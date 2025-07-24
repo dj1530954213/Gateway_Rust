@@ -1,0 +1,43 @@
+# Docker Compose Override - 开发环境配置
+# 这个文件会自动与docker-compose.yml合并
+
+services:
+  # 开发环境覆盖
+  edge-gateway:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    environment:
+      - RUST_LOG=debug
+      - RUST_BACKTRACE=1
+    volumes:
+      # 开发时挂载源代码配置
+      - ./config:/app/config:ro
+      - ./web:/app/web:ro
+      # 数据目录可写
+      - gateway-data:/app/data
+      - gateway-logs:/app/logs
+    # 开发时允许重启
+    restart: unless-stopped
+    
+  # EMQX开发配置
+  emqx:
+    restart: unless-stopped
+    environment:
+      - EMQX_LOG__CONSOLE_HANDLER__LEVEL=debug
+      
+  # Prometheus开发配置
+  prometheus:
+    restart: unless-stopped
+    
+  # Grafana开发配置
+  grafana:
+    restart: unless-stopped
+    environment:
+      - GF_LOG_LEVEL=debug
+      - GF_INSTALL_PLUGINS=grafana-clock-panel
+
+volumes:
+  gateway-data:
+  gateway-logs:

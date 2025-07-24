@@ -1,0 +1,37 @@
+[package]
+name = "mqtt5"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+prometheus = { workspace = true }
+rumqttc = { workspace = true }
+zstd = { workspace = true }
+
+# Core dependencies
+frame-bus = { path = "../../core/frame-bus" }
+
+# For TLS configuration
+rustls = { workspace = true }
+rustls-native-certs = { workspace = true }
+
+# Additional dependencies
+url = "2.5"
+base64 = "0.21"
+uuid = { version = "1.0", features = ["v4"] }
+humantime-serde = "1.1"
+once_cell = { workspace = true }
+prost = { workspace = true }
+
+[dev-dependencies]
+serde_yaml = { workspace = true }
+tempfile = "3.8"

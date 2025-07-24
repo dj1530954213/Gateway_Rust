@@ -1,0 +1,519 @@
+# 连接器配置模板
+# 包含各种云平台和企业系统连接器配置
+
+# MQTT5 连接器 - 主要云平台连接
+mqtt_cloud_primary:
+  enabled: true
+  type: "mqtt5"
+  name: "主云平台MQTT"
+  
+  # 连接配置
+  connection:
+    broker: "${MQTT_BROKER:-emqx.cloud.com:1883}"
+    client_id: "gateway-${GATEWAY_ID}"
+    username: "${MQTT_USERNAME}"
+    password: "${MQTT_PASSWORD}"
+    clean_session: false              # 持久会话
+    keep_alive: 60
+    connect_timeout: "30s"
+    
+    # 遗嘱消息
+    last_will:
+      topic: "gateways/${GATEWAY_ID}/status"
+      payload: '{"status": "offline", "timestamp": "${timestamp}"}'
+      qos: 1
+      retain: true
+      
+  # TLS/SSL配置
+  tls:
+    enabled: "${MQTT_TLS_ENABLED:-true}"
+    ca_cert: "/opt/edge-gateway/certs/mqtt_ca.crt"
+    client_cert: "/opt/edge-gateway/certs/mqtt_client.crt"
+    client_key: "/opt/edge-gateway/certs/mqtt_client.key"
+    insecure_skip_verify: false
+    server_name: "${MQTT_SERVER_NAME}"
+    
+  # 发布配置
+  publish:
+    topic_prefix: "industrial/${GATEWAY_ID}"
+    qos: 1
+    retain: false
+    batch_size: 500
+    batch_timeout: "10s"
+    compression: "gzip"
+    max_inflight: 100
+    
+    # 重试配置
+    retry:
+      max_attempts: 5
+      initial_interval: "1s"
+      max_interval: "60s"
+      multiplier: 2.0
+      
+  # 订阅配置（下行命令）
+  subscribe:
+    topics:
+      - topic: "commands/${GATEWAY_ID}/+"
+        qos: 1
+        handler: "command_processor"
+      - topic: "config/${GATEWAY_ID}/update"
+        qos: 1
+        handler: "config_updater"
+        
+  # 数据映射
+  data_mapping:
+    # 数据点映射
+    datapoints:
+      topic_template: "data/{driver_id}/{point_id}"
+      payload_format: "json"
+      include_metadata: true
+      timestamp_format: "rfc3339"
+      
+      # 字段映射
+      fields:
+        value: "value"
+        timestamp: "timestamp"
+        quality: "quality"
+        driver_id: "source.driver"
+        point_id: "source.point"
+        
+    # 告警映射
+    alerts:
+      topic: "alerts"
+      payload_format: "json"
+      include_context: true
+      
+    # 系统状态映射
+    system_status:
+      topic: "status"
+      interval: "60s"
+      include_metrics: true
+
+# MQTT 备份连接器
+mqtt_cloud_backup:
+  enabled: "${ENABLE_BACKUP_MQTT:-true}"
+  type: "mqtt5"
+  name: "备份云平台MQTT"
+  
+  connection:
+    broker: "${BACKUP_MQTT_BROKER:-backup.mqtt.com:1883}"
+    client_id: "gateway-${GATEWAY_ID}-backup"
+    username: "${BACKUP_MQTT_USERNAME}"
+    password: "${BACKUP_MQTT_PASSWORD}"
+    
+  # 仅在主连接失败时启用
+  failover:
+    enabled: true
+    primary_connector: "mqtt_cloud_primary"
+    health_check_interval: "30s"
+    
+  publish:
+    topic_prefix: "backup/${GATEWAY_ID}"
+    qos: 1
+    batch_size: 200
+
+# HTTP REST API连接器 - 企业系统集成
+http_enterprise_api:
+  enabled: "${ENABLE_HTTP_CONNECTOR:-true}"
+  type: "http"
+  name: "企业API连接器"
+  
+  config:
+    base_url: "${ENTERPRISE_API_URL}"
+    timeout: "30s"
+    max_retries: 3
+    retry_delay: "5s"
+    
+    # 认证配置
+    auth:
+      type: "oauth2"
+      client_id: "${API_CLIENT_ID}"
+      client_secret: "${API_CLIENT_SECRET}"
+      token_url: "${API_TOKEN_URL}"
+      scope: "industrial-data"
+      
+    # 请求头
+    headers:
+      Content-Type: "application/json"
+      User-Agent: "EdgeGateway/1.0"
+      X-Gateway-ID: "${GATEWAY_ID}"
+      
+    # 批量配置
+    batch_size: 1000
+    batch_timeout: "30s"
+    
+  # 端点映射
+  endpoints:
+    datapoints: "/api/v2/datapoints/batch"
+    alerts: "/api/v2/alerts"
+    events: "/api/v2/events"
+    status: "/api/v2/gateways/${GATEWAY_ID}/heartbeat"
+    
+  # 数据格式
+  data_format:
+    timestamp_format: "unix_ms"
+    number_precision: 6
+    include_quality: true
+
+# WebSocket连接器 - 实时数据流
+websocket_realtime:
+  enabled: false
+  type: "websocket"
+  name: "实时数据流"
+  
+  config:
+    url: "${WEBSOCKET_URL:-wss://realtime.company.com/gateway}"
+    
+    # 认证
+    auth:
+      type: "bearer"
+      token: "${WEBSOCKET_TOKEN}"
+      
+    # 连接配置
+    ping_interval: "30s"
+    pong_timeout: "10s"
+    max_reconnect_attempts: 10
+    reconnect_interval: "5s"
+    
+  # 数据流配置
+  streams:
+    - name: "critical_data"
+      filter: 'tags.contains("critical")'
+      interval: "1s"
+      
+    - name: "alerts"
+      filter: 'type == "alert"'
+      interval: "immediate"
+
+# gRPC连接器 - 高性能数据传输
+grpc_high_performance:
+  enabled: false
+  type: "grpc"
+  name: "高性能gRPC连接"
+  
+  config:
+    endpoint: "${GRPC_ENDPOINT:-grpc.company.com:443}"
+    
+    # TLS配置
+    tls:
+      enabled: true
+      cert_file: "/opt/edge-gateway/certs/grpc_client.crt"
+      key_file: "/opt/edge-gateway/certs/grpc_client.key"
+      ca_file: "/opt/edge-gateway/certs/grpc_ca.crt"
+      
+    # 连接配置
+    max_message_size: "100MB"
+    keep_alive_time: "30s"
+    keep_alive_timeout: "5s"
+    
+  # 服务配置
+  services:
+    data_ingestion: "DataIngestionService"
+    alert_notification: "AlertService"
+
+# Apache Kafka连接器 - 大数据平台
+kafka_big_data:
+  enabled: false
+  type: "kafka"
+  name: "Kafka大数据平台"
+  
+  config:
+    brokers:
+      - "${KAFKA_BROKER1:-kafka1.company.com:9092}"
+      - "${KAFKA_BROKER2:-kafka2.company.com:9092}"
+      - "${KAFKA_BROKER3:-kafka3.company.com:9092}"
+      
+    # 安全配置
+    security:
+      protocol: "SASL_SSL"
+      mechanism: "PLAIN"
+      username: "${KAFKA_USERNAME}"
+      password: "${KAFKA_PASSWORD}"
+      
+    # 生产者配置
+    producer:
+      compression_type: "snappy"
+      batch_size: 16384
+      linger_ms: 100
+      max_in_flight_requests: 5
+      
+  # 主题映射
+  topics:
+    datapoints: "industrial.datapoints.${GATEWAY_ID}"
+    alerts: "industrial.alerts.${GATEWAY_ID}"
+    events: "industrial.events.${GATEWAY_ID}"
+    
+  # 数据序列化
+  serialization:
+    format: "avro"
+    schema_registry: "${SCHEMA_REGISTRY_URL}"
+
+# Amazon IoT Core连接器
+aws_iot_core:
+  enabled: false
+  type: "aws-iot"
+  name: "AWS IoT Core"
+  
+  config:
+    endpoint: "${AWS_IOT_ENDPOINT}"
+    thing_name: "gateway-${GATEWAY_ID}"
+    
+    # 证书认证
+    certificates:
+      ca_cert: "/opt/edge-gateway/certs/aws_ca.pem"
+      cert_file: "/opt/edge-gateway/certs/aws_cert.pem"
+      key_file: "/opt/edge-gateway/certs/aws_private.key"
+      
+    # 区域配置
+    region: "${AWS_REGION:-us-east-1}"
+    
+  # 主题配置
+  topics:
+    telemetry: "gateway/${GATEWAY_ID}/telemetry"
+    shadow_update: "$aws/thing/gateway-${GATEWAY_ID}/shadow/update"
+    
+  # Device Shadow集成
+  device_shadow:
+    enabled: true
+    sync_interval: "60s"
+
+# Azure IoT Hub连接器
+azure_iot_hub:
+  enabled: false
+  type: "azure-iot"
+  name: "Azure IoT Hub"
+  
+  config:
+    connection_string: "${AZURE_IOT_CONNECTION_STRING}"
+    device_id: "gateway-${GATEWAY_ID}"
+    
+    # 传输协议
+    transport: "mqtt"  # mqtt, amqp, https
+    
+  # 消息配置
+  messages:
+    telemetry:
+      content_type: "application/json"
+      content_encoding: "utf-8"
+      
+  # Device Twin集成
+  device_twin:
+    enabled: true
+    sync_interval: "300s"
+
+# Google Cloud IoT连接器
+gcp_iot_core:
+  enabled: false
+  type: "gcp-iot"
+  name: "Google Cloud IoT"
+  
+  config:
+    project_id: "${GCP_PROJECT_ID}"
+    location: "${GCP_LOCATION:-us-central1}"
+    registry_id: "${GCP_REGISTRY_ID}"
+    device_id: "gateway-${GATEWAY_ID}"
+    
+    # JWT认证
+    private_key_file: "/opt/edge-gateway/certs/gcp_private.pem"
+    algorithm: "RS256"
+    
+  # 发布配置
+  publish:
+    telemetry_topic: "/devices/gateway-${GATEWAY_ID}/events"
+    state_topic: "/devices/gateway-${GATEWAY_ID}/state"
+
+# ThingsBoard连接器
+thingsboard:
+  enabled: false
+  type: "thingsboard"
+  name: "ThingsBoard平台"
+  
+  config:
+    host: "${TB_HOST:-thingsboard.company.com}"
+    port: 1883
+    access_token: "${TB_ACCESS_TOKEN}"
+    
+  # 遥测数据
+  telemetry:
+    topic: "v1/devices/me/telemetry"
+    format: "json"
+    
+  # 属性上报
+  attributes:
+    topic: "v1/devices/me/attributes"
+    interval: "300s"
+
+# InfluxDB连接器 - 时序数据库
+influxdb_tsdb:
+  enabled: "${ENABLE_INFLUXDB_CONNECTOR:-false}"
+  type: "influxdb"
+  name: "InfluxDB时序数据库"
+  
+  config:
+    url: "${INFLUXDB_URL:-http://influxdb:8086}"
+    database: "${INFLUXDB_DATABASE:-gateway_data}"
+    username: "${INFLUXDB_USERNAME}"
+    password: "${INFLUXDB_PASSWORD}"
+    
+    # 写入配置
+    write_consistency: "one"
+    retention_policy: "${INFLUXDB_RETENTION:-default}"
+    precision: "ns"
+    
+    # 批量写入
+    batch_size: 5000
+    flush_interval: "10s"
+    
+  # 数据映射
+  measurement_mapping:
+    datapoints: "datapoints"
+    alerts: "alerts"
+    system_metrics: "system"
+    
+  # 标签映射
+  tag_fields:
+    - "driver_id"
+    - "point_id"
+    - "location"
+    - "equipment"
+
+# Elasticsearch连接器 - 日志和搜索
+elasticsearch_logs:
+  enabled: false
+  type: "elasticsearch"
+  name: "Elasticsearch日志"
+  
+  config:
+    hosts:
+      - "${ES_HOST1:-elasticsearch1:9200}"
+      - "${ES_HOST2:-elasticsearch2:9200}"
+      
+    # 认证
+    username: "${ES_USERNAME}"
+    password: "${ES_PASSWORD}"
+    
+    # 索引配置
+    index_pattern: "gateway-logs-{yyyy.MM.dd}"
+    document_type: "_doc"
+    
+    # 批量配置
+    bulk_size: 1000
+    flush_interval: "30s"
+
+# OPC UA服务器连接器 - 向上级系统提供数据
+opcua_server:
+  enabled: false
+  type: "opcua-server"
+  name: "OPC UA服务器"
+  
+  config:
+    endpoint: "opc.tcp://0.0.0.0:4840/edge-gateway"
+    
+    # 安全配置
+    security_policies:
+      - "None"
+      - "Basic256Sha256"
+      
+    # 证书配置
+    certificates:
+      server_cert: "/opt/edge-gateway/certs/opcua_server.der"
+      server_key: "/opt/edge-gateway/certs/opcua_server.key"
+      
+  # 地址空间配置
+  address_space:
+    namespace: "urn:edge-gateway:server"
+    root_folder: "EdgeGateway"
+
+# FTP/SFTP文件传输连接器
+file_transfer:
+  enabled: false
+  type: "ftp"
+  name: "文件传输"
+  
+  config:
+    host: "${FTP_HOST}"
+    port: "${FTP_PORT:-21}"
+    username: "${FTP_USERNAME}"
+    password: "${FTP_PASSWORD}"
+    
+    # 传输配置
+    passive_mode: true
+    timeout: "30s"
+    
+    # 文件配置
+    remote_path: "/gateway-data/${GATEWAY_ID}/"
+    file_pattern: "data-{yyyy-MM-dd-HH}.csv"
+    transfer_interval: "1h"
+    
+  # 数据格式
+  export_format:
+    type: "csv"
+    delimiter: ","
+    include_header: true
+    timestamp_format: "iso8601"
+
+# Email通知连接器
+email_notifications:
+  enabled: "${ENABLE_EMAIL_NOTIFICATIONS:-false}"
+  type: "email"
+  name: "邮件通知"
+  
+  config:
+    smtp_server: "${SMTP_SERVER}"
+    smtp_port: "${SMTP_PORT:-587}"
+    username: "${SMTP_USERNAME}"
+    password: "${SMTP_PASSWORD}"
+    
+    # TLS配置
+    use_tls: true
+    skip_verify: false
+    
+    # 发件人配置
+    from_address: "${EMAIL_FROM:-gateway@company.com}"
+    from_name: "Edge Gateway ${GATEWAY_ID}"
+    
+  # 通知配置
+  notifications:
+    alerts:
+      enabled: true
+      to_addresses:
+        - "${ALERT_EMAIL_TO}"
+      subject_template: "[ALERT] Gateway ${GATEWAY_ID}: {alert_title}"
+      
+    system_status:
+      enabled: true
+      interval: "24h"
+      to_addresses:
+        - "${STATUS_EMAIL_TO}"
+
+# 自定义webhook连接器
+webhook_custom:
+  enabled: false
+  type: "webhook"
+  name: "自定义Webhook"
+  
+  config:
+    url: "${WEBHOOK_URL}"
+    method: "POST"
+    timeout: "15s"
+    
+    # 认证
+    auth:
+      type: "api_key"
+      header: "X-API-Key"
+      value: "${WEBHOOK_API_KEY}"
+      
+    # 请求头
+    headers:
+      Content-Type: "application/json"
+      User-Agent: "EdgeGateway-Webhook"
+      
+  # 触发条件
+  triggers:
+    - event: "alert"
+      condition: 'severity == "critical"'
+      
+    - event: "datapoint"
+      condition: 'tags.contains("important")'
+      batch_size: 100
+      batch_timeout: "60s"

@@ -1,0 +1,50 @@
+# endpoints.yml - 端点配置示例
+# 定义连接到设备的端点信息
+
+endpoints:
+  # PLC设备1 - Modbus TCP
+  plc1:
+    url: "tcp://192.168.1.100:502"
+    description: "生产线PLC控制器"
+    timeout: "10s"
+    pool:
+      min_connections: 1
+      max_connections: 5
+      idle_timeout: "300s"
+      max_lifetime: "3600s"
+  
+  # PLC设备2 - Modbus TCP with TLS
+  plc2:
+    url: "tls://192.168.1.101:502"
+    description: "包装线PLC控制器"
+    timeout: "10s"
+    pool:
+      min_connections: 1
+      max_connections: 3
+    tls:
+      server_name: "plc2.example.com"
+      verify_cert: true
+      ca_path: "/etc/ssl/certs/ca.pem"
+  
+  # 串口设备
+  meter1:
+    url: "serial:///dev/ttyUSB0"
+    description: "电表读取"
+    timeout: "5s"
+    pool:
+      min_connections: 1
+      max_connections: 1
+    serial:
+      baud_rate: 9600
+      data_bits: 8
+      stop_bits: 1
+      parity: "none"
+  
+  # 开发环境 - Docker PLC模拟器
+  dev_plc:
+    url: "tcp://localhost:502"
+    description: "开发环境PLC模拟器"
+    timeout: "5s"
+    pool:
+      min_connections: 1
+      max_connections: 2

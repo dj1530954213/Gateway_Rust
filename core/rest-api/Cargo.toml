@@ -1,0 +1,51 @@
+[package]
+name = "rest-api"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Core dependencies
+tokio.workspace = true
+async-trait.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tracing.workspace = true
+
+# Web framework
+warp = "0.3"
+tower = "0.4"
+tower-http = { version = "0.4", features = ["cors", "trace"] }
+
+# Authentication
+jsonwebtoken = "9.0"
+
+# HTTP client for testing
+reqwest = { version = "0.11", features = ["json"] }
+
+# Validation
+validator = { version = "0.16", features = ["derive"] }
+
+# OpenAPI documentation
+utoipa = { version = "4.0", features = ["axum_extras"] }
+utoipa-swagger-ui = { version = "4.0", features = ["axum"] }
+
+# Rate limiting
+governor = "0.6"
+
+# Crypto for password hashing
+sha2 = "0.10"
+base64 = "0.21"
+
+# Internal dependencies
+frame-bus = { path = "../frame-bus" }
+driver-manager = { path = "../driver-manager" }
+config-manager = { path = "../config-manager" }
+
+[dev-dependencies]
+tokio-test.workspace = true
+wiremock.workspace = true
+tower-test = "0.4"

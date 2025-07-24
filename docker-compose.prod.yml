@@ -1,0 +1,156 @@
+# Docker Compose - 生产环境配置
+
+version: '3.8'
+
+services:
+  # Edge Gateway主服务 - 生产配置
+  edge-gateway:
+    image: edge-gateway:latest
+    container_name: edge-gateway-prod
+    ports:
+      - "8080:8080"   # REST API
+      - "8090:8090"   # Web管理界面
+    environment:
+      - RUST_LOG=warn
+      - GATEWAY_CONFIG=/app/config/gateway.yml
+    volumes:
+      - ./config:/app/config:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./drivers:/app/drivers:ro
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '1.0'
+        reservations:
+          memory: 256M
+          cpus: '0.5'
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8090/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - gateway-net
+
+  # EMQX MQTT代理 - 生产配置
+  emqx:
+    image: emqx/emqx:5.4.1
+    container_name: emqx-prod
+    ports:
+      - "1883:1883"   # MQTT
+      - "8083:8083"   # MQTT over WebSocket
+      - "18083:18083" # Dashboard
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=emqx
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=emqx_admin_2024
+      - EMQX_LOG__CONSOLE_HANDLER__LEVEL=warning
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-etc:/opt/emqx/etc
+      - emqx-log:/opt/emqx/log
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - gateway-net
+
+  # Prometheus监控 - 生产配置
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: prometheus-prod
+    ports:
+      - "9091:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=720h'  # 30天
+      - '--web.enable-lifecycle'
+      - '--log.level=warn'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+    networks:
+      - gateway-net
+
+  # Grafana仪表板 - 生产配置
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana-prod
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin_2024}
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_LOG_LEVEL=warn
+      - GF_SECURITY_SECRET_KEY=${GRAFANA_SECRET_KEY:-your-secret-key}
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+          cpus: '0.5'
+    networks:
+      - gateway-net
+
+  # InfluxDB时序数据库 - 生产配置
+  influxdb:
+    image: influxdb:2.7.3
+    container_name: influxdb-prod
+    ports:
+      - "8086:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD:-influx_2024}
+      - DOCKER_INFLUXDB_INIT_ORG=edge-gateway
+      - DOCKER_INFLUXDB_INIT_BUCKET=iot-data
+      - INFLUXD_LOG_LEVEL=warn
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    restart: always
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+          cpus: '1.0'
+    networks:
+      - gateway-net
+
+volumes:
+  emqx-data:
+  emqx-etc:
+  emqx-log:
+  prometheus-data:
+  grafana-data:
+  influxdb-data:
+  influxdb-config:
+
+networks:
+  gateway-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

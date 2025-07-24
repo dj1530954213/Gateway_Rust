@@ -1,0 +1,28 @@
+[package]
+name = "driver-manager"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tracing = { workspace = true }
+prometheus = { workspace = true }
+once_cell = { workspace = true }
+
+# For dynamic loading
+libloading = "0.8"
+
+# For static driver registration
+ctor = "0.2"
+paste = "1.0"
+
+# Frame bus and endpoint kit dependencies
+frame-bus = { path = "../frame-bus" }
+endpoint-kit = { path = "../endpoint-kit" }

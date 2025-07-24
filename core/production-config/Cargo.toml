@@ -1,0 +1,40 @@
+[package]
+name = "production-config"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Core dependencies
+tokio.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+
+# Configuration and validation
+config = "0.13"
+validator = { version = "0.16", features = ["derive"] }
+clap = { version = "4.3", features = ["derive"] }
+
+# Environment and file system
+dotenv = "0.15"
+dirs = "5.0"
+
+# Security
+ring = "0.17"
+base64 = "0.21"
+
+# Additional dependencies
+chrono.workspace = true
+hostname.workspace = true
+
+# Internal dependencies
+config-manager = { path = "../config-manager" }
+
+[dev-dependencies]
+tokio-test.workspace = true
+tempfile.workspace = true

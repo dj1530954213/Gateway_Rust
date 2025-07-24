@@ -1,0 +1,414 @@
+# 驱动配置模板
+# 包含常见工业协议驱动的配置示例
+
+# Modbus TCP 驱动配置
+modbus_line1:
+  enabled: true
+  type: "modbus-tcp"
+  name: "生产线PLC1"
+  endpoint: "tcp://${PLC1_IP:-192.168.1.100}:502"
+  
+  config:
+    unit_id: 1
+    polling_interval: "2s"
+    timeout: "5s"
+    retry_count: 3
+    retry_delay: "1s"
+    max_batch_size: 100
+    
+    # 连接配置
+    connection:
+      persistent: true
+      max_idle_time: "30s"
+      keep_alive: true
+      
+  # 数据点配置
+  datapoints:
+    # 温度传感器
+    - id: "temp_reactor_001"
+      name: "反应器温度1"
+      address: "40001"
+      data_type: "float32"
+      unit: "°C"
+      scale: 0.1
+      offset: 0
+      min_value: 0.0
+      max_value: 200.0
+      tags: ["temperature", "reactor", "line1"]
+      alarm_high: 150.0
+      alarm_low: 10.0
+      
+    - id: "temp_reactor_002"
+      name: "反应器温度2"
+      address: "40003"
+      data_type: "float32"
+      unit: "°C"
+      scale: 0.1
+      offset: 0
+      min_value: 0.0
+      max_value: 200.0
+      tags: ["temperature", "reactor", "line1"]
+      
+    # 压力传感器
+    - id: "pressure_main_001"
+      name: "主管道压力"
+      address: "40005"
+      data_type: "uint16"
+      unit: "Pa"
+      scale: 100
+      offset: 0
+      min_value: 0
+      max_value: 10000
+      tags: ["pressure", "main", "line1"]
+      alarm_high: 8000
+      alarm_low: 500
+      
+    # 流量计
+    - id: "flow_inlet_001"
+      name: "进料流量"
+      address: "40007"
+      data_type: "float32"
+      unit: "L/min"
+      scale: 1.0
+      offset: 0
+      min_value: 0.0
+      max_value: 1000.0
+      tags: ["flow", "inlet", "line1"]
+      
+    # 液位计
+    - id: "level_tank_001"
+      name: "储罐液位"
+      address: "40009"
+      data_type: "uint16"
+      unit: "%"
+      scale: 0.1
+      offset: 0
+      min_value: 0
+      max_value: 100
+      tags: ["level", "tank", "line1"]
+      alarm_high: 90
+      alarm_low: 10
+      
+    # 开关量输入
+    - id: "switch_pump_001"
+      name: "泵运行状态"
+      address: "10001"
+      data_type: "bool"
+      tags: ["switch", "pump", "line1"]
+      
+    - id: "switch_valve_001"
+      name: "阀门开关状态"
+      address: "10002"
+      data_type: "bool"
+      tags: ["switch", "valve", "line1"]
+      
+    # 计数器
+    - id: "counter_production"
+      name: "生产计数"
+      address: "40011"
+      data_type: "uint32"
+      unit: "件"
+      tags: ["counter", "production", "line1"]
+
+modbus_line2:
+  enabled: true
+  type: "modbus-tcp"
+  name: "生产线PLC2"
+  endpoint: "tcp://${PLC2_IP:-192.168.1.101}:502"
+  
+  config:
+    unit_id: 1
+    polling_interval: "3s"
+    timeout: "5s"
+    retry_count: 3
+    max_batch_size: 50
+    
+  datapoints:
+    - id: "temp_line2_001"
+      name: "生产线2温度"
+      address: "40001"
+      data_type: "float32"
+      unit: "°C"
+      scale: 0.1
+      tags: ["temperature", "line2"]
+      
+    - id: "speed_motor_001"
+      name: "电机转速"
+      address: "40003"
+      data_type: "uint16"
+      unit: "rpm"
+      scale: 10
+      tags: ["speed", "motor", "line2"]
+
+# Modbus RTU 串口驱动
+modbus_rtu_line3:
+  enabled: false
+  type: "modbus-rtu"
+  name: "生产线RTU设备"
+  endpoint: "serial://${SERIAL_PORT:-/dev/ttyUSB0}"
+  
+  config:
+    unit_id: 3
+    baud_rate: 9600
+    data_bits: 8
+    stop_bits: 1
+    parity: "none"
+    polling_interval: "5s"
+    timeout: "10s"
+    
+  datapoints:
+    - id: "temp_rtu_001"
+      name: "RTU温度传感器"
+      address: "30001"
+      data_type: "int16"
+      unit: "°C"
+      scale: 0.1
+      tags: ["temperature", "rtu", "line3"]
+
+# OPC UA 驱动配置
+opcua_scada:
+  enabled: false
+  type: "opcua"
+  name: "SCADA系统"
+  endpoint: "opc.tcp://${SCADA_IP:-192.168.1.200}:4840"
+  
+  config:
+    # 安全配置
+    security_policy: "Basic256Sha256"
+    security_mode: "SignAndEncrypt"
+    
+    # 会话配置
+    session_timeout: "60s"
+    subscription_interval: "1s"
+    keep_alive_count: 3
+    
+    # 认证配置
+    auth:
+      type: "username"
+      username: "${OPC_USERNAME:-opcuser}"
+      password: "${OPC_PASSWORD}"
+      
+    # 证书配置
+    certificates:
+      client_cert: "/opt/edge-gateway/certs/opc_client.der"
+      client_key: "/opt/edge-gateway/certs/opc_client.key"
+      trusted_certs: "/opt/edge-gateway/certs/trusted/"
+      
+  datapoints:
+    - id: "production_rate"
+      name: "生产速率"
+      node_id: "ns=2;s=ProductionRate"
+      data_type: "float"
+      unit: "件/小时"
+      tags: ["production", "rate", "scada"]
+      
+    - id: "overall_efficiency"
+      name: "整体效率"
+      node_id: "ns=2;s=OverallEfficiency"
+      data_type: "float"
+      unit: "%"
+      tags: ["efficiency", "overall", "scada"]
+      
+    - id: "alarm_status"
+      name: "告警状态"
+      node_id: "ns=2;s=AlarmStatus"
+      data_type: "string"
+      tags: ["alarm", "status", "scada"]
+
+# Ethernet/IP 驱动配置
+ethernet_ip_ab:
+  enabled: false
+  type: "ethernet-ip"
+  name: "Allen-Bradley PLC"
+  endpoint: "enip://${AB_PLC_IP:-192.168.1.150}"
+  
+  config:
+    slot: 0
+    connection_timeout: "10s"
+    request_timeout: "5s"
+    
+  datapoints:
+    - id: "ab_temp_001"
+      name: "AB温度"
+      tag: "Temperature_01"
+      data_type: "real"
+      unit: "°C"
+      tags: ["temperature", "allen-bradley"]
+      
+    - id: "ab_pressure_001"
+      name: "AB压力"
+      tag: "Pressure_01"
+      data_type: "dint"
+      unit: "psi"
+      tags: ["pressure", "allen-bradley"]
+
+# Siemens S7 驱动配置
+siemens_s7:
+  enabled: false
+  type: "s7"
+  name: "西门子S7 PLC"
+  endpoint: "s7://${S7_IP:-192.168.1.160}"
+  
+  config:
+    rack: 0
+    slot: 2
+    connection_type: "PG"
+    
+  datapoints:
+    - id: "s7_temp_001"
+      name: "S7温度"
+      address: "DB1.DBD0"
+      data_type: "real"
+      unit: "°C"
+      tags: ["temperature", "siemens"]
+      
+    - id: "s7_counter_001"
+      name: "S7计数器"
+      address: "DB1.DBW4"
+      data_type: "word"
+      tags: ["counter", "siemens"]
+
+# MQTT 设备驱动（IoT传感器）
+mqtt_sensors:
+  enabled: false
+  type: "mqtt-device"
+  name: "MQTT传感器网络"
+  
+  config:
+    broker: "${IOT_MQTT_BROKER:-localhost:1883}"
+    client_id: "gateway-mqtt-driver"
+    username: "${IOT_MQTT_USER}"
+    password: "${IOT_MQTT_PASSWORD}"
+    
+  datapoints:
+    - id: "iot_temp_001"
+      name: "IoT温度传感器1"
+      topic: "sensors/temp001/value"
+      data_type: "float"
+      unit: "°C"
+      tags: ["temperature", "iot", "wireless"]
+      
+    - id: "iot_humidity_001"
+      name: "IoT湿度传感器1"
+      topic: "sensors/humidity001/value"
+      data_type: "float"
+      unit: "%"
+      tags: ["humidity", "iot", "wireless"]
+
+# 数据模拟器
+simulator:
+  enabled: "${ENABLE_SIMULATOR:-false}"
+  type: "simulator"
+  name: "数据模拟器"
+  
+  config:
+    data_rate: "1s"
+    point_count: 20
+    noise_level: 0.05
+    trend_enabled: true
+    
+  datapoints:
+    - id: "sim_temp_001"
+      name: "模拟温度1"
+      data_type: "float32"
+      unit: "°C"
+      base_value: 25.0
+      variation: 10.0
+      trend: 0.1
+      tags: ["temperature", "simulation"]
+      
+    - id: "sim_pressure_001"
+      name: "模拟压力1"
+      data_type: "uint16"
+      unit: "Pa"
+      base_value: 2000
+      variation: 500
+      tags: ["pressure", "simulation"]
+      
+    - id: "sim_flow_001"
+      name: "模拟流量1"
+      data_type: "float32"
+      unit: "L/min"
+      base_value: 50.0
+      variation: 20.0
+      tags: ["flow", "simulation"]
+
+# DNP3 驱动配置（电力系统）
+dnp3_power:
+  enabled: false
+  type: "dnp3"
+  name: "DNP3电力设备"
+  endpoint: "tcp://${DNP3_IP:-192.168.1.170}:20000"
+  
+  config:
+    master_address: 1
+    outstation_address: 10
+    keep_alive_timeout: "60s"
+    
+  datapoints:
+    - id: "power_voltage_a"
+      name: "A相电压"
+      index: 0
+      group: "analog_input"
+      variation: 1
+      unit: "V"
+      tags: ["voltage", "phase_a", "power"]
+      
+    - id: "power_current_a"
+      name: "A相电流"
+      index: 1
+      group: "analog_input"
+      variation: 1
+      unit: "A"
+      tags: ["current", "phase_a", "power"]
+
+# BACnet 驱动配置（楼宇自控）
+bacnet_hvac:
+  enabled: false
+  type: "bacnet"
+  name: "BACnet楼宇设备"
+  
+  config:
+    device_id: 12345
+    port: 47808
+    network_number: 0
+    
+  datapoints:
+    - id: "hvac_temp_room1"
+      name: "房间1温度"
+      device_id: 1001
+      object_type: "analog_input"
+      object_instance: 1
+      property: "present_value"
+      unit: "°C"
+      tags: ["temperature", "hvac", "room1"]
+      
+    - id: "hvac_setpoint_room1"
+      name: "房间1温度设定"
+      device_id: 1001
+      object_type: "analog_value"
+      object_instance: 1
+      property: "present_value"
+      unit: "°C"
+      tags: ["setpoint", "hvac", "room1"]
+
+# 文件驱动（CSV数据导入）
+file_import:
+  enabled: false
+  type: "file"
+  name: "文件数据导入"
+  
+  config:
+    file_path: "/data/import/*.csv"
+    format: "csv"
+    delimiter: ","
+    header_row: true
+    polling_interval: "60s"
+    
+  datapoints:
+    - id: "file_data_001"
+      name: "文件数据1"
+      column: "temperature"
+      data_type: "float"
+      unit: "°C"
+      tags: ["temperature", "file", "import"]

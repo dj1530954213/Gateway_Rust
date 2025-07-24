@@ -1,0 +1,50 @@
+# drivers.yml - 驱动配置示例
+# 定义协议驱动实例和采集参数
+
+drivers:
+  # Modbus驱动实例1 - 生产线PLC
+  modbus_line1:
+    driver_type: "modbus-tcp"
+    endpoint: "plc1"
+    enabled: true
+    polling: "1s"
+    retry: 3
+    # Modbus特定配置
+    unit_id: 1
+    max_regs_per_req: 125
+    endian: "big"
+    enable_write: false
+  
+  # Modbus驱动实例2 - 包装线PLC  
+  modbus_line2:
+    driver_type: "modbus-tcp"
+    endpoint: "plc2"
+    enabled: true
+    polling: "2s"
+    retry: 5
+    unit_id: 1
+    max_regs_per_req: 100
+    endian: "big"
+    enable_write: true
+  
+  # 电表Modbus驱动
+  modbus_meter:
+    driver_type: "modbus-rtu"
+    endpoint: "meter1"
+    enabled: true
+    polling: "10s"
+    retry: 2
+    unit_id: 1
+    max_regs_per_req: 50
+    endian: "big"
+    
+  # 开发环境驱动
+  dev_modbus:
+    driver_type: "modbus-tcp"
+    endpoint: "dev_plc"
+    enabled: true
+    polling: "500ms"
+    retry: 1
+    unit_id: 1
+    max_regs_per_req: 10
+    endian: "big"

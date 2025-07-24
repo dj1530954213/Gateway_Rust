@@ -1,0 +1,288 @@
+//! EndpointKit连接池测试
+
+use endpoint_kit::{EndpointHandle, ConnectionPool, PoolConfig};
+use std::time::Duration;
+use tokio::time::{timeout, sleep};
+use std::sync::Arc;
+
+/// 创建测试用的连接池配置
+fn create_test_pool_config() -> PoolConfig {
+    PoolConfig {
+        min_connections: 1,
+        max_connections: 3,
+        idle_timeout: Duration::from_secs(30),
+        max_lifetime: Duration::from_secs(300),
+        connection_timeout: Duration::from_secs(5),
+    }
+}
+
+#[tokio::test]
+async fn test_connection_pool_basic_operations() {
+    let config = create_test_pool_config();
+    let pool = ConnectionPool::new("tcp://127.0.0.1:12345", config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 测试连接池初始状态
+    assert_eq!(pool.active_connections(), 0);
+    assert_eq!(pool.idle_connections(), 0);
+}
+
+#[tokio::test]
+async fn test_connection_acquisition_and_release() {
+    let config = create_test_pool_config();
+    let pool = Arc::new(
+        ConnectionPool::new("tcp://127.0.0.1:12346", config)
+            .await
+            .expect("Failed to create pool")
+    );
+    
+    // 获取连接
+    let conn_result = timeout(Duration::from_millis(100), pool.acquire()).await;
+    
+    // 由于没有真实的服务器，连接应该失败，但这测试了pool的基本机制
+    // 在实际场景中，这里会成功获取连接
+    match conn_result {
+        Ok(Ok(_conn)) => {
+            // 连接成功获取
+            assert_eq!(pool.active_connections(), 1);
+        }
+        Ok(Err(_)) => {
+            // 连接失败是预期的，因为没有真实服务器
+            println!("Connection failed as expected (no real server)");
+        }
+        Err(_) => {
+            // 超时
+            println!("Connection attempt timed out");
+        }
+    }
+}
+
+#[tokio::test]
+async fn test_pool_configuration_validation() {
+    // 测试无效配置
+    let invalid_config = PoolConfig {
+        min_connections: 5,
+        max_connections: 3, // max < min 应该失败
+        idle_timeout: Duration::from_secs(30),
+        max_lifetime: Duration::from_secs(300),
+        connection_timeout: Duration::from_secs(5),
+    };
+    
+    let result = ConnectionPool::new("tcp://127.0.0.1:12347", invalid_config).await;
+    assert!(result.is_err(), "Should fail with invalid config");
+}
+
+#[tokio::test]
+async fn test_pool_metrics() {
+    let config = create_test_pool_config();
+    let pool = ConnectionPool::new("tcp://127.0.0.1:12348", config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 测试指标初始状态
+    let metrics = pool.metrics();
+    assert_eq!(metrics.active_connections, 0);
+    assert_eq!(metrics.idle_connections, 0);
+    assert_eq!(metrics.total_connections, 0);
+    assert_eq!(metrics.failed_connections, 0);
+}
+
+#[tokio::test]
+async fn test_pool_shutdown() {
+    let config = create_test_pool_config();
+    let pool = ConnectionPool::new("tcp://127.0.0.1:12349", config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 执行关闭操作
+    let shutdown_result = pool.shutdown().await;
+    assert!(shutdown_result.is_ok(), "Pool shutdown should succeed");
+    
+    // 关闭后尝试获取连接应该失败
+    let acquire_result = pool.acquire().await;
+    assert!(acquire_result.is_err(), "Should not acquire connection after shutdown");
+}
+
+#[tokio::test]
+async fn test_connection_handle_operations() {
+    // 这里我们需要一个Mock连接来测试EndpointHandle
+    // 由于实际实现可能比较复杂，我们先测试接口
+    
+    // 创建一个模拟的EndpointHandle
+    // 注意：这需要根据实际的EndpointHandle实现来调整
+}
+
+#[tokio::test]
+async fn test_pool_concurrent_access() {
+    let config = PoolConfig {
+        min_connections: 1,
+        max_connections: 5,
+        idle_timeout: Duration::from_secs(30),
+        max_lifetime: Duration::from_secs(300),
+        connection_timeout: Duration::from_millis(100),
+    };
+    
+    let pool = Arc::new(
+        ConnectionPool::new("tcp://127.0.0.1:12350", config)
+            .await
+            .expect("Failed to create pool")
+    );
+    
+    // 启动多个并发任务尝试获取连接
+    let mut tasks = Vec::new();
+    
+    for i in 0..10 {
+        let pool_clone = pool.clone();
+        let task = tokio::spawn(async move {
+            let result = timeout(Duration::from_millis(200), pool_clone.acquire()).await;
+            println!("Task {} connection result: {:?}", i, result.is_ok());
+            result
+        });
+        tasks.push(task);
+    }
+    
+    // 等待所有任务完成
+    for task in tasks {
+        let _ = task.await;
+    }
+}
+
+#[tokio::test]
+async fn test_pool_health_check() {
+    let config = create_test_pool_config();
+    let pool = ConnectionPool::new("tcp://127.0.0.1:12351", config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 测试健康检查功能
+    let health_result = pool.health_check().await;
+    // 由于没有真实服务器，健康检查可能失败，但不应该panic
+    println!("Health check result: {:?}", health_result);
+}
+
+#[tokio::test]
+async fn test_pool_configuration_update() {
+    let initial_config = create_test_pool_config();
+    let pool = ConnectionPool::new("tcp://127.0.0.1:12352", initial_config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 测试配置更新
+    let new_config = PoolConfig {
+        min_connections: 2,
+        max_connections: 5,
+        idle_timeout: Duration::from_secs(60),
+        max_lifetime: Duration::from_secs(600),
+        connection_timeout: Duration::from_secs(10),
+    };
+    
+    let update_result = pool.update_config(new_config).await;
+    assert!(update_result.is_ok(), "Config update should succeed");
+}
+
+/// 集成测试：使用Mock服务器测试完整的连接流程
+#[tokio::test]
+async fn test_pool_with_mock_server() {
+    // 启动一个简单的Mock TCP服务器
+    use tokio::net::TcpListener;
+    
+    let listener = TcpListener::bind("127.0.0.1:0").await.unwrap();
+    let addr = listener.local_addr().unwrap();
+    
+    // 启动服务器任务
+    tokio::spawn(async move {
+        while let Ok((mut stream, _)) = listener.accept().await {
+            tokio::spawn(async move {
+                // 简单的echo服务器
+                let mut buffer = [0; 1024];
+                while let Ok(n) = stream.try_read(&mut buffer) {
+                    if n == 0 {
+                        break;
+                    }
+                    let _ = stream.try_write(&buffer[..n]);
+                }
+            });
+        }
+    });
+    
+    // 等待服务器启动
+    sleep(Duration::from_millis(100)).await;
+    
+    // 创建连接池连接到Mock服务器
+    let config = create_test_pool_config();
+    let pool = ConnectionPool::new(&format!("tcp://{}", addr), config)
+        .await
+        .expect("Failed to create pool");
+    
+    // 尝试获取连接
+    let conn_result = timeout(Duration::from_secs(1), pool.acquire()).await;
+    
+    match conn_result {
+        Ok(Ok(conn)) => {
+            println!("Successfully acquired connection from mock server");
+            assert_eq!(pool.active_connections(), 1);
+            
+            // 释放连接
+            drop(conn);
+            
+            // 等待连接返回池中
+            sleep(Duration::from_millis(50)).await;
+            assert_eq!(pool.active_connections(), 0);
+        }
+        Ok(Err(e)) => {
+            panic!("Failed to acquire connection: {}", e);
+        }
+        Err(_) => {
+            panic!("Connection acquisition timed out");
+        }
+    }
+}
+
+/// 压力测试：测试池在高并发下的表现
+#[tokio::test]
+async fn test_pool_stress() {
+    let config = PoolConfig {
+        min_connections: 2,
+        max_connections: 10,
+        idle_timeout: Duration::from_secs(5),
+        max_lifetime: Duration::from_secs(30),
+        connection_timeout: Duration::from_millis(500),
+    };
+    
+    let pool = Arc::new(
+        ConnectionPool::new("tcp://127.0.0.1:12353", config)
+            .await
+            .expect("Failed to create pool")
+    );
+    
+    // 启动100个并发任务
+    let mut tasks = Vec::new();
+    
+    for i in 0..100 {
+        let pool_clone = pool.clone();
+        let task = tokio::spawn(async move {
+            for j in 0..10 {
+                let result = timeout(
+                    Duration::from_millis(100),
+                    pool_clone.acquire()
+                ).await;
+                
+                if j % 20 == 0 {
+                    println!("Task {} iteration {} result: {:?}", i, j, result.is_ok());
+                }
+                
+                // 短暂休息
+                sleep(Duration::from_millis(1)).await;
+            }
+        });
+        tasks.push(task);
+    }
+    
+    // 等待所有任务完成
+    for task in tasks {
+        let _ = task.await;
+    }
+    
+    println!("Stress test completed. Final pool metrics: {:?}", pool.metrics());
+}

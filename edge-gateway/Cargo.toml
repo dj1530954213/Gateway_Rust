@@ -1,0 +1,47 @@
+[package]
+name = "edge-gateway"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "edge-gateway"
+path = "src/main.rs"
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true, features = ["env-filter"] }
+serde = { workspace = true }
+serde_yaml = { workspace = true }
+prometheus = { workspace = true }
+clap = { version = "4.3", features = ["derive"] }
+uuid.workspace = true
+
+# Core modules
+endpoint-kit = { path = "../core/endpoint-kit" }
+frame-bus = { path = "../core/frame-bus" }
+driver-manager = { path = "../core/driver-manager" }
+dynamic-driver = { path = "../core/dynamic-driver" }
+config-manager = { path = "../core/config-manager" }
+metrics-server = { path = "../core/metrics-server" }
+rest-api = { path = "../core/rest-api" }
+web-server = { path = "../core/web-server" }
+monitoring = { path = "../core/monitoring" }
+production-config = { path = "../core/production-config" }
+# advanced-features = { path = "../core/advanced-features" }  # 暂时禁用
+
+# Drivers
+modbus-static = { path = "../drivers/modbus-static" }
+
+# Connectors  
+mqtt5 = { path = "../connectors/mqtt5" }
+
+# Config management
+config = "0.13"
+
+# HTTP server for metrics
+axum = "0.6"
+tower = "0.4"

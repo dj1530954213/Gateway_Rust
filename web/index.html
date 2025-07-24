@@ -1,0 +1,1716 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工控物联网边缘网关 - 管理界面</title>
+    
+    <!-- 引入图标库 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- 引入Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2ecc71;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --dark-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --success-color: #27ae60;
+            --info-color: #17a2b8;
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        /* 侧边栏导航 */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 250px;
+            height: 100vh;
+            background: rgba(44, 62, 80, 0.95);
+            backdrop-filter: blur(10px);
+            color: white;
+            z-index: 1000;
+            transition: transform 0.3s ease;
+            overflow-y: auto;
+        }
+
+        .sidebar.collapsed {
+            transform: translateX(-200px);
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .sidebar-header h2 {
+            font-size: 1.2em;
+            margin-bottom: 5px;
+        }
+
+        .sidebar-header p {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin-bottom: 5px;
+        }
+
+        .nav-link {
+            display: block;
+            padding: 15px 20px;
+            color: white;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            background: rgba(255, 255, 255, 0.1);
+            border-left-color: var(--primary-color);
+        }
+
+        .nav-link i {
+            margin-right: 10px;
+            width: 20px;
+        }
+
+        /* 主内容区域 */
+        .main-content {
+            margin-left: 250px;
+            min-height: 100vh;
+            transition: margin-left 0.3s ease;
+            padding: 20px;
+        }
+
+        .main-content.expanded {
+            margin-left: 50px;
+        }
+
+        /* 顶部工具栏 */
+        .toolbar {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-success { background: var(--success-color); }
+        .btn-danger { background: var(--danger-color); }
+        .btn-warning { background: var(--warning-color); }
+        .btn-secondary { background: #6c757d; }
+
+        /* 页面内容 */
+        .page-content {
+            display: none;
+        }
+
+        .page-content.active {
+            display: block;
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .card-title {
+            font-size: 1.5em;
+            color: var(--dark-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* 仪表盘样式 */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, var(--primary-color), #2980b9);
+            color: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            transform: translate(30px, -30px);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .stat-change {
+            font-size: 0.9em;
+            margin-top: 10px;
+            opacity: 0.8;
+        }
+
+        /* 数据表格 */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .data-table th {
+            background: var(--dark-color);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .data-table td {
+            padding: 15px;
+            border-bottom: 1px solid var(--light-color);
+        }
+
+        .data-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* 状态标识 */
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-online {
+            background: var(--success-color);
+            color: white;
+        }
+
+        .status-offline {
+            background: var(--danger-color);
+            color: white;
+        }
+
+        .status-warning {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        /* 表单样式 */
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--dark-color);
+            font-weight: 600;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--light-color);
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-control:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+        }
+
+        /* 图表容器 */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin: 20px 0;
+        }
+
+        /* 日志容器 */
+        .log-container {
+            background: var(--dark-color);
+            color: var(--light-color);
+            border-radius: 10px;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-radius: 4px;
+            border-left: 3px solid transparent;
+        }
+
+        .log-info { border-left-color: var(--info-color); }
+        .log-success { border-left-color: var(--success-color); }
+        .log-warning { border-left-color: var(--warning-color); }
+        .log-error { border-left-color: var(--danger-color); }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 2000;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.show {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light-color);
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            color: var(--dark-color);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .close-btn:hover {
+            color: var(--danger-color);
+        }
+
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                width: 280px;
+            }
+
+            .sidebar.show {
+                transform: translateX(0);
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .toolbar {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* 通知样式 */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            z-index: 3000;
+            opacity: 0;
+            transform: translateX(100%);
+            transition: all 0.3s ease;
+        }
+
+        .notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        .notification.success { background: var(--success-color); }
+        .notification.error { background: var(--danger-color); }
+        .notification.warning { background: var(--warning-color); }
+        .notification.info { background: var(--info-color); }
+    </style>
+</head>
+<body>
+    <!-- 侧边栏导航 -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2><i class="fas fa-industry"></i> 边缘网关</h2>
+            <p>v1.0.0 | MVP-5</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item">
+                <a href="#" class="nav-link active" data-page="dashboard">
+                    <i class="fas fa-tachometer-alt"></i> 仪表盘
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="drivers">
+                    <i class="fas fa-cogs"></i> 驱动管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="datapoints">
+                    <i class="fas fa-database"></i> 数据点
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="commands">
+                    <i class="fas fa-terminal"></i> 命令执行
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="alerts">
+                    <i class="fas fa-exclamation-triangle"></i> 告警管理
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="analytics">
+                    <i class="fas fa-chart-line"></i> 数据分析
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="ml">
+                    <i class="fas fa-brain"></i> 机器学习
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="config">
+                    <i class="fas fa-sliders-h"></i> 系统配置
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="logs">
+                    <i class="fas fa-file-alt"></i> 系统日志
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="#" class="nav-link" data-page="users">
+                    <i class="fas fa-users"></i> 用户管理
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+    <!-- 主内容区域 -->
+    <main class="main-content" id="mainContent">
+        <!-- 顶部工具栏 -->
+        <div class="toolbar">
+            <div class="toolbar-left">
+                <button class="btn btn-secondary" onclick="toggleSidebar()">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <h1 id="pageTitle">工控物联网边缘网关</h1>
+            </div>
+            <div class="toolbar-right">
+                <button class="btn" onclick="refreshData()">
+                    <i class="fas fa-sync-alt"></i> 刷新
+                </button>
+                <button class="btn btn-success" onclick="showSystemStatus()">
+                    <i class="fas fa-heartbeat"></i> 系统状态
+                </button>
+                <span id="connectionStatus" class="status-badge status-online">已连接</span>
+            </div>
+        </div>
+
+        <!-- 仪表盘页面 -->
+        <div id="dashboard" class="page-content active">
+            <div class="dashboard-grid">
+                <div class="stat-card" style="background: linear-gradient(135deg, #3498db, #2980b9);">
+                    <div class="stat-value" id="gatewayUptime">2h 15m</div>
+                    <div class="stat-label">系统运行时间</div>
+                    <div class="stat-change">+2 小时</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #2ecc71, #27ae60);">
+                    <div class="stat-value" id="activeDrivers">5</div>
+                    <div class="stat-label">活跃驱动</div>
+                    <div class="stat-change">+1 今日</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #e74c3c, #c0392b);">
+                    <div class="stat-value" id="totalDataPoints">12.5K</div>
+                    <div class="stat-label">今日数据点</div>
+                    <div class="stat-change">+2.3% 较昨日</div>
+                </div>
+                <div class="stat-card" style="background: linear-gradient(135deg, #f39c12, #e67e22);">
+                    <div class="stat-value" id="successRate">98.9%</div>
+                    <div class="stat-label">命令成功率</div>
+                    <div class="stat-change">+0.5% 今日</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-area"></i> 实时数据监控
+                    </h2>
+                    <button class="btn btn-secondary" onclick="toggleChart()">
+                        <i class="fas fa-expand"></i> 全屏
+                    </button>
+                </div>
+                <div class="chart-container">
+                    <canvas id="realtimeChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-server"></i> 系统健康状态
+                    </h2>
+                </div>
+                <div class="form-grid">
+                    <div class="health-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>Frame Bus</span>
+                            <span class="status-badge status-online">正常</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>WAL 持久化</span>
+                            <span class="status-badge status-online">正常</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>MQTT 连接</span>
+                            <span class="status-badge status-online">已连接</span>
+                        </div>
+                    </div>
+                    <div class="health-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>内存使用</span>
+                            <span class="status-badge status-warning">75%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>CPU 使用</span>
+                            <span class="status-badge status-online">45%</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span>磁盘空间</span>
+                            <span class="status-badge status-online">60%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 驱动管理页面 -->
+        <div id="drivers" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-cogs"></i> 驱动管理
+                    </h2>
+                    <button class="btn btn-success" onclick="showAddDriverModal()">
+                        <i class="fas fa-plus"></i> 添加驱动
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>驱动ID</th>
+                            <th>名称</th>
+                            <th>类型</th>
+                            <th>状态</th>
+                            <th>端点</th>
+                            <th>最后更新</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="driversTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 数据点页面 -->
+        <div id="datapoints" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-database"></i> 数据点监控
+                    </h2>
+                    <div>
+                        <input type="text" class="form-control" placeholder="搜索数据点..." style="width: 200px; display: inline-block;">
+                        <button class="btn" onclick="refreshDataPoints()">
+                            <i class="fas fa-sync-alt"></i> 刷新
+                        </button>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>点位ID</th>
+                            <th>名称</th>
+                            <th>当前值</th>
+                            <th>单位</th>
+                            <th>质量</th>
+                            <th>最后更新</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="datapointsTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 命令执行页面 -->
+        <div id="commands" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-terminal"></i> 命令执行
+                    </h2>
+                </div>
+                <div class="form-grid">
+                    <div>
+                        <div class="form-group">
+                            <label for="cmdDriverId">目标驱动</label>
+                            <select id="cmdDriverId" class="form-control">
+                                <option value="">选择驱动...</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdAddress">目标地址</label>
+                            <input type="text" id="cmdAddress" class="form-control" placeholder="例如: 40001">
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdValue">设定值</label>
+                            <input type="text" id="cmdValue" class="form-control" placeholder="例如: 100">
+                        </div>
+                        <div class="form-group">
+                            <label for="cmdDataType">数据类型</label>
+                            <select id="cmdDataType" class="form-control">
+                                <option value="uint16">Uint16</option>
+                                <option value="int16">Int16</option>
+                                <option value="uint32">Uint32</option>
+                                <option value="int32">Int32</option>
+                                <option value="float32">Float32</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="executeCommand()">
+                            <i class="fas fa-play"></i> 执行命令
+                        </button>
+                    </div>
+                    <div>
+                        <h3>命令历史</h3>
+                        <div id="commandHistory" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; border-radius: 5px;">
+                            <!-- 动态填充 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 告警管理页面 -->
+        <div id="alerts" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-exclamation-triangle"></i> 告警管理
+                    </h2>
+                    <button class="btn btn-warning" onclick="acknowledgeAllAlerts()">
+                        <i class="fas fa-check"></i> 确认所有
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>时间</th>
+                            <th>级别</th>
+                            <th>标题</th>
+                            <th>消息</th>
+                            <th>来源</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="alertsTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 数据分析页面 -->
+        <div id="analytics" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-chart-line"></i> 数据分析
+                    </h2>
+                </div>
+                <div class="form-grid">
+                    <div class="chart-container">
+                        <canvas id="analyticsChart"></canvas>
+                    </div>
+                    <div>
+                        <h3>分析配置</h3>
+                        <div class="form-group">
+                            <label>数据源</label>
+                            <select class="form-control" id="analyticsDataSource">
+                                <option value="temperature">温度传感器</option>
+                                <option value="pressure">压力传感器</option>
+                                <option value="vibration">振动传感器</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>时间范围</label>
+                            <select class="form-control" id="analyticsTimeRange">
+                                <option value="1h">最近1小时</option>
+                                <option value="6h">最近6小时</option>
+                                <option value="24h">最近24小时</option>
+                                <option value="7d">最近7天</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-success" onclick="runAnalytics()">
+                            <i class="fas fa-play"></i> 运行分析
+                        </button>
+                        <div id="analyticsResults" style="margin-top: 20px;">
+                            <!-- 分析结果 -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 机器学习页面 -->
+        <div id="ml" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-brain"></i> 机器学习引擎
+                    </h2>
+                    <button class="btn btn-success" onclick="showUploadModelModal()">
+                        <i class="fas fa-upload"></i> 上传模型
+                    </button>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="stat-card" style="background: linear-gradient(135deg, #9b59b6, #8e44ad);">
+                        <div class="stat-value" id="loadedModels">3</div>
+                        <div class="stat-label">已加载模型</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #16a085, #1abc9c);">
+                        <div class="stat-value" id="inferenceCount">1.2K</div>
+                        <div class="stat-label">今日推理次数</div>
+                    </div>
+                    <div class="stat-card" style="background: linear-gradient(135deg, #34495e, #2c3e50);">
+                        <div class="stat-value" id="avgInferenceTime">125ms</div>
+                        <div class="stat-label">平均推理时间</div>
+                    </div>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>模型ID</th>
+                            <th>名称</th>
+                            <th>类型</th>
+                            <th>版本</th>
+                            <th>状态</th>
+                            <th>推理次数</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mlModelsTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 系统配置页面 -->
+        <div id="config" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-sliders-h"></i> 系统配置
+                    </h2>
+                    <button class="btn btn-success" onclick="saveConfig()">
+                        <i class="fas fa-save"></i> 保存配置
+                    </button>
+                </div>
+                <div class="form-grid">
+                    <div>
+                        <h3>网关设置</h3>
+                        <div class="form-group">
+                            <label>网关名称</label>
+                            <input type="text" class="form-control" id="gatewayName" value="edge-gateway">
+                        </div>
+                        <div class="form-group">
+                            <label>日志级别</label>
+                            <select class="form-control" id="logLevel">
+                                <option value="debug">Debug</option>
+                                <option value="info" selected>Info</option>
+                                <option value="warn">Warning</option>
+                                <option value="error">Error</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>最大连接数</label>
+                            <input type="number" class="form-control" id="maxConnections" value="1000">
+                        </div>
+                    </div>
+                    <div>
+                        <h3>MQTT 配置</h3>
+                        <div class="form-group">
+                            <label>Broker 地址</label>
+                            <input type="text" class="form-control" id="mqttBroker" value="tcp://emqx:1883">
+                        </div>
+                        <div class="form-group">
+                            <label>客户端ID</label>
+                            <input type="text" class="form-control" id="mqttClientId" value="edge-gateway">
+                        </div>
+                        <div class="form-group">
+                            <label>QoS级别</label>
+                            <select class="form-control" id="mqttQos">
+                                <option value="0">0 - 最多一次</option>
+                                <option value="1" selected>1 - 至少一次</option>
+                                <option value="2">2 - 恰好一次</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 系统日志页面 -->
+        <div id="logs" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-file-alt"></i> 系统日志
+                    </h2>
+                    <div>
+                        <select class="form-control" style="width: 150px; display: inline-block;" id="logLevelFilter">
+                            <option value="">所有级别</option>
+                            <option value="info">Info</option>
+                            <option value="warning">Warning</option>
+                            <option value="error">Error</option>
+                            <option value="success">Success</option>
+                        </select>
+                        <button class="btn" onclick="clearLogs()">
+                            <i class="fas fa-trash"></i> 清空日志
+                        </button>
+                        <button class="btn" onclick="exportLogs()">
+                            <i class="fas fa-download"></i> 导出日志
+                        </button>
+                    </div>
+                </div>
+                <div class="log-container" id="logContainer">
+                    <!-- 动态填充日志 -->
+                </div>
+            </div>
+        </div>
+
+        <!-- 用户管理页面 -->
+        <div id="users" class="page-content">
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">
+                        <i class="fas fa-users"></i> 用户管理
+                    </h2>
+                    <button class="btn btn-success" onclick="showAddUserModal()">
+                        <i class="fas fa-user-plus"></i> 添加用户
+                    </button>
+                </div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>用户名</th>
+                            <th>姓名</th>
+                            <th>邮箱</th>
+                            <th>角色</th>
+                            <th>状态</th>
+                            <th>最后登录</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <!-- 动态填充 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- 模态框 -->
+    <div id="modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">模态框标题</h3>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modalBody">
+                <!-- 动态内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 通知容器 -->
+    <div id="notification" class="notification"></div>
+
+    <script>
+        // 全局变量
+        let currentPage = 'dashboard';
+        let realtimeChart = null;
+        let analyticsChart = null;
+        let wsConnection = null;
+
+        // API基础配置
+        const API_BASE = '/api/v1';
+        let authToken = localStorage.getItem('authToken');
+
+        // 页面初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeApp();
+        });
+
+        function initializeApp() {
+            // 初始化导航
+            setupNavigation();
+            
+            // 初始化图表
+            initializeCharts();
+            
+            // 连接WebSocket
+            connectWebSocket();
+            
+            // 加载初始数据
+            loadDashboardData();
+            
+            // 设置定时任务
+            setInterval(updateRealtimeData, 5000);
+            setInterval(updateStats, 10000);
+            
+            addLog('Web管理界面已加载', 'log-success');
+        }
+
+        // 导航设置
+        function setupNavigation() {
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.dataset.page;
+                    if (page) {
+                        switchPage(page);
+                    }
+                });
+            });
+        }
+
+        function switchPage(page) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(p => {
+                p.classList.remove('active');
+            });
+            
+            // 显示目标页面
+            const targetPage = document.getElementById(page);
+            if (targetPage) {
+                targetPage.classList.add('active');
+                currentPage = page;
+                
+                // 更新导航状态
+                document.querySelectorAll('.nav-link').forEach(link => {
+                    link.classList.remove('active');
+                });
+                document.querySelector(`[data-page="${page}"]`).classList.add('active');
+                
+                // 更新页面标题
+                updatePageTitle(page);
+                
+                // 加载页面数据
+                loadPageData(page);
+            }
+        }
+
+        function updatePageTitle(page) {
+            const titles = {
+                'dashboard': '仪表盘',
+                'drivers': '驱动管理',
+                'datapoints': '数据点',
+                'commands': '命令执行',
+                'alerts': '告警管理',
+                'analytics': '数据分析',
+                'ml': '机器学习',
+                'config': '系统配置',
+                'logs': '系统日志',
+                'users': '用户管理'
+            };
+            document.getElementById('pageTitle').textContent = titles[page] || '工控物联网边缘网关';
+        }
+
+        function loadPageData(page) {
+            switch(page) {
+                case 'drivers':
+                    loadDriversData();
+                    break;
+                case 'datapoints':
+                    loadDataPointsData();
+                    break;
+                case 'alerts':
+                    loadAlertsData();
+                    break;
+                case 'ml':
+                    loadMLModelsData();
+                    break;
+                case 'users':
+                    loadUsersData();
+                    break;
+            }
+        }
+
+        // 图表初始化
+        function initializeCharts() {
+            // 实时数据图表
+            const ctx1 = document.getElementById('realtimeChart').getContext('2d');
+            realtimeChart = new Chart(ctx1, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: '温度',
+                        data: [],
+                        borderColor: '#3498db',
+                        backgroundColor: 'rgba(52, 152, 219, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: '压力',
+                        data: [],
+                        borderColor: '#e74c3c',
+                        backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            position: 'top'
+                        }
+                    }
+                }
+            });
+
+            // 分析图表
+            const ctx2 = document.getElementById('analyticsChart').getContext('2d');
+            analyticsChart = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['异常检测', '趋势分析', '模式识别', '预测分析'],
+                    datasets: [{
+                        label: '准确率',
+                        data: [95.5, 88.2, 92.1, 87.6],
+                        backgroundColor: [
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(46, 204, 113, 0.8)',
+                            'rgba(241, 196, 15, 0.8)',
+                            'rgba(231, 76, 60, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+
+        // WebSocket连接
+        function connectWebSocket() {
+            try {
+                wsConnection = new WebSocket(`ws://${window.location.host}/ws`);
+                
+                wsConnection.onopen = function() {
+                    updateConnectionStatus(true);
+                    addLog('WebSocket连接已建立', 'log-success');
+                };
+                
+                wsConnection.onmessage = function(event) {
+                    const data = JSON.parse(event.data);
+                    handleWebSocketMessage(data);
+                };
+                
+                wsConnection.onclose = function() {
+                    updateConnectionStatus(false);
+                    addLog('WebSocket连接已断开', 'log-warning');
+                    // 重连逻辑
+                    setTimeout(connectWebSocket, 5000);
+                };
+                
+                wsConnection.onerror = function(error) {
+                    addLog('WebSocket连接错误', 'log-error');
+                };
+            } catch (error) {
+                addLog('WebSocket连接失败: ' + error.message, 'log-error');
+            }
+        }
+
+        function handleWebSocketMessage(data) {
+            switch(data.type) {
+                case 'datapoint':
+                    updateRealtimeChart(data);
+                    break;
+                case 'alert':
+                    showNotification('新告警: ' + data.message, 'warning');
+                    break;
+                case 'system_status':
+                    updateSystemStatus(data);
+                    break;
+            }
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.textContent = '已连接';
+                status.className = 'status-badge status-online';
+            } else {
+                status.textContent = '断开连接';
+                status.className = 'status-badge status-offline';
+            }
+        }
+
+        // 数据加载函数
+        function loadDashboardData() {
+            // 模拟数据
+            updateRealtimeData();
+        }
+
+        function loadDriversData() {
+            const tbody = document.getElementById('driversTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>modbus_line1</td>
+                    <td>生产线PLC1</td>
+                    <td>Modbus TCP</td>
+                    <td><span class="status-badge status-online">运行中</span></td>
+                    <td>tcp://192.168.1.100:502</td>
+                    <td>2024-01-20 14:30:25</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="restartDriver('modbus_line1')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="stopDriver('modbus_line1')">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>mqtt_connector</td>
+                    <td>MQTT连接器</td>
+                    <td>MQTT 5.0</td>
+                    <td><span class="status-badge status-online">已连接</span></td>
+                    <td>tcp://emqx:1883</td>
+                    <td>2024-01-20 14:30:15</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="restartDriver('mqtt_connector')">
+                            <i class="fas fa-redo"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="stopDriver('mqtt_connector')">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function loadDataPointsData() {
+            const tbody = document.getElementById('datapointsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>temp_001</td>
+                    <td>温度传感器1</td>
+                    <td>23.5°C</td>
+                    <td>°C</td>
+                    <td><span class="status-badge status-online">良好</span></td>
+                    <td>2024-01-20 14:30:30</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewDataPointHistory('temp_001')">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>pressure_001</td>
+                    <td>压力传感器1</td>
+                    <td>2.1 bar</td>
+                    <td>bar</td>
+                    <td><span class="status-badge status-online">良好</span></td>
+                    <td>2024-01-20 14:30:28</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="viewDataPointHistory('pressure_001')">
+                            <i class="fas fa-chart-line"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function loadAlertsData() {
+            const tbody = document.getElementById('alertsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>2024-01-20 14:25:00</td>
+                    <td><span class="status-badge status-warning">警告</span></td>
+                    <td>内存使用率过高</td>
+                    <td>系统内存使用率达到85%</td>
+                    <td>系统监控</td>
+                    <td><span class="status-badge status-warning">活跃</span></td>
+                    <td>
+                        <button class="btn btn-success" onclick="acknowledgeAlert('alert_001')">
+                            <i class="fas fa-check"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>2024-01-20 14:20:15</td>
+                    <td><span class="status-badge status-danger">错误</span></td>
+                    <td>设备连接丢失</td>
+                    <td>Modbus设备 192.168.1.101 连接超时</td>
+                    <td>modbus_line2</td>
+                    <td><span class="status-badge status-online">已确认</span></td>
+                    <td>
+                        <span style="color: #999;">已处理</span>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function loadMLModelsData() {
+            const tbody = document.getElementById('mlModelsTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>anomaly_detection_v1</td>
+                    <td>异常检测模型</td>
+                    <td>分类</td>
+                    <td>v1.0.0</td>
+                    <td><span class="status-badge status-online">已加载</span></td>
+                    <td>1,234</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="runInference('anomaly_detection_v1')">
+                            <i class="fas fa-play"></i> 推理
+                        </button>
+                        <button class="btn btn-danger" onclick="unloadModel('anomaly_detection_v1')">
+                            <i class="fas fa-times"></i> 卸载
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>trend_analysis_v2</td>
+                    <td>趋势分析模型</td>
+                    <td>回归</td>
+                    <td>v2.1.0</td>
+                    <td><span class="status-badge status-online">已加载</span></td>
+                    <td>856</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="runInference('trend_analysis_v2')">
+                            <i class="fas fa-play"></i> 推理
+                        </button>
+                        <button class="btn btn-danger" onclick="unloadModel('trend_analysis_v2')">
+                            <i class="fas fa-times"></i> 卸载
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function loadUsersData() {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = `
+                <tr>
+                    <td>admin</td>
+                    <td>系统管理员</td>
+                    <td>admin@company.com</td>
+                    <td><span class="status-badge status-danger">管理员</span></td>
+                    <td><span class="status-badge status-online">活跃</span></td>
+                    <td>2024-01-20 14:30:00</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="editUser('admin')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                    </td>
+                </tr>
+                <tr>
+                    <td>operator1</td>
+                    <td>操作员1</td>
+                    <td>operator1@company.com</td>
+                    <td><span class="status-badge status-info">操作员</span></td>
+                    <td><span class="status-badge status-online">活跃</span></td>
+                    <td>2024-01-20 13:45:22</td>
+                    <td>
+                        <button class="btn btn-secondary" onclick="editUser('operator1')">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn btn-danger" onclick="deleteUser('operator1')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // 实时数据更新
+        function updateRealtimeData() {
+            const now = new Date();
+            const timeLabel = now.toLocaleTimeString();
+            
+            // 更新图表数据
+            if (realtimeChart) {
+                const temp = 20 + Math.random() * 10;
+                const pressure = 1.8 + Math.random() * 0.6;
+                
+                realtimeChart.data.labels.push(timeLabel);
+                realtimeChart.data.datasets[0].data.push(temp);
+                realtimeChart.data.datasets[1].data.push(pressure);
+                
+                // 保持最近20个数据点
+                if (realtimeChart.data.labels.length > 20) {
+                    realtimeChart.data.labels.shift();
+                    realtimeChart.data.datasets[0].data.shift();
+                    realtimeChart.data.datasets[1].data.shift();
+                }
+                
+                realtimeChart.update('none');
+            }
+        }
+
+        function updateStats() {
+            // 更新统计数据
+            const dataPoints = Math.floor(Math.random() * 1000) + 12000;
+            const commands = Math.floor(Math.random() * 10) + 23;
+            const successRate = (98 + Math.random() * 2).toFixed(1);
+            
+            document.getElementById('totalDataPoints').textContent = (dataPoints / 1000).toFixed(1) + 'K';
+            document.getElementById('successRate').textContent = successRate + '%';
+        }
+
+        // 驱动操作
+        function restartDriver(driverId) {
+            addLog(`正在重启驱动: ${driverId}`, 'log-info');
+            showNotification('驱动重启中...', 'info');
+            
+            setTimeout(() => {
+                addLog(`驱动重启成功: ${driverId}`, 'log-success');
+                showNotification('驱动重启成功', 'success');
+            }, 2000);
+        }
+
+        function stopDriver(driverId) {
+            addLog(`正在停止驱动: ${driverId}`, 'log-warning');
+            showNotification('驱动停止中...', 'warning');
+            
+            setTimeout(() => {
+                addLog(`驱动已停止: ${driverId}`, 'log-info');
+                showNotification('驱动已停止', 'info');
+            }, 1000);
+        }
+
+        // 命令执行
+        function executeCommand() {
+            const driverId = document.getElementById('cmdDriverId').value;
+            const address = document.getElementById('cmdAddress').value;
+            const value = document.getElementById('cmdValue').value;
+            const dataType = document.getElementById('cmdDataType').value;
+            
+            if (!driverId || !address || !value) {
+                showNotification('请填写完整的命令参数', 'error');
+                return;
+            }
+            
+            const command = {
+                driver_id: driverId,
+                address: address,
+                value: value,
+                data_type: dataType,
+                timestamp: new Date().toISOString()
+            };
+            
+            addLog(`执行命令: ${driverId}@${address} → ${value}`, 'log-info');
+            showNotification('命令执行中...', 'info');
+            
+            // 模拟命令执行
+            setTimeout(() => {
+                const success = Math.random() > 0.1;
+                if (success) {
+                    addLog(`命令执行成功: ${driverId}@${address} → ${value}`, 'log-success');
+                    showNotification('命令执行成功', 'success');
+                    addCommandToHistory(command, true);
+                } else {
+                    addLog(`命令执行失败: ${driverId}@${address} - 设备未响应`, 'log-error');
+                    showNotification('命令执行失败', 'error');
+                    addCommandToHistory(command, false);
+                }
+            }, Math.random() * 3000 + 1000);
+        }
+
+        function addCommandToHistory(command, success) {
+            const container = document.getElementById('commandHistory');
+            const now = new Date().toLocaleString('zh-CN');
+            const statusClass = success ? 'color: #27ae60' : 'color: #e74c3c';
+            const statusText = success ? '成功' : '失败';
+            
+            const item = document.createElement('div');
+            item.style.cssText = 'padding: 10px; background: #f8f9fa; border-radius: 5px; margin-bottom: 5px; border-left: 3px solid ' + (success ? '#27ae60' : '#e74c3c');
+            item.innerHTML = `
+                <strong>${command.driver_id}@${command.address}</strong> → ${command.value}
+                <br><small style="color: #666;">${now} | <span style="${statusClass}">${statusText}</span></small>
+            `;
+            
+            container.insertBefore(item, container.firstChild);
+            
+            // 保持最近10条记录
+            while (container.children.length > 10) {
+                container.removeChild(container.lastChild);
+            }
+        }
+
+        // 模态框操作
+        function showModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('modal').classList.add('show');
+        }
+
+        function closeModal() {
+            document.getElementById('modal').classList.remove('show');
+        }
+
+        function showAddDriverModal() {
+            const content = `
+                <div class="form-group">
+                    <label>驱动ID</label>
+                    <input type="text" class="form-control" id="newDriverId" placeholder="例如: modbus_new">
+                </div>
+                <div class="form-group">
+                    <label>驱动名称</label>
+                    <input type="text" class="form-control" id="newDriverName" placeholder="例如: 新设备">
+                </div>
+                <div class="form-group">
+                    <label>驱动类型</label>
+                    <select class="form-control" id="newDriverType">
+                        <option value="modbus-tcp">Modbus TCP</option>
+                        <option value="modbus-rtu">Modbus RTU</option>
+                        <option value="opcua">OPC UA</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>端点地址</label>
+                    <input type="text" class="form-control" id="newDriverEndpoint" placeholder="例如: tcp://192.168.1.100:502">
+                </div>
+                <div style="text-align: right; margin-top: 20px;">
+                    <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+                    <button class="btn btn-success" onclick="createDriver()">创建驱动</button>
+                </div>
+            `;
+            showModal('添加新驱动', content);
+        }
+
+        function createDriver() {
+            const id = document.getElementById('newDriverId').value;
+            const name = document.getElementById('newDriverName').value;
+            const type = document.getElementById('newDriverType').value;
+            const endpoint = document.getElementById('newDriverEndpoint').value;
+            
+            if (!id || !name || !endpoint) {
+                showNotification('请填写完整的驱动信息', 'error');
+                return;
+            }
+            
+            addLog(`创建驱动: ${name} (${id})`, 'log-info');
+            showNotification('驱动创建中...', 'info');
+            
+            setTimeout(() => {
+                addLog(`驱动创建成功: ${name}`, 'log-success');
+                showNotification('驱动创建成功', 'success');
+                closeModal();
+                loadDriversData();
+            }, 2000);
+        }
+
+        // 通知系统
+        function showNotification(message, type = 'info') {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 日志系统
+        function addLog(message, className = 'log-info') {
+            const container = document.getElementById('logContainer');
+            const now = new Date().toLocaleString('zh-CN');
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = `log-entry ${className}`;
+            logEntry.innerHTML = `<span style="color: #888;">[${now}]</span> ${message}`;
+            
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+            
+            // 保持最近100条日志
+            while (container.children.length > 100) {
+                container.removeChild(container.firstChild);
+            }
+        }
+
+        function clearLogs() {
+            document.getElementById('logContainer').innerHTML = '';
+            addLog('日志已清空', 'log-info');
+        }
+
+        function exportLogs() {
+            const logs = document.getElementById('logContainer').innerText;
+            const blob = new Blob([logs], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `gateway-logs-${new Date().toISOString().split('T')[0]}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showNotification('日志导出成功', 'success');
+        }
+
+        // 工具函数
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+
+        function refreshData() {
+            addLog('刷新数据...', 'log-info');
+            showNotification('数据刷新中...', 'info');
+            
+            loadPageData(currentPage);
+            
+            setTimeout(() => {
+                showNotification('数据刷新完成', 'success');
+            }, 1000);
+        }
+
+        function showSystemStatus() {
+            const content = `
+                <div class="form-grid">
+                    <div>
+                        <h4>系统信息</h4>
+                        <p><strong>版本:</strong> v1.0.0</p>
+                        <p><strong>构建时间:</strong> 2024-01-20 10:30:00</p>
+                        <p><strong>运行时间:</strong> 2小时15分钟</p>
+                        <p><strong>进程ID:</strong> 12345</p>
+                    </div>
+                    <div>
+                        <h4>资源使用</h4>
+                        <p><strong>内存:</strong> 256MB / 512MB (50%)</p>
+                        <p><strong>CPU:</strong> 45%</p>
+                        <p><strong>磁盘:</strong> 2.1GB / 10GB (21%)</p>
+                        <p><strong>网络:</strong> ↑ 125KB/s ↓ 89KB/s</p>
+                    </div>
+                </div>
+            `;
+            showModal('系统状态', content);
+        }
+
+        // 页面加载完成后执行
+        window.addEventListener('load', function() {
+            // 初始化驱动下拉列表
+            const driverSelect = document.getElementById('cmdDriverId');
+            driverSelect.innerHTML = `
+                <option value="">选择驱动...</option>
+                <option value="modbus_line1">生产线PLC1</option>
+                <option value="modbus_line2">生产线PLC2</option>
+                <option value="mqtt_connector">MQTT连接器</option>
+            `;
+            
+            // 模拟一些初始日志
+            setTimeout(() => addLog('Edge Gateway 启动成功', 'log-success'), 500);
+            setTimeout(() => addLog('Frame Bus 初始化完成', 'log-info'), 1000);
+            setTimeout(() => addLog('驱动管理器已加载', 'log-info'), 1500);
+            setTimeout(() => addLog('REST API 服务已启动', 'log-success'), 2000);
+            setTimeout(() => addLog('Web管理界面准备就绪', 'log-success'), 2500);
+        });
+    </script>
+</body>
+</html>

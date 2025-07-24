@@ -1,0 +1,29 @@
+{
+  "name": "gateway_rust",
+  "version": "1.0.0",
+  "description": "![Status](https://img.shields.io/badge/Status-Production_Ready-green) ![Rust](https://img.shields.io/badge/Rust-1.70+-orange) ![Tests](https://img.shields.io/badge/Tests-Passing-green) ![Architecture](https://img.shields.io/badge/Architecture-Microservices-blue)",
+  "main": "mock-api.js",
+  "directories": {
+    "doc": "docs",
+    "example": "examples",
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dj1530954213/Gateway_Rust.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dj1530954213/Gateway_Rust/issues"
+  },
+  "homepage": "https://github.com/dj1530954213/Gateway_Rust#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0"
+  }
+}

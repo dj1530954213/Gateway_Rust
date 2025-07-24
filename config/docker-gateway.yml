@@ -1,0 +1,91 @@
+# 生产级Docker环境配置
+general:
+  instance_id: "edge-gateway-docker-001"
+  environment: "docker"
+  description: "Docker containerized edge gateway for industrial IoT"
+  enable_debug: true
+  max_workers: 4
+  heartbeat_interval_seconds: 30
+
+network:
+  rest_api_bind: "0.0.0.0:8080"
+  metrics_bind: "0.0.0.0:9090"
+  web_ui_bind: "0.0.0.0:8090"
+  max_connections: 100
+  connection_timeout_seconds: 30
+
+security:
+  jwt_secret: "docker-development-jwt-secret-key-for-edge-gateway-authentication-system"
+  jwt_expiry_seconds: 3600
+  enable_signature_verification: false
+  trusted_keys: []
+  enable_rate_limiting: false
+  rate_limit_per_minute: 100
+
+logging:
+  level: "info"
+  format: "text"
+  enable_file_logging: true
+  log_file_path: "/app/logs/gateway.log"
+  max_log_files: 10
+  max_log_size_mb: 50
+
+storage:
+  data_directory: "/app/data"
+  wal_directory: "/app/data/wal"
+  driver_directory: "/app/drivers"
+  config_directory: "/app/config"
+  wal_buffer_size: 1024
+  wal_sync_interval_seconds: 5
+  enable_compression: true
+  enable_encryption: false
+
+monitoring:
+  enable_metrics: true
+  enable_health_checks: true
+  enable_alerts: true
+  metrics_interval_seconds: 30
+  health_check_interval_seconds: 60
+  max_alerts: 100
+  alert_destinations: ["mqtt://localhost:1883/gateway/alerts"]
+  performance_thresholds:
+    cpu_usage_percent: 80.0
+    memory_usage_percent: 85.0
+    disk_usage_percent: 90.0
+    network_latency_ms: 1000.0
+
+# 驱动配置
+drivers:
+  docker_modbus:
+    driver_type: "modbus-tcp"
+    enabled: true
+    auto_start: true
+    poll_interval_seconds: 2
+    max_retries: 3
+    timeout_seconds: 5
+    endpoint: "tcp://plc-simulator:502"
+    settings:
+      unit_id: 1
+      max_regs_per_req: 50
+      endian: "big"
+      enable_write: false
+
+# 连接器配置  
+connectors:
+  mqtt:
+    connector_type: "mqtt5"
+    enabled: true
+    auto_connect: true
+    connection_timeout_seconds: 10
+    keepalive_interval_seconds: 60
+    settings:
+      broker_url: "tcp://localhost:1883"
+      client_id: "edge-gateway-docker"
+      username: ""
+      password: ""
+      clean_session: true
+      qos: 1
+      topics:
+        data: "gateway/data"
+        commands: "gateway/commands"
+        status: "gateway/status"

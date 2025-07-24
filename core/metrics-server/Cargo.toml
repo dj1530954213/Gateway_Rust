@@ -1,0 +1,16 @@
+[package]
+name = "metrics-server"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+tracing = { workspace = true }
+prometheus = { workspace = true }
+
+# HTTP server for metrics
+hyper = { version = "0.14", features = ["server", "http1", "tcp"] }

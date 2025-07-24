@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>边缘网关调试页面</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        .title {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+            font-weight: bold;
+        }
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .status-card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .status-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .status-ok { background: #4ade80; }
+        .status-error { background: #f87171; }
+        .status-warning { background: #fbbf24; }
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #2563eb;
+            transform: translateY(-2px);
+        }
+        .btn-success {
+            background: #10b981;
+            color: white;
+        }
+        .btn-success:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+        .btn-warning {
+            background: #f59e0b;
+            color: white;
+        }
+        .btn-warning:hover {
+            background: #d97706;
+            transform: translateY(-2px);
+        }
+        .logs {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin-bottom: 5px;
+            padding: 3px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        .timestamp {
+            color: #94a3b8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">🚀 工控物联网边缘网关调试面板</h1>
+        
+        <div class="status-grid">
+            <div class="status-card">
+                <div class="status-title">
+                    <span class="status-indicator" id="api-status"></span>
+                    API服务器状态
+                </div>
+                <div id="api-info">检测中...</div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-title">
+                    <span class="status-indicator" id="frontend-status"></span>
+                    前端服务状态
+                </div>
+                <div id="frontend-info">检测中...</div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-title">
+                    <span class="status-indicator" id="docker-status"></span>
+                    Docker服务状态
+                </div>
+                <div id="docker-info">检测中...</div>
+            </div>
+            
+            <div class="status-card">
+                <div class="status-title">
+                    <span class="status-indicator" id="auth-status"></span>
+                    认证状态
+                </div>
+                <div id="auth-info">检测中...</div>
+            </div>
+        </div>
+        
+        <div class="action-buttons">
+            <a href="http://localhost:20020" class="btn btn-primary" target="_blank">
+                🎨 打开前端界面 (端口20020)
+            </a>
+            <a href="http://localhost:20009/api/v1/health" class="btn btn-success" target="_blank">
+                🔍 检查API健康状态
+            </a>
+            <a href="http://localhost:20008" class="btn btn-warning" target="_blank">
+                📊 打开Grafana监控
+            </a>
+            <button class="btn btn-primary" onclick="testLogin()">
+                🔐 测试登录功能
+            </button>
+            <button class="btn btn-success" onclick="clearStorage()">
+                🧹 清除本地存储
+            </button>
+        </div>
+        
+        <div class="logs">
+            <div class="status-title">实时日志</div>
+            <div id="logs-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // 日志功能
+        function addLog(message, level = 'info') {
+            const logsContainer = document.getElementById('logs-container');
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = 'log-entry';
+            logEntry.innerHTML = `<span class="timestamp">${timestamp}</span> ${message}`;
+            logsContainer.appendChild(logEntry);
+            logsContainer.scrollTop = logsContainer.scrollHeight;
+        }
+
+        // 检查API状态
+        async function checkApiStatus() {
+            try {
+                const response = await fetch('http://localhost:20009/api/v1/health');
+                const data = await response.json();
+                document.getElementById('api-status').className = 'status-indicator status-ok';
+                document.getElementById('api-info').innerHTML = `
+                    ✅ 运行正常<br>
+                    端口: 20009<br>
+                    状态: ${data.data?.status || 'healthy'}
+                `;
+                addLog('✅ API服务器连接成功');
+                return true;
+            } catch (error) {
+                document.getElementById('api-status').className = 'status-indicator status-error';
+                document.getElementById('api-info').innerHTML = `
+                    ❌ 连接失败<br>
+                    错误: ${error.message}
+                `;
+                addLog(`❌ API服务器连接失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 检查前端状态
+        async function checkFrontendStatus() {
+            try {
+                const response = await fetch('http://localhost:20020');
+                if (response.ok) {
+                    document.getElementById('frontend-status').className = 'status-indicator status-ok';
+                    document.getElementById('frontend-info').innerHTML = `
+                        ✅ 运行正常<br>
+                        端口: 20020<br>
+                        状态: Vue.js 开发服务器
+                    `;
+                    addLog('✅ 前端服务器运行正常');
+                    return true;
+                } else {
+                    throw new Error('服务器响应异常');
+                }
+            } catch (error) {
+                document.getElementById('frontend-status').className = 'status-indicator status-warning';
+                document.getElementById('frontend-info').innerHTML = `
+                    ⚠️ 可能未启动<br>
+                    建议: 运行 npm run dev
+                `;
+                addLog(`⚠️ 前端服务器检查失败: ${error.message}`);
+                return false;
+            }
+        }
+
+        // 检查Docker状态
+        async function checkDockerStatus() {
+            const services = [
+                { name: 'EMQX MQTT', port: 20002 },
+                { name: 'Prometheus', port: 20007 },
+                { name: 'Grafana', port: 20008 }
+            ];
+            
+            let runningServices = 0;
+            for (const service of services) {
+                try {
+                    const response = await fetch(`http://localhost:${service.port}`, { mode: 'no-cors' });
+                    runningServices++;
+                } catch (error) {
+                    // CORS错误通常意味着服务正在运行
+                    if (error.message.includes('CORS')) {
+                        runningServices++;
+                    }
+                }
+            }
+            
+            if (runningServices >= 2) {
+                document.getElementById('docker-status').className = 'status-indicator status-ok';
+                document.getElementById('docker-info').innerHTML = `
+                    ✅ 大部分服务运行正常<br>
+                    运行中: ${runningServices}/${services.length}
+                `;
+                addLog(`✅ Docker服务状态良好 (${runningServices}/${services.length})`);
+            } else {
+                document.getElementById('docker-status').className = 'status-indicator status-warning';
+                document.getElementById('docker-info').innerHTML = `
+                    ⚠️ 部分服务未启动<br>
+                    建议: docker-compose up -d
+                `;
+                addLog(`⚠️ Docker服务需要启动 (${runningServices}/${services.length})`);
+            }
+        }
+
+        // 检查认证状态
+        function checkAuthStatus() {
+            const token = localStorage.getItem('token');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                document.getElementById('auth-status').className = 'status-indicator status-ok';
+                const userData = JSON.parse(user);
+                document.getElementById('auth-info').innerHTML = `
+                    ✅ 已登录<br>
+                    用户: ${userData.username}<br>
+                    角色: ${userData.role}
+                `;
+                addLog(`✅ 用户已登录: ${userData.username}`);
+            } else {
+                document.getElementById('auth-status').className = 'status-indicator status-warning';
+                document.getElementById('auth-info').innerHTML = `
+                    ⚠️ 未登录<br>
+                    需要登录才能访问功能
+                `;
+                addLog('⚠️ 用户未登录');
+            }
+        }
+
+        // 测试登录功能
+        async function testLogin() {
+            try {
+                const response = await fetch('http://localhost:20009/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        username: 'admin',
+                        password: 'admin'
+                    })
+                });
+                
+                const data = await response.json();
+                if (data.success) {
+                    localStorage.setItem('token', data.data.token);
+                    localStorage.setItem('user', JSON.stringify(data.data.user));
+                    addLog('✅ 登录测试成功');
+                    checkAuthStatus();
+                } else {
+                    addLog(`❌ 登录测试失败: ${data.message}`);
+                }
+            } catch (error) {
+                addLog(`❌ 登录请求失败: ${error.message}`);
+            }
+        }
+
+        // 清除本地存储
+        function clearStorage() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            addLog('🧹 已清除本地存储');
+            checkAuthStatus();
+        }
+
+        // 初始化检查
+        async function initialize() {
+            addLog('🚀 开始系统检查...');
+            await checkApiStatus();
+            await checkFrontendStatus();
+            await checkDockerStatus();
+            checkAuthStatus();
+            addLog('✅ 系统检查完成');
+        }
+
+        // 启动检查
+        initialize();
+        
+        // 定期更新状态
+        setInterval(() => {
+            checkApiStatus();
+            checkAuthStatus();
+        }, 30000);
+    </script>
+</body>
+</html>

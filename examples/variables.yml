@@ -1,0 +1,133 @@
+# variables.yml - 变量配置示例
+# 定义数据点位映射和处理规则
+
+variables:
+  # 生产线流量计
+  plant.line1.flow_m3h:
+    description: "生产线1流量计读数"
+    driver: "modbus_line1"
+    data_type: "uint16"
+    address: "40001"
+    access: "r"
+    scale: "value / 10.0"
+    unit: "m³/h"
+    alarms:
+      - alarm_type: "low"
+        value: 20.0
+        level: "warning" 
+        message: "流量过低"
+      - alarm_type: "high"
+        value: 200.0
+        level: "critical"
+        message: "流量过高"
+  
+  # 压力传感器
+  plant.line1.pressure_bar:
+    description: "生产线1压力传感器"
+    driver: "modbus_line1"
+    data_type: "uint16"
+    address: "40002"
+    access: "r"
+    scale: "value / 100.0"
+    unit: "bar"
+    alarms:
+      - alarm_type: "high"
+        value: 8.0
+        level: "critical"
+        message: "压力超限"
+  
+  # 温度传感器
+  plant.line1.temperature_c:
+    description: "生产线1温度传感器"
+    driver: "modbus_line1"
+    data_type: "int16"
+    address: "40003"
+    access: "r"
+    scale: "value / 10.0"
+    unit: "°C"
+  
+  # 水泵运行状态
+  plant.line1.pump_running:
+    description: "水泵运行状态"
+    driver: "modbus_line1"
+    data_type: "bool"
+    address: "1"
+    access: "rw"
+    unit: ""
+  
+  # 阀门开度
+  plant.line1.valve_position:
+    description: "阀门开度"
+    driver: "modbus_line1"
+    data_type: "uint16"
+    address: "40004"
+    access: "rw"
+    scale: "value"
+    unit: "%"
+  
+  # 电机转速
+  plant.line1.motor_speed:
+    description: "电机转速"
+    driver: "modbus_line1" 
+    data_type: "uint16"
+    address: "40005"
+    access: "r"
+    scale: "value"
+    unit: "rpm"
+  
+  # 液位传感器
+  plant.line1.tank_level:
+    description: "储罐液位"
+    driver: "modbus_line1"
+    data_type: "uint16"
+    address: "40006"
+    access: "r"
+    scale: "value"
+    unit: "%"
+  
+  # 生产线2设备
+  plant.line2.flow_gpm:
+    description: "生产线2流量计(加仑/分钟)"
+    driver: "modbus_line2"
+    data_type: "float32"
+    address: "40010"
+    access: "r"
+    scale: "value"
+    unit: "gpm"
+  
+  plant.line2.pressure_psi:
+    description: "生产线2压力(psi)"
+    driver: "modbus_line2"
+    data_type: "float32"
+    address: "40012"
+    access: "r"
+    scale: "value"
+    unit: "psi"
+  
+  # 电表数据
+  meter.energy_kwh:
+    description: "电表总能耗"
+    driver: "modbus_meter"
+    data_type: "uint32"
+    address: "40001"
+    access: "r"
+    scale: "value / 1000.0"
+    unit: "kWh"
+  
+  meter.power_kw:
+    description: "实时功率"
+    driver: "modbus_meter"
+    data_type: "uint16"
+    address: "40003"
+    access: "r"
+    scale: "value / 10.0"
+    unit: "kW"
+  
+  meter.voltage_v:
+    description: "电压"
+    driver: "modbus_meter"
+    data_type: "uint16"
+    address: "40004"
+    access: "r"
+    scale: "value / 10.0"
+    unit: "V"

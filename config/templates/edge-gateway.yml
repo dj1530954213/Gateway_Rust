@@ -1,0 +1,356 @@
+# 边缘计算环境配置模板
+# 适用于资源受限的边缘设备，优化内存和CPU使用
+
+gateway:
+  id: "edge-${DEVICE_ID:-$(hostname)}"
+  name: "边缘计算网关-${DEVICE_ID:-默认}"
+  location: "${EDGE_LOCATION:-边缘站点}"
+  description: "资源受限环境的边缘计算网关"
+  
+  system:
+    log_level: "warn"                    # 减少日志输出
+    max_memory_mb: 256                   # 限制内存使用
+    max_connections: 50                  # 限制连接数
+    thread_pool_size: 2                  # 少线程数
+    enable_metrics: true                 # 保持监控能力
+    
+  paths:
+    data_dir: "./data"
+    log_dir: "./logs"
+    config_dir: "./config"
+    temp_dir: "./temp"
+    models_dir: "./models"
+
+# 精简的服务配置
+services:
+  # REST API服务
+  api:
+    enabled: true
+    host: "0.0.0.0"
+    port: 8080
+    request_timeout: "15s"               # 较短超时
+    max_payload_size: "1MB"              # 限制payload大小
+    enable_compression: true             # 节省带宽
+    enable_cors: false
+    
+  # 禁用Web界面节省资源
+  web:
+    enabled: false
+    
+  # 保持指标端点用于监控
+  metrics:
+    enabled: true
+    host: "127.0.0.1"
+    port: 9090
+    path: "/metrics"
+    
+  # 健康检查
+  health:
+    enabled: true
+    path: "/health"
+    interval: "60s"                      # 降低检查频率
+
+# 精简的驱动配置
+drivers:
+  # 本地Modbus设备
+  local_modbus:
+    enabled: true
+    type: "modbus-tcp"
+    name: "本地PLC"
+    endpoint: "tcp://${PLC_IP:-192.168.1.100}:502"
+    
+    config:
+      unit_id: 1
+      polling_interval: "5s"             # 降低采集频率
+      timeout: "3s"
+      retry_count: 2
+      max_batch_size: 20                 # 小批量减少内存
+      
+    datapoints:
+      # 只配置关键数据点
+      - id: "temp_main"
+        name: "主要温度"
+        address: "40001"
+        data_type: "float32"
+        unit: "°C"
+        tags: ["critical", "temperature"]
+        
+      - id: "pressure_main"
+        name: "主要压力"
+        address: "40002"
+        data_type: "uint16"
+        unit: "Pa"
+        scale: 100
+        tags: ["critical", "pressure"]
+
+# 轻量级连接器配置
+connectors:
+  # HTTP上云连接器
+  cloud_http:
+    enabled: true
+    type: "http"
+    name: "云端API"
+    
+    config:
+      base_url: "${CLOUD_API_URL}"
+      timeout: "30s"
+      max_retries: 3
+      retry_delay: "10s"
+      
+      # 认证
+      auth:
+        type: "bearer"
+        token: "${CLOUD_API_TOKEN}"
+        
+      # 批量发送减少请求数
+      batch_size: 100
+      batch_timeout: "60s"              # 1分钟批量发送
+      
+    # 数据映射
+    endpoints:
+      datapoints: "/api/v1/datapoints"
+      alerts: "/api/v1/alerts"
+      
+  # MQTT连接器（备用）
+  mqtt_backup:
+    enabled: "${ENABLE_MQTT:-false}"
+    type: "mqtt5"
+    name: "MQTT备份连接"
+    
+    connection:
+      broker: "${MQTT_BROKER:-mqtt.edge.local:1883}"
+      client_id: "edge-${DEVICE_ID}"
+      keep_alive: 300                    # 5分钟心跳
+      
+    publish:
+      topic_prefix: "edge/${DEVICE_ID}"
+      qos: 1
+      batch_size: 50
+      batch_timeout: "30s"
+      compression: "gzip"                # 压缩节省带宽
+
+# 存储配置
+storage:
+  # 仅启用WAL，不使用外部数据库
+  wal:
+    enabled: true
+    path: "./data/wal"
+    max_file_size: "10MB"               # 小文件大小
+    max_files: 3                        # 少文件数量
+    sync_interval: "5s"
+    compression: true
+    
+  # 使用内存缓存
+  cache:
+    enabled: true
+    type: "memory"                      # 不依赖外部缓存
+    max_memory: "32MB"                  # 小内存缓存
+    ttl: "30m"
+    
+  # 禁用时序数据库
+  timeseries:
+    enabled: false
+
+# 启用轻量级ML推理
+ml_engine:
+  enabled: "${ENABLE_ML:-true}"
+  
+  # 仅配置轻量级模型
+  models:
+    anomaly_detector:
+      name: "轻量级异常检测"
+      type: "onnx"
+      path: "./models/light_anomaly.onnx"
+      enabled: true
+      
+      # 简化输入
+      inputs:
+        - datapoint: "temp_main"
+          feature: "temperature"
+        - datapoint: "pressure_main"
+          feature: "pressure"
+          
+      # 推理配置
+      inference:
+        interval: "30s"                 # 30秒推理一次
+        batch_size: 1
+        max_memory_mb: 64               # 限制ML内存使用
+
+# 禁用重型分析功能
+analytics:
+  enabled: false
+
+# 精简监控配置
+monitoring:
+  enabled: true
+  
+  # 系统监控阈值调整
+  system:
+    cpu_threshold: 90                   # 边缘设备容忍更高CPU
+    memory_threshold: 95                # 更高内存阈值
+    disk_threshold: 95
+    
+  # 告警配置
+  alerts:
+    enabled: true
+    
+    # 仅控制台和本地日志
+    handlers:
+      console:
+        enabled: true
+        type: "console"
+        min_severity: "error"           # 仅错误级别
+        
+      file:
+        enabled: true
+        type: "file"
+        path: "./logs/alerts.log"
+        min_severity: "warn"
+
+# 安全配置
+security:
+  # 使用默认密钥（生产环境需要更换）
+  jwt_secret: "${JWT_SECRET:-edge-default-jwt-secret-change-me}"
+  encryption_key: "${ENCRYPTION_KEY:-edge-default-encryption-32-bytes}"
+  
+  # 简化权限管理
+  enable_rbac: false
+  
+  # 基础认证
+  default_users:
+    - username: "${ADMIN_USER:-admin}"
+      password: "${ADMIN_PASSWORD:-edge123}"
+      roles: ["admin"]
+
+# 性能优化
+performance:
+  # 内存管理
+  memory:
+    garbage_collection: "conservative"   # 保守的GC策略
+    buffer_pool_size: "16MB"            # 小缓冲池
+    
+  # 网络优化
+  network:
+    tcp_nodelay: true
+    socket_buffer_size: "16KB"          # 小缓冲区
+    
+  # 磁盘I/O优化
+  disk:
+    sync_mode: "async"                  # 异步写入提高性能
+
+# 日志配置
+logging:
+  # 文件日志
+  file:
+    enabled: true
+    path: "./logs/gateway.log"
+    level: "warn"                       # 仅警告以上
+    rotation:
+      max_size: "10MB"                  # 小日志文件
+      max_files: 3                      # 少文件数
+      compress: true
+      
+  # 禁用系统日志
+  syslog:
+    enabled: false
+
+# 边缘计算特定配置
+edge_computing:
+  # 本地处理优先
+  local_processing:
+    enabled: true
+    priority: "high"
+    
+  # 数据预处理
+  preprocessing:
+    enabled: true
+    filters:
+      - type: "outlier_removal"
+        threshold: 3.0
+      - type: "smoothing"
+        window_size: 5
+        
+  # 本地决策
+  local_decisions:
+    enabled: true
+    rules:
+      - condition: "temp_main > 80"
+        action: "alert"
+        priority: "high"
+      - condition: "pressure_main < 1000"
+        action: "shutdown"
+        priority: "critical"
+
+# 离线支持
+offline_mode:
+  enabled: true
+  
+  # 数据缓存
+  data_buffer:
+    max_size: "100MB"                   # 离线时数据缓存
+    retention: "24h"                    # 24小时数据保留
+    
+  # 自动重连
+  reconnect:
+    enabled: true
+    interval: "60s"                     # 1分钟重连间隔
+    max_attempts: 1440                  # 24小时重连尝试
+    
+  # 离线告警
+  offline_alerts:
+    enabled: true
+    store_locally: true
+    max_alerts: 1000
+
+# 设备管理
+device_management:
+  # 远程配置
+  remote_config:
+    enabled: "${ENABLE_REMOTE_CONFIG:-false}"
+    check_interval: "5m"
+    
+  # 固件更新
+  firmware_update:
+    enabled: "${ENABLE_OTA:-false}"
+    check_interval: "1h"
+    auto_update: false                  # 手动更新确保稳定性
+    
+  # 设备信息上报
+  device_info:
+    enabled: true
+    report_interval: "1h"
+    include_system_info: true
+
+# 环境适配
+environment:
+  type: "edge"
+  resource_level: "limited"
+  network_quality: "${NETWORK_QUALITY:-unstable}"
+  
+  # 环境传感器
+  sensors:
+    temperature:
+      enabled: "${HAS_TEMP_SENSOR:-false}"
+      threshold_high: 60                # 60°C设备温度告警
+    humidity:
+      enabled: "${HAS_HUMIDITY_SENSOR:-false}"
+      threshold_high: 80                # 80%湿度告警
+
+# 故障恢复
+fault_tolerance:
+  # 看门狗
+  watchdog:
+    enabled: true
+    timeout: "300s"                     # 5分钟看门狗
+    
+  # 自动重启
+  auto_restart:
+    enabled: true
+    max_crashes: 3                      # 3次崩溃后停止重启
+    restart_delay: "30s"
+    
+  # 数据完整性检查
+  data_integrity:
+    enabled: true
+    check_interval: "1h"
+    auto_repair: true

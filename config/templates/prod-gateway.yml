@@ -1,0 +1,320 @@
+# 生产环境配置模板
+# 适用于生产部署，重点关注性能、安全性和可靠性
+
+gateway:
+  id: "${GATEWAY_ID}"                    # 从环境变量读取
+  name: "${GATEWAY_NAME}"                # 从环境变量读取
+  location: "${GATEWAY_LOCATION}"        # 从环境变量读取
+  description: "${GATEWAY_DESCRIPTION:-生产环境工控物联网边缘网关}"
+  
+  system:
+    log_level: "info"                    # 生产环境使用info级别
+    max_memory_mb: 2048                  # 2GB内存限制
+    max_connections: 2000                # 高并发支持
+    thread_pool_size: 16                 # 多核CPU支持
+    enable_metrics: true                 # 生产监控必须
+    
+  paths:
+    data_dir: "/opt/edge-gateway/data"
+    log_dir: "/opt/edge-gateway/logs"
+    config_dir: "/opt/edge-gateway/config"
+    temp_dir: "/tmp/edge-gateway"
+    models_dir: "/opt/edge-gateway/models"
+
+# 服务端口配置
+services:
+  # REST API服务
+  api:
+    enabled: true
+    host: "0.0.0.0"                      # 允许外部访问
+    port: 8080
+    request_timeout: "30s"
+    max_payload_size: "10MB"
+    enable_compression: true             # 生产环境启用压缩
+    enable_cors: false                   # 生产环境严格CORS
+    cors_origins: 
+      - "https://${DASHBOARD_DOMAIN:-dashboard.company.com}"
+    
+    # TLS配置
+    tls:
+      enabled: "${ENABLE_TLS:-true}"
+      cert_file: "/opt/edge-gateway/certs/server.crt"
+      key_file: "/opt/edge-gateway/certs/server.key"
+      
+  # Web管理界面
+  web:
+    enabled: true
+    host: "127.0.0.1"                    # 仅本地访问或通过代理
+    port: 8090
+    static_path: "/opt/edge-gateway/web"
+    enable_websocket: true
+    websocket_path: "/ws"
+    
+    # 生产环境安全配置
+    security:
+      enable_auth: true
+      session_timeout: "1h"
+      max_failed_attempts: 5
+      lockout_duration: "15m"
+    
+  # Prometheus指标
+  metrics:
+    enabled: true
+    host: "127.0.0.1"                    # 仅本地访问
+    port: 9090
+    path: "/metrics"
+    
+  # 健康检查
+  health:
+    enabled: true
+    path: "/health"
+    interval: "30s"
+
+# 驱动配置 - 使用包含文件
+drivers: !include drivers-config.yml
+
+# 连接器配置 - 使用包含文件  
+connectors: !include connectors-config.yml
+
+# 存储配置
+storage:
+  # WAL配置
+  wal:
+    enabled: true
+    path: "/opt/edge-gateway/data/wal"
+    max_file_size: "100MB"
+    max_files: 10
+    sync_interval: "1s"
+    compression: true                    # 生产环境启用压缩
+    
+  # Redis缓存
+  cache:
+    enabled: true
+    type: "redis"
+    url: "redis://${REDIS_HOST:-redis}:${REDIS_PORT:-6379}"
+    password: "${REDIS_PASSWORD}"
+    max_memory: "512MB"
+    ttl: "1h"
+    
+    # 连接池配置
+    pool:
+      max_connections: 50
+      min_connections: 5
+      connection_timeout: "5s"
+    
+  # InfluxDB时序数据库
+  timeseries:
+    enabled: true
+    type: "influxdb"
+    
+    config:
+      url: "http://${INFLUXDB_HOST:-influxdb}:${INFLUXDB_PORT:-8086}"
+      database: "${INFLUXDB_DATABASE:-gateway_data}"
+      username: "${INFLUXDB_USERNAME:-gateway}"
+      password: "${INFLUXDB_PASSWORD}"
+      retention_policy: "90d"            # 90天保留策略
+      
+      # 批量写入配置
+      batch_size: 5000
+      flush_interval: "10s"
+      max_retry_time: "30s"
+      
+      # 连接池配置
+      pool:
+        max_connections: 10
+        connection_timeout: "10s"
+
+# 高级功能配置
+ml_engine: !include ml-config.yml
+analytics: !include analytics-config.yml
+
+# 监控配置
+monitoring:
+  enabled: true
+  
+  # 系统监控
+  system:
+    cpu_threshold: 80                    # CPU使用率告警阈值
+    memory_threshold: 85                 # 内存使用率告警阈值
+    disk_threshold: 90                   # 磁盘使用率告警阈值
+    
+  # 告警配置
+  alerts: !include alerts-config.yml
+
+# 安全配置
+security:
+  # 从环境变量读取敏感信息
+  jwt_secret: "${JWT_SECRET}"
+  encryption_key: "${ENCRYPTION_KEY}"
+  
+  # 启用基于角色的访问控制
+  enable_rbac: true
+  
+  # 密码策略
+  password_policy:
+    min_length: 8
+    require_uppercase: true
+    require_lowercase: true
+    require_numbers: true
+    require_special_chars: true
+    max_age_days: 90
+    
+  # 会话管理
+  session:
+    timeout: "8h"                        # 工作时间内有效
+    max_concurrent: 3                    # 每用户最大并发会话
+    
+  # API安全
+  api:
+    rate_limit:
+      requests_per_minute: 1000
+      burst_size: 100
+    enable_ip_whitelist: "${ENABLE_IP_WHITELIST:-false}"
+    ip_whitelist: "${API_IP_WHITELIST:-}"
+    
+  # 审计日志
+  audit:
+    enabled: true
+    log_file: "/opt/edge-gateway/logs/audit.log"
+    log_level: "info"
+    include_payload: false               # 不记录敏感数据
+
+# 性能优化配置
+performance:
+  # 内存管理
+  memory:
+    garbage_collection: "aggressive"     # 积极回收内存
+    buffer_pool_size: "256MB"
+    
+  # 网络优化
+  network:
+    tcp_nodelay: true
+    tcp_keepalive: true
+    socket_buffer_size: "64KB"
+    
+  # 磁盘I/O优化
+  disk:
+    io_scheduler: "noop"
+    read_ahead: "4KB"
+    sync_mode: "fsync"
+
+# 日志配置
+logging:
+  # 文件日志
+  file:
+    enabled: true
+    path: "/opt/edge-gateway/logs/gateway.log"
+    level: "info"
+    rotation:
+      max_size: "100MB"
+      max_files: 10
+      compress: true
+      
+  # 系统日志
+  syslog:
+    enabled: true
+    facility: "local0"
+    level: "warn"
+    
+  # 审计日志
+  audit:
+    enabled: true
+    path: "/opt/edge-gateway/logs/audit.log"
+    format: "json"
+    
+# 备份配置
+backup:
+  enabled: true
+  
+  # 配置备份
+  config:
+    enabled: true
+    schedule: "0 2 * * *"                # 每天凌晨2点
+    retention_days: 30
+    destination: "/backup/edge-gateway/config"
+    
+  # 数据备份
+  data:
+    enabled: true
+    schedule: "0 3 * * *"                # 每天凌晨3点
+    retention_days: 7
+    destination: "/backup/edge-gateway/data"
+    
+  # 增量备份
+  incremental:
+    enabled: true
+    schedule: "0 */6 * * *"              # 每6小时
+    retention_hours: 48
+
+# 高可用配置
+high_availability:
+  enabled: "${ENABLE_HA:-false}"
+  
+  # 集群配置
+  cluster:
+    node_id: "${NODE_ID}"
+    nodes:
+      - "${NODE1_ADDRESS}"
+      - "${NODE2_ADDRESS}"
+      - "${NODE3_ADDRESS}"
+      
+  # 故障转移
+  failover:
+    health_check_interval: "10s"
+    failure_threshold: 3
+    recovery_threshold: 2
+    
+  # 数据同步
+  replication:
+    enabled: true
+    sync_interval: "5s"
+    max_lag: "30s"
+
+# 环境特定配置
+environment:
+  type: "production"
+  region: "${DEPLOYMENT_REGION:-default}"
+  availability_zone: "${AZ:-default}"
+  
+  # 资源标签
+  tags:
+    environment: "production"
+    team: "${TEAM:-ops}"
+    project: "${PROJECT:-edge-gateway}"
+    cost_center: "${COST_CENTER:-}"
+
+# 集成配置
+integrations:
+  # 企业系统集成
+  erp:
+    enabled: "${ENABLE_ERP_INTEGRATION:-false}"
+    endpoint: "${ERP_ENDPOINT}"
+    api_key: "${ERP_API_KEY}"
+    
+  # SCADA系统集成
+  scada:
+    enabled: "${ENABLE_SCADA_INTEGRATION:-false}"
+    endpoint: "${SCADA_ENDPOINT}"
+    protocol: "${SCADA_PROTOCOL:-opcua}"
+    
+  # 云平台集成
+  cloud:
+    enabled: "${ENABLE_CLOUD_INTEGRATION:-true}"
+    provider: "${CLOUD_PROVIDER:-aws}"
+    region: "${CLOUD_REGION:-us-east-1}"
+    
+# 合规配置
+compliance:
+  # 数据保护
+  gdpr:
+    enabled: "${ENABLE_GDPR:-false}"
+    data_retention_days: 2555            # 7年
+    anonymization: true
+    
+  # 工业标准
+  iec61850:
+    enabled: "${ENABLE_IEC61850:-false}"
+    
+  # 安全标准
+  iec62443:
+    security_level: "${IEC62443_LEVEL:-2}"

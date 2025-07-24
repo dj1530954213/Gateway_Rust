@@ -1,0 +1,496 @@
+# 告警配置模板
+# 定义各种告警规则和处理器
+
+# 告警规则配置
+rules:
+  # 系统级告警
+  system_alerts:
+    # CPU使用率告警
+    - id: "system_cpu_high"
+      name: "CPU使用率过高"
+      condition: "system.cpu_usage > 85"
+      severity: "warning"
+      description: "系统CPU使用率超过85%"
+      cooldown: "5m"
+      
+    - id: "system_cpu_critical"
+      name: "CPU使用率严重过高"
+      condition: "system.cpu_usage > 95"
+      severity: "critical"
+      description: "系统CPU使用率超过95%"
+      cooldown: "2m"
+      
+    # 内存使用率告警
+    - id: "system_memory_high"
+      name: "内存使用率过高"
+      condition: "system.memory_usage > 80"
+      severity: "warning"
+      description: "系统内存使用率超过80%"
+      cooldown: "5m"
+      
+    - id: "system_memory_critical"
+      name: "内存使用率严重过高"
+      condition: "system.memory_usage > 90"
+      severity: "critical"
+      description: "系统内存使用率超过90%"
+      cooldown: "2m"
+      
+    # 磁盘空间告警
+    - id: "system_disk_high"
+      name: "磁盘空间不足"
+      condition: "system.disk_usage > 85"
+      severity: "warning"
+      description: "系统磁盘使用率超过85%"
+      cooldown: "1h"
+      
+    - id: "system_disk_critical"
+      name: "磁盘空间严重不足"
+      condition: "system.disk_usage > 95"
+      severity: "critical"
+      description: "系统磁盘使用率超过95%"
+      cooldown: "30m"
+
+  # 网络连接告警
+  network_alerts:
+    # 网关连接丢失
+    - id: "gateway_disconnected"
+      name: "网关连接丢失"
+      condition: "network.connectivity == false"
+      severity: "critical"
+      description: "网关与上级系统连接丢失"
+      cooldown: "1m"
+      
+    # MQTT连接告警
+    - id: "mqtt_connection_lost"
+      name: "MQTT连接丢失"
+      condition: "connectors.mqtt.status != 'connected'"
+      severity: "high"
+      description: "MQTT连接器连接丢失"
+      cooldown: "2m"
+      
+    # 网络延迟告警
+    - id: "network_latency_high"
+      name: "网络延迟过高"
+      condition: "network.latency > 1000"
+      severity: "warning"
+      description: "网络延迟超过1秒"
+      cooldown: "10m"
+
+  # 驱动级告警
+  driver_alerts:
+    # 驱动连接失败
+    - id: "driver_connection_failed"
+      name: "驱动连接失败"
+      condition: "driver.status == 'failed'"
+      severity: "high"
+      description: "驱动连接失败: {driver.name}"
+      cooldown: "5m"
+      
+    # 驱动响应超时
+    - id: "driver_timeout"
+      name: "驱动响应超时"
+      condition: "driver.response_time > 5000"
+      severity: "warning"
+      description: "驱动响应时间超过5秒: {driver.name}"
+      cooldown: "10m"
+      
+    # 驱动错误率过高
+    - id: "driver_error_rate_high"
+      name: "驱动错误率过高"
+      condition: "driver.error_rate > 10"
+      severity: "warning"
+      description: "驱动错误率超过10%: {driver.name}"
+      cooldown: "15m"
+
+  # 数据点告警
+  datapoint_alerts:
+    # 温度过高告警
+    - id: "temperature_high"
+      name: "温度过高"
+      condition: "datapoint.value > datapoint.alarm_high AND datapoint.tags.contains('temperature')"
+      severity: "high"
+      description: "温度超过告警上限: {datapoint.name} = {datapoint.value}{datapoint.unit}"
+      cooldown: "5m"
+      
+    # 温度过低告警
+    - id: "temperature_low"
+      name: "温度过低"
+      condition: "datapoint.value < datapoint.alarm_low AND datapoint.tags.contains('temperature')"
+      severity: "high"
+      description: "温度低于告警下限: {datapoint.name} = {datapoint.value}{datapoint.unit}"
+      cooldown: "5m"
+      
+    # 压力异常告警
+    - id: "pressure_abnormal"
+      name: "压力异常"
+      condition: "(datapoint.value > datapoint.alarm_high OR datapoint.value < datapoint.alarm_low) AND datapoint.tags.contains('pressure')"
+      severity: "high"
+      description: "压力值异常: {datapoint.name} = {datapoint.value}{datapoint.unit}"
+      cooldown: "3m"
+      
+    # 数据质量告警
+    - id: "data_quality_bad"
+      name: "数据质量异常"
+      condition: "datapoint.quality != 'good'"
+      severity: "warning"
+      description: "数据点质量异常: {datapoint.name} 质量为 {datapoint.quality}"
+      cooldown: "10m"
+      
+    # 数据超时告警
+    - id: "data_stale"
+      name: "数据更新超时"
+      condition: "now() - datapoint.timestamp > 60s"
+      severity: "warning"
+      description: "数据点更新超时: {datapoint.name} 最后更新时间 {datapoint.timestamp}"
+      cooldown: "30m"
+
+  # 设备状态告警
+  equipment_alerts:
+    # 泵运行状态告警
+    - id: "pump_stopped"
+      name: "泵停止运行"
+      condition: "datapoint.value == false AND datapoint.tags.contains('pump')"
+      severity: "high"
+      description: "泵停止运行: {datapoint.name}"
+      cooldown: "1m"
+      
+    # 阀门状态异常
+    - id: "valve_position_error"
+      name: "阀门位置异常"
+      condition: "datapoint.tags.contains('valve') AND datapoint.error_code != null"
+      severity: "warning"
+      description: "阀门位置异常: {datapoint.name} 错误代码 {datapoint.error_code}"
+      cooldown: "5m"
+      
+    # 电机过载
+    - id: "motor_overload"
+      name: "电机过载"
+      condition: "datapoint.value > 90 AND datapoint.tags.contains('motor') AND datapoint.tags.contains('load')"
+      severity: "high"
+      description: "电机负载过高: {datapoint.name} = {datapoint.value}%"
+      cooldown: "2m"
+
+  # 生产告警
+  production_alerts:
+    # 生产效率低
+    - id: "production_efficiency_low"
+      name: "生产效率低"
+      condition: "datapoint.value < 70 AND datapoint.tags.contains('efficiency')"
+      severity: "warning"
+      description: "生产效率低于70%: {datapoint.value}%"
+      cooldown: "30m"
+      
+    # 生产停机
+    - id: "production_stopped"
+      name: "生产线停机"
+      condition: "datapoint.value == 0 AND datapoint.tags.contains('production_rate')"
+      severity: "critical"
+      description: "生产线停机: {datapoint.name}"
+      cooldown: "1m"
+      
+    # 质量异常
+    - id: "quality_issue"
+      name: "产品质量异常"
+      condition: "datapoint.value < 95 AND datapoint.tags.contains('quality')"
+      severity: "high"
+      description: "产品质量低于95%: {datapoint.value}%"
+      cooldown: "10m"
+
+  # 机器学习告警
+  ml_alerts:
+    # 异常检测
+    - id: "anomaly_detected"
+      name: "异常数据检测"
+      condition: "ml.anomaly_score > 0.8"
+      severity: "warning"
+      description: "检测到异常数据模式，异常分数: {ml.anomaly_score}"
+      cooldown: "15m"
+      
+    # 预测性维护
+    - id: "maintenance_required"
+      name: "需要预防性维护"
+      condition: "ml.maintenance_score > 0.7"
+      severity: "info"
+      description: "建议进行预防性维护，风险分数: {ml.maintenance_score}"
+      cooldown: "24h"
+
+  # 安全告警
+  security_alerts:
+    # 认证失败
+    - id: "auth_failure"
+      name: "认证失败"
+      condition: "security.failed_auth_count > 5"
+      severity: "warning"
+      description: "检测到多次认证失败: {security.failed_auth_count}次"
+      cooldown: "5m"
+      
+    # 异常访问
+    - id: "unusual_access"
+      name: "异常访问模式"
+      condition: "security.unusual_access == true"
+      severity: "high"
+      description: "检测到异常访问模式"
+      cooldown: "10m"
+
+# 告警处理器配置
+handlers:
+  # 控制台输出
+  console:
+    enabled: true
+    type: "console"
+    min_severity: "warning"
+    format: "text"
+    
+  # 文件日志
+  file:
+    enabled: true
+    type: "file"
+    min_severity: "info"
+    file_path: "/opt/edge-gateway/logs/alerts.log"
+    format: "json"
+    rotation:
+      max_size: "50MB"
+      max_files: 5
+      
+  # 邮件通知
+  email:
+    enabled: "${ENABLE_EMAIL_ALERTS:-false}"
+    type: "email"
+    min_severity: "high"
+    
+    config:
+      smtp_server: "${SMTP_SERVER}"
+      smtp_port: "${SMTP_PORT:-587}"
+      username: "${SMTP_USERNAME}"
+      password: "${SMTP_PASSWORD}"
+      use_tls: true
+      
+      from_address: "alerts@company.com"
+      to_addresses:
+        - "${ALERT_EMAIL_TO}"
+        
+      # 邮件模板
+      subject_template: "[{severity}] {gateway_id}: {title}"
+      body_template: |
+        告警详情:
+        
+        网关: {gateway_id}
+        时间: {timestamp}
+        级别: {severity}
+        标题: {title}
+        描述: {description}
+        
+        数据点: {datapoint.name} ({datapoint.id})
+        当前值: {datapoint.value} {datapoint.unit}
+        
+        位置: {gateway_location}
+        
+        请及时处理。
+        
+  # SMS短信通知
+  sms:
+    enabled: "${ENABLE_SMS_ALERTS:-false}"
+    type: "sms"
+    min_severity: "critical"
+    
+    config:
+      provider: "${SMS_PROVIDER:-twilio}"
+      api_key: "${SMS_API_KEY}"
+      api_secret: "${SMS_API_SECRET}"
+      from_number: "${SMS_FROM_NUMBER}"
+      to_numbers:
+        - "${SMS_TO_NUMBER}"
+        
+      # 短信模板
+      message_template: "[{severity}] {gateway_id}: {title} - {description}"
+      
+  # Webhook通知
+  webhook:
+    enabled: "${ENABLE_WEBHOOK_ALERTS:-false}"
+    type: "webhook"
+    min_severity: "warning"
+    
+    config:
+      url: "${ALERT_WEBHOOK_URL}"
+      method: "POST"
+      timeout: "10s"
+      
+      headers:
+        Content-Type: "application/json"
+        Authorization: "Bearer ${WEBHOOK_TOKEN}"
+        
+      # 请求体模板
+      payload_template: |
+        {
+          "gateway_id": "{gateway_id}",
+          "timestamp": "{timestamp}",
+          "severity": "{severity}",
+          "title": "{title}",
+          "description": "{description}",
+          "datapoint": {
+            "id": "{datapoint.id}",
+            "name": "{datapoint.name}",
+            "value": "{datapoint.value}",
+            "unit": "{datapoint.unit}",
+            "quality": "{datapoint.quality}"
+          },
+          "location": "{gateway_location}"
+        }
+        
+  # 企业通讯工具
+  teams:
+    enabled: "${ENABLE_TEAMS_ALERTS:-false}"
+    type: "teams"
+    min_severity: "high"
+    
+    config:
+      webhook_url: "${TEAMS_WEBHOOK_URL}"
+      
+      # Teams消息模板
+      card_template: |
+        {
+          "@type": "MessageCard",
+          "@context": "https://schema.org/extensions",
+          "summary": "{title}",
+          "themeColor": "{color}",
+          "sections": [{
+            "activityTitle": "{title}",
+            "activitySubtitle": "网关: {gateway_id}",
+            "facts": [
+              {"name": "时间", "value": "{timestamp}"},
+              {"name": "级别", "value": "{severity}"},
+              {"name": "位置", "value": "{gateway_location}"},
+              {"name": "数据点", "value": "{datapoint.name}"},
+              {"name": "当前值", "value": "{datapoint.value} {datapoint.unit}"}
+            ],
+            "text": "{description}"
+          }]
+        }
+        
+  # 钉钉通知
+  dingtalk:
+    enabled: "${ENABLE_DINGTALK_ALERTS:-false}"
+    type: "dingtalk"
+    min_severity: "high"
+    
+    config:
+      webhook_url: "${DINGTALK_WEBHOOK_URL}"
+      secret: "${DINGTALK_SECRET}"
+      
+      # 钉钉消息模板
+      message_template: |
+        ### {title}
+        
+        **网关**: {gateway_id}  
+        **时间**: {timestamp}  
+        **级别**: {severity}  
+        **位置**: {gateway_location}  
+        
+        **数据点**: {datapoint.name} ({datapoint.id})  
+        **当前值**: {datapoint.value} {datapoint.unit}  
+        
+        **描述**: {description}
+        
+  # MQTT告警发布
+  mqtt_alerts:
+    enabled: true
+    type: "mqtt"
+    min_severity: "info"
+    
+    config:
+      broker: "${MQTT_BROKER:-localhost:1883}"
+      topic: "alerts/{gateway_id}"
+      qos: 1
+      retain: false
+      
+      # 认证
+      username: "${MQTT_USERNAME}"
+      password: "${MQTT_PASSWORD}"
+
+# 告警升级配置
+escalation:
+  enabled: true
+  
+  # 升级规则
+  rules:
+    - name: "critical_escalation"
+      condition: "severity == 'critical' AND age > 5m"
+      action: "escalate"
+      target_severity: "emergency"
+      
+    - name: "unacknowledged_escalation"
+      condition: "acknowledged == false AND age > 30m"
+      action: "escalate"
+      target_handlers: ["email", "sms"]
+      
+    - name: "repeated_alert"
+      condition: "count > 10 AND timeframe == '1h'"
+      action: "suppress"
+      duration: "1h"
+
+# 告警抑制配置
+suppression:
+  enabled: true
+  
+  # 抑制规则
+  rules:
+    - name: "maintenance_mode"
+      condition: "system.maintenance_mode == true"
+      suppress_alerts:
+        - "driver_connection_failed"
+        - "data_stale"
+        
+    - name: "known_issue"
+      condition: "alert.tags.contains('known_issue')"
+      suppress_duration: "24h"
+      
+    - name: "cascade_suppression"
+      condition: "driver.status == 'failed'"
+      suppress_alerts:
+        - "data_quality_bad"
+        - "data_stale"
+
+# 告警恢复配置
+recovery:
+  enabled: true
+  
+  # 恢复通知
+  notify_on_recovery: true
+  recovery_handlers: ["console", "file", "mqtt_alerts"]
+  
+  # 恢复模板
+  recovery_message_template: "告警已恢复: {title} - {description}"
+
+# 告警统计配置
+statistics:
+  enabled: true
+  
+  # 统计间隔
+  intervals:
+    - "1h"
+    - "24h"
+    - "7d"
+    - "30d"
+    
+  # 统计指标
+  metrics:
+    - "alert_count_by_severity"
+    - "alert_count_by_type"
+    - "mttr"  # 平均恢复时间
+    - "alert_rate"
+    
+# 告警存储配置
+storage:
+  # 本地存储
+  local:
+    enabled: true
+    path: "/opt/edge-gateway/data/alerts"
+    retention: "90d"
+    
+  # 外部存储
+  external:
+    enabled: "${ENABLE_EXTERNAL_ALERT_STORAGE:-false}"
+    type: "elasticsearch"
+    config:
+      host: "${ES_HOST}"
+      index: "gateway-alerts-{yyyy.MM.dd}"

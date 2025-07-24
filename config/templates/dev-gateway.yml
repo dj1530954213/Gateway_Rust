@@ -1,0 +1,247 @@
+# 开发环境配置模板
+# 适用于本地开发和测试
+
+gateway:
+  id: "dev-gateway-${USER:-unknown}"
+  name: "开发环境网关"
+  location: "开发环境"
+  description: "用于开发和测试的网关实例"
+  
+  system:
+    log_level: "debug"          # 开发环境使用详细日志
+    max_memory_mb: 512          # 开发环境资源较少
+    max_connections: 100        # 限制连接数
+    thread_pool_size: 4         # 根据开发机配置
+    enable_metrics: true        # 启用监控便于调试
+    
+  paths:
+    data_dir: "./data"
+    log_dir: "./logs"
+    config_dir: "./config"
+    temp_dir: "./temp"
+    models_dir: "./models"
+
+# 服务端口配置
+services:
+  # REST API服务
+  api:
+    enabled: true
+    host: "127.0.0.1"           # 仅本地访问
+    port: 8080
+    request_timeout: "30s"
+    max_payload_size: "1MB"     # 开发环境限制
+    enable_compression: false   # 便于调试
+    enable_cors: true           # 开发时允许跨域
+    cors_origins: ["*"]         # 宽松的CORS策略
+    
+  # Web管理界面
+  web:
+    enabled: true
+    host: "127.0.0.1"
+    port: 8090
+    static_path: "./web"
+    enable_websocket: true
+    websocket_path: "/ws"
+    
+  # Prometheus指标
+  metrics:
+    enabled: true
+    host: "127.0.0.1"
+    port: 9090
+    path: "/metrics"
+    
+  # 健康检查
+  health:
+    enabled: true
+    path: "/health"
+    interval: "10s"              # 开发环境更频繁检查
+
+# 驱动配置
+drivers:
+  # 数据模拟器 - 用于开发测试
+  simulator:
+    enabled: true
+    type: "simulator"
+    name: "数据模拟器"
+    
+    config:
+      data_rate: "2s"           # 2秒生成一次数据
+      point_count: 10           # 模拟10个数据点
+      noise_level: 0.1          # 10%的噪声
+      
+    datapoints:
+      - id: "sim_temp_001"
+        name: "模拟温度1"
+        data_type: "float32"
+        unit: "°C"
+        min_value: 20.0
+        max_value: 80.0
+        tags: ["temperature", "simulation"]
+        
+      - id: "sim_pressure_001"
+        name: "模拟压力1"
+        data_type: "uint16"
+        unit: "Pa"
+        min_value: 1000
+        max_value: 5000
+        tags: ["pressure", "simulation"]
+        
+      - id: "sim_flow_001"
+        name: "模拟流量1"
+        data_type: "float32"
+        unit: "L/min"
+        min_value: 0.0
+        max_value: 100.0
+        tags: ["flow", "simulation"]
+
+  # 本地Modbus测试（如果有）
+  local_modbus:
+    enabled: false              # 默认禁用，需要时启用
+    type: "modbus-tcp"
+    name: "本地Modbus设备"
+    endpoint: "tcp://localhost:502"
+    
+    config:
+      unit_id: 1
+      polling_interval: "5s"
+      timeout: "3s"
+      retry_count: 2
+      max_batch_size: 10        # 小批量便于调试
+      
+# 连接器配置
+connectors:
+  # 开发MQTT代理
+  mqtt_dev:
+    enabled: true
+    type: "mqtt5"
+    name: "开发MQTT"
+    
+    connection:
+      broker: "localhost:1883"   # 本地MQTT代理
+      client_id: "dev-gateway-${USER:-dev}"
+      username: "dev"
+      password: "dev123"
+      clean_session: true
+      keep_alive: 60
+      
+    tls:
+      enabled: false            # 开发环境不使用TLS
+      
+    publish:
+      topic_prefix: "dev/gateway"
+      qos: 0                    # 开发环境使用QoS 0
+      retain: false
+      batch_size: 10            # 小批量
+      batch_timeout: "2s"
+      compression: "none"       # 不压缩便于调试
+      
+    data_mapping:
+      datapoints:
+        topic_template: "data/{driver_id}/{point_id}"
+        payload_format: "json"
+        include_metadata: true
+        
+      alerts:
+        topic: "alerts"
+        payload_format: "json"
+        
+      system_status:
+        topic: "status"
+        interval: "30s"
+
+  # HTTP API测试
+  http_test:
+    enabled: false              # 默认禁用
+    type: "http"
+    name: "测试HTTP API"
+    
+    config:
+      base_url: "http://localhost:3000/api/v1"
+      timeout: "10s"
+      max_retries: 1
+      
+      headers:
+        Content-Type: "application/json"
+        X-Source: "dev-gateway"
+
+# 存储配置
+storage:
+  # WAL配置
+  wal:
+    enabled: true
+    path: "./data/wal"
+    max_file_size: "10MB"       # 开发环境较小
+    max_files: 3                # 保留较少文件
+    sync_interval: "1s"
+    
+  # 本地缓存
+  cache:
+    enabled: false              # 开发环境禁用外部缓存
+    type: "memory"              # 使用内存缓存
+    max_memory: "64MB"
+    ttl: "10m"
+    
+  # 时序数据库（可选）
+  timeseries:
+    enabled: false              # 开发环境默认禁用
+    type: "influxdb"
+    config:
+      url: "http://localhost:8086"
+      database: "dev_gateway"
+      username: "dev"
+      password: "dev123"
+      batch_size: 100
+      flush_interval: "5s"
+
+# 高级功能配置
+ml_engine:
+  enabled: false                # 开发环境默认禁用ML
+  
+analytics:
+  enabled: false                # 开发环境默认禁用分析
+
+# 监控配置
+monitoring:
+  enabled: true
+  
+  alerts:
+    enabled: true
+    handlers:
+      console:                  # 开发环境仅控制台输出
+        enabled: true
+        type: "console"
+        min_severity: "info"
+        
+# 安全配置
+security:
+  jwt_secret: "dev-jwt-secret-key-not-for-production"
+  encryption_key: "dev-encryption-key-32-bytes-long"
+  enable_rbac: false            # 开发环境简化权限
+  
+  # 开发用户
+  default_users:
+    - username: "dev"
+      password: "dev123"
+      roles: ["admin"]
+      
+    - username: "test"
+      password: "test123"
+      roles: ["operator"]
+
+# 开发专用配置
+development:
+  # 启用开发特性
+  enable_debug_endpoints: true  # 启用调试端点
+  enable_mock_data: true        # 启用模拟数据
+  auto_reload_config: true      # 配置文件热重载
+  
+  # 测试配置
+  test_mode: false
+  test_data_path: "./test-data"
+  
+  # 调试选项
+  debug:
+    log_requests: true          # 记录所有请求
+    log_responses: true         # 记录所有响应
+    profile_performance: false  # 性能分析
+    trace_enabled: true         # 启用跟踪

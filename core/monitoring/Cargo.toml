@@ -1,0 +1,33 @@
+[package]
+name = "monitoring"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+# Core dependencies
+tokio.workspace = true
+anyhow.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+# Monitoring and metrics
+prometheus = { workspace = true }
+chrono.workspace = true
+sysinfo = "0.30"
+async-trait.workspace = true
+prost = { workspace = true }
+
+# HTTP client for health checks
+reqwest = { version = "0.11", features = ["json"] }
+
+# Internal dependencies
+frame-bus = { path = "../frame-bus" }
+driver-manager = { path = "../driver-manager" }
+
+[dev-dependencies]
+tokio-test.workspace = true
+wiremock.workspace = true

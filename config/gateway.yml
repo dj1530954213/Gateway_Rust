@@ -1,0 +1,163 @@
+# Gateway主配置文件
+# Edge Gateway - Industrial IoT 边缘网关配置
+
+# 基础配置
+gateway:
+  name: "edge-gateway"
+  version: "1.0.0"
+  environment: "production"
+  log_level: "info"
+  
+# 服务端口配置
+services:
+  # REST API服务
+  rest_api:
+    bind_addr: "0.0.0.0:8080"
+    max_connections: 1000
+    enable_cors: true
+    enable_rate_limit: true
+    rate_limit_per_minute: 60
+    jwt_secret: "your-secret-key-here"
+    
+  # Web管理界面
+  web_server:
+    bind_addr: "0.0.0.0:8090"
+    static_dir: "/app/web"
+    enable_cors: true
+    
+  # Prometheus指标
+  metrics:
+    bind_addr: "0.0.0.0:9090"
+    enable: true
+    path: "/metrics"
+
+# 数据存储配置
+storage:
+  # WAL(Write-Ahead Log)配置
+  wal:
+    enabled: true
+    path: "/app/data/wal"
+    sync_interval: "1s"
+    max_file_size: "64MB"
+    retention_days: 7
+    
+  # RocksDB配置
+  database:
+    path: "/app/data/rocksdb"
+    max_open_files: 1000
+    write_buffer_size: "64MB"
+    max_write_buffer_number: 3
+
+# 连接器配置
+connectors:
+  # MQTT连接器
+  mqtt:
+    enabled: true
+    broker_url: "tcp://emqx:1883"
+    client_id: "edge-gateway"
+    username: ""
+    password: ""
+    keep_alive: 60
+    clean_session: true
+    qos: 1
+    retain: false
+    topics:
+      data: "gateway/data"
+      commands: "gateway/commands"
+      status: "gateway/status"
+    
+# 监控和告警配置
+monitoring:
+  # 健康检查
+  health:
+    enabled: true
+    check_interval: "30s"
+    unhealthy_threshold: 3
+    
+  # 告警配置
+  alerts:
+    enabled: true
+    max_alerts: 1000
+    notification:
+      # MQTT告警通知
+      mqtt:
+        enabled: true
+        topic: "gateway/alerts"
+        
+      # HTTP Webhook告警
+      webhook:
+        enabled: false
+        url: "http://localhost:8080/alerts"
+        timeout: "10s"
+
+# 安全配置
+security:
+  # 权限控制
+  permissions:
+    enabled: true
+    default_deny: true
+    
+  # 签名验证
+  signature:
+    enabled: false
+    algorithm: "RS256"
+    public_key_path: "/app/config/public.pem"
+
+# 高级功能配置
+advanced_features:
+  # 机器学习引擎
+  ml_engine:
+    enabled: true
+    model_directory: "/app/models"
+    max_models: 10
+    cache_size: 1000
+    
+  # 实时分析引擎
+  analytics:
+    enabled: true
+    batch_size: 1000
+    processing_interval_ms: 100
+    retention_hours: 24
+    
+  # 边缘计算运行时
+  edge_compute:
+    enabled: true
+    max_modules: 50
+    memory_limit_mb: 256
+    execution_timeout_ms: 5000
+    
+  # 数据管道
+  data_pipeline:
+    enabled: true
+    max_throughput: 10000
+    buffer_size: 1000
+    parallel_processing: true
+    
+  # 预测分析
+  predictive:
+    enabled: true
+    default_horizon_minutes: 60
+    update_interval_minutes: 5
+    
+  # 自动化控制
+  automation:
+    enabled: true
+    max_rules: 100
+    evaluation_interval_ms: 1000
+    
+  # 性能优化
+  optimization:
+    enabled: true
+    optimization_interval_minutes: 10
+    
+  # 时序数据处理
+  time_series:
+    enabled: true
+    max_series: 10000
+    retention_days: 30
+
+# 配置文件引用
+includes:
+  - "/app/config/endpoints.yml"
+  - "/app/config/drivers.yml"
+  - "/app/config/variables.yml"

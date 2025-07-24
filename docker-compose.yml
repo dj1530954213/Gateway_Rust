@@ -1,0 +1,114 @@
+services:
+  # EMQX MQTT代理
+  emqx:
+    image: emqx/emqx:5.4.1
+    container_name: emqx
+    ports:
+      - "20002:1883"   # MQTT
+      - "20003:8083"   # MQTT over WebSocket
+      - "20004:8084"   # MQTT over WSS
+      - "20005:8883"   # MQTT over SSL
+      - "20006:18083" # Dashboard
+    environment:
+      - EMQX_NAME=emqx
+      - EMQX_HOST=emqx
+      - EMQX_DASHBOARD__DEFAULT_USERNAME=admin
+      - EMQX_DASHBOARD__DEFAULT_PASSWORD=public
+    volumes:
+      - emqx-data:/opt/emqx/data
+      - emqx-etc:/opt/emqx/etc
+      - emqx-log:/opt/emqx/log
+    networks:
+      - gateway-net
+
+  # Prometheus监控
+  prometheus:
+    image: prom/prometheus:v2.47.2
+    container_name: prometheus
+    ports:
+      - "20007:9090"   # Prometheus Web UI
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    networks:
+      - gateway-net
+
+  # Grafana仪表板
+  grafana:
+    image: grafana/grafana:10.2.0
+    container_name: grafana
+    ports:
+      - "20008:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./docker/grafana/provisioning:/etc/grafana/provisioning
+      - ./docker/grafana/dashboards:/var/lib/grafana/dashboards
+    networks:
+      - gateway-net
+
+  # Edge Gateway主服务
+  edge-gateway:
+    build: .
+    container_name: edge-gateway
+    ports:
+      - "20009:8080"   # REST API
+      - "20010:8090"   # Web管理界面
+      - "20011:9090"   # Prometheus指标
+    environment:
+      - RUST_LOG=info
+      - GATEWAY_CONFIG=/app/config/docker-gateway.yml
+    volumes:
+      - ./config:/app/config
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./drivers:/app/drivers
+    depends_on:
+      - emqx
+      - prometheus
+    networks:
+      - gateway-net
+
+  # InfluxDB时序数据库(可选)
+  influxdb:
+    image: influxdb:2.7.3
+    container_name: influxdb
+    ports:
+      - "20012:8086"
+    environment:
+      - DOCKER_INFLUXDB_INIT_MODE=setup
+      - DOCKER_INFLUXDB_INIT_USERNAME=admin
+      - DOCKER_INFLUXDB_INIT_PASSWORD=password123
+      - DOCKER_INFLUXDB_INIT_ORG=edge-gateway
+      - DOCKER_INFLUXDB_INIT_BUCKET=iot-data
+    volumes:
+      - influxdb-data:/var/lib/influxdb2
+      - influxdb-config:/etc/influxdb2
+    networks:
+      - gateway-net
+
+volumes:
+  emqx-data:
+  emqx-etc:
+  emqx-log:
+  prometheus-data:
+  grafana-data:
+  influxdb-data:
+  influxdb-config:
+
+networks:
+  gateway-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

@@ -1,0 +1,233 @@
+// Global styles for Edge Gateway Management System
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+}
+
+// Element Plus customizations
+:root {
+  --el-color-primary: #409eff;
+  --el-color-primary-light-3: #79bbff;
+  --el-color-primary-light-5: #a0cfff;
+  --el-color-primary-light-7: #c6e2ff;
+  --el-color-primary-light-8: #d9ecff;
+  --el-color-primary-light-9: #ecf5ff;
+  --el-color-primary-dark-2: #337ecc;
+  
+  --el-border-radius-base: 6px;
+  --el-border-radius-small: 4px;
+  --el-border-radius-round: 20px;
+  --el-border-radius-circle: 100%;
+}
+
+// Custom utility classes
+.flex {
+  display: flex;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.flex-between {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.ml-auto {
+  margin-left: auto;
+}
+
+.mr-auto {
+  margin-right: auto;
+}
+
+// Layout classes
+.main-container {
+  height: 100vh;
+  overflow: hidden;
+}
+
+.sidebar {
+  box-shadow: 2px 0 6px rgba(0, 21, 41, 0.35);
+  transition: width 0.3s;
+}
+
+.main-content {
+  flex: 1;
+  background-color: #f5f7fa;
+  overflow: auto;
+}
+
+.content-wrapper {
+  padding: 20px;
+  min-height: calc(100vh - 60px);
+}
+
+// Card styles
+.info-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+  transition: box-shadow 0.3s;
+  
+  &:hover {
+    box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
+  }
+}
+
+// Status indicators
+.status-online {
+  color: #67c23a;
+}
+
+.status-offline {
+  color: #f56c6c;
+}
+
+.status-warning {
+  color: #e6a23c;
+}
+
+// Loading animations
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+
+// Scrollbar customization
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+  
+  &:hover {
+    background: #a8a8a8;
+  }
+}
+
+// Dark mode support
+html.dark {
+  .main-content {
+    background-color: #1a1a1a;
+  }
+  
+  .info-card {
+    background-color: #2d2d2d;
+    border-color: #3d3d3d;
+  }
+}
+
+// Responsive design
+@media (max-width: 768px) {
+  .content-wrapper {
+    padding: 15px;
+  }
+  
+  .flex-mobile-column {
+    flex-direction: column;
+    gap: 10px;
+  }
+}
+
+// Chart container
+.chart-container {
+  width: 100%;
+  height: 400px;
+  min-height: 300px;
+}
+
+// Form styles
+.form-section {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 16px;
+  color: #303133;
+  border-bottom: 1px solid #e4e7ed;
+  padding-bottom: 8px;
+}
+
+// Table styles
+.data-table {
+  .el-table__header {
+    font-weight: 600;
+  }
+  
+  .el-table__row:hover {
+    background-color: #f5f7fa;
+  }
+}
+
+// Button groups
+.button-group {
+  display: flex;
+  gap: 8px;
+  
+  &.vertical {
+    flex-direction: column;
+  }
+}
+
+// Notifications
+.notification-success {
+  border-left: 4px solid #67c23a;
+}
+
+.notification-warning {
+  border-left: 4px solid #e6a23c;
+}
+
+.notification-error {
+  border-left: 4px solid #f56c6c;
+}
+
+.notification-info {
+  border-left: 4px solid #409eff;
+}

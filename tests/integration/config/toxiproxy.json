@@ -1,0 +1,8 @@
+[
+  {
+    "name": "mqtt_proxy",
+    "listen": "0.0.0.0:21883",
+    "upstream": "mqtt-broker:1883",
+    "enabled": true
+  }
+]

@@ -1,0 +1,44 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+# 规则文件
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+# 监控目标配置
+scrape_configs:
+  # Prometheus自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Edge Gateway指标
+  - job_name: 'edge-gateway'
+    static_configs:
+      - targets: ['host.docker.internal:20011']  # 网关指标端口
+    scrape_interval: 5s
+    metrics_path: /metrics
+    
+  # EMQX MQTT代理指标
+  - job_name: 'emqx'
+    static_configs:
+      - targets: ['emqx:18083']  # 内部端口保持不变
+    metrics_path: /api/v5/prometheus/stats
+    scrape_interval: 10s
+
+# 告警管理器配置
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+          # - alertmanager:9093
+
+# 远程写入配置（可选）
+# remote_write:
+#   - url: "http://influxdb:8086/api/v1/prom/write?db=metrics"
+
+# 远程读取配置（可选）  
+# remote_read:
+#   - url: "http://influxdb:8086/api/v1/prom/read?db=metrics"

@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package frame;
+
+// 统一数据值类型
+message Value {
+  oneof value {
+    bool bool_v = 1;
+    int64 int_v = 2;
+    double float_v = 3;
+    bytes bin_v = 4;
+    string str_v = 5;
+  }
+}
+
+// 现场数据帧
+message DataFrame {
+  string tag = 1;                    // 全局唯一标识符 "driver_id.point"
+  Value value = 2;                   // 数据值
+  uint64 timestamp = 3;              // ns since epoch (monotonic)
+  uint32 qos = 4;                    // 0=bad, 1=uncertain, 2=good
+  map<string, string> meta = 5;      // 元数据: unit=db, raw_reg=40001...
+}
+
+// 命令/写入帧
+message CmdFrame {
+  string tag = 1;                    // 目标点位
+  Value value = 2;                   // 期望写值
+  string origin = 3;                 // "north" / "bridge_opcua" / "mqtt"
+  uint64 cmd_id = 4;                 // 命令唯一ID
+  uint64 timestamp = 5;              // 命令创建时间戳
+  int32 priority = 6;                // 命令优先级 (0=低, 1=正常, 2=高, 3=紧急)
+  uint32 timeout_ms = 7;             // 超时时间(毫秒)
+  map<string, string> meta = 8;      // 可选元数据: ack_needed=true
+}
+
+// 命令确认帧
+message CmdAckFrame {
+  uint64 cmd_id = 1;                 // 对应的命令ID
+  string tag = 2;                    // 目标点位
+  bool success = 3;                  // 执行是否成功
+  string error_msg = 4;              // 错误信息(如果失败)
+  uint64 timestamp = 5;              // 确认时间戳
+  Value actual_value = 6;            // 实际写入的值(可选)
+  string driver_id = 7;              // 执行驱动ID
+}
+
+// 帧封装（总线内部使用）
+message FrameEnvelope {
+  uint64 seq = 1;                    // 单调递增序列号
+  int32 kind = 2;                    // 0=DATA, 1=CMD, 2=CMD_ACK
+  bytes payload = 3;                 // DataFrame、CmdFrame或CmdAckFrame序列化
+}

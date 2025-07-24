@@ -1,0 +1,32 @@
+[package]
+name = "endpoint-kit"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+url = { workspace = true }
+rustls = { workspace = true }
+rustls-native-certs = { workspace = true }
+bb8 = { workspace = true }
+once_cell = { workspace = true }
+prometheus = { workspace = true }
+tracing = { workspace = true }
+serde = { workspace = true }
+dashmap = { workspace = true }
+
+# Serial port support
+tokio-serial = "5.4"
+
+# TLS support
+tokio-rustls = "0.24"
+
+[dev-dependencies]
+tokio-test = "0.4"
+proptest = { workspace = true }

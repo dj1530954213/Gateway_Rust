@@ -1,0 +1,50 @@
+# Prometheus配置文件 - 集成测试专用
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus自身监控
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # 网关主程序指标
+  - job_name: 'gateway-metrics'
+    static_configs:
+      - targets: ['host.docker.internal:9100']
+    scrape_interval: 2s
+    metrics_path: /metrics
+
+  # 驱动管理器指标
+  - job_name: 'gateway-drivers'
+    static_configs:
+      - targets: ['host.docker.internal:9101']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Frame Bus指标
+  - job_name: 'gateway-framebus'
+    static_configs:
+      - targets: ['host.docker.internal:9102']
+    scrape_interval: 2s
+    metrics_path: /metrics
+
+  # MQTT连接器指标
+  - job_name: 'gateway-mqtt'
+    static_configs:
+      - targets: ['host.docker.internal:9103']
+    scrape_interval: 5s
+    metrics_path: /metrics
+
+  # Mock PLC指标 (如果提供)
+  - job_name: 'mock-plc'
+    static_configs:
+      - targets: ['mock-plc:8080']
+    scrape_interval: 10s
+    metrics_path: /metrics

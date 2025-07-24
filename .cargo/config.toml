@@ -1,0 +1,11 @@
+[build]
+jobs = 2                # 减少并发编译任务数
+incremental = false     # 禁用增量编译以避免缓存问题
+
+[net]
+retry = 2
+git-fetch-with-cli = true
+
+[env]
+# 确保链接器有足够的堆栈空间
+LINK_ARGS = "/STACK:8388608"

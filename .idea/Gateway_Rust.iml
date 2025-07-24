@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="EMPTY_MODULE" version="4">
+  <component name="NewModuleRootManager">
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/connectors/mqtt5/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/connectors/mqtt5/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/config-manager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/config-manager/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/driver-manager/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/driver-manager/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/endpoint-kit/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/endpoint-kit/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/frame-bus/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/frame-bus/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/metrics-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drivers/modbus-static/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/drivers/modbus-static/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/edge-gateway/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/advanced-features/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/dynamic-driver/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/dynamic-driver/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/monitoring/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/production-config/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/rest-api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/rest-api/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/web-server/src" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/target" />
+    </content>
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>
