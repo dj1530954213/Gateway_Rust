@@ -40,6 +40,9 @@ governor = "0.6"
 sha2 = "0.10"
 base64 = "0.21"
 
+# Date and time
+chrono = { version = "0.4", features = ["serde"] }
+
 # Internal dependencies
 frame-bus = { path = "../frame-bus" }
 driver-manager = { path = "../driver-manager" }

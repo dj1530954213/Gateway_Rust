@@ -10,6 +10,7 @@ members = [
     "core/web-server",
     "core/monitoring",
     "core/production-config",
+    "core/protocol-bridge",
     # "core/advanced-features",  # 暂时禁用以解决链接问题
     "drivers/modbus-static",
     "connectors/mqtt5",

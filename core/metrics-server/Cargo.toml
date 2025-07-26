@@ -11,6 +11,21 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 tracing = { workspace = true }
 prometheus = { workspace = true }
+serde = { workspace = true }
+once_cell = { workspace = true }
 
 # HTTP server for metrics
 hyper = { version = "0.14", features = ["server", "http1", "tcp"] }
+
+# Optional Linux system monitoring
+[target.'cfg(target_os = "linux")'.dependencies]
+nix = { version = "0.27", features = ["fs"] }
+
+# Optional component integration
+endpoint-kit = { path = "../endpoint-kit", optional = true }
+frame-bus = { path = "../frame-bus", optional = true }
+
+[features]
+default = []
+endpoint-kit = ["dep:endpoint-kit"]
+frame-bus = ["dep:frame-bus"]

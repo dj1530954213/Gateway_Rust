@@ -13,6 +13,7 @@ use crate::{
     decorator::{EndpointDecorator, TlsDecorator, RateLimitDecorator, HalfDuplexDecorator},
     control::{subscribe_control, ControlMsg},
     metrics::METRICS,
+    circuitbreaker::{CircuitBreaker, CircuitBreakerConfig},
 };
 
 /// 连接制造器
@@ -45,6 +46,7 @@ pub struct EndpointHandle {
     normalized_url: NormalizedUrl,
     pool: Pool<ConnMaker>,
     paused: Arc<RwLock<bool>>,
+    circuit_breaker: CircuitBreaker,
 }
 
 impl EndpointHandle {
@@ -62,18 +64,41 @@ impl EndpointHandle {
     pub async fn acquire(&self) -> Result<PooledConnection<'_, ConnMaker>, EndpointError> {
         let start = Instant::now();
         
+        // 检查熔断器状态
+        if !self.circuit_breaker.can_request() {
+            return Err(EndpointError::Pool("Circuit breaker is open".to_string()));
+        }
+        
         // 检查是否被暂停
         if *self.paused.read().await {
             return Err(EndpointError::Paused);
         }
 
-        let conn = self.pool.get().await
-            .map_err(|e| EndpointError::Pool(format!("Failed to acquire connection: {}", e)))?;
+        // 执行连接获取操作，由熔断器保护
+        let result = self.circuit_breaker.call(async {
+            self.pool.get().await
+                .map_err(|e| EndpointError::Pool(format!("Failed to acquire connection: {}", e)))
+        }).await;
+
+        let conn = match result {
+            Ok(conn) => conn,
+            Err(crate::circuitbreaker::CircuitBreakerError::CircuitOpen) => {
+                return Err(EndpointError::Pool("Circuit breaker is open".to_string()));
+            }
+            Err(crate::circuitbreaker::CircuitBreakerError::OperationFailed(e)) => {
+                return Err(e);
+            }
+        };
 
         // 记录指标
         let elapsed = start.elapsed();
         METRICS.acquire_latency.observe(elapsed.as_micros() as f64);
         METRICS.pool_size.set(self.pool.state().connections as i64);
+        
+        // Hot Acquire性能要求检查 (≤1µs)
+        if elapsed.as_micros() > 1 {
+            tracing::warn!("Hot acquire exceeded 1µs threshold: {}µs", elapsed.as_micros());
+        }
 
         Ok(conn)
     }
@@ -104,15 +129,26 @@ impl EndpointFactory {
         // 创建新的连接池
         let manager = ConnMaker { url };
         let pool = Pool::builder()
-            .max_size(8) // 默认最大连接数
+            .max_size(4) // MVP-3要求：默认连接池大小为4
             .build(manager)
             .await
             .map_err(|e| EndpointError::Pool(format!("Failed to create pool: {}", e)))?;
+
+        // 创建熔断器
+        let circuit_breaker_config = CircuitBreakerConfig {
+            failure_threshold: 3,
+            failure_rate_threshold: 0.5,
+            min_request_threshold: 10,
+            timeout: std::time::Duration::from_secs(30),
+            max_half_open_requests: 2,
+        };
+        let circuit_breaker = CircuitBreaker::new(circuit_breaker_config);
 
         let handle = Arc::new(EndpointHandle {
             normalized_url: normalized.clone(),
             pool,
             paused: Arc::new(RwLock::new(false)),
+            circuit_breaker,
         });
 
         // 启动控制消息监听

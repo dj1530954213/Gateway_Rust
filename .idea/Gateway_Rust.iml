@@ -24,6 +24,8 @@
       <sourceFolder url="file://$MODULE_DIR$/core/rest-api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/core/rest-api/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/core/web-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/protocol-bridge/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/protocol-bridge/tests" isTestSource="true" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

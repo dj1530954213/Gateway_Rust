@@ -116,11 +116,20 @@ async fn handle_request(
 
 /// 收集所有Prometheus指标
 async fn gather_metrics() -> Result<String> {
+    use crate::comprehensive::COMPREHENSIVE_METRICS;
+    
+    // 使用综合指标系统的注册表
     let encoder = TextEncoder::new();
-    let metric_families = prometheus::gather();
+    let metric_families = COMPREHENSIVE_METRICS.registry().gather();
     
     let mut buffer = Vec::new();
     encoder.encode(&metric_families, &mut buffer)?;
+    
+    // 同时包含默认注册表的指标（用于兼容性）
+    let default_metrics = prometheus::gather();
+    for family in default_metrics {
+        encoder.encode(&[family], &mut buffer)?;
+    }
     
     Ok(String::from_utf8(buffer)?)
 }
