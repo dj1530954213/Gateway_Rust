@@ -1,0 +1,107 @@
+// Gateway Rust Web UI - 样式变量定义
+// 遵循Element Plus设计语言并添加项目定制
+
+// 主题色彩
+$primary-color: #1890ff;
+$success-color: #52c41a;
+$warning-color: #faad14;
+$danger-color: #ff4d4f;
+$info-color: #1890ff;
+
+// 背景色
+$bg-color: #f5f5f5;
+$bg-color-white: #ffffff;
+$bg-color-light: #fafafa;
+$bg-color-dark: #001529;
+
+// 文字色彩
+$text-color-primary: #262626;
+$text-color-regular: #595959;
+$text-color-secondary: #8c8c8c;
+$text-color-placeholder: #bfbfbf;
+$text-color-white: #ffffff;
+
+// 边框色彩
+$border-color: #d9d9d9;
+$border-color-light: #e8e8e8;
+$border-color-lighter: #f0f0f0;
+$border-color-dark: #bfbfbf;
+
+// 阴影
+$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+$box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
+$box-shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+// 间距
+$spacing-xs: 4px;
+$spacing-sm: 8px;
+$spacing-md: 16px;
+$spacing-lg: 24px;
+$spacing-xl: 32px;
+$spacing-xxl: 48px;
+
+// 字体大小
+$font-size-xs: 12px;
+$font-size-sm: 14px;
+$font-size-base: 16px;
+$font-size-lg: 18px;
+$font-size-xl: 20px;
+$font-size-xxl: 24px;
+
+// 圆角
+$border-radius-base: 6px;
+$border-radius-sm: 4px;
+$border-radius-lg: 8px;
+$border-radius-round: 50%;
+
+// Z-index层级
+$z-index-dropdown: 1000;
+$z-index-fixed: 1010;
+$z-index-modal-backdrop: 1020;
+$z-index-modal: 1030;
+$z-index-popover: 1040;
+$z-index-tooltip: 1050;
+$z-index-toast: 1060;
+
+// 动画时长
+$transition-base: 0.3s;
+$transition-fast: 0.2s;
+$transition-slow: 0.5s;
+
+// 状态色彩 - IoT设备专用
+$device-online: #52c41a;
+$device-offline: #ff4d4f;
+$device-warning: #faad14;
+$device-unknown: #8c8c8c;
+
+// 驱动状态色彩
+$driver-loaded: #52c41a;
+$driver-error: #ff4d4f;
+$driver-loading: #1890ff;
+$driver-unloaded: #8c8c8c;
+
+// 数据点位类型色彩
+$tag-float: #1890ff;
+$tag-int: #52c41a;
+$tag-bool: #faad14;
+$tag-string: #722ed1;
+
+// 报警级别色彩
+$alert-critical: #ff4d4f;
+$alert-major: #fa8c16;
+$alert-minor: #faad14;
+$alert-warning: #faad14;
+$alert-info: #1890ff;
+
+// 布局尺寸
+$header-height: 64px;
+$sidebar-width: 250px;
+$sidebar-collapsed-width: 64px;
+$footer-height: 48px;
+
+// 响应式断点
+$breakpoint-xs: 480px;
+$breakpoint-sm: 768px;
+$breakpoint-md: 992px;
+$breakpoint-lg: 1200px;
+$breakpoint-xl: 1600px;

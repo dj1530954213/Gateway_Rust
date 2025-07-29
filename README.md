@@ -99,44 +99,62 @@
 
 ### 前置要求
 
-- Rust 1.70+
-- Protocol Buffers编译器 (protoc)
-- Windows/Linux/macOS
+- Docker Desktop 或 Docker Engine
+- Docker Compose v2.0+
+- 足够的磁盘空间 (建议10GB+)
 
-### 构建项目
+### 方式一：一键生产环境启动（推荐）
 
 ```bash
-# 完整构建
-cargo build --release
+# Windows用户（一键启动）
+start-prod.bat
 
-# 运行测试
-cargo test
-
-# 完整系统测试
-./test_complete_system.ps1  # Windows
-./test_complete_system.sh   # Linux/macOS
+# 或手动启动生产环境
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
-### 启动网关
+### 方式二：开发环境启动
 
 ```bash
-# 启动完整功能版本
-cargo run --bin edge-gateway
+# Windows用户（开发模式）
+start-dev.bat
 
-# 使用自定义配置
-cargo run --bin edge-gateway -- --config config/production.yaml
+# 或手动启动开发环境
+docker-compose up -d
+```
 
-# 调试模式
-cargo run --bin edge-gateway -- --debug
+### 方式三：完整清理后重新启动
+
+```bash
+# 清理所有Docker资源
+docker system prune -a --volumes -f
+
+# 启动生产环境
+docker-compose -f docker-compose.prod.yml up -d
 ```
 
 ### 访问系统
 
-启动后可以访问以下地址：
+**生产环境访问地址：**
+- 🌐 **Web管理界面**: http://localhost:8090
+- 🔗 **REST API**: http://localhost:8080  
+- 📊 **Grafana监控**: http://localhost:3000 (admin/grafana_secure_2024)
+- 💾 **InfluxDB 3.2-core**: http://localhost:8086 (admin/influx_secure_2024)
+- 📈 **Prometheus**: http://localhost:9091
+- 🔗 **EMQX Dashboard**: http://localhost:18083 (admin/emqx_admin_2024)
 
-- 🌐 **Web管理界面**: http://127.0.0.1:8090
-- 🔗 **REST API**: http://127.0.0.1:8080
-- 📊 **监控指标**: http://127.0.0.1:9090/metrics
+**开发环境访问地址：**
+- 🌐 **Web管理界面**: http://localhost:20010
+- 🔗 **REST API**: http://localhost:20009
+- 📊 **Grafana监控**: http://localhost:20008 (admin/admin)
+- 💾 **InfluxDB 3.2-core**: http://localhost:20012 (admin/password123)
+- 📈 **Prometheus**: http://localhost:20007
+- 🔗 **EMQX Dashboard**: http://localhost:20006 (admin/public)
+- 🛠️ **前端开发**: http://localhost:5173 (需单独启动)
+
+### 详细启动指南
+
+完整的启动说明和故障排除请参考：[startup.md](./startup.md)
 
 ## 📊 功能模块详解
 

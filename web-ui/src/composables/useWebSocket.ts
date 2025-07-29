@@ -31,9 +31,64 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   
   let reconnectTimer: NodeJS.Timeout | null = null
   let heartbeatTimer: NodeJS.Timeout | null = null
+  let mockTimer: NodeJS.Timeout | null = null
+
+  const startMockWebSocket = () => {
+    // 模拟连接成功
+    isConnected.value = true
+    isConnecting.value = false
+    reconnectAttempts.value = 0
+    
+    console.log('Mock WebSocket connected:', url)
+    onOpen?.()
+    
+    // 定期发送模拟消息（可选）
+    if (url.includes('/ws/dashboard') || url.includes('/ws')) {
+      mockTimer = setInterval(() => {
+        const mockMessages = [
+          {
+            type: 'system_metrics',
+            data: {
+              cpu_usage: Math.random() * 30 + 20,
+              memory_usage: Math.random() * 20 + 60,
+              timestamp: new Date().toISOString()
+            }
+          },
+          {
+            type: 'device_status_update',
+            data: {
+              deviceId: 'device_' + Math.floor(Math.random() * 10),
+              status: Math.random() > 0.8 ? 'offline' : 'online',
+              timestamp: new Date().toISOString()
+            }
+          }
+        ]
+        
+        const randomMessage = mockMessages[Math.floor(Math.random() * mockMessages.length)]
+        const messageStr = JSON.stringify(randomMessage)
+        lastMessage.value = messageStr
+        onMessage?.(messageStr)
+      }, 10000) // 每10秒发送一次模拟消息
+    }
+  }
+
+  const stopMockWebSocket = () => {
+    if (mockTimer) {
+      clearInterval(mockTimer)
+      mockTimer = null
+    }
+    isConnected.value = false
+  }
 
   const connect = async () => {
     if (isConnecting.value || isConnected.value) {
+      return
+    }
+
+    // 在Mock模式下启用模拟WebSocket
+    if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+      console.log('WebSocket Mock mode enabled:', url)
+      startMockWebSocket()
       return
     }
 
@@ -102,14 +157,27 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
     
     stopHeartbeat()
     stopReconnect()
+    stopMockWebSocket()
     
     isConnected.value = false
     isConnecting.value = false
   }
 
   const send = (data: string | object) => {
-    if (!isConnected.value || !socket.value) {
+    if (!isConnected.value) {
       console.warn('WebSocket is not connected')
+      return false
+    }
+
+    // Mock模式下模拟发送
+    if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+      const message = typeof data === 'string' ? data : JSON.stringify(data)
+      console.log('Mock WebSocket send:', message)
+      return true
+    }
+
+    if (!socket.value) {
+      console.warn('WebSocket socket is not available')
       return false
     }
 
@@ -187,7 +255,7 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
     return unsubscribe
   }
 
-  // Auto-connect on mount
+  // Auto-connect on mount (with Mock mode support)
   onMounted(() => {
     if (autoConnect) {
       nextTick(() => {

@@ -636,7 +636,7 @@ const handleBeforeUpload = (file: File) => {
   
   // 检查文件类型
   const acceptedTypes = currentType.accept.split(',').map(type => type.trim())
-  const fileExt = '.' + file.name.split('.').pop()?.toLowerCase()
+  const fileExt = `.${  file.name.split('.').pop()?.toLowerCase()}`
   const isValidType = acceptedTypes.includes(fileExt) || acceptedTypes.includes('*')
   
   if (!isValidType) {

@@ -24,7 +24,7 @@
         >
           <template v-for="item in menuItems" :key="item.path">
             <el-sub-menu
-              v-if="item.children && item.children.length > 0"
+              v-if="Array.isArray(item.children) && item.children.length > 0"
               :index="item.path"
             >
               <template #title>
@@ -52,9 +52,14 @@
       <el-container direction="vertical">
         <!-- Header -->
         <el-header class="main-header">
+          <!-- 开发模式指示器 -->
+          <div v-if="isDevelopmentMode" class="dev-indicator">
+            <el-tag type="warning" size="small">开发模式 (Mock数据)</el-tag>
+          </div>
+          
           <div class="header-left">
             <el-button
-              type="text"
+              type="link"
               size="large"
               @click="toggleSidebar"
             >
@@ -93,7 +98,7 @@
             <!-- Alerts Dropdown -->
             <el-dropdown trigger="click" @command="handleAlertCommand">
               <el-badge :value="unreadAlertsCount" :hidden="unreadAlertsCount === 0">
-                <el-button type="text" size="large">
+                <el-button type="link" size="large">
                   <el-icon><Bell /></el-icon>
                 </el-button>
               </el-badge>
@@ -101,7 +106,7 @@
                 <el-dropdown-menu>
                   <div class="alerts-header">
                     <span>最新告警</span>
-                    <el-button type="text" size="small" @click="markAllAlertsRead">
+                    <el-button type="link" size="small" @click="markAllAlertsRead">
                       全部已读
                     </el-button>
                   </div>
@@ -127,7 +132,7 @@
 
             <!-- Theme Toggle -->
             <el-button
-              type="text"
+              type="link"
               size="large"
               @click="toggleTheme"
             >
@@ -171,9 +176,14 @@
         <!-- Main Content Area -->
         <el-main class="main-content">
           <div class="content-wrapper">
-            <router-view v-slot="{ Component }">
-              <transition name="fade-slide" mode="out-in">
-                <component :is="Component" />
+            <router-view v-slot="{ Component, route }">
+              <transition 
+                name="fade-slide" 
+                mode="out-in"
+                @before-leave="handleBeforeLeave"
+                @after-enter="handleAfterEnter"
+              >
+                <component :is="Component" :key="route.fullPath" />
               </transition>
             </router-view>
           </div>
@@ -191,7 +201,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, watch, onUnmounted } from 'vue'
+import { computed, onMounted, ref, watch, onUnmounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { ElMessage, ElNotification } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
@@ -220,10 +230,17 @@ const unreadAlertsCount = computed(() =>
 )
 
 // WebSocket connection
-const { isConnected, lastMessage } = useWebSocket('/ws')
+const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'
+const { isConnected, lastMessage } = useWebSocket(`${wsUrl}/ws`)
+
+// Development mode indicator
+const isDevelopmentMode = computed(() => {
+  return import.meta.env.VITE_ENABLE_MOCK === 'true'
+})
 
 // Menu configuration
-const menuItems = computed(() => [
+const menuItems = computed(() => {
+  const items = [
   {
     path: '/dashboard',
     title: '仪表板',
@@ -235,11 +252,16 @@ const menuItems = computed(() => [
     icon: 'Monitor',
   },
   {
+    path: '/devices',
+    title: '设备管理',
+    icon: 'Monitor',
+  },
+  {
     path: '/drivers',
     title: '驱动管理',
     icon: 'Connection',
     children: [
-      { path: '/drivers', title: '驱动列表' },
+      { path: '/drivers/list', title: '驱动列表' },
       { path: '/drivers/create', title: '创建驱动' },
     ],
   },
@@ -248,21 +270,30 @@ const menuItems = computed(() => [
     title: '连接器管理',
     icon: 'Link',
     children: [
-      { path: '/connectors', title: '连接器列表' },
+      { path: '/connectors/list', title: '连接器列表' },
       { path: '/connectors/create', title: '创建连接器' },
     ],
   },
   {
-    path: '/data-points',
-    title: '数据点配置',
+    path: '/tags',
+    title: '点位管理',
     icon: 'SetUp',
+  },
+  {
+    path: '/data-points',
+    title: '数据点管理',
+    icon: 'DataBoard',
+    children: [
+      { path: '/data-points/list', title: '数据点列表' },
+      { path: '/data-points/create', title: '创建数据点' },
+    ],
   },
   {
     path: '/alerts',
     title: '告警管理',
     icon: 'Warning',
     children: [
-      { path: '/alerts', title: '告警列表' },
+      { path: '/alerts/list', title: '告警列表' },
       { path: '/alerts/rules', title: '告警规则' },
       { path: '/alerts/history', title: '告警历史' },
     ],
@@ -281,13 +312,7 @@ const menuItems = computed(() => [
       { path: '/system/users', title: '用户管理' },
       { path: '/system/logs', title: '系统日志' },
       { path: '/system/backup', title: '备份恢复' },
-    ].filter(item => {
-      // Filter menu items based on user permissions
-      if (item.path === '/system/users' && !authStore.hasRole('admin')) {
-        return false
-      }
-      return true
-    }),
+    ],
   },
   {
     path: '/monitoring',
@@ -298,16 +323,47 @@ const menuItems = computed(() => [
       { path: '/monitoring/health', title: '健康状态' },
     ],
   },
-])
+]
+  
+  // Ensure all menu items have safe structure and apply permission filtering
+  return items.map(item => {
+    let children = item.children || []
+    
+    // Apply permission filtering to children
+    if (children.length > 0) {
+      children = children.filter(child => {
+        try {
+          // Filter system users menu for admin only
+          if (child.path === '/system/users') {
+            return authStore.user?.role === 'admin'
+          }
+          // Filter system backup menu for admin only  
+          if (child.path === '/system/backup') {
+            return authStore.user?.role === 'admin'
+          }
+          return true
+        } catch (error) {
+          console.warn('Error filtering menu child:', child.path, error)
+          return true
+        }
+      })
+    }
+    
+    return {
+      ...item,
+      children
+    }
+  })
+})
 
 // Active menu calculation
 const activeMenu = computed(() => {
   const path = route.path
   // Find the best matching menu item
   for (const item of menuItems.value) {
-    if (item.children) {
+    if (Array.isArray(item.children) && item.children.length > 0) {
       for (const child of item.children) {
-        if (path.startsWith(child.path)) {
+        if (child && child.path && path.startsWith(child.path)) {
           return child.path
         }
       }
@@ -334,8 +390,8 @@ const breadcrumbs = computed(() => {
         title = item.title
         break
       }
-      if (item.children) {
-        const child = item.children.find(c => c.path === currentPath)
+      if (Array.isArray(item.children) && item.children.length > 0) {
+        const child = item.children.find(c => c && c.path === currentPath)
         if (child) {
           title = child.title
           break
@@ -408,6 +464,19 @@ const markAllAlertsRead = () => {
   ElMessage.success('已标记所有告警为已读')
 }
 
+// Transition event handlers
+const handleBeforeLeave = () => {
+  // 确保在组件离开前清理任何可能的DOM引用
+  globalLoading.value = false
+}
+
+const handleAfterEnter = () => {
+  // 组件进入后的处理
+  nextTick(() => {
+    // 确保DOM已经稳定
+  })
+}
+
 // Watch for WebSocket messages
 watch(lastMessage, (message) => {
   if (message) {
@@ -450,8 +519,10 @@ onMounted(async () => {
     systemStore.init(),
   ])
   
-  // Start metrics polling
-  systemStore.startMetricsPolling()
+  // Start metrics polling (with delay to ensure proper initialization)
+  setTimeout(() => {
+    systemStore.startMetricsPolling()
+  }, 1000)
 })
 
 // Cleanup
@@ -542,6 +613,30 @@ onUnmounted(() => {
         color: var(--el-text-color-primary);
       }
     }
+  }
+  
+  // 开发模式指示器样式
+  .dev-indicator {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    
+    .el-tag {
+      font-size: 12px;
+      font-weight: 500;
+      animation: pulse-soft 2s infinite;
+    }
+  }
+}
+
+// 柔和的脉冲动画
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
   }
 }
 

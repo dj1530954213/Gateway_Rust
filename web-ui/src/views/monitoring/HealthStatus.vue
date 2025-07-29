@@ -477,7 +477,7 @@ const healthScoreChartOption = computed(() => ({
     type: 'category',
     data: Array.from({ length: 24 }, (_, i) => {
       const time = new Date(Date.now() - (23 - i) * 60 * 60 * 1000)
-      return time.getHours() + ':00'
+      return `${time.getHours()  }:00`
     })
   },
   yAxis: {
@@ -784,7 +784,7 @@ const exportDiagnostic = () => {
   }
   
   const dataStr = JSON.stringify(report, null, 2)
-  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+  const dataUri = `data:application/json;charset=utf-8,${ encodeURIComponent(dataStr)}`
   
   const exportFileDefaultName = `health-diagnostic-${new Date().toISOString().split('T')[0]}.json`
   

@@ -41,6 +41,16 @@ export function formatTime(
 }
 
 /**
+ * Format timestamp to datetime string (alias for formatTime)
+ */
+export function formatDateTime(
+  timestamp: string | number | Date,
+  format: string = DATE_FORMATS.DATETIME
+): string {
+  return formatTime(timestamp, format)
+}
+
+/**
  * Get relative time (e.g., "2 hours ago")
  */
 export function getRelativeTime(timestamp: string | number | Date): string {
@@ -266,7 +276,7 @@ export function isBusinessHours(): boolean {
  */
 export function formatFilename(prefix: string = '', extension: string = ''): string {
   const timestamp = dayjs().format('YYYYMMDD_HHmmss')
-  return `${prefix}${prefix ? '_' : ''}${timestamp}${extension ? '.' + extension : ''}`
+  return `${prefix}${prefix ? '_' : ''}${timestamp}${extension ? `.${  extension}` : ''}`
 }
 
 /**

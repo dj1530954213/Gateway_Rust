@@ -12,7 +12,7 @@
       <div class="filter-actions">
         <el-button
           v-if="showReset"
-          type="text"
+          type="link"
           size="small"
           @click="handleReset"
           :disabled="!hasActiveFilters"
@@ -22,7 +22,7 @@
         
         <el-button
           v-if="collapsible"
-          type="text"
+          type="link"
           size="small"
           :icon="isCollapsed ? ArrowDown : ArrowUp"
           @click="toggleCollapse"
@@ -461,8 +461,8 @@ const activeFilters = computed(() => {
         displayValue = `${value[0]} ~ ${value[1]}`
       }
     } else if (filter.type === 'numberRange') {
-      const minKey = key + '_min'
-      const maxKey = key + '_max'
+      const minKey = `${key  }_min`
+      const maxKey = `${key  }_max`
       const minValue = filterValues[minKey]
       const maxValue = filterValues[maxKey]
       if (minValue !== null && maxValue !== null) {
@@ -495,6 +495,9 @@ const getFilterOptions = (filter: FilterItem) => {
 
 // 判断快速筛选是否激活
 const isQuickFilterActive = (quick: QuickFilter) => {
+  if (!quick || !quick.filters || typeof quick.filters !== 'object') {
+    return false
+  }
   return Object.entries(quick.filters).every(([key, value]) => {
     return filterValues[key] === value
   })
@@ -539,6 +542,10 @@ const handleRangeChange = (key: string, type: 'min' | 'max', value: any) => {
 }
 
 const handleQuickFilter = (quick: QuickFilter) => {
+  if (!quick || !quick.filters || typeof quick.filters !== 'object') {
+    return
+  }
+  
   if (isQuickFilterActive(quick)) {
     // 取消快速筛选
     Object.keys(quick.filters).forEach(key => {

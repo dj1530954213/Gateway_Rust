@@ -8,7 +8,7 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 use anyhow::Result;
-use tokio::sync::{mpsc, Mutex};
+use tokio::sync::mpsc;
 use tracing::{info, warn, debug};
 
 use crate::metrics::METRICS;
@@ -180,9 +180,9 @@ impl WalManager {
         let db = self.db.clone();
         let config = self.config.clone();
         let background_running = self.background_running.clone();
-        let batch_writes = self.batch_writes.clone();
-        let gc_runs = self.gc_runs.clone();
-        let compactions = self.compactions.clone();
+        let batch_writes = Arc::new(AtomicU64::new(0));
+        let gc_runs = Arc::new(AtomicU64::new(0));
+        let compactions = Arc::new(AtomicU64::new(0));
         
         // 批量写入任务
         tokio::spawn(async move {
@@ -206,7 +206,7 @@ impl WalManager {
         db: Arc<DB>,
         config: WalConfig,
         mut receiver: mpsc::UnboundedReceiver<BatchEntry>,
-        batch_writes: AtomicU64,
+        batch_writes: Arc<AtomicU64>,
     ) {
         let mut batch = Vec::new();
         let mut last_flush = Instant::now();
@@ -250,7 +250,7 @@ impl WalManager {
     }
 
     /// 刷新批次到数据库
-    fn flush_batch(db: &Arc<DB>, batch: &mut Vec<BatchEntry>, batch_writes: &AtomicU64) {
+    fn flush_batch(db: &Arc<DB>, batch: &mut Vec<BatchEntry>, batch_writes: &Arc<AtomicU64>) {
         if batch.is_empty() {
             return;
         }
@@ -294,8 +294,8 @@ impl WalManager {
         db: Arc<DB>,
         config: WalConfig,
         background_running: Arc<AtomicBool>,
-        gc_runs: AtomicU64,
-        compactions: AtomicU64,
+        gc_runs: Arc<AtomicU64>,
+        compactions: Arc<AtomicU64>,
     ) {
         let mut interval = tokio::time::interval(config.gc_interval);
         
@@ -316,12 +316,9 @@ impl WalManager {
                 
             if current_size > config.auto_compact_threshold {
                 info!("WAL size ({} bytes) exceeds threshold, triggering compaction", current_size);
-                if let Err(e) = db.compact_range::<&[u8], &[u8]>(None, None) {
-                    warn!("Auto compaction failed: {}", e);
-                } else {
-                    compactions.fetch_add(1, Ordering::Relaxed);
-                    info!("Auto compaction completed");
-                }
+                db.compact_range::<&[u8], &[u8]>(None, None);
+                compactions.fetch_add(1, Ordering::Relaxed);
+                info!("Auto compaction completed");
             }
         }
         

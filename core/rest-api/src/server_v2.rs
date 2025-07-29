@@ -174,7 +174,7 @@ impl ApiServerV2 {
     }
 
     /// 创建所有路由
-    fn create_routes(&self) -> impl Filter<Extract = impl Reply, Error = Rejection> + Clone {
+    fn create_routes(&self) -> impl Filter<Extract = impl Reply, Error = std::convert::Infallible> + Clone {
         // 身份验证路由
         let auth_routes = self.auth_routes();
         

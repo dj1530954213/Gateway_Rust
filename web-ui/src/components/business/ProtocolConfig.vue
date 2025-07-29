@@ -15,7 +15,7 @@
       <div class="header-actions">
         <!-- 配置模板 -->
         <el-dropdown v-if="showTemplates" trigger="click" @command="handleTemplate">
-          <el-button type="text" size="small">
+          <el-button type="link" size="small">
             配置模板 <el-icon><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
@@ -31,7 +31,7 @@
         <!-- 帮助按钮 -->
         <el-button
           v-if="showHelp"
-          type="text"
+          type="link"
           size="small"
           :icon="QuestionFilled"
           @click="handleHelp"
@@ -275,7 +275,7 @@ import {
   QuestionFilled,
   Connection,
   Monitor,
-  // Network,  // 这个图标不存在，先移除
+  Link,
   Lock
 } from '@element-plus/icons-vue'
 import { BaseForm, BaseTable } from '../base'
@@ -373,7 +373,7 @@ const supportedProtocols = [
     label: 'Modbus TCP',
     category: '以太网',
     tagType: 'primary',
-    icon: Network
+    icon: Link
   },
   {
     value: 'modbus_rtu',
@@ -394,21 +394,21 @@ const supportedProtocols = [
     label: 'MQTT 5.0',
     category: '物联网',
     tagType: 'info',
-    icon: Network
+    icon: Link
   },
   {
     value: 'ethernet_ip',
     label: 'Ethernet/IP',
     category: '以太网',
     tagType: 'primary',
-    icon: Network
+    icon: Link
   },
   {
     value: 'profinet',
     label: 'PROFINET',
     category: '工业以太网',
     tagType: 'danger',
-    icon: Network
+    icon: Link
   }
 ]
 

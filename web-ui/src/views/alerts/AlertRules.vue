@@ -895,7 +895,7 @@ const handleTestRule = async (rule: AlertRule) => {
 
 const handleExportRule = (rule: AlertRule) => {
   const exportData = {
-    rule: rule,
+    rule,
     exportTime: new Date().toISOString(),
     version: '1.0'
   }

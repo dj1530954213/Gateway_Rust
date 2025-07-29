@@ -4,11 +4,11 @@ services:
     image: emqx/emqx:5.4.1
     container_name: emqx
     ports:
-      - "20002:1883"   # MQTT
-      - "20003:8083"   # MQTT over WebSocket
-      - "20004:8084"   # MQTT over WSS
-      - "20005:8883"   # MQTT over SSL
-      - "20006:18083" # Dashboard
+      - "50005:1883"   # MQTT
+      - "50006:8083"   # MQTT over WebSocket
+      - "50007:8084"   # MQTT over WSS
+      - "50008:8883"   # MQTT over SSL
+      - "50004:18083" # Dashboard
     environment:
       - EMQX_NAME=emqx
       - EMQX_HOST=emqx
@@ -26,7 +26,7 @@ services:
     image: prom/prometheus:v2.47.2
     container_name: prometheus
     ports:
-      - "20007:9090"   # Prometheus Web UI
+      - "50003:9090"   # Prometheus Web UI
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -45,7 +45,7 @@ services:
     image: grafana/grafana:10.2.0
     container_name: grafana
     ports:
-      - "20008:3000"
+      - "50002:3000"
     environment:
       - GF_SECURITY_ADMIN_USER=admin
       - GF_SECURITY_ADMIN_PASSWORD=admin
@@ -57,45 +57,66 @@ services:
     networks:
       - gateway-net
 
-  # Edge Gateway主服务
-  edge-gateway:
-    build: .
-    container_name: edge-gateway
-    ports:
-      - "20009:8080"   # REST API
-      - "20010:8090"   # Web管理界面
-      - "20011:9090"   # Prometheus指标
-    environment:
-      - RUST_LOG=info
-      - GATEWAY_CONFIG=/app/config/docker-gateway.yml
-    volumes:
-      - ./config:/app/config
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./drivers:/app/drivers
-    depends_on:
-      - emqx
-      - prometheus
-    networks:
-      - gateway-net
+  # Edge Gateway主服务 - 开发调试时在控制台启动
+  # edge-gateway:
+  #   build: .
+  #   container_name: edge-gateway
+  #   ports:
+  #     - "50010:8080"   # REST API (调试时改用控制台启动)
+  #     - "50011:8090"   # Web管理界面  
+  #     - "50012:9090"   # Prometheus指标
+  #   environment:
+  #     - RUST_LOG=info
+  #     - GATEWAY_CONFIG=/app/config/docker-gateway.yml
+  #   volumes:
+  #     - ./config:/app/config
+  #     - ./data:/app/data
+  #     - ./logs:/app/logs
+  #     - ./drivers:/app/drivers
+  #   depends_on:
+  #     - emqx
+  #     - prometheus
+  #   networks:
+  #     - gateway-net
 
-  # InfluxDB时序数据库(可选)
+  # InfluxDB时序数据库(可选) - 3.2-core版本配置
   influxdb:
-    image: influxdb:2.7.3
+    image: influxdb:3.2-core
     container_name: influxdb
     ports:
-      - "20012:8086"
+      - "50001:8086"
+    command: 
+      - influxdb3
+      - serve
+      - --object-store
+      - memory
+      - --node-id
+      - gateway-node-001
+      - --log-filter
+      - info
+      - --without-auth
+      - --http-bind
+      - 0.0.0.0:8086
+      - --disable-authz
+      - health,ping,metrics
     environment:
-      - DOCKER_INFLUXDB_INIT_MODE=setup
-      - DOCKER_INFLUXDB_INIT_USERNAME=admin
-      - DOCKER_INFLUXDB_INIT_PASSWORD=password123
-      - DOCKER_INFLUXDB_INIT_ORG=edge-gateway
-      - DOCKER_INFLUXDB_INIT_BUCKET=iot-data
+      - INFLUXDB_HTTP_BIND_ADDRESS=0.0.0.0:8086
+      - INFLUXDB_INIT_USERNAME=admin
+      - INFLUXDB_INIT_PASSWORD=password123
+      - INFLUXDB_INIT_ORG=edge-gateway
+      - INFLUXDB_INIT_BUCKET=iot-data
+      - INFLUXDB3_DISABLE_PYTHON_UDF=true
     volumes:
-      - influxdb-data:/var/lib/influxdb2
-      - influxdb-config:/etc/influxdb2
+      - influxdb-data:/var/lib/influxdb3
+      - influxdb-config:/etc/influxdb3
     networks:
       - gateway-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
 volumes:
   emqx-data:

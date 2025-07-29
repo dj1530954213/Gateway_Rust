@@ -1,0 +1,56 @@
+# 开发调试环境配置 - 后端控制台启动专用
+general:
+  instance_id: "gateway-dev-debug"
+  environment: "development"
+  enable_debug: true
+
+# 网络配置 - 使用50000+端口
+network:
+  rest_api_bind: "127.0.0.1:50010"      # 后端API端口
+  web_ui_bind: "127.0.0.1:50011"        # Web管理界面端口  
+  metrics_bind: "127.0.0.1:50012"       # Prometheus指标端口
+  websocket_bind: "127.0.0.1:50013"     # WebSocket端口
+
+# 数据库连接配置 - 连接到Docker中的服务
+database:
+  influxdb:
+    url: "http://127.0.0.1:50001"       # InfluxDB 3.2-core
+    username: "admin"
+    password: "password123"
+    org: "edge-gateway"
+    bucket: "iot-data"
+    
+  postgres:
+    host: "127.0.0.1"
+    port: 5432
+    database: "gateway_dev"
+    username: "postgres"
+    password: "postgres"
+
+# MQTT配置 - 连接到Docker中的EMQX
+mqtt:
+  broker_host: "127.0.0.1"
+  broker_port: 50005                    # MQTT端口
+  client_id: "gateway-dev-debug"
+  username: "admin"
+  password: "public"
+
+# 监控配置 - 连接到Docker中的服务
+monitoring:
+  prometheus_url: "http://127.0.0.1:50003"
+  grafana_url: "http://127.0.0.1:50002"
+  enable_metrics: true
+  metrics_interval: 30
+
+# 日志配置
+logging:
+  level: "debug"
+  format: "json"
+  output: "console"
+
+# 开发特性
+development:
+  auto_reload: true
+  hot_reload: true
+  debug_mode: true
+  cors_origins: ["http://localhost:50020", "http://127.0.0.1:50020"]

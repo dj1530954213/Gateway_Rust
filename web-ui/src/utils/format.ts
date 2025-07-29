@@ -19,6 +19,13 @@ export function formatBytes(bytes: number, decimals: number = 2): string {
 }
 
 /**
+ * Alias for formatBytes - Format file size to human readable string
+ */
+export function formatFileSize(bytes: number, decimals: number = 2): string {
+  return formatBytes(bytes, decimals)
+}
+
+/**
  * Format percentage with specified decimals
  */
 export function formatPercentage(value: number, decimals: number = 1): string {
@@ -293,7 +300,7 @@ export function truncateText(text: string, maxLength: number = 50): string {
   
   if (text.length <= maxLength) return text
   
-  return text.substring(0, maxLength - 3) + '...'
+  return `${text.substring(0, maxLength - 3)  }...`
 }
 
 /**

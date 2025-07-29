@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 5px; }
+        .log { background: #f5f5f5; padding: 10px; height: 300px; overflow-y: auto; border: 1px solid #ccc; }
+        button { padding: 8px 15px; margin: 5px; cursor: pointer; }
+        input, select { padding: 5px; margin: 5px; }
+        .connected { color: green; }
+        .disconnected { color: red; }
+        .message { padding: 2px 0; border-bottom: 1px solid #eee; }
+        .timestamp { color: #666; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Gateway WebSocket Test Client</h1>
+        
+        <div class="section">
+            <h3>Connection</h3>
+            <input type="text" id="wsUrl" value="ws://localhost:8080/ws/telemetry" placeholder="WebSocket URL">
+            <input type="text" id="clientId" value="" placeholder="Client ID (optional)">
+            <button onclick="connect()">Connect</button>
+            <button onclick="disconnect()">Disconnect</button>
+            <span id="status" class="disconnected">Disconnected</span>
+        </div>
+
+        <div class="section">
+            <h3>Subscription</h3>
+            <input type="text" id="deviceIds" placeholder="Device IDs (comma separated)">
+            <input type="text" id="tagIds" placeholder="Tag IDs (comma separated, optional)">
+            <input type="number" id="sampleInterval" placeholder="Sample interval (ms)" value="1000">
+            <label><input type="checkbox" id="alerts" checked> Subscribe to alerts</label>
+            <br>
+            <button onclick="subscribe()">Subscribe</button>
+            <button onclick="unsubscribe()">Unsubscribe</button>
+            <button onclick="getStatus()">Get Status</button>
+        </div>
+
+        <div class="section">
+            <h3>Test Data</h3>
+            <button onclick="sendPing()">Send Ping</button>
+            <button onclick="simulateData()">Simulate Telemetry Data</button>
+            <button onclick="simulateAlert()">Simulate Alert</button>
+        </div>
+
+        <div class="section">
+            <h3>Messages</h3>
+            <button onclick="clearLog()">Clear Log</button>
+            <div id="log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let ws = null;
+        let messageCount = 0;
+
+        function log(message, type = 'info') {
+            const logDiv = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message';
+            messageDiv.innerHTML = `
+                <span class="timestamp">[${timestamp}]</span> 
+                <span style="color: ${type === 'error' ? 'red' : type === 'send' ? 'blue' : 'black'}">${message}</span>
+            `;
+            logDiv.appendChild(messageDiv);
+            logDiv.scrollTop = logDiv.scrollHeight;
+            messageCount++;
+        }
+
+        function updateStatus(status, connected) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = status;
+            statusEl.className = connected ? 'connected' : 'disconnected';
+        }
+
+        function connect() {
+            const url = document.getElementById('wsUrl').value;
+            const clientId = document.getElementById('clientId').value;
+            
+            let wsUrl = url;
+            if (clientId) {
+                wsUrl += `?client_id=${encodeURIComponent(clientId)}`;
+            }
+
+            try {
+                ws = new WebSocket(wsUrl);
+
+                ws.onopen = function(event) {
+                    log('Connected to WebSocket server');
+                    updateStatus('Connected', true);
+                };
+
+                ws.onmessage = function(event) {
+                    try {
+                        const data = JSON.parse(event.data);
+                        log(`Received: ${JSON.stringify(data, null, 2)}`);
+                    } catch (e) {
+                        log(`Received raw: ${event.data}`);
+                    }
+                };
+
+                ws.onclose = function(event) {
+                    log(`Connection closed: ${event.code} ${event.reason}`, 'error');
+                    updateStatus('Disconnected', false);
+                };
+
+                ws.onerror = function(error) {
+                    log(`WebSocket error: ${error}`, 'error');
+                };
+
+            } catch (error) {
+                log(`Connection error: ${error}`, 'error');
+            }
+        }
+
+        function disconnect() {
+            if (ws) {
+                ws.close();
+                ws = null;
+            }
+        }
+
+        function sendMessage(message) {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                const msgStr = JSON.stringify(message);
+                ws.send(msgStr);
+                log(`Sent: ${msgStr}`, 'send');
+            } else {
+                log('WebSocket not connected', 'error');
+            }
+        }
+
+        function subscribe() {
+            const deviceIds = document.getElementById('deviceIds').value
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id);
+            
+            const tagIds = document.getElementById('tagIds').value
+                .split(',')
+                .map(id => id.trim())
+                .filter(id => id);
+
+            const sampleInterval = parseInt(document.getElementById('sampleInterval').value) || null;
+            const alerts = document.getElementById('alerts').checked;
+
+            const subscription = {
+                type: 'Subscribe',
+                data: {
+                    device_ids: deviceIds,
+                    tag_ids: tagIds.length > 0 ? tagIds : null,
+                    alerts: alerts,
+                    sample_interval_ms: sampleInterval
+                }
+            };
+
+            sendMessage(subscription);
+        }
+
+        function unsubscribe() {
+            sendMessage({ type: 'Unsubscribe' });
+        }
+
+        function getStatus() {
+            sendMessage({ type: 'GetStatus' });
+        }
+
+        function sendPing() {
+            sendMessage({ type: 'Ping' });
+        }
+
+        function simulateData() {
+            // This would normally come from the server
+            const simulatedData = {
+                type: 'Telemetry',
+                data: {
+                    device_id: '550e8400-e29b-41d4-a716-446655440001',
+                    tag_id: '550e8400-e29b-41d4-a716-446655440002',
+                    ts: Date.now(),
+                    value: Math.random() * 100,
+                    unit: 'celsius'
+                }
+            };
+            log(`Simulated data: ${JSON.stringify(simulatedData, null, 2)}`);
+        }
+
+        function simulateAlert() {
+            // This would normally come from the server
+            const simulatedAlert = {
+                type: 'Alert',
+                data: {
+                    event_id: '550e8400-e29b-41d4-a716-446655440003',
+                    rule_name: 'High Temperature',
+                    device_name: 'Sensor-01',
+                    tag_name: 'temperature',
+                    level: 'CRIT',
+                    message: 'Temperature exceeded 80°C',
+                    fired_at: new Date().toISOString()
+                }
+            };
+            log(`Simulated alert: ${JSON.stringify(simulatedAlert, null, 2)}`);
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+            messageCount = 0;
+        }
+
+        // Auto-generate a client ID if empty
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!document.getElementById('clientId').value) {
+                document.getElementById('clientId').value = 'test-client-' + Math.random().toString(36).substr(2, 9);
+            }
+        });
+    </script>
+</body>
+</html>

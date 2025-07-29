@@ -24,8 +24,12 @@
       <sourceFolder url="file://$MODULE_DIR$/core/rest-api/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/core/rest-api/tests" isTestSource="true" />
       <sourceFolder url="file://$MODULE_DIR$/core/web-server/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/alert-engine/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/core/driver-sdk/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/core/protocol-bridge/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/core/protocol-bridge/tests" isTestSource="true" />
+      <sourceFolder url="file://$MODULE_DIR$/core/web-gw-api/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/infra/pg-repo/src" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/target" />
     </content>
     <orderEntry type="inheritedJdk" />

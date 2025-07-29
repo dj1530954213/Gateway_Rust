@@ -414,7 +414,7 @@ const loadConfig = async () => {
       ElMessage.success('配置加载成功')
     }
   } catch (error) {
-    ElMessage.error('配置加载失败: ' + error.message)
+    ElMessage.error(`配置加载失败: ${  error.message}`)
   } finally {
     loading.value = false
   }
@@ -446,7 +446,7 @@ const saveConfig = async () => {
     }
   } catch (error) {
     if (error !== 'cancel') {
-      ElMessage.error('配置保存失败: ' + error.message)
+      ElMessage.error(`配置保存失败: ${  error.message}`)
     }
   } finally {
     saving.value = false
@@ -463,7 +463,7 @@ const resetConfig = () => {
 
 const exportConfig = () => {
   const dataStr = JSON.stringify(config, null, 2)
-  const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+  const dataUri = `data:application/json;charset=utf-8,${ encodeURIComponent(dataStr)}`
   
   const exportFileDefaultName = `gateway-config-${new Date().toISOString().split('T')[0]}.json`
   

@@ -45,15 +45,19 @@ const routes: RouteRecordRaw[] = [
         path: 'drivers',
         name: 'Drivers',
         component: () => import('@/views/drivers/DriversView.vue'),
+        redirect: '/drivers/list',
         meta: {
           title: '驱动管理',
-          icon: 'Connection',
+          icon: 'Cpu',
         },
         children: [
           {
-            path: '',
+            path: 'list',
             name: 'DriversList',
             component: () => import('@/views/drivers/DriversList.vue'),
+            meta: {
+              title: '驱动列表',
+            },
           },
           {
             path: 'create',
@@ -82,18 +86,31 @@ const routes: RouteRecordRaw[] = [
         ],
       },
       {
+        path: 'devices',
+        name: 'Devices',
+        component: () => import('@/views/devices/DevicesView.vue'),
+        meta: {
+          title: '设备管理',
+          icon: 'Monitor',
+        },
+      },
+      {
         path: 'connectors',
         name: 'Connectors',
         component: () => import('@/views/connectors/ConnectorsView.vue'),
+        redirect: '/connectors/list',
         meta: {
           title: '连接器管理',
           icon: 'Link',
         },
         children: [
           {
-            path: '',
+            path: 'list',
             name: 'ConnectorsList',
             component: () => import('@/views/connectors/ConnectorsList.vue'),
+            meta: {
+              title: '连接器列表',
+            },
           },
           {
             path: 'create',
@@ -122,18 +139,31 @@ const routes: RouteRecordRaw[] = [
         ],
       },
       {
+        path: 'tags',
+        name: 'Tags',
+        component: () => import('@/views/tags/TagsView.vue'),
+        meta: {
+          title: '点位管理',
+          icon: 'SetUp',
+        },
+      },
+      {
         path: 'data-points',
         name: 'DataPoints',
         component: () => import('@/views/data-points/DataPointsView.vue'),
+        redirect: '/data-points/list',
         meta: {
-          title: '数据点配置',
-          icon: 'SetUp',
+          title: '数据点管理',
+          icon: 'DataBoard',
         },
         children: [
           {
-            path: '',
+            path: 'list',
             name: 'DataPointsList',
             component: () => import('@/views/data-points/DataPointsList.vue'),
+            meta: {
+              title: '数据点列表',
+            },
           },
           {
             path: 'create',
@@ -157,15 +187,19 @@ const routes: RouteRecordRaw[] = [
         path: 'alerts',
         name: 'Alerts',
         component: () => import('@/views/alerts/AlertsView.vue'),
+        redirect: '/alerts/list',
         meta: {
           title: '告警管理',
           icon: 'Warning',
         },
         children: [
           {
-            path: '',
+            path: 'list',
             name: 'AlertsList',
             component: () => import('@/views/alerts/AlertsList.vue'),
+            meta: {
+              title: '告警列表',
+            },
           },
           {
             path: 'rules',
@@ -198,6 +232,7 @@ const routes: RouteRecordRaw[] = [
         path: 'system',
         name: 'System',
         component: () => import('@/views/system/SystemView.vue'),
+        redirect: '/system/config',
         meta: {
           title: '系统管理',
           icon: 'Setting',
@@ -243,6 +278,7 @@ const routes: RouteRecordRaw[] = [
         path: 'monitoring',
         name: 'Monitoring',
         component: () => import('@/views/monitoring/MonitoringView.vue'),
+        redirect: '/monitoring/health',
         meta: {
           title: '监控中心',
           icon: 'DataAnalysis',
@@ -278,6 +314,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/route-test',
+    name: 'RouteTest',
+    component: () => import('@/views/test/RouteTestView.vue'),
+    meta: {
+      title: '路由测试',
+      requiresAuth: false,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/NotFound.vue'),
@@ -299,39 +344,56 @@ const router = createRouter({
   },
 })
 
-// Route guards
-router.beforeEach((to, from, next) => {
-  const authStore = useAuthStore()
-  
-  // Basic route logging for debugging
-  console.log('Navigating to:', to.path, 'from:', from.path)
-  console.log('Auth status:', authStore.isAuthenticated)
+// Route guards simplified for development
+router.beforeEach(async (to, from, next) => {
+  console.log('Navigating to:', to.path)
   
   // Set page title
   if (to.meta?.title) {
-    document.title = `${to.meta.title} - 工控物联网边缘网关`
+    document.title = `${to.meta.title} - Gateway Rust`
   }
   
-  // Check authentication - skip for login page
-  if (to.path !== '/login' && to.meta?.requiresAuth !== false && !authStore.isAuthenticated) {
+  // 在Mock模式下跳过所有认证检查
+  if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+    console.log('Mock mode: skipping auth checks')
+    next()
+    return
+  }
+  
+  const authStore = useAuthStore()
+  
+  // Skip auth for specific paths
+  const skipAuthPaths = ['/login', '/diagnostic', '/route-test']
+  
+  if (!skipAuthPaths.includes(to.path) && 
+      to.meta?.requiresAuth !== false && 
+      !authStore.isAuthenticated) {
     next('/login')
     return
   }
   
-  // Check role requirements
-  if (to.meta?.requiresRole && authStore.user?.role !== to.meta.requiresRole) {
-    ElMessage.error('权限不足')
-    next(from.path)
-    return
-  }
-  
-  // Redirect to dashboard if already authenticated and accessing login
-  if (to.name === 'Login' && authStore.isAuthenticated) {
-    next('/dashboard')
-    return
-  }
-  
   next()
+})
+
+// Error handling for development
+router.onError((error) => {
+  console.error('Router error:', error)
+  console.error('Stack trace:', error.stack)
+  
+  // 在开发模式下不自动刷新页面，只记录错误
+  if (import.meta.env.MODE === 'development') {
+    // 提供更友好的错误信息
+    let errorMessage = error.message
+    if (error.message.includes('parentNode')) {
+      errorMessage = 'DOM元素引用错误，通常由组件清理不当导致'
+    } else if (error.message.includes('Cannot read properties of null')) {
+      errorMessage = '空值引用错误，检查组件生命周期'
+    } else if (error.message.includes('Cannot read properties of undefined')) {
+      errorMessage = '未定义值引用错误，检查数据初始化'
+    }
+    
+    ElMessage.error(`路由加载失败: ${errorMessage}`)
+  }
 })
 
 export default router

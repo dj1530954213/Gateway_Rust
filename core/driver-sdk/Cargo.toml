@@ -1,0 +1,26 @@
+[package]
+name = "driver-sdk"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Workspace dependencies
+async-trait = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+uuid = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+chrono = { workspace = true }
+
+# ABI stability
+abi_stable = { workspace = true }
+
+# For macros
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "2.0", features = ["full"] }
+
+[lib]
+crate-type = ["cdylib", "rlib"]

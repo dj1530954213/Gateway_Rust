@@ -92,9 +92,14 @@ impl Gateway {
         // Initialize REST API server
         use rest_api::{ServerConfig, AuthManager, CommandHandler, HealthHandler};
         use frame_bus::{command::CommandProcessor, permissions::PermissionManager};
+        use std::net::SocketAddr;
         
+        // 使用50000+端口范围（开发调试环境）
+        let bind_addr: SocketAddr = "127.0.0.1:50013".parse()
+            .context("Invalid REST API bind address")?;
+            
         let server_config = ServerConfig {
-            bind_addr: SocketAddr::from(([127, 0, 0, 1], 8080)),
+            bind_addr,
             ..Default::default()
         };
         
@@ -114,9 +119,8 @@ impl Gateway {
 
         // Initialize Web server
         use web_server::WebServerConfig;
-        use std::net::SocketAddr;
         let web_config = WebServerConfig {
-            bind_addr: SocketAddr::from(([127, 0, 0, 1], 8090)),
+            bind_addr: SocketAddr::from(([127, 0, 0, 1], 50014)),
             ..Default::default()
         };
         let web_server = WebServer::new(web_config)
@@ -177,9 +181,9 @@ impl Gateway {
         info!("✓ Steps 36-50: REST API & Web Management");
         info!("✓ Steps 51-70: Advanced Features & Production-Ready");
         info!("================================");
-        info!("🌐 Web管理界面: http://127.0.0.1:8090");
-        info!("🔗 REST API: http://127.0.0.1:8080");
-        info!("📊 监控指标: http://127.0.0.1:9090/metrics");
+        info!("🌐 Web管理界面: http://127.0.0.1:50014");
+        info!("🔗 REST API: http://127.0.0.1:50013");
+        info!("📊 监控指标: http://127.0.0.1:50015/metrics");
         info!("================================");
         info!("🧠 机器学习引擎: 已启用");
         info!("📈 实时分析引擎: 已启用");

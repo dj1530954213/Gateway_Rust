@@ -9,7 +9,7 @@ import type {
   ThemeMode,
   GatewayConfig 
 } from '@/types'
-import { systemApi } from '@/services/api'
+import { systemApi, BackupInfo } from '@/services/api'
 
 export const useSystemStore = defineStore('system', () => {
   // State
@@ -49,10 +49,23 @@ export const useSystemStore = defineStore('system', () => {
   // Actions
   const fetchSystemInfo = async (): Promise<void> => {
     try {
-      const response = await systemApi.getSystemInfo()
-      if (response.success && response.data) {
-        systemInfo.value = response.data as SystemInfo
+      // 检查是否启用Mock模式
+      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+        systemInfo.value = {
+          version: '1.0.0',
+          uptime: 86400,
+          memory_usage: 65.5,
+          cpu_usage: 23.8,
+          disk_usage: 45.2,
+          connected_devices: 12,
+          active_tags: 256,
+          alert_count: 3
+        }
+        return
       }
+      
+      const info = await systemApi.getInfo()
+      systemInfo.value = info
     } catch (error) {
       console.error('Failed to fetch system info:', error)
     }
@@ -61,12 +74,35 @@ export const useSystemStore = defineStore('system', () => {
   const fetchSystemMetrics = async (): Promise<void> => {
     metricsLoading.value = true
     try {
-      const response = await systemApi.getSystemMetrics()
-      if (response.success && response.data) {
-        systemMetrics.value = response.data as SystemMetrics
+      // 检查是否启用Mock模式
+      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+        // 生成随机变化的Mock数据
+        systemMetrics.value = {
+          timestamp: new Date().toISOString(),
+          cpu_usage: Math.random() * 30 + 20,
+          memory_usage: Math.random() * 20 + 60,
+          disk_usage: Math.random() * 10 + 40,
+          network_io: {
+            bytes_in: Math.floor(Math.random() * 10000),
+            bytes_out: Math.floor(Math.random() * 5000)
+          },
+          active_connections: Math.floor(Math.random() * 20 + 10),
+          request_rate: Math.random() * 100 + 50,
+          error_rate: Math.random() * 2
+        }
+        metricsLoading.value = false
+        return
       }
+      
+      const metrics = await systemApi.getMetrics()
+      systemMetrics.value = metrics[0] || null // getMetrics returns array, take first item
     } catch (error) {
       console.error('Failed to fetch system metrics:', error)
+      // 如果是404错误，停止轮询
+      if ((error as any)?.response?.status === 404) {
+        stopMetricsPolling()
+        console.warn('API服务不可用，已停止指标轮询')
+      }
     } finally {
       metricsLoading.value = false
     }
@@ -74,22 +110,60 @@ export const useSystemStore = defineStore('system', () => {
 
   const fetchHealthStatus = async (): Promise<void> => {
     try {
-      const response = await systemApi.getHealthStatus()
-      if (response.success && response.data) {
-        healthStatus.value = response.data as HealthStatus
+      // 检查是否启用Mock模式
+      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+        healthStatus.value = {
+          overall: 'good',
+          components: [
+            {
+              name: 'database',
+              status: 'healthy',
+              message: 'PostgreSQL连接正常',
+              last_check: new Date().toISOString()
+            },
+            {
+              name: 'influxdb', 
+              status: 'healthy',
+              message: 'InfluxDB运行正常',
+              last_check: new Date().toISOString()
+            },
+            {
+              name: 'drivers',
+              status: 'warning',
+              message: '部分驱动连接异常',
+              last_check: new Date().toISOString()
+            },
+            {
+              name: 'websocket',
+              status: 'healthy',
+              message: 'WebSocket服务正常',
+              last_check: new Date().toISOString()
+            }
+          ],
+          uptime: 86400,
+          version: '1.0.0',
+          timestamp: new Date().toISOString()
+        }
+        return
       }
+      
+      const health = await systemApi.getHealth()
+      healthStatus.value = health
     } catch (error) {
       console.error('Failed to fetch health status:', error)
+      // 如果是404错误，停止轮询
+      if ((error as any)?.response?.status === 404) {
+        stopMetricsPolling()
+        console.warn('API服务不可用，已停止健康状态轮询')
+      }
     }
   }
 
   const fetchGatewayConfig = async (): Promise<void> => {
     loading.value = true
     try {
-      const response = await systemApi.getGatewayConfig()
-      if (response.success && response.data) {
-        gatewayConfig.value = response.data as GatewayConfig
-      }
+      const config = await systemApi.getConfig()
+      gatewayConfig.value = config
     } catch (error) {
       console.error('Failed to fetch gateway config:', error)
       ElMessage.error('获取系统配置失败')
@@ -101,13 +175,10 @@ export const useSystemStore = defineStore('system', () => {
   const updateGatewayConfig = async (config: Partial<GatewayConfig>): Promise<void> => {
     loading.value = true
     try {
-      const response = await systemApi.updateGatewayConfig(config)
-      if (response.success && response.data) {
-        gatewayConfig.value = response.data as GatewayConfig
-        ElMessage.success('系统配置更新成功')
-      } else {
-        throw new Error(response.message || '配置更新失败')
-      }
+      await systemApi.updateConfig(config)
+      // Refetch config to get updated data
+      await fetchGatewayConfig()
+      ElMessage.success('系统配置更新成功')
     } catch (error: any) {
       console.error('Failed to update gateway config:', error)
       ElMessage.error(error.message || '系统配置更新失败')
@@ -119,12 +190,8 @@ export const useSystemStore = defineStore('system', () => {
 
   const restartSystem = async (): Promise<void> => {
     try {
-      const response = await systemApi.restartSystem()
-      if (response.success) {
-        ElMessage.success('系统重启命令已发送')
-      } else {
-        throw new Error(response.message || '重启失败')
-      }
+      await systemApi.restart()
+      ElMessage.success('系统重启命令已发送')
     } catch (error: any) {
       console.error('Failed to restart system:', error)
       ElMessage.error(error.message || '系统重启失败')
@@ -132,11 +199,11 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  const backupConfig = async (): Promise<Blob> => {
+  const backupConfig = async (): Promise<BackupInfo> => {
     try {
-      const response = await systemApi.backupConfig()
+      const backup = await systemApi.createBackup()
       ElMessage.success('配置备份已生成')
-      return response
+      return backup
     } catch (error: any) {
       console.error('Failed to backup config:', error)
       ElMessage.error('配置备份失败')
@@ -144,17 +211,13 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  const restoreConfig = async (file: File): Promise<void> => {
+  const restoreConfig = async (backupId: string): Promise<void> => {
     loading.value = true
     try {
-      const response = await systemApi.restoreConfig(file)
-      if (response.success) {
-        ElMessage.success('配置恢复成功')
-        // Refresh config after restore
-        await fetchGatewayConfig()
-      } else {
-        throw new Error(response.message || '配置恢复失败')
-      }
+      await systemApi.restoreBackup(backupId)
+      ElMessage.success('配置恢复成功')
+      // Refresh config after restore
+      await fetchGatewayConfig()
     } catch (error: any) {
       console.error('Failed to restore config:', error)
       ElMessage.error(error.message || '配置恢复失败')

@@ -116,7 +116,7 @@ services:
 
   # InfluxDB时序数据库 - 生产配置
   influxdb:
-    image: influxdb:2.7.3
+    image: influxdb:3.2-core
     container_name: influxdb-prod
     ports:
       - "8086:8086"
@@ -126,6 +126,7 @@ services:
       - DOCKER_INFLUXDB_INIT_PASSWORD=${INFLUXDB_ADMIN_PASSWORD:-influx_2024}
       - DOCKER_INFLUXDB_INIT_ORG=edge-gateway
       - DOCKER_INFLUXDB_INIT_BUCKET=iot-data
+      - DOCKER_INFLUXDB_INIT_RETENTION=1w
       - INFLUXD_LOG_LEVEL=warn
     volumes:
       - influxdb-data:/var/lib/influxdb2

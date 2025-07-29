@@ -305,8 +305,9 @@ use([
 
 const systemStore = useSystemStore()
 
-// WebSocket connection for real-time updates
-const { lastMessage } = useWebSocket('/ws/dashboard')
+// WebSocket connection for real-time updates (disabled in development)
+const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'
+const { lastMessage } = useWebSocket(`${wsUrl}/ws/dashboard`, { autoConnect: false })
 
 // Refs
 const chartContainer = ref()
@@ -658,6 +659,9 @@ const loadDashboardData = async () => {
   }
 }
 
+// Timers for cleanup
+let dataUpdateTimer: NodeJS.Timeout | null = null
+
 // Initialize component
 onMounted(async () => {
   selectedDataPoints.value = ['temp_001', 'pressure_001']
@@ -666,18 +670,21 @@ onMounted(async () => {
   await loadDashboardData()
   
   // Start real-time updates
-  const timer = setInterval(() => {
+  dataUpdateTimer = setInterval(() => {
     updateRealTimeData()
     loadDashboardData() // Refresh dashboard data
   }, 10000) // Update every 10 seconds
   
-  // Cleanup timer on unmount
-  onUnmounted(() => {
-    clearInterval(timer)
-  })
-  
   // Initialize system store
   await systemStore.init()
+})
+
+// Cleanup on unmount
+onUnmounted(() => {
+  if (dataUpdateTimer) {
+    clearInterval(dataUpdateTimer)
+    dataUpdateTimer = null
+  }
 })
 
 // Watch for WebSocket messages

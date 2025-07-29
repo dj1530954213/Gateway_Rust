@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gateway Rust - 工业物联网边缘网关</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #333;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            padding: 40px;
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+        .logo {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .subtitle {
+            font-size: 1.2em;
+            color: #666;
+            margin-bottom: 30px;
+        }
+        .status {
+            display: flex;
+            justify-content: space-around;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .status-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 5px;
+            flex: 1;
+            min-width: 120px;
+        }
+        .status-item h3 {
+            margin: 0 0 10px 0;
+            color: #667eea;
+            font-size: 1.1em;
+        }
+        .status-item p {
+            margin: 0;
+            font-size: 0.9em;
+            color: #666;
+        }
+        .nav-links {
+            margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        .nav-link {
+            display: inline-block;
+            margin: 10px;
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            transition: background 0.3s;
+            font-size: 0.9em;
+        }
+        .nav-link:hover {
+            background: #5a67d8;
+        }
+        .footer {
+            margin-top: 30px;
+            color: #999;
+            font-size: 0.8em;
+        }
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .version {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.9);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.8em;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="version">v3.2-debug</div>
+    
+    <div class="container">
+        <div class="logo">🚀 Gateway Rust</div>
+        <div class="subtitle">工业物联网边缘网关 - 开发调试模式</div>
+        
+        <div class="status">
+            <div class="status-item">
+                <h3>系统状态</h3>
+                <p id="system-status">正在检查...<span class="loading"></span></p>
+            </div>
+            <div class="status-item">
+                <h3>设备连接</h3>
+                <p id="device-count">正在统计...<span class="loading"></span></p>
+            </div>
+            <div class="status-item">
+                <h3>数据点</h3>
+                <p id="tag-count">正在统计...<span class="loading"></span></p>
+            </div>
+        </div>
+        
+        <div class="nav-links">
+            <a href="http://localhost:50020" class="nav-link" target="_blank">📊 管理界面</a>
+            <a href="http://localhost:50010/docs" class="nav-link" target="_blank">📖 API文档</a>
+            <a href="http://localhost:50002" class="nav-link" target="_blank">📈 Grafana</a>
+            <a href="http://localhost:50001" class="nav-link" target="_blank">💾 InfluxDB</a>
+            <a href="http://localhost:50004" class="nav-link" target="_blank">🔗 EMQX</a>
+        </div>
+        
+        <div class="footer">
+            <p>Gateway Rust Edge Gateway | 端口: 50000+ | InfluxDB 3.2-core</p>
+            <p>开发调试模式 - 所有服务运行在本机</p>
+        </div>
+    </div>
+
+    <script>
+        // 简单的状态检查
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/v1/health');
+                const data = await response.json();
+                document.getElementById('system-status').textContent = '运行正常 ✅';
+            } catch (error) {
+                document.getElementById('system-status').textContent = '连接失败 ❌';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                // 模拟加载统计数据
+                setTimeout(() => {
+                    document.getElementById('device-count').textContent = '3 台设备在线';
+                    document.getElementById('tag-count').textContent = '24 个数据点活跃';
+                }, 1000);
+            } catch (error) {
+                document.getElementById('device-count').textContent = '无法获取';
+                document.getElementById('tag-count').textContent = '无法获取';
+            }
+        }
+
+        // 页面加载完成后检查状态
+        window.addEventListener('load', () => {
+            checkHealth();
+            loadStats();
+        });
+    </script>
+</body>
+</html>

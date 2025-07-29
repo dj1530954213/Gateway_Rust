@@ -90,7 +90,7 @@
             :status="getMetricStatus(metrics.disk.current, 80, 90)"
             :chart-data="metrics.disk.history"
             color="#E6A23C"
-            icon="HardDisk"
+            icon="Folder"
           />
         </el-col>
         <el-col :span="6">
@@ -557,7 +557,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   TrendCharts, Refresh, Download, Setting, Search, Cpu, Memory,
-  HardDisk, Connection, Server, Tools, Document
+  Folder, Connection, Server, Tools, Document
 } from '@element-plus/icons-vue'
 import MetricCard from '../../components/common/MetricCard.vue'
 import ProcessDetail from '../../components/business/ProcessDetail.vue'

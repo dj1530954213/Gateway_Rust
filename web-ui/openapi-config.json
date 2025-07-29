@@ -1,0 +1,17 @@
+{
+  "input": "http://localhost:8080/docs/openapi.json",
+  "output": "./src/api/generated",
+  "client": "axios",
+  "useOptions": true,
+  "useUnionTypes": true,
+  "exportCore": false,
+  "exportSchemas": true,
+  "exportModels": true,
+  "exportServices": true,
+  "write": true,
+  "prettier": true,
+  "lint": false,
+  "enumStyle": "enum",
+  "name": "GatewayRustApi",
+  "request": "./src/api/http.ts"
+}

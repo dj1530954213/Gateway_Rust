@@ -1,0 +1,39 @@
+# Example configuration for Gateway Rust API
+# Copy this file to default.yaml and modify as needed
+
+# HTTP server configuration
+http_addr: "0.0.0.0:8080"
+metrics_addr: "0.0.0.0:8081"
+ws_path: "/ws"
+
+# CORS configuration
+cors_allowed:
+  - "http://localhost:5173"
+  - "http://127.0.0.1:5173"
+
+# Database configuration
+pg_dsn: "postgres://postgres:postgres@localhost:5432/iot"
+
+# InfluxDB configuration
+influx_url: "http://localhost:8086"
+influx_token: "your-dev-token-here"
+influx_org: "iot"
+influx_bucket: "telemetry"
+
+# Frame bus configuration
+bus_url: "nats://localhost:4222"
+
+# Driver configuration
+drivers_dir: "./drivers"
+
+# Logging configuration
+log_level: "info"
+
+# Request configuration
+request_timeout: 30
+max_request_size: 10  # MB
+
+# WebSocket configuration
+ws_max_connections: 1000
+ws_heartbeat_timeout: 60  # seconds
+ws_cleanup_interval: 30   # seconds

@@ -445,9 +445,7 @@
     </el-dialog>
 
     <!-- 加载遮罩 -->
-    <div v-if="loading" class="loading-overlay">
-      <el-loading-service :visible="loading" text="正在加载..."/>
-    </div>
+    <div v-loading="loading" element-loading-text="正在加载..." class="loading-overlay" v-if="loading"></div>
   </div>
 </template>
 
@@ -676,7 +674,7 @@ const formatBytes = (bytes: number) => {
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   if (bytes === 0) return '0 B'
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return Math.round(bytes / Math.pow(1024, i) * 100) / 100 + ' ' + sizes[i]
+  return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`
 }
 
 const formatConfigLabel = (key: string) => {

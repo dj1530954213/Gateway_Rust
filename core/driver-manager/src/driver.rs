@@ -5,7 +5,7 @@ use serde_json::Value;
 use std::fmt;
 
 /// 驱动类型
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub enum DriverKind {
     Static,  // 静态编译驱动
     Dyn,     // 动态库驱动

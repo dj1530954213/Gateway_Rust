@@ -90,7 +90,7 @@
               :trend="systemInfo.diskTrend"
               trend-label="较1小时前"
               color="#F56C6C"
-              icon="HardDisk"
+              icon="Folder"
             />
           </el-col>
         </el-row>
@@ -486,7 +486,7 @@ import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Monitor, Refresh, Tools, Download, Setting, Check, Warning, Close,
-  Timer, Cpu, Memory, HardDisk, Connection, Database, Server, Link
+  Timer, Cpu, Memory, Folder, Connection, Database, Server, Link
 } from '@element-plus/icons-vue'
 import StatCard from '../../components/common/StatCard.vue'
 import ComponentDetail from '../../components/business/ComponentDetail.vue'
@@ -1236,9 +1236,9 @@ const getComponentIcon = (type: string) => {
     'Message Broker': Link,
     'Data Service': Database,
     'Alert Service': Warning,
-    'Database': Database,
+    Database,
     'API Service': Server,
-    'Storage Service': HardDisk
+    'Storage Service': Folder
   }
   return iconMap[type] || Server
 }

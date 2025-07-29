@@ -7,11 +7,18 @@ pub mod manager;
 pub mod loader;
 pub mod supervisor;
 pub mod registry;
+pub mod dynamic;
+pub mod registry_manager;
 
 pub use driver::{Driver, DriverMeta, DriverKind, DriverState, StaticDriverEntry};
 pub use manager::DriverManager;
 pub use registry::StaticDriverRegistry;
 pub use loader::{DynDriverLoader, WasmDriverLoader};
+pub use dynamic::{DynamicDriverLoader, DynamicDriverInfo, DynamicDriverEvent, SdkDriverWrapper};
+pub use registry_manager::{
+    RegistryManager, UnifiedDriverEntry, DriverQueryRequest, DriverQueryResponse,
+    DriverQueryFilter, DriverSortBy, RegistryOverview, DriverStatistics
+};
 
 use anyhow::Result;
 

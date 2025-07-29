@@ -11,7 +11,6 @@ use tokio::sync::{mpsc, Mutex};
 use tokio::time::timeout;
 use anyhow::{Context, Result};
 use tracing::{info, warn, error, debug};
-use uuid::Uuid;
 
 use crate::envelope::{CmdFrame, CmdAckFrame, FrameEnvelope, Value};
 use crate::ring::FrameSender;

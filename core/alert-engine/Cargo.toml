@@ -1,0 +1,51 @@
+[package]
+name = "alert-engine"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+
+[dependencies]
+# Workspace dependencies
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+async-trait = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Database
+sqlx = { workspace = true }
+influxdb2 = { workspace = true }
+
+# Email
+lettre = "0.11"
+
+# HTTP client for webhooks
+reqwest = { workspace = true }
+
+# Configuration
+serde_yaml = { workspace = true }
+humantime = { workspace = true }
+
+# Metrics
+metrics = { workspace = true }
+metrics-exporter-prometheus = { workspace = true }
+
+# HTTP服务器（健康检查和指标）
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["cors", "trace"] }
+
+# URL解析
+url = "2.4"
+
+# Local dependencies
+pg-repo = { path = "../../infra/pg-repo" }
+
+[[bin]]
+name = "alert-engine"
+path = "src/main.rs"

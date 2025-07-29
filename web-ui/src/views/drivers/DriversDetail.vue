@@ -563,9 +563,7 @@
     </el-dialog>
 
     <!-- 加载遮罩 -->
-    <div v-if="loading" class="loading-overlay">
-      <el-loading-service :visible="loading" text="正在加载..."/>
-    </div>
+    <div v-loading="loading" element-loading-text="正在加载..." class="loading-overlay" v-if="loading"></div>
   </div>
 </template>
 
@@ -730,7 +728,7 @@ const qualityDistribution = ref<ChartData[]>([])
 
 // 计算属性
 const filteredDataPoints = computed(() => {
-  let filtered = dataPoints.value.filter(point => {
+  const filtered = dataPoints.value.filter(point => {
     const matchesFilter = !pointFilter.value || 
       point.name.toLowerCase().includes(pointFilter.value.toLowerCase())
     const matchesQuality = !qualityFilter.value || point.quality === qualityFilter.value

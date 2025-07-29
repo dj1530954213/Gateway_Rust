@@ -478,7 +478,7 @@ const driverTemplates = ref<DriverTemplate[]>([
 ])
 
 // WebSocket连接（模拟实时数据）
-let wsConnection: WebSocket | null = null
+const wsConnection: WebSocket | null = null
 
 // 计算属性
 const driversStats = computed<DriversStats>(() => {

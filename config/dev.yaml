@@ -1,0 +1,16 @@
+# 开发环境配置覆盖
+
+# 开发环境特定的CORS配置
+cors_allowed:
+  - "http://localhost:5173"
+  - "http://127.0.0.1:5173"
+  - "http://localhost:3000"
+
+# 开发环境日志级别
+log_level: "debug"
+
+# 开发环境数据库（如果需要覆盖）
+# pg_dsn: "postgres://postgres:postgres@127.0.0.1:5432/iot_dev"
+
+# 开发环境InfluxDB配置
+influx_token: "dev-token"

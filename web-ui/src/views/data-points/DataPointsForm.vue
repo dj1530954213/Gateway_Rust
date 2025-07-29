@@ -944,7 +944,7 @@ const readValue = async () => {
 
       testResult.value = {
         connected: true,
-        value: value,
+        value,
         timestamp: new Date().toISOString(),
         quality: Math.random() > 0.1 ? 'good' : 'uncertain'
       }
