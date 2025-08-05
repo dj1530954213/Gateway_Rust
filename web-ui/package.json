@@ -4,7 +4,7 @@
   "description": "Gateway Rust Web UI - IoT设备网关管理界面",
   "type": "module",
   "scripts": {
-    "dev": "vite --host 0.0.0.0 --port 5173",
+    "dev": "vite --host 0.0.0.0 --port 50020",
     "dev:debug": "vite --mode development --host 0.0.0.0 --port 50020 --config vite.config.ts",
     "build": "vite build",
     "build:dev": "vite build --mode development",

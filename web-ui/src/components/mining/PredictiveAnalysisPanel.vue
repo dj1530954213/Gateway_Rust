@@ -621,72 +621,38 @@ async function simulateTraining(): Promise<void> {
  * 生成预测结果
  */
 async function generatePredictionResults() {
-  // 模拟预测结果数据
-  const results = {
-    accuracy: 92.5,
-    mape: 5.8,
-    r2Score: 0.89,
-    trainTime: 45.2,
-    sampleCount: 1250,
-    predictions: generateMockPredictions(),
-    metrics: [
-      { metric: 'MAE', value: '2.34', description: '平均绝对误差' },
-      { metric: 'RMSE', value: '3.12', description: '均方根误差' },
-      { metric: 'MAPE', value: '5.8%', description: '平均绝对百分比误差' },
-      { metric: 'R²', value: '0.89', description: '决定系数' }
-    ]
+  try {
+    // 调用真实的预测API
+    const response = await fetch('/api/v1/analytics/prediction', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        algorithm: config.value.algorithm,
+        parameters: config.value.parameters,
+        dataSource: config.value.dataSource,
+        predictRange: config.value.predictRange,
+        timeRange: config.value.timeRange,
+        targetVariable: config.value.targetVariable
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('预测分析请求失败')
+    }
+    
+    predictionResults.value = await response.json()
+    
+    // 初始化图表
+    await nextTick()
+    initPredictionCharts()
+  } catch (error) {
+    console.error('获取预测结果失败:', error)
+    throw error
   }
-  
-  predictionResults.value = results
-  
-  // 初始化图表
-  await nextTick()
-  initPredictionCharts()
 }
 
-/**
- * 生成模拟预测数据
- */
-function generateMockPredictions() {
-  const data = {
-    historical: [],
-    predictions: [],
-    confidence: {
-      upper: [],
-      lower: []
-    }
-  }
-  
-  const now = new Date()
-  
-  // 历史数据 (过去30天)
-  for (let i = 30; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 24 * 60 * 60 * 1000)
-    const value = 100 + Math.sin(i / 5) * 20 + Math.random() * 10
-    
-    data.historical.push({
-      timestamp: time.toISOString().slice(0, 19).replace('T', ' '),
-      value
-    })
-  }
-  
-  // 预测数据 (未来7天)
-  for (let i = 1; i <= 7; i++) {
-    const time = new Date(now.getTime() + i * 24 * 60 * 60 * 1000)
-    const baseValue = 100 + Math.sin((30 + i) / 5) * 20
-    const prediction = baseValue + (Math.random() - 0.5) * 5
-    
-    data.predictions.push({
-      timestamp: time.toISOString().slice(0, 19).replace('T', ' '),
-      value: prediction
-    })
-    
-    data.confidence.upper.push(prediction + 10)
-    data.confidence.lower.push(prediction - 10)
-  }
-  
-  return data
-}
 
 /**
  * 初始化预测图表

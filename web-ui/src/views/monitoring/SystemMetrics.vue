@@ -232,6 +232,8 @@ import {
 } from 'echarts/components'
 import VChart from 'vue-echarts'
 import { formatTime } from '@/utils/date'
+import { metricsApi, wsClient } from '@/api'
+import type { SystemMetrics, MetricsHistory, DetailedMetric, SystemHealthStatus } from '@/api/metrics'
 
 // 注册 ECharts 组件
 use([
@@ -250,146 +252,110 @@ const autoRefresh = ref(true)
 const timeRange = ref('1h')
 
 // 性能指标数据
-const cpuUsage = ref(45)
-const memoryUsage = ref(62)
-const diskUsage = ref(78)
-const networkSpeed = ref('125 MB/s')
-const uploadSpeed = ref('45 MB/s')
-const downloadSpeed = ref('80 MB/s')
+const currentMetrics = ref<SystemMetrics>({
+  cpuUsage: 0,
+  memoryUsage: 0,
+  diskUsage: 0,
+  networkSpeed: '0 MB/s',
+  uploadSpeed: '0 MB/s',
+  downloadSpeed: '0 MB/s',
+  timestamp: new Date().toISOString()
+})
 
-// 模拟历史数据
-const cpuHistory = ref<number[]>([])
-const memoryHistory = ref<number[]>([])
-const networkUpHistory = ref<number[]>([])
-const networkDownHistory = ref<number[]>([])
-const timeLabels = ref<string[]>([])
+const systemHealth = ref<SystemHealthStatus>({
+  overall: 'healthy',
+  cpuStatus: 'normal',
+  memoryStatus: 'normal',
+  diskStatus: 'normal',
+  networkStatus: 'normal'
+})
+
+// 历史数据
+const metricsHistory = ref<MetricsHistory>({
+  timeLabels: [],
+  cpuHistory: [],
+  memoryHistory: [],
+  networkUpHistory: [],
+  networkDownHistory: [],
+  diskReadHistory: [],
+  diskWriteHistory: [],
+  loadAverage1m: [],
+  loadAverage5m: [],
+  loadAverage15m: []
+})
 
 // 详细指标数据
-const detailedMetrics = ref([
-  {
-    category: 'CPU',
-    metric: 'CPU使用率',
-    current: '45.2%',
-    average: '38.7%',
-    peak: '89.1%',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: 'CPU',
-    metric: 'CPU温度',
-    current: '65°C',
-    average: '62°C',
-    peak: '78°C',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '内存',
-    metric: '内存使用率',
-    current: '62.1%',
-    average: '58.3%',
-    peak: '91.5%',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '内存',
-    metric: '可用内存',
-    current: '6.1 GB',
-    average: '6.7 GB',
-    peak: '15.2 GB',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '磁盘',
-    metric: '磁盘使用率',
-    current: '78.3%',
-    average: '72.1%',
-    peak: '89.7%',
-    status: '警告',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '磁盘',
-    metric: '磁盘读取速度',
-    current: '245 MB/s',
-    average: '198 MB/s',
-    peak: '512 MB/s',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '网络',
-    metric: '网络延迟',
-    current: '12ms',
-    average: '15ms',
-    peak: '156ms',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  },
-  {
-    category: '网络',
-    metric: '丢包率',
-    current: '0.01%',
-    average: '0.03%',
-    peak: '2.1%',
-    status: '正常',
-    lastUpdate: formatTime(new Date())
-  }
-])
+const detailedMetrics = ref<DetailedMetric[]>([])
 
 // 计算属性
 const systemHealthType = computed(() => {
-  const avgUsage = (cpuUsage.value + memoryUsage.value + diskUsage.value) / 3
-  if (avgUsage > 80) return 'danger'
-  if (avgUsage > 60) return 'warning'
-  return 'success'
+  switch (systemHealth.value.overall) {
+    case 'critical': return 'danger'
+    case 'warning': return 'warning'
+    default: return 'success'
+  }
 })
 
 const systemHealthText = computed(() => {
-  const avgUsage = (cpuUsage.value + memoryUsage.value + diskUsage.value) / 3
-  if (avgUsage > 80) return '系统负载过高'
-  if (avgUsage > 60) return '系统负载较高'
-  return '系统运行正常'
-})
-
-const cpuTrend = computed(() => {
-  const trend = Math.random() > 0.5 ? 'up' : 'down'
-  return {
-    class: trend === 'up' ? 'trend-up' : 'trend-down',
-    icon: trend === 'up' ? 'Top' : 'Bottom',
-    text: trend === 'up' ? '+2.3%' : '-1.8%'
+  switch (systemHealth.value.overall) {
+    case 'critical': return '系统负载过高'
+    case 'warning': return '系统负载较高'
+    default: return '系统运行正常'
   }
 })
 
-const memoryTrend = computed(() => {
-  const trend = Math.random() > 0.5 ? 'up' : 'down'
-  return {
-    class: trend === 'up' ? 'trend-up' : 'trend-down',
-    icon: trend === 'up' ? 'Top' : 'Bottom',
-    text: trend === 'up' ? '+5.1%' : '-3.2%'
-  }
-})
+const cpuUsage = computed(() => currentMetrics.value.cpuUsage)
+const memoryUsage = computed(() => currentMetrics.value.memoryUsage)
+const diskUsage = computed(() => currentMetrics.value.diskUsage)
+const networkSpeed = computed(() => currentMetrics.value.networkSpeed)
+const uploadSpeed = computed(() => currentMetrics.value.uploadSpeed)
+const downloadSpeed = computed(() => currentMetrics.value.downloadSpeed)
 
-const diskTrend = computed(() => {
-  const trend = Math.random() > 0.5 ? 'up' : 'down'
-  return {
-    class: trend === 'up' ? 'trend-up' : 'trend-down',
-    icon: trend === 'up' ? 'Top' : 'Bottom',
-    text: trend === 'up' ? '+0.8%' : '-0.5%'
-  }
-})
+// 趋势数据
+const cpuTrend = ref({ class: 'trend-down', icon: 'Bottom', text: '0%' })
+const memoryTrend = ref({ class: 'trend-down', icon: 'Bottom', text: '0%' })
+const diskTrend = ref({ class: 'trend-down', icon: 'Bottom', text: '0%' })
+const networkTrend = ref({ class: 'trend-down', icon: 'Bottom', text: '0 MB/s' })
 
-const networkTrend = computed(() => {
-  const trend = Math.random() > 0.5 ? 'up' : 'down'
-  return {
-    class: trend === 'up' ? 'trend-up' : 'trend-down',
-    icon: trend === 'up' ? 'Top' : 'Bottom',
-    text: trend === 'up' ? '+15 MB/s' : '-8 MB/s'
+// 计算趋势数据
+const calculateTrend = (current: number, history: number[]) => {
+  if (history.length < 2) return { class: 'trend-down', icon: 'Bottom', text: '0%' }
+  
+  const previous = history[history.length - 2]
+  const change = current - previous
+  const changePercent = previous > 0 ? ((change / previous) * 100).toFixed(1) : '0'
+  
+  if (change > 0) {
+    return {
+      class: 'trend-up',
+      icon: 'Top',
+      text: `+${changePercent}%`
+    }
+  } else {
+    return {
+      class: 'trend-down',
+      icon: 'Bottom',
+      text: `${changePercent}%`
+    }
   }
-})
+}
+
+const updateTrends = () => {
+  cpuTrend.value = calculateTrend(currentMetrics.value.cpuUsage, metricsHistory.value.cpuHistory)
+  memoryTrend.value = calculateTrend(currentMetrics.value.memoryUsage, metricsHistory.value.memoryHistory)
+  diskTrend.value = calculateTrend(currentMetrics.value.diskUsage, [])
+  
+  const networkChange = metricsHistory.value.networkUpHistory.length > 0 
+    ? metricsHistory.value.networkUpHistory[metricsHistory.value.networkUpHistory.length - 1] - 
+      (metricsHistory.value.networkUpHistory[metricsHistory.value.networkUpHistory.length - 2] || 0)
+    : 0
+  
+  networkTrend.value = {
+    class: networkChange > 0 ? 'trend-up' : 'trend-down',
+    icon: networkChange > 0 ? 'Top' : 'Bottom',
+    text: `${networkChange > 0 ? '+' : ''}${networkChange.toFixed(0)} MB/s`
+  }
+}
 
 // 图表配置
 const cpuMemoryChartOption = computed(() => ({
@@ -407,7 +373,7 @@ const cpuMemoryChartOption = computed(() => ({
   },
   xAxis: {
     type: 'category',
-    data: timeLabels.value
+    data: metricsHistory.value.timeLabels
   },
   yAxis: {
     type: 'value',
@@ -421,14 +387,14 @@ const cpuMemoryChartOption = computed(() => ({
       name: 'CPU使用率',
       type: 'line',
       smooth: true,
-      data: cpuHistory.value,
+      data: metricsHistory.value.cpuHistory,
       lineStyle: { color: '#409eff' }
     },
     {
       name: '内存使用率',
       type: 'line',
       smooth: true,
-      data: memoryHistory.value,
+      data: metricsHistory.value.memoryHistory,
       lineStyle: { color: '#67c23a' }
     }
   ]
@@ -456,7 +422,7 @@ const networkChartOption = computed(() => ({
   },
   xAxis: {
     type: 'category',
-    data: timeLabels.value
+    data: metricsHistory.value.timeLabels
   },
   yAxis: {
     type: 'value',
@@ -469,14 +435,14 @@ const networkChartOption = computed(() => ({
       name: '上传',
       type: 'line',
       smooth: true,
-      data: networkUpHistory.value,
+      data: metricsHistory.value.networkUpHistory,
       lineStyle: { color: '#e6a23c' }
     },
     {
       name: '下载',
       type: 'line',
       smooth: true,
-      data: networkDownHistory.value,
+      data: metricsHistory.value.networkDownHistory,
       lineStyle: { color: '#f56c6c' }
     }
   ]
@@ -497,7 +463,7 @@ const diskIOChartOption = computed(() => ({
   },
   xAxis: {
     type: 'category',
-    data: timeLabels.value
+    data: metricsHistory.value.timeLabels
   },
   yAxis: {
     type: 'value',
@@ -509,13 +475,13 @@ const diskIOChartOption = computed(() => ({
     {
       name: '读取速度',
       type: 'bar',
-      data: Array.from({ length: 20 }, () => Math.floor(Math.random() * 300 + 100)),
+      data: metricsHistory.value.diskReadHistory,
       itemStyle: { color: '#909399' }
     },
     {
       name: '写入速度',
       type: 'bar',
-      data: Array.from({ length: 20 }, () => Math.floor(Math.random() * 200 + 50)),
+      data: metricsHistory.value.diskWriteHistory,
       itemStyle: { color: '#606266' }
     }
   ]
@@ -536,7 +502,7 @@ const loadChartOption = computed(() => ({
   },
   xAxis: {
     type: 'category',
-    data: timeLabels.value
+    data: metricsHistory.value.timeLabels
   },
   yAxis: {
     type: 'value'
@@ -546,21 +512,21 @@ const loadChartOption = computed(() => ({
       name: '1分钟负载',
       type: 'line',
       smooth: true,
-      data: Array.from({ length: 20 }, () => Math.random() * 4),
+      data: metricsHistory.value.loadAverage1m,
       lineStyle: { color: '#409eff' }
     },
     {
       name: '5分钟负载',
       type: 'line',
       smooth: true,
-      data: Array.from({ length: 20 }, () => Math.random() * 3 + 0.5),
+      data: metricsHistory.value.loadAverage5m,
       lineStyle: { color: '#67c23a' }
     },
     {
       name: '15分钟负载',
       type: 'line',
       smooth: true,
-      data: Array.from({ length: 20 }, () => Math.random() * 2 + 1),
+      data: metricsHistory.value.loadAverage15m,
       lineStyle: { color: '#e6a23c' }
     }
   ]
@@ -575,6 +541,9 @@ const getMetricValueClass = (row: any) => {
 
 const getStatusType = (status: string) => {
   const types: Record<string, string> = {
+    'normal': 'success',
+    'warning': 'warning', 
+    'critical': 'danger',
     '正常': 'success',
     '警告': 'warning',
     '异常': 'danger'
@@ -582,44 +551,44 @@ const getStatusType = (status: string) => {
   return types[status] || 'info'
 }
 
-const generateMockData = () => {
-  const now = new Date()
-  const labels = []
-  const cpu = []
-  const memory = []
-  const netUp = []
-  const netDown = []
-
-  for (let i = 19; i >= 0; i--) {
-    const time = new Date(now.getTime() - i * 60000)
-    labels.push(time.toLocaleTimeString())
-    cpu.push(Math.floor(Math.random() * 30 + 30))
-    memory.push(Math.floor(Math.random() * 25 + 50))
-    netUp.push(Math.floor(Math.random() * 50 + 20))
-    netDown.push(Math.floor(Math.random() * 100 + 40))
+// 从API加载真实的系统指标数据
+const loadMetricsData = async () => {
+  try {
+    const response = await metricsApi.getMetricsHistory({ timeRange: timeRange.value as any })
+    metricsHistory.value = response.data
+    updateTrends()
+  } catch (error) {
+    console.error('加载指标历史数据失败:', error)
   }
+}
 
-  timeLabels.value = labels
-  cpuHistory.value = cpu
-  memoryHistory.value = memory
-  networkUpHistory.value = netUp
-  networkDownHistory.value = netDown
+const loadCurrentMetrics = async () => {
+  try {
+    const [metricsResponse, healthResponse, detailsResponse] = await Promise.all([
+      metricsApi.getCurrentMetrics(),
+      metricsApi.getSystemHealth(),
+      metricsApi.getDetailedMetrics()
+    ])
+    
+    currentMetrics.value = metricsResponse.data
+    systemHealth.value = healthResponse.data
+    detailedMetrics.value = detailsResponse.data
+    updateTrends()
+  } catch (error) {
+    console.error('加载当前指标数据失败:', error)
+  }
 }
 
 const refreshMetrics = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 更新指标数据
-    cpuUsage.value = Math.floor(Math.random() * 40 + 30)
-    memoryUsage.value = Math.floor(Math.random() * 30 + 50)
-    diskUsage.value = Math.floor(Math.random() * 20 + 70)
-    
-    generateMockData()
+    await Promise.all([
+      loadCurrentMetrics(),
+      loadMetricsData()
+    ])
     ElMessage.success('指标数据已刷新')
   } catch (error) {
+    console.error('刷新指标数据失败:', error)
     ElMessage.error('刷新失败')
   } finally {
     loading.value = false
@@ -645,15 +614,30 @@ const startAutoRefresh = () => {
 }
 
 // 生命周期
-onMounted(() => {
-  generateMockData()
+onMounted(async () => {
+  await Promise.all([
+    loadCurrentMetrics(),
+    loadMetricsData()
+  ])
   startAutoRefresh()
+  
+  // 设置WebSocket监听器
+  wsClient.on('system_metrics', (data: SystemMetrics) => {
+    currentMetrics.value = data
+    updateTrends()
+  })
+  
+  wsClient.on('system_health', (data: SystemHealthStatus) => {
+    systemHealth.value = data
+  })
 })
 
 onUnmounted(() => {
   if (refreshTimer) {
     clearInterval(refreshTimer)
   }
+  wsClient.off('system_metrics')
+  wsClient.off('system_health')
 })
 </script>
 

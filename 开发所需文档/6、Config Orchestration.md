@@ -25,7 +25,7 @@
 # ------------ 现场 PLC A（Modbus-TCP + TLS） ------------
 plc_modbus_tls:
   scheme: tls+tcp                 # TLS over TCP
-  host: 192.168.10.5
+  host: [REAL_MODBUS_PLC_IP]
   port: 502
   opts:
     timeout: 1s
@@ -37,7 +37,7 @@ plc_modbus_tls:
 # ------------ OPC UA 服务器（油气 SCADA） ------------
 plc_opcua:
   scheme: opc.tcp                 # 明文 opc.tcp
-  host: 192.168.11.20
+  host: [REAL_OPCUA_IP]
   port: 4840
   opts:
     security_policy: None
@@ -46,7 +46,7 @@ plc_opcua:
 # ------------ 西门子 S7-1200 ------------
 plc_s7:
   scheme: tcp
-  host: 192.168.12.30
+  host: [REAL_S7_PLC_IP]
   port: 102
   opts:
     keepalive: true

@@ -137,12 +137,13 @@ export const useDriversStore = defineStore('drivers', () => {
         ...params,
       }
 
-      const response: PaginatedResponse<DriverVO> = await driversApi.list(query)
+      const response: any = await driversApi.list(query)
       
-      state.value.drivers = response.items
-      state.value.total = response.total
-      state.value.currentPage = response.page
-      state.value.pageSize = response.size
+      // 处理后端返回的数据格式 {drivers: [], total: 0, page: 1, page_size: 20}
+      state.value.drivers = response.drivers || response.items || []
+      state.value.total = response.total || 0
+      state.value.currentPage = response.page || 1
+      state.value.pageSize = response.page_size || response.size || 20
       
       // 更新查询条件
       state.value.query = { ...query }
@@ -471,10 +472,11 @@ export const useDriversStore = defineStore('drivers', () => {
    * 更新状态统计
    */
   function updateStatusStats() {
+    const drivers = state.value.drivers || []
     state.value.statusStats = {
-      loaded: state.value.drivers.filter(d => d.status === 'Loaded').length,
-      failed: state.value.drivers.filter(d => d.status === 'Failed').length,
-      unloaded: state.value.drivers.filter(d => d.status === 'Unloaded').length,
+      loaded: drivers.filter(d => d.status === 'Loaded').length,
+      failed: drivers.filter(d => d.status === 'Failed').length,
+      unloaded: drivers.filter(d => d.status === 'Unloaded').length,
     }
   }
 

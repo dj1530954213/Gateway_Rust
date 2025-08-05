@@ -16,6 +16,14 @@ export * from './history'
 export * from './alerts'
 export * from './system'
 export * from './realtime'
+export * from './datapoints'
+export * from './users'
+export * from './systemlogs'
+export * from './backup'
+export * from './metrics'
+
+// Config API (使用 system API)
+export { systemApi as configApi } from './system'
 
 // 导入API实例以供便捷方法使用
 import { authApi } from './auth'
@@ -27,6 +35,11 @@ import { historyApi } from './history'
 import { alertsApi } from './alerts'
 import { systemApi } from './system'
 import { realtimeApi } from './realtime'
+import { datapointsApi } from './datapoints'
+import { usersApi } from './users'
+import { systemLogsApi } from './systemlogs'
+import { backupApi } from './backup'
+import { metricsApi } from './metrics'
 
 // 重新导出常用的 API 实例
 export { authApi } from './auth'
@@ -38,6 +51,11 @@ export { historyApi } from './history'
 export { alertsApi } from './alerts'
 export { systemApi } from './system'
 export { realtimeApi } from './realtime'
+export { datapointsApi } from './datapoints'
+export { usersApi } from './users'
+export { systemLogsApi } from './systemlogs'
+export { backupApi } from './backup'
+export { metricsApi } from './metrics'
 
 // WebSocket 连接管理
 export interface WebSocketMessage {
@@ -79,7 +97,7 @@ export class WebSocketClient {
       heartbeatInterval?: number
     } = {}
   ) {
-    this.url = url || `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws`
+    this.url = url || `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/telemetry`
     this.maxReconnectAttempts = options.maxReconnectAttempts || 
       parseInt(import.meta.env.VITE_WS_MAX_RECONNECT_ATTEMPTS || '10')
     this.reconnectInterval = options.reconnectInterval || 
@@ -249,6 +267,11 @@ export const api = {
   alerts: alertsApi,
   system: systemApi,
   realtime: realtimeApi,
+  datapoints: datapointsApi,
+  users: usersApi,
+  systemLogs: systemLogsApi,
+  backup: backupApi,
+  metrics: metricsApi,
   ws: wsClient,
 }
 

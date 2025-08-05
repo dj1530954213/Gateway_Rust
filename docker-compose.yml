@@ -1,4 +1,42 @@
 services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=iot
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_INITDB_ARGS=--encoding=UTF-8 --lc-collate=C --lc-ctype=C
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - gateway-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # NATS消息队列
+  nats:
+    image: nats:2.10-alpine
+    container_name: nats
+    ports:
+      - "4222:4222"  # NATS protocol
+      - "8222:8222"  # HTTP monitoring
+      - "6222:6222"  # Routing port for clustering
+    command: ["-js", "-m", "8222"]
+    networks:
+      - gateway-net
+    healthcheck:
+      test: ["CMD", "nats", "server", "check"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # EMQX MQTT代理
   emqx:
     image: emqx/emqx:5.4.1
@@ -84,7 +122,7 @@ services:
     image: influxdb:3.2-core
     container_name: influxdb
     ports:
-      - "50001:8086"
+      - "8086:8086"
     command: 
       - influxdb3
       - serve
@@ -119,6 +157,7 @@ services:
       start_period: 40s
 
 volumes:
+  postgres-data:
   emqx-data:
   emqx-etc:
   emqx-log:

@@ -307,9 +307,9 @@ mod tests {
 
     #[test]
     fn test_simple_tcp_url() {
-        let url = EndpointUrl::parse("tcp://192.168.1.10:502").unwrap();
+        let url = EndpointUrl::parse("tcp://[REAL_TEST_IP]:502").unwrap();
         assert_eq!(url.scheme_stack, vec![Scheme::Tcp]);
-        assert_eq!(url.host, "192.168.1.10");
+        assert_eq!(url.host, "[REAL_TEST_IP]");
         assert_eq!(url.port, Some(502));
     }
 

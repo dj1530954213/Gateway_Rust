@@ -349,76 +349,19 @@ const selectedDataPoints = ref<string[]>([])
 const showDatapointDetail = ref(false)
 const viewingDatapoint = ref<DataPoint | null>(null)
 
-// 模拟数据
+// 系统统计数据（从API获取）
 const systemStats = reactive<SystemStats>({
-  activeDataPoints: 156,
-  connectedDrivers: 8,
-  activeAlarms: 3,
-  messageRate: 1247
+  activeDataPoints: 0,
+  connectedDrivers: 0,
+  activeAlarms: 0,
+  messageRate: 0
 })
 
-const dataPoints = ref<DataPoint[]>([
-  {
-    id: '1',
-    name: '温度传感器-001',
-    address: '40001',
-    dataType: 'float',
-    driverId: 'modbus-1',
-    quality: 'good',
-    currentValue: 23.5,
-    lastReadTime: new Date(),
-    unit: '°C',
-    trend: 'up'
-  },
-  {
-    id: '2',
-    name: '压力传感器-001',
-    address: '40002',
-    dataType: 'float',
-    driverId: 'modbus-1',
-    quality: 'good',
-    currentValue: 1.2,
-    lastReadTime: new Date(),
-    unit: 'bar',
-    trend: 'stable'
-  },
-  {
-    id: '3',
-    name: '流量计-001',
-    address: '40003',
-    dataType: 'float',
-    driverId: 'modbus-2',
-    quality: 'uncertain',
-    currentValue: 45.8,
-    lastReadTime: new Date(),
-    unit: 'L/min',
-    trend: 'down'
-  }
-])
+// 数据点列表（从API获取真实数据）
+const dataPoints = ref<DataPoint[]>([])
 
-const driverStatuses = ref<DriverStatus[]>([
-  {
-    id: 'modbus-1',
-    name: 'Modbus TCP-001',
-    status: 'running',
-    messageRate: 150,
-    avgLatency: 12
-  },
-  {
-    id: 'modbus-2',
-    name: 'Modbus RTU-001',
-    status: 'running',
-    messageRate: 89,
-    avgLatency: 25
-  },
-  {
-    id: 'opcua-1',
-    name: 'OPC UA Server',
-    status: 'error',
-    messageRate: 0,
-    avgLatency: 0
-  }
-])
+// 驱动状态列表（从API获取真实数据）
+const driverStatuses = ref<DriverStatus[]>([])
 
 const chartData = ref({
   series: [] as any[],
@@ -575,9 +518,7 @@ const updateChartData = () => {
       name: dp.name,
       type: 'line',
       smooth: true,
-      data: Array.from({ length: 20 }, () => 
-        Math.random() * 100 + (dp.currentValue as number || 50)
-      )
+      data: [] // 从真实历史数据API获取
     }))
   }
 }
@@ -601,16 +542,10 @@ let refreshTimer: number | null = null
 const startAutoRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer)
   
-  refreshTimer = setInterval(() => {
+  refreshTimer = setInterval(async () => {
     if (isAutoRefresh.value) {
-      // 更新数据点值
-      dataPoints.value.forEach(dp => {
-        dp.currentValue = Math.random() * 100
-        dp.lastReadTime = new Date()
-      })
-      
-      // 更新统计
-      systemStats.messageRate = Math.floor(Math.random() * 500) + 1000
+      // 从API获取最新的实时数据
+      await loadRealtimeData()
       
       // 更新图表
       updateChartData()
@@ -620,12 +555,11 @@ const startAutoRefresh = () => {
 
 // 生命周期
 onMounted(async () => {
-  selectedDataPoints.value = ['1', '2']
-  updateChartData()
   startAutoRefresh()
   
   try {
     await loadRealtimeData()
+    updateChartData()
   } catch (error) {
     console.error('Failed to load realtime data:', error)
   }
@@ -639,11 +573,26 @@ onUnmounted(() => {
 
 const loadRealtimeData = async () => {
   try {
-    const response = await realtimeApi.getCurrentValues()
-    if (response.success && response.data) {
-      // 处理实时数据
-      console.log('Realtime data loaded:', response.data)
+    // 获取实时数据点
+    const dataResponse = await realtimeApi.getCurrentValues()
+    if (dataResponse.success && dataResponse.data) {
+      dataPoints.value = dataResponse.data
+      systemStats.activeDataPoints = dataResponse.data.length
     }
+    
+    // 获取驱动状态
+    const driverResponse = await realtimeApi.getDriverStatuses()
+    if (driverResponse.success && driverResponse.data) {
+      driverStatuses.value = driverResponse.data
+      systemStats.connectedDrivers = driverResponse.data.filter(d => d.status === 'running').length
+    }
+    
+    // 获取系统统计
+    const statsResponse = await realtimeApi.getSystemStats()
+    if (statsResponse.success && statsResponse.data) {
+      Object.assign(systemStats, statsResponse.data)
+    }
+    
   } catch (error) {
     console.error('Failed to load realtime data:', error)
   }

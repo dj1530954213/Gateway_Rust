@@ -583,7 +583,7 @@ const connectionFields = computed(() => {
       label: 'IP地址',
       type: 'text',
       required: true,
-      placeholder: '192.168.1.100'
+      placeholder: ''
     },
     {
       key: 'port',

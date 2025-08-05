@@ -792,25 +792,23 @@ async function loadDataPreview() {
   dataPreview.value.loading = true
   
   try {
-    // 模拟数据加载
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 从真实API加载数据预览
+    const response = await fetch(`/api/v1/data-mining/preview?source=${dataConfig.value.dataSource}`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     
-    // 生成模拟数据预览
-    dataPreview.value.data = {
-      totalSamples: Math.floor(Math.random() * 10000) + 1000,
-      featureCount: Math.floor(Math.random() * 20) + 5,
-      missingRate: (Math.random() * 10).toFixed(1),
-      columns: ['timestamp', 'temperature', 'pressure', 'flow', 'power'],
-      samples: Array.from({ length: 5 }, (_, i) => ({
-        timestamp: new Date(Date.now() - i * 60000).toISOString().slice(0, 19),
-        temperature: (25 + Math.random() * 10).toFixed(2),
-        pressure: (1.0 + Math.random() * 0.5).toFixed(3),
-        flow: (150 + Math.random() * 50).toFixed(1),
-        power: (800 + Math.random() * 200).toFixed(0)
-      }))
+    if (response.ok) {
+      dataPreview.value.data = await response.json()
+    } else {
+      throw new Error('数据加载失败')
     }
   } catch (error) {
+    console.error('数据预览加载失败:', error)
     ElMessage.error('数据加载失败')
+    dataPreview.value.data = null
   } finally {
     dataPreview.value.loading = false
   }

@@ -466,7 +466,6 @@ function getCurrentTimeDisplay(): string {
  */
 function applyTimezoneSettings() {
   // 这里可以应用时区设置
-  console.log('应用时区设置:', { timezone: selectedTimezone.value, format: timeFormat.value })
   showTimezoneDialog.value = false
   ElMessage.success('时区设置已应用')
 }

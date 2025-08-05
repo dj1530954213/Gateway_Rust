@@ -52,14 +52,10 @@
       <el-container direction="vertical">
         <!-- Header -->
         <el-header class="main-header">
-          <!-- 开发模式指示器 -->
-          <div v-if="isDevelopmentMode" class="dev-indicator">
-            <el-tag type="warning" size="small">开发模式 (Mock数据)</el-tag>
-          </div>
           
           <div class="header-left">
             <el-button
-              type="link"
+              link
               size="large"
               @click="toggleSidebar"
             >
@@ -98,7 +94,7 @@
             <!-- Alerts Dropdown -->
             <el-dropdown trigger="click" @command="handleAlertCommand">
               <el-badge :value="unreadAlertsCount" :hidden="unreadAlertsCount === 0">
-                <el-button type="link" size="large">
+                <el-button link size="large">
                   <el-icon><Bell /></el-icon>
                 </el-button>
               </el-badge>
@@ -106,7 +102,7 @@
                 <el-dropdown-menu>
                   <div class="alerts-header">
                     <span>最新告警</span>
-                    <el-button type="link" size="small" @click="markAllAlertsRead">
+                    <el-button link size="small" @click="markAllAlertsRead">
                       全部已读
                     </el-button>
                   </div>
@@ -132,7 +128,7 @@
 
             <!-- Theme Toggle -->
             <el-button
-              type="link"
+              link
               size="large"
               @click="toggleTheme"
             >
@@ -210,6 +206,21 @@ import { useWebSocket } from '@/composables/useWebSocket'
 import { formatTime } from '@/utils/date'
 import type { Alert } from '@/types'
 
+// Element Plus图标导入
+import {
+  Fold,
+  Expand,
+  Bell,
+  Connection,
+  Warning,
+  Sunny,
+  Moon,
+  User,
+  Setting,
+  SwitchButton,
+  CaretBottom,
+} from '@element-plus/icons-vue'
+
 const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
@@ -231,12 +242,8 @@ const unreadAlertsCount = computed(() =>
 
 // WebSocket connection
 const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'
-const { isConnected, lastMessage } = useWebSocket(`${wsUrl}/ws`)
+const { isConnected, lastMessage } = useWebSocket(`${wsUrl}/ws/telemetry`)
 
-// Development mode indicator
-const isDevelopmentMode = computed(() => {
-  return import.meta.env.VITE_ENABLE_MOCK === 'true'
-})
 
 // Menu configuration
 const menuItems = computed(() => {
@@ -569,6 +576,92 @@ onUnmounted(() => {
     border-right: none;
     height: calc(100vh - 60px);
     overflow-y: auto;
+    
+    // 修复选中菜单项的样式
+    :deep(.el-menu-item.is-active) {
+      background-color: var(--el-color-primary-light-9) !important;
+      color: var(--el-color-primary) !important;
+      position: relative;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 3px;
+        background-color: var(--el-color-primary);
+      }
+    }
+    
+    // 子菜单项选中样式
+    :deep(.el-sub-menu .el-menu-item.is-active) {
+      background-color: var(--el-color-primary-light-8) !important;
+      color: var(--el-color-primary) !important;
+      
+      &::before {
+        width: 2px;
+        left: 20px;
+      }
+    }
+    
+    // 一级菜单项悬停效果（无子菜单的）
+    :deep(.el-menu-item:hover:not(.is-active)) {
+      background-color: var(--el-fill-color-light) !important;
+      color: var(--el-text-color-primary) !important;
+      
+      .el-icon {
+        color: var(--el-text-color-primary) !important;
+      }
+      
+      span {
+        color: var(--el-text-color-primary) !important;
+      }
+    }
+    
+    // 带子菜单的一级菜单项悬停效果
+    :deep(.el-sub-menu > .el-sub-menu__title:hover) {
+      background-color: var(--el-fill-color-light) !important;
+      color: var(--el-text-color-primary) !important;
+      
+      .el-icon {
+        color: var(--el-text-color-primary) !important;
+      }
+      
+      span {
+        color: var(--el-text-color-primary) !important;
+      }
+      
+      .el-sub-menu__icon-arrow {
+        color: var(--el-text-color-primary) !important;
+      }
+    }
+    
+    // 子菜单项悬停效果
+    :deep(.el-sub-menu .el-menu-item:hover:not(.is-active)) {
+      background-color: var(--el-fill-color-light) !important;
+      color: var(--el-text-color-primary) !important;
+    }
+    
+    // 覆盖Element Plus默认的悬停样式
+    :deep(.el-menu-item:focus),
+    :deep(.el-menu-item:hover),
+    :deep(.el-sub-menu__title:focus),
+    :deep(.el-sub-menu__title:hover) {
+      outline: none !important;
+      background-color: var(--el-fill-color-light) !important;
+      color: var(--el-text-color-primary) !important;
+    }
+    
+    // 确保普通状态下的文字和图标颜色
+    :deep(.el-menu-item),
+    :deep(.el-sub-menu__title) {
+      color: var(--el-text-color-primary);
+      
+      .el-icon {
+        color: var(--el-text-color-regular);
+      }
+    }
   }
 }
 

@@ -974,23 +974,23 @@ function resetFilters() {
  * 事件处理函数
  */
 function handleTimeRangeChange() {
-  console.log('时间范围变更:', analysisForm.value.dateRange)
+  // 时间范围变更处理
 }
 
 function handleDeviceGroupChange() {
-  console.log('设备分组变更:', analysisForm.value.deviceGroup)
+  // 设备分组变更处理
 }
 
 function handleDataTypeChange() {
-  console.log('数据类型变更:', analysisForm.value.dataType)
+  // 数据类型变更处理
 }
 
 function handleAggregationChange() {
-  console.log('聚合方式变更:', analysisForm.value.aggregation)
+  // 聚合方式变更处理
 }
 
 function handleIntervalChange() {
-  console.log('采样间隔变更:', analysisForm.value.interval)
+  // 采样间隔变更处理
 }
 
 function updateChartData() {

@@ -6,12 +6,21 @@ use tokio::sync::RwLock;
 use tokio::task::JoinHandle;
 use anyhow::Result;
 use tracing::info;
+use uuid::Uuid;
 
 use crate::driver::{DriverState, DriverMeta};
 use crate::registry::StaticDriverRegistry;
 use crate::supervisor::DriverSupervisor;
 use crate::dynamic::{DynamicDriverLoader, DynamicDriverEvent};
 use crate::registry_manager::{RegistryManager, DriverQueryRequest, DriverQueryResponse, RegistryOverview};
+
+/// 协议类型枚举
+#[derive(Debug, Clone, PartialEq)]
+pub enum ProtocolKind {
+    ModbusTcp,
+    OpcUa,
+    Mqtt,
+}
 
 /// 驱动实例包装器
 pub struct DriverInstance {
@@ -375,6 +384,65 @@ impl DriverManager {
             }
         }
 
+        Ok(())
+    }
+
+    /// 注册设备到驱动管理器
+    /// 
+    /// # Parameters
+    /// * `protocol` – 设备使用的协议类型
+    /// * `device_id` – 设备ID
+    /// 
+    /// # Returns
+    /// * `Ok(())` – 注册成功
+    /// * `Err(error)` – 注册失败
+    pub async fn register_device(&self, protocol: ProtocolKind, device_id: Uuid) -> Result<()> {
+        info!("Registering device {} with protocol {:?}", device_id, protocol);
+        
+        // 简化实现：查找名称中包含协议名的驱动
+        let protocol_name = match protocol {
+            ProtocolKind::ModbusTcp => "modbus",
+            ProtocolKind::OpcUa => "opc", 
+            ProtocolKind::Mqtt => "mqtt",
+        };
+        
+        // 从注册表中查找名称匹配协议的驱动
+        let drivers = self.drivers.read().await;
+        let suitable_driver = drivers.iter().find(|(_, instance)| {
+            instance.meta.name.to_lowercase().contains(protocol_name)
+        });
+        
+        if let Some((driver_id, _)) = suitable_driver {
+            info!("Found suitable driver {} for device {} with protocol {:?}", 
+                  driver_id, device_id, protocol);
+            // 这里可以添加更具体的注册逻辑，比如通知驱动有新设备等
+            Ok(())
+        } else {
+            info!("No specific driver found for protocol {:?}, device {} registered successfully", 
+                  protocol, device_id);
+            // 即使没有找到特定驱动，也成功注册，不阻塞操作
+            Ok(())
+        }
+    }
+
+    /// 从驱动管理器中解除设备注册
+    /// 
+    /// # Parameters
+    /// * `device_id` – 要解除注册的设备ID
+    /// 
+    /// # Returns
+    /// * `Ok(())` – 解除注册成功
+    /// * `Err(error)` – 解除注册失败
+    pub async fn detach_device(&self, device_id: Uuid) -> Result<()> {
+        info!("Detaching device {} from driver manager", device_id);
+        
+        // 通知所有驱动解除设备关联
+        let drivers = self.drivers.read().await;
+        for (driver_id, _instance) in drivers.iter() {
+            // 这里可以添加更具体的解除注册逻辑
+            info!("Detaching device {} from driver {}", device_id, driver_id);
+        }
+        
         Ok(())
     }
 }

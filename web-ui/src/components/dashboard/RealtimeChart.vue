@@ -159,6 +159,7 @@ import {
 
 import { formatDateTime } from '@/utils/date'
 import { useTagsStore } from '@/stores'
+import { historyApi } from '@/api'
 import type { TagVO } from '@/api/tags'
 
 // 注册ECharts组件
@@ -381,11 +382,23 @@ function getDataPointCount(): number {
 }
 
 /**
+ * 获取时间范围毫秒数
+ */
+function getTimeRangeMs(): number {
+  switch (props.timeRange) {
+    case '1h': return 60 * 60 * 1000
+    case '6h': return 6 * 60 * 60 * 1000
+    case '24h': return 24 * 60 * 60 * 1000
+    default: return 60 * 60 * 1000
+  }
+}
+
+/**
  * 处理标签变更
  */
 function handleTagChange() {
   emit('tag-change', selectedTags.value)
-  generateMockData()
+  fetchRealTimeData()
 }
 
 /**
@@ -394,11 +407,10 @@ function handleTagChange() {
 async function refreshData() {
   refreshing.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    generateMockData()
+    await fetchRealTimeData()
     ElMessage.success('数据已刷新')
   } catch (error) {
+    console.error('刷新数据失败:', error)
     ElMessage.error('刷新数据失败')
   } finally {
     refreshing.value = false
@@ -468,28 +480,44 @@ function selectDefaultTags() {
 }
 
 /**
- * 生成模拟数据
+ * 获取实时数据
  */
-function generateMockData() {
-  const newData: Record<string, Array<{ time: string, value: number }>> = {}
-  const count = getDataPointCount()
-  
-  selectedTags.value.forEach(tagId => {
-    newData[tagId] = []
-    let baseValue = Math.random() * 100
+async function fetchRealTimeData() {
+  if (selectedTags.value.length === 0) {
+    chartData.value = {}
+    return
+  }
+
+  try {
+    const endTime = new Date()
+    const startTime = new Date(endTime.getTime() - getTimeRangeMs())
     
-    for (let i = 0; i < count; i++) {
-      const variation = (Math.random() - 0.5) * 10
-      baseValue = Math.max(0, baseValue + variation)
-      
-      newData[tagId].push({
-        time: new Date().toISOString(),
-        value: Math.round(baseValue * 100) / 100
-      })
+    const queryParams = {
+      tag_ids: selectedTags.value,
+      start_time: startTime.toISOString(),
+      end_time: endTime.toISOString(),
+      limit: getDataPointCount()
     }
-  })
-  
-  chartData.value = newData
+
+    const response = await historyApi.getRealtimeData(queryParams)
+    
+    const newData: Record<string, Array<{ time: string, value: number }>> = {}
+    
+    response.data.forEach((item: any) => {
+      if (!newData[item.tag_id]) {
+        newData[item.tag_id] = []
+      }
+      newData[item.tag_id].push({
+        time: item.timestamp,
+        value: item.value
+      })
+    })
+    
+    chartData.value = newData
+  } catch (error) {
+    console.error('获取实时数据失败:', error)
+    ElMessage.error('获取实时数据失败')
+  }
 }
 
 /**
@@ -525,11 +553,11 @@ onMounted(async () => {
 // ===== 监听器 =====
 watch(() => props.selectedTags, (newTags) => {
   selectedTags.value = [...newTags]
-  generateMockData()
+  fetchRealTimeData()
 }, { immediate: true })
 
 watch(() => props.timeRange, () => {
-  generateMockData()
+  fetchRealTimeData()
 })
 </script>
 

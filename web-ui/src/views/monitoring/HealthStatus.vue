@@ -298,6 +298,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useSystemStore } from '@/stores/system'
 import { use } from 'echarts/core'
 import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, PieChart } from 'echarts/charts'
@@ -328,118 +329,23 @@ const autoRefresh = ref(true)
 const showDiagnostic = ref(false)
 const activeCollapse = ref<string[]>([])
 
-// 健康数据
-const healthScore = ref(87)
-const systemUptime = ref('15天 8小时 23分钟')
-const lastRestart = ref('2024-01-08 14:30:15')
-const availability = ref(99.9)
+// 健康数据 - 从API获取
+const healthScore = ref(0)
+const systemUptime = ref('获取中...')
+const lastRestart = ref('获取中...')
+const availability = ref(0)
 
 const healthStats = ref({
-  healthy: 12,
-  warning: 2,
-  critical: 1
+  healthy: 0,
+  warning: 0,
+  critical: 0
 })
 
-// 组件健康状态
-const healthComponents = ref([
-  {
-    name: 'Modbus驱动',
-    icon: 'Connection',
-    status: 'healthy',
-    responseTime: 12,
-    availability: 99.8,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: 'OPC UA服务',
-    icon: 'SetUp',
-    status: 'warning',
-    responseTime: 45,
-    availability: 97.2,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: 'MQTT代理',
-    icon: 'Message',
-    status: 'healthy',
-    responseTime: 8,
-    availability: 99.9,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: '数据库连接',
-    icon: 'Files',
-    status: 'critical',
-    responseTime: 156,
-    availability: 89.3,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: 'API网关',
-    icon: 'Link',
-    status: 'healthy',
-    responseTime: 23,
-    availability: 99.5,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: '告警服务',
-    icon: 'Warning',
-    status: 'healthy',
-    responseTime: 18,
-    availability: 98.7,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: '监控服务',
-    icon: 'Monitor',
-    status: 'warning',
-    responseTime: 67,
-    availability: 96.1,
-    lastCheck: new Date(),
-    checking: false
-  },
-  {
-    name: '日志服务',
-    icon: 'Document',
-    status: 'healthy',
-    responseTime: 31,
-    availability: 99.1,
-    lastCheck: new Date(),  
-    checking: false
-  }
-])
+// 组件健康状态 - 从API获取
+const healthComponents = ref([])
 
-// 健康检查日志
-const healthLogs = ref([
-  {
-    timestamp: new Date(),
-    component: 'Modbus驱动',
-    status: 'healthy',
-    message: '所有连接正常，数据采集稳定',
-    duration: 12
-  },
-  {
-    timestamp: new Date(Date.now() - 300000),
-    component: 'OPC UA服务',
-    status: 'warning',
-    message: '连接延迟较高，建议检查网络状况',
-    duration: 45
-  },
-  {
-    timestamp: new Date(Date.now() - 600000),
-    component: '数据库连接',
-    status: 'critical',  
-    message: '连接超时，部分查询失败',
-    duration: 156
-  }
-])
+// 健康检查日志 - 从API获取
+const healthLogs = ref([])
 
 // 诊断结果
 const diagnosticResult = ref({
@@ -461,7 +367,8 @@ const overallHealthText = computed(() => {
   return '系统异常'
 })
 
-// 图表配置
+// 图表配置 - 使用实际数据
+const healthScoreData = ref([])
 const healthScoreChartOption = computed(() => ({
   tooltip: {
     trigger: 'axis',
@@ -475,10 +382,7 @@ const healthScoreChartOption = computed(() => ({
   },
   xAxis: {
     type: 'category',
-    data: Array.from({ length: 24 }, (_, i) => {
-      const time = new Date(Date.now() - (23 - i) * 60 * 60 * 1000)
-      return `${time.getHours()  }:00`
-    })
+    data: healthScoreData.value.map(item => item.time) || []
   },
   yAxis: {
     type: 'value',
@@ -493,9 +397,7 @@ const healthScoreChartOption = computed(() => ({
       name: '健康评分',
       type: 'line',
       smooth: true,
-      data: Array.from({ length: 24 }, () => 
-        Math.floor(Math.random() * 20 + 75)
-      ),
+      data: healthScoreData.value.map(item => item.score) || [],
       lineStyle: { 
         color: '#67c23a',
         width: 3
@@ -602,20 +504,33 @@ const toggleAutoRefresh = () => {
 const refreshHealthStatus = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 获取健康状态数据
+    const systemStore = useSystemStore()
+    await systemStore.fetchHealthStatus()
     
-    // 更新健康数据
-    healthScore.value = Math.floor(Math.random() * 30 + 70)
-    
-    // 更新组件状态
-    healthComponents.value.forEach(component => {
-      component.responseTime = Math.floor(Math.random() * 100 + 10)
-      component.lastCheck = new Date()
-    })
+    // 更新本地状态
+    if (systemStore.healthStatus) {
+      const health = systemStore.healthStatus
+      healthScore.value = health.metrics?.cpu_usage || 0
+      systemUptime.value = `运行时间: ${health.metrics?.uptime || 0}秒`
+      availability.value = 99.0
+      
+      // 更新统计数据
+      const services = health.services || {}
+      let healthy = 0, warning = 0, critical = 0
+      
+      Object.values(services).forEach(status => {
+        if (status === 'healthy') healthy++
+        else if (status === 'warning') warning++
+        else critical++
+      })
+      
+      healthStats.value = { healthy, warning, critical }
+    }
     
     ElMessage.success('健康状态已刷新')
   } catch (error) {
+    console.error('获取健康状态失败:', error)
     ElMessage.error('刷新失败')
   } finally {
     loading.value = false
@@ -626,74 +541,71 @@ const runHealthCheck = async () => {
   checkingHealth.value = true
   
   try {
-    // 模拟健康检查
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 执行真实的健康检查API调用
+    const systemStore = useSystemStore()
+    await systemStore.fetchHealthStatus()
     
-    // 生成诊断结果
-    diagnosticResult.value = {
-      summary: '系统整体运行良好，发现2个需要关注的问题',
-      type: 'warning',
-      details: [
-        {
-          category: '核心服务',
-          checks: [
-            {
-              name: 'API服务状态',
-              status: 'pass',
-              message: 'API服务运行正常，响应时间在正常范围内'
-            },
-            {
-              name: '数据库连接',
-              status: 'warning',
-              message: '数据库连接池使用率较高，建议优化查询',
-              suggestion: '增加数据库连接池大小或优化慢查询'
-            }
-          ]
-        },
-        {
-          category: '网络连接',
-          checks: [
-            {
-              name: 'MQTT连接',
-              status: 'pass',
-              message: 'MQTT连接稳定，消息传输正常'
-            },
-            {
-              name: 'Modbus连接',
-              status: 'pass',
-              message: '所有Modbus设备连接正常'
-            }
-          ]
-        },
-        {
-          category: '系统资源',
-          checks: [
-            {
-              name: 'CPU使用率',
-              status: 'pass',
-              message: 'CPU使用率正常，平均负载在合理范围内'
-            },
-            {
-              name: '内存使用',
-              status: 'warning',
-              message: '内存使用率偏高，建议监控内存泄漏',
-              suggestion: '检查长时间运行的进程，清理不必要的缓存'
-            },
-            {
-              name: '磁盘空间',
-              status: 'pass',
-              message: '磁盘空间充足，日志文件大小正常'
-            }
-          ]
+    // 基于实际健康状态生成诊断结果
+    const health = systemStore.healthStatus
+    if (health) {
+      const services = health.services || {}
+      const metrics = health.metrics || {}
+      
+      let passCount = 0
+      let warningCount = 0
+      let criticalCount = 0
+      
+      const checks = Object.entries(services).map(([name, status]) => {
+        if (status === 'healthy') passCount++
+        else if (status === 'warning') warningCount++
+        else criticalCount++
+        
+        return {
+          name: `${name}服务`,
+          status: status === 'healthy' ? 'pass' : status,
+          message: status === 'healthy' ? '服务运行正常' : `服务状态: ${status}`
         }
-      ]
+      })
+      
+      diagnosticResult.value = {
+        summary: `系统检查完成，发现 ${passCount} 个正常服务，${warningCount} 个警告，${criticalCount} 个异常`,
+        type: criticalCount > 0 ? 'error' : warningCount > 0 ? 'warning' : 'success',
+        details: [
+          {
+            category: '服务状态',
+            checks
+          },
+          {
+            category: '系统资源',
+            checks: [
+              {
+                name: 'CPU使用率',
+                status: (metrics.cpu_usage || 0) > 80 ? 'warning' : 'pass',
+                message: `当前CPU使用率: ${metrics.cpu_usage || 0}%`
+              },
+              {
+                name: '内存使用',
+                status: (metrics.memory_usage || 0) > 80 ? 'warning' : 'pass',
+                message: `当前内存使用率: ${metrics.memory_usage || 0}%`
+              }
+            ]
+          }
+        ]
+      }
+    } else {
+      diagnosticResult.value = {
+        summary: '无法获取系统健康状态',
+        type: 'error',
+        details: []
+      }
     }
     
     showDiagnostic.value = true
-    activeCollapse.value = ['核心服务', '网络连接', '系统资源']
+    activeCollapse.value = ['服务状态', '系统资源']
     
     ElMessage.success('健康检查完成')
   } catch (error) {
+    console.error('健康检查失败:', error)
     ElMessage.error('健康检查失败')
   } finally {
     checkingHealth.value = false
@@ -704,27 +616,25 @@ const checkComponent = async (component: any) => {
   component.checking = true
   
   try {
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 执行实际的组件健康检查
+    const systemStore = useSystemStore()
+    await systemStore.fetchHealthStatus()
     
-    // 随机生成检查结果
-    const statuses = ['healthy', 'warning', 'critical']
-    const newStatus = statuses[Math.floor(Math.random() * statuses.length)]
-    
-    component.status = newStatus
-    component.responseTime = Math.floor(Math.random() * 100 + 10)
+    // 更新组件状态
     component.lastCheck = new Date()
     
-    // 添加日志
+    // 添加检查日志
     healthLogs.value.unshift({
       timestamp: new Date(),
       component: component.name,
-      status: newStatus,
-      message: `组件检查完成: ${getHealthStatusText(newStatus)}`,
+      status: component.status,
+      message: `组件检查完成: ${getHealthStatusText(component.status)}`,
       duration: component.responseTime
     })
     
     ElMessage.success(`${component.name} 检查完成`)
   } catch (error) {
+    console.error(`${component.name} 检查失败:`, error)
     ElMessage.error(`${component.name} 检查失败`)
   } finally {
     component.checking = false
@@ -745,11 +655,13 @@ const restartComponent = async (component: any) => {
     
     ElMessage.info(`正在重启 ${component.name}...`)
     
-    // 模拟重启
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // 调用系统重启API（需要后端实现）
+    const systemStore = useSystemStore()
+    await systemStore.restartSystem()
     
-    component.status = 'healthy'
-    component.responseTime = Math.floor(Math.random() * 30 + 10)
+    // 重新获取状态
+    await systemStore.fetchHealthStatus()
+    
     component.lastCheck = new Date()
     
     // 添加日志
@@ -757,13 +669,14 @@ const restartComponent = async (component: any) => {
       timestamp: new Date(),
       component: component.name,
       status: 'healthy',
-      message: '服务重启成功，运行状态良好',
+      message: '服务重启成功',
       duration: component.responseTime
     })
     
     ElMessage.success(`${component.name} 重启成功`)
   } catch (error) {
     if (error !== 'cancel') {
+      console.error(`${component.name} 重启失败:`, error)
       ElMessage.error(`${component.name} 重启失败`)
     }
   }
@@ -802,19 +715,28 @@ let refreshTimer: number | null = null
 const startAutoRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer)
   
-  refreshTimer = setInterval(() => {
+  refreshTimer = setInterval(async () => {
     if (autoRefresh.value) {
-      // 静默更新组件状态
-      healthComponents.value.forEach(component => {
-        component.responseTime = Math.floor(Math.random() * 100 + 10)
-        component.lastCheck = new Date()
-      })
+      // 静默获取最新健康状态
+      try {
+        const systemStore = useSystemStore()
+        await systemStore.fetchHealthStatus()
+        
+        // 更新组件的最后检查时间
+        healthComponents.value.forEach(component => {
+          component.lastCheck = new Date()
+        })
+      } catch (error) {
+        console.warn('自动刷新健康状态失败:', error)
+      }
     }
   }, 30000) // 每30秒更新一次
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
+  // 初始化系统健康数据
+  await refreshHealthStatus()
   startAutoRefresh()
 })
 

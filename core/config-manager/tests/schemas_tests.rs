@@ -8,7 +8,7 @@ use serde_yaml;
 #[test]
 fn test_endpoint_config_serialization() {
     let cfg = EndpointCfg {
-        url: "tcp://192.168.1.100:502".to_string(),
+        url: "tcp://[REAL_PLC_IP]:502".to_string(),
         description: "Test PLC".to_string(),
         timeout: Duration::from_secs(5),
         pool: PoolCfg {
@@ -29,7 +29,7 @@ fn test_endpoint_config_serialization() {
 
     // 序列化为YAML
     let yaml = serde_yaml::to_string(&cfg).expect("Failed to serialize endpoint config");
-    assert!(yaml.contains("tcp://192.168.1.100:502"));
+    assert!(yaml.contains("tcp://[REAL_PLC_IP]:502"));
     assert!(yaml.contains("Test PLC"));
 
     // 反序列化
@@ -294,7 +294,7 @@ fn test_complete_config_structure() {
     // 创建完整的端点配置
     let mut endpoints = HashMap::new();
     endpoints.insert("plc1".to_string(), EndpointCfg {
-        url: "tcp://192.168.1.100:502".to_string(),
+        url: "tcp://[REAL_PLC_IP]:502".to_string(),
         description: "Main PLC".to_string(),
         timeout: Duration::from_secs(10),
         pool: PoolCfg::default(),

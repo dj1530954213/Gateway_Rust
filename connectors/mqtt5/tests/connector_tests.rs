@@ -59,7 +59,7 @@ fn test_mqtt_connector_with_empty_client_id() {
 fn test_broker_url_parsing() {
     let test_cases = vec![
         ("tcp://localhost:1883", "localhost", 1883),
-        ("tcp://192.168.1.100:1883", "192.168.1.100", 1883),
+        ("tcp://[REAL_MQTT_IP]:1883", "[REAL_MQTT_IP]", 1883),
         ("tcp://example.com:8883", "example.com", 8883),
         ("tcp://mqtt.broker.com", "mqtt.broker.com", 1883), // 默认端口
     ];

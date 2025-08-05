@@ -48,12 +48,12 @@
           </el-col>
         </el-row>
         
-        <el-form-item label="设备描述" prop="description">
+        <el-form-item label="设备位置" prop="location">
           <el-input
-            v-model="formData.description"
+            v-model="formData.location"
             type="textarea"
             :rows="3"
-            placeholder="请输入设备描述信息（可选）"
+            placeholder="请输入设备位置信息（可选）"
             maxlength="500"
             show-word-limit
           />
@@ -78,18 +78,18 @@
         <template v-if="formData.protocol === 'ModbusTcp'">
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="主机地址" prop="connection_config.host">
+              <el-form-item label="主机地址" prop="config.host">
                 <el-input
-                  v-model="formData.connection_config.host"
+                  v-model="formData.config.host"
                   placeholder="请输入IP地址或主机名"
                 />
               </el-form-item>
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="端口号" prop="connection_config.port">
+              <el-form-item label="端口号" prop="config.port">
                 <el-input-number
-                  v-model="formData.connection_config.port"
+                  v-model="formData.config.port"
                   :min="1"
                   :max="65535"
                   placeholder="502"
@@ -101,9 +101,9 @@
           
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="从站ID" prop="connection_config.slave_id">
+              <el-form-item label="从站ID" prop="config.slave_id">
                 <el-input-number
-                  v-model="formData.connection_config.slave_id"
+                  v-model="formData.config.slave_id"
                   :min="1"
                   :max="255"
                   placeholder="1"
@@ -113,9 +113,9 @@
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="连接超时" prop="connection_config.timeout">
+              <el-form-item label="连接超时" prop="config.timeout">
                 <el-input-number
-                  v-model="formData.connection_config.timeout"
+                  v-model="formData.config.timeout"
                   :min="1000"
                   :max="30000"
                   :step="1000"
@@ -133,18 +133,18 @@
         <template v-else-if="formData.protocol === 'ModbusRtu'">
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="串口端口" prop="connection_config.port_name">
+              <el-form-item label="串口端口" prop="config.port_name">
                 <el-input
-                  v-model="formData.connection_config.port_name"
+                  v-model="formData.config.port_name"
                   placeholder="如: COM1, /dev/ttyUSB0"
                 />
               </el-form-item>
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="波特率" prop="connection_config.baud_rate">
+              <el-form-item label="波特率" prop="config.baud_rate">
                 <el-select
-                  v-model="formData.connection_config.baud_rate"
+                  v-model="formData.config.baud_rate"
                   placeholder="请选择波特率"
                   style="width: 100%"
                 >
@@ -160,9 +160,9 @@
           
           <el-row :gutter="20">
             <el-col :span="8">
-              <el-form-item label="数据位" prop="connection_config.data_bits">
+              <el-form-item label="数据位" prop="config.data_bits">
                 <el-select
-                  v-model="formData.connection_config.data_bits"
+                  v-model="formData.config.data_bits"
                   style="width: 100%"
                 >
                   <el-option label="7" :value="7" />
@@ -172,9 +172,9 @@
             </el-col>
             
             <el-col :span="8">
-              <el-form-item label="停止位" prop="connection_config.stop_bits">
+              <el-form-item label="停止位" prop="config.stop_bits">
                 <el-select
-                  v-model="formData.connection_config.stop_bits"
+                  v-model="formData.config.stop_bits"
                   style="width: 100%"
                 >
                   <el-option label="1" :value="1" />
@@ -184,9 +184,9 @@
             </el-col>
             
             <el-col :span="8">
-              <el-form-item label="校验位" prop="connection_config.parity">
+              <el-form-item label="校验位" prop="config.parity">
                 <el-select
-                  v-model="formData.connection_config.parity"
+                  v-model="formData.config.parity"
                   style="width: 100%"
                 >
                   <el-option label="无" value="None" />
@@ -197,9 +197,9 @@
             </el-col>
           </el-row>
           
-          <el-form-item label="从站ID" prop="connection_config.slave_id">
+          <el-form-item label="从站ID" prop="config.slave_id">
             <el-input-number
-              v-model="formData.connection_config.slave_id"
+              v-model="formData.config.slave_id"
               :min="1"
               :max="255"
               placeholder="1"
@@ -210,27 +210,27 @@
         
         <!-- OPC UA 配置 -->
         <template v-else-if="formData.protocol === 'OpcUa'">
-          <el-form-item label="端点URL" prop="connection_config.endpoint">
+          <el-form-item label="端点URL" prop="config.endpoint">
             <el-input
-              v-model="formData.connection_config.endpoint"
+              v-model="formData.config.endpoint"
               placeholder="opc.tcp://localhost:4840"
             />
           </el-form-item>
           
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="用户名" prop="connection_config.username">
+              <el-form-item label="用户名" prop="config.username">
                 <el-input
-                  v-model="formData.connection_config.username"
+                  v-model="formData.config.username"
                   placeholder="用户名（可选）"
                 />
               </el-form-item>
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="密码" prop="connection_config.password">
+              <el-form-item label="密码" prop="config.password">
                 <el-input
-                  v-model="formData.connection_config.password"
+                  v-model="formData.config.password"
                   type="password"
                   placeholder="密码（可选）"
                   show-password
@@ -244,18 +244,18 @@
         <template v-else-if="formData.protocol === 'Mqtt'">
           <el-row :gutter="20">
             <el-col :span="16">
-              <el-form-item label="Broker地址" prop="connection_config.broker_url">
+              <el-form-item label="Broker地址" prop="config.broker_url">
                 <el-input
-                  v-model="formData.connection_config.broker_url"
+                  v-model="formData.config.broker_url"
                   placeholder="mqtt://localhost:1883"
                 />
               </el-form-item>
             </el-col>
             
             <el-col :span="8">
-              <el-form-item label="客户端ID" prop="connection_config.client_id">
+              <el-form-item label="客户端ID" prop="config.client_id">
                 <el-input
-                  v-model="formData.connection_config.client_id"
+                  v-model="formData.config.client_id"
                   placeholder="自动生成"
                 />
               </el-form-item>
@@ -264,18 +264,18 @@
           
           <el-row :gutter="20">
             <el-col :span="12">
-              <el-form-item label="用户名" prop="connection_config.username">
+              <el-form-item label="用户名" prop="config.username">
                 <el-input
-                  v-model="formData.connection_config.username"
+                  v-model="formData.config.username"
                   placeholder="用户名（可选）"
                 />
               </el-form-item>
             </el-col>
             
             <el-col :span="12">
-              <el-form-item label="密码" prop="connection_config.password">
+              <el-form-item label="密码" prop="config.password">
                 <el-input
-                  v-model="formData.connection_config.password"
+                  v-model="formData.config.password"
                   type="password"
                   placeholder="密码（可选）"
                   show-password
@@ -370,8 +370,8 @@ const dialogTitle = computed(() => {
 const formData = ref<DeviceCreateReq>({
   name: '',
   protocol: 'ModbusTcp',
-  connection_config: {},
-  description: '',
+  config: {},
+  location: '',
   enabled: true,
 })
 
@@ -384,22 +384,22 @@ const formRules: FormRules = {
   protocol: [
     { required: true, message: '请选择协议类型', trigger: 'change' },
   ],
-  'connection_config.host': [
+  'config.host': [
     { required: true, message: '请输入主机地址', trigger: 'blur' },
   ],
-  'connection_config.port': [
+  'config.port': [
     { type: 'number', min: 1, max: 65535, message: '端口号应在 1-65535 之间', trigger: 'blur' },
   ],
-  'connection_config.port_name': [
+  'config.port_name': [
     { required: true, message: '请输入串口端口', trigger: 'blur' },
   ],
-  'connection_config.baud_rate': [
+  'config.baud_rate': [
     { required: true, message: '请选择波特率', trigger: 'change' },
   ],
-  'connection_config.endpoint': [
+  'config.endpoint': [
     { required: true, message: '请输入端点URL', trigger: 'blur' },
   ],
-  'connection_config.broker_url': [
+  'config.broker_url': [
     { required: true, message: '请输入Broker地址', trigger: 'blur' },
   ],
 }
@@ -411,12 +411,12 @@ const formRules: FormRules = {
  */
 function handleProtocolChange(protocol: string) {
   // 清空连接配置
-  formData.value.connection_config = {}
+  formData.value.config = {}
   
   // 设置默认值
   switch (protocol) {
     case 'ModbusTcp':
-      formData.value.connection_config = {
+      formData.value.config = {
         host: '',
         port: 502,
         slave_id: 1,
@@ -424,7 +424,7 @@ function handleProtocolChange(protocol: string) {
       }
       break
     case 'ModbusRtu':
-      formData.value.connection_config = {
+      formData.value.config = {
         port_name: '',
         baud_rate: 9600,
         data_bits: 8,
@@ -434,14 +434,14 @@ function handleProtocolChange(protocol: string) {
       }
       break
     case 'OpcUa':
-      formData.value.connection_config = {
+      formData.value.config = {
         endpoint: 'opc.tcp://localhost:4840',
         username: '',
         password: '',
       }
       break
     case 'Mqtt':
-      formData.value.connection_config = {
+      formData.value.config = {
         broker_url: 'mqtt://localhost:1883',
         client_id: '',
         username: '',
@@ -534,8 +534,8 @@ function initFormData() {
     formData.value = {
       name: props.device.name,
       protocol: props.device.protocol,
-      connection_config: { ...props.device.connection_config },
-      description: props.device.description || '',
+      config: { ...props.device.config },
+      location: props.device.location || '',
       enabled: props.device.enabled,
     }
   } else {
@@ -543,13 +543,13 @@ function initFormData() {
     formData.value = {
       name: '',
       protocol: 'ModbusTcp',
-      connection_config: {
+      config: {
         host: '',
         port: 502,
         slave_id: 1,
         timeout: 5000,
       },
-      description: '',
+      location: '',
       enabled: true,
     }
   }

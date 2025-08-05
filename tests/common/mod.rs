@@ -1,9 +1,8 @@
 //! 通用测试工具和辅助函数
+//! 
+//! 🚫 重要提示：本系统为生产级产品，测试必须使用真实设备和真实数据
 
-pub mod mock_plc;
 pub mod test_env;
-pub mod performance_monitor;
-pub mod mqtt_helper;
 
 use std::time::Duration;
 use tokio::time::timeout;
@@ -37,14 +36,9 @@ pub fn create_temp_dir() -> tempfile::TempDir {
     tempfile::tempdir().expect("Failed to create temp directory")
 }
 
-/// 生成测试用的DataFrame
-pub fn create_test_frame(tag: &str, value: i64) -> frame_bus::DataFrame {
-    frame_bus::DataFrame::new(tag, frame_bus::Value::int(value))
-}
-
-/// 生成大量测试数据
-pub fn generate_test_data(count: usize) -> Vec<frame_bus::DataFrame> {
-    (0..count)
-        .map(|i| create_test_frame(&format!("test.point.{:04}", i), i as i64))
-        .collect()
-}
+// 🚫 模拟数据生成函数已移除
+// 
+// 原有的create_test_frame()和generate_test_data()函数已删除，
+// 因为本系统为生产级产品，必须使用真实设备的真实数据进行测试。
+//
+// 如需测试，请连接真实的工业设备和传感器。

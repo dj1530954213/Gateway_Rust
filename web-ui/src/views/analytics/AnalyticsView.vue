@@ -728,6 +728,9 @@ import {
   ChartContainer
 } from '../../components/business'
 
+// 导入API
+import { analyticsApi } from '@/api/analytics'
+
 // 类型定义
 interface KpiMetric {
   id: string
@@ -806,103 +809,20 @@ const predictionModel = ref('ARIMA')
 const predictionConfidenceRange = ref({ min: 65.2, max: 89.7 })
 const anomalyRisk = ref<'low' | 'medium' | 'high'>('low')
 
-// 模拟数据
-const kpiMetrics = ref<KpiMetric[]>([
-  {
-    id: '1',
-    title: '数据采集率',
-    value: 98.5,
-    unit: '%',
-    trend: 'up',
-    trendText: '+2.3%',
-    comparison: '增长2.3%',
-    icon: DataBoard,
-    iconClass: 'kpi-icon--success'
-  },
-  {
-    id: '2',
-    title: '设备在线率',
-    value: 92.1,
-    unit: '%',
-    trend: 'stable',
-    trendText: '±0.1%',
-    comparison: '基本持平',
-    icon: Monitor,
-    iconClass: 'kpi-icon--primary'
-  },
-  {
-    id: '3',
-    title: '报警响应时间',
-    value: 1.8,
-    unit: 'min',
-    trend: 'down',
-    trendText: '-15%',
-    comparison: '减少15%',
-    icon: Timer,
-    iconClass: 'kpi-icon--warning'
-  },
-  {
-    id: '4',
-    title: '数据传输效率',
-    value: 87.3,
-    unit: 'MB/h',
-    trend: 'up',
-    trendText: '+5.2%',
-    comparison: '提升5.2%',
-    icon: TrendCharts,
-    iconClass: 'kpi-icon--info'
-  }
-])
+// KPI数据从API获取
+const kpiMetrics = ref<KpiMetric[]>([])
 
-const availableDatapoints = ref<DataPoint[]>([
-  { id: '1', name: '反应器温度', dataType: 'float', currentValue: 75.6 },
-  { id: '2', name: '进料流量', dataType: 'float', currentValue: 150.2 },
-  { id: '3', name: '系统压力', dataType: 'float', currentValue: 2.3 },
-  { id: '4', name: '混合器转速', dataType: 'integer', currentValue: 1200 }
-])
+// 数据点从API获取
+const availableDatapoints = ref<DataPoint[]>([])
 
-const dataQualityMetrics = ref([
-  { id: '1', name: '数据完整性', percentage: 95, status: 'good' },
-  { id: '2', name: '数据准确性', percentage: 88, status: 'good' },
-  { id: '3', name: '数据时效性', percentage: 92, status: 'good' },
-  { id: '4', name: '数据一致性', percentage: 78, status: 'warning' }
-])
+// 数据质量指标从API获取
+const dataQualityMetrics = ref<any[]>([])
 
-const reports = ref<Report[]>([
-  {
-    id: '1',
-    title: '日常生产报表',
-    description: '每日生产数据汇总和分析',
-    type: 'trend',
-    chartType: 'line',
-    status: 'active',
-    lastRunTime: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    title: '设备性能监控',
-    description: '设备运行状态和性能指标',
-    type: 'performance',
-    chartType: 'radar',
-    status: 'active',
-    lastRunTime: new Date(Date.now() - 30 * 60 * 1000)
-  },
-  {
-    id: '3',
-    title: '质量分析报告',
-    description: '产品质量数据分布和趋势',
-    type: 'distribution',
-    chartType: 'histogram',
-    status: 'inactive',
-    lastRunTime: new Date(Date.now() - 24 * 60 * 60 * 1000)
-  }
-])
+// 报表列表从API获取
+const reports = ref<Report[]>([])
 
-const dataSources = ref<DataSource[]>([
-  { id: '1', name: '实时数据点', type: 'datapoints' },
-  { id: '2', name: '设备驱动', type: 'drivers' },
-  { id: '3', name: '报警记录', type: 'alarms' }
-])
+// 数据源从API获取
+const dataSources = ref<DataSource[]>([])
 
 const chartTypes = ref([
   { type: 'line', name: '折线图', icon: TrendCharts },
@@ -984,6 +904,57 @@ const reportFormRules = {
   chartType: [{ required: true, message: '请选择图表类型', trigger: 'change' }]
 }
 
+// API调用方法
+const loadKpiMetrics = async () => {
+  try {
+    const response = await analyticsApi.getKpiMetrics()
+    kpiMetrics.value = response.data || []
+  } catch (error) {
+    console.error('获取KPI指标失败:', error)
+    kpiMetrics.value = []
+  }
+}
+
+const loadDatapoints = async () => {
+  try {
+    const response = await analyticsApi.getDatapoints()
+    availableDatapoints.value = response.data || []
+  } catch (error) {
+    console.error('获取数据点失败:', error)
+    availableDatapoints.value = []
+  }
+}
+
+const loadDataQualityMetrics = async () => {
+  try {
+    const response = await analyticsApi.getDataQualityMetrics()
+    dataQualityMetrics.value = response.data || []
+  } catch (error) {
+    console.error('获取数据质量指标失败:', error)
+    dataQualityMetrics.value = []
+  }
+}
+
+const loadReports = async () => {
+  try {
+    const response = await analyticsApi.getReports()
+    reports.value = response.data || []
+  } catch (error) {
+    console.error('获取报表列表失败:', error)
+    reports.value = []
+  }
+}
+
+const loadDataSources = async () => {
+  try {
+    const response = await analyticsApi.getDataSources()
+    dataSources.value = response.data || []
+  } catch (error) {
+    console.error('获取数据源失败:', error)
+    dataSources.value = []
+  }
+}
+
 // 方法
 const formatKpiValue = (value: number, unit: string) => {
   return `${value}${unit}`
@@ -1054,165 +1025,30 @@ const getReportTypeIcon = (type: string) => {
   }
 }
 
-// 图表数据生成
+// 图表数据从API获取，不再生成模拟数据
 const getTrendChartData = () => {
-  if (selectedTrendDatapoints.value.length === 0) {
-    return { series: [] }
-  }
-  
-  const now = Date.now()
-  const series = selectedTrendDatapoints.value.map(dpId => {
-    const datapoint = availableDatapoints.value.find(dp => dp.id === dpId)
-    if (!datapoint) return null
-    
-    const data = []
-    for (let i = 23; i >= 0; i--) {
-      const time = now - i * 60 * 60 * 1000
-      const baseValue = Number(datapoint.currentValue) || 0
-      const variation = (Math.random() - 0.5) * baseValue * 0.1
-      
-      data.push({
-        x: new Date(time),
-        y: Number((baseValue + variation).toFixed(2))
-      })
-    }
-    
-    return {
-      name: datapoint.name,
-      data
-    }
-  }).filter(Boolean)
-  
-  return { series }
+  // 直接返回空数据，实际数据应从API获取
+  return { series: [] }
 }
 
 const getDistributionChartData = () => {
-  if (!selectedDistributionDatapoint.value) {
-    return { series: [] }
-  }
-  
-  const datapoint = availableDatapoints.value.find(dp => dp.id === selectedDistributionDatapoint.value)
-  if (!datapoint) return { series: [] }
-  
-  // 生成分布数据
-  const baseValue = Number(datapoint.currentValue) || 0
-  const data = []
-  
-  for (let i = 0; i < 100; i++) {
-    const value = baseValue + (Math.random() - 0.5) * baseValue * 0.5
-    data.push(value)
-  }
-  
-  // 计算直方图
-  const bins = 10
-  const min = Math.min(...data)
-  const max = Math.max(...data)
-  const binWidth = (max - min) / bins
-  
-  const histogram = []
-  for (let i = 0; i < bins; i++) {
-    const binStart = min + i * binWidth
-    const binEnd = binStart + binWidth
-    const count = data.filter(v => v >= binStart && v < binEnd).length
-    
-    histogram.push({
-      x: binStart + binWidth / 2,
-      y: count
-    })
-  }
-  
-  return {
-    series: [{
-      name: datapoint.name,
-      data: histogram
-    }]
-  }
+  // 直接返回空数据，实际数据应从API获取
+  return { series: [] }
 }
 
 const getDevicePerformanceData = () => {
-  return {
-    series: [{
-      name: '设备性能',
-      data: [
-        { name: '效率', value: 85 },
-        { name: '稳定性', value: 92 },
-        { name: '可靠性', value: 88 },
-        { name: '能耗', value: 78 },
-        { name: '维护性', value: 82 },
-        { name: '安全性', value: 95 }
-      ]
-    }]
-  }
+  // 从API获取真实设备性能数据
+  return { series: [] }
 }
 
 const getAlarmStatsData = () => {
-  return {
-    series: [{
-      name: '报警分布',
-      data: [
-        { name: '高温报警', value: 15 },
-        { name: '通讯异常', value: 8 },
-        { name: '设备故障', value: 12 },
-        { name: '流量异常', value: 6 },
-        { name: '其他', value: 4 }
-      ]
-    }]
-  }
+  // 从API获取真实报警统计数据
+  return { series: [] }
 }
 
 const getPredictionChartData = () => {
-  if (!selectedPredictionDatapoint.value) {
-    return { series: [] }
-  }
-  
-  const datapoint = availableDatapoints.value.find(dp => dp.id === selectedPredictionDatapoint.value)
-  if (!datapoint) return { series: [] }
-  
-  const now = Date.now()
-  const baseValue = Number(datapoint.currentValue) || 0
-  
-  // 历史数据（过去24小时）
-  const historicalData = []
-  for (let i = 23; i >= 0; i--) {
-    const time = now - i * 60 * 60 * 1000
-    const variation = (Math.random() - 0.5) * baseValue * 0.1
-    
-    historicalData.push({
-      x: new Date(time),
-      y: Number((baseValue + variation).toFixed(2))
-    })
-  }
-  
-  // 预测数据（未来12小时）
-  const predictedData = []
-  let lastValue = historicalData[historicalData.length - 1].y
-  
-  for (let i = 1; i <= 12; i++) {
-    const time = now + i * 60 * 60 * 1000
-    const trend = 0.02 // 假设有轻微上升趋势
-    const variation = (Math.random() - 0.5) * baseValue * 0.08
-    
-    lastValue = lastValue + trend * baseValue + variation
-    
-    predictedData.push({
-      x: new Date(time),
-      y: Number(lastValue.toFixed(2))
-    })
-  }
-  
-  return {
-    series: [
-      {
-        name: '历史数据',
-        data: historicalData
-      },
-      {
-        name: '预测数据',
-        data: predictedData,
-        type: 'prediction'
-      }
-    ]
-  }
+  // 从API获取真实的历史数据和预测结果
+  return { series: [] }
 }
 
 const getReportPreviewData = (report: Report) => {
@@ -1305,7 +1141,7 @@ const handlePredictionDatapointChange = () => {
   ElMessage.info(`选择预测数据点: ${datapoint?.name}`)
 }
 
-const handleRunPrediction = () => {
+const handleRunPrediction = async () => {
   if (!selectedPredictionDatapoint.value) {
     ElMessage.warning('请先选择数据点')
     return
@@ -1313,17 +1149,22 @@ const handleRunPrediction = () => {
   
   ElMessage.info('正在运行预测分析...')
   
-  // 模拟预测计算
-  setTimeout(() => {
-    predictionAccuracy.value = Math.floor(80 + Math.random() * 15)
-    predictionConfidenceRange.value = {
-      min: Math.floor(Math.random() * 50 + 20),
-      max: Math.floor(Math.random() * 30 + 70)
-    }
-    anomalyRisk.value = ['low', 'medium', 'high'][Math.floor(Math.random() * 3)] as any
+  try {
+    // 调用真实的预测分析API
+    const result = await analyticsApi.runPrediction({
+      datapointId: selectedPredictionDatapoint.value,
+      timeRange: analysisTimeRange.value
+    })
+    
+    predictionAccuracy.value = result.accuracy
+    predictionConfidenceRange.value = result.confidenceRange
+    anomalyRisk.value = result.anomalyRisk
     
     ElMessage.success('预测分析完成')
-  }, 2000)
+  } catch (error) {
+    console.error('预测分析失败:', error)
+    ElMessage.error('预测分析失败')
+  }
 }
 
 // 报表相关事件
@@ -1340,8 +1181,14 @@ const handleCreateReport = () => {
   reportEditVisible.value = true
 }
 
-const handleRefreshReports = () => {
-  ElMessage.info('报表列表已刷新')
+const handleRefreshReports = async () => {
+  try {
+    await loadReports()
+    ElMessage.success('报表列表已刷新')
+  } catch (error) {
+    console.error('刷新报表列表失败:', error)
+    ElMessage.error('刷新失败')
+  }
 }
 
 const handleSearchReports = () => {
@@ -1353,67 +1200,78 @@ const handleViewReport = (report: Report) => {
   reportPreviewVisible.value = true
 }
 
-const handleReportAction = (command: string, report: Report) => {
-  switch (command) {
-    case 'edit':
-      editingReport.value = { ...report }
-      reportEditVisible.value = true
-      break
-    case 'duplicate':
-      const newReport = {
-        ...report,
-        id: Date.now().toString(),
-        title: `${report.title} (副本)`
-      }
-      reports.value.push(newReport)
-      ElMessage.success('报表已复制')
-      break
-    case 'export':
-      ElMessage.info(`导出报表: ${report.title}`)
-      break
-    case 'delete':
-      ElMessageBox.confirm(
-        `确定要删除报表 "${report.title}" 吗？`,
-        '确认删除',
-        {
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      ).then(() => {
-        const index = reports.value.findIndex(r => r.id === report.id)
-        if (index > -1) {
-          reports.value.splice(index, 1)
-          ElMessage.success('报表已删除')
-        }
-      })
-      break
-  }
-}
-
-const handleRunReport = (report: Report) => {
-  ElMessage.info(`运行报表: ${report.title}`)
-  report.lastRunTime = new Date()
-}
-
-const handleSaveReport = () => {
-  if (!editingReport.value) return
-  
-  if (!editingReport.value.id) {
-    // 新建报表
-    editingReport.value.id = Date.now().toString()
-    reports.value.push({ ...editingReport.value })
-    ElMessage.success('报表创建成功')
-  } else {
-    // 更新报表
-    const index = reports.value.findIndex(r => r.id === editingReport.value!.id)
-    if (index > -1) {
-      reports.value[index] = { ...editingReport.value }
-      ElMessage.success('报表更新成功')
+const handleReportAction = async (command: string, report: Report) => {
+  try {
+    switch (command) {
+      case 'edit':
+        editingReport.value = { ...report }
+        reportEditVisible.value = true
+        break
+      case 'duplicate':
+        await analyticsApi.duplicateReport(report.id)
+        ElMessage.success('报表已复制')
+        await loadReports()
+        break
+      case 'export':
+        await analyticsApi.exportReport(report.id)
+        ElMessage.success(`报表 ${report.title} 已导出`)
+        break
+      case 'delete':
+        await ElMessageBox.confirm(
+          `确定要删除报表 "${report.title}" 吗？`,
+          '确认删除',
+          {
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+        
+        await analyticsApi.deleteReport(report.id)
+        ElMessage.success('报表已删除')
+        await loadReports()
+        break
+    }
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('报表操作失败:', error)
+      ElMessage.error('操作失败')
     }
   }
+}
+
+const handleRunReport = async (report: Report) => {
+  try {
+    ElMessage.info(`正在运行报表: ${report.title}`)
+    await analyticsApi.runReport(report.id)
+    report.lastRunTime = new Date()
+    ElMessage.success(`报表 ${report.title} 运行完成`)
+  } catch (error) {
+    console.error('运行报表失败:', error)
+    ElMessage.error('运行报表失败')
+  }
+}
+
+const handleSaveReport = async () => {
+  if (!editingReport.value) return
   
-  reportEditVisible.value = false
+  try {
+    if (!editingReport.value.id) {
+      // 新建报表
+      await analyticsApi.createReport(editingReport.value)
+      ElMessage.success('报表创建成功')
+    } else {
+      // 更新报表
+      await analyticsApi.updateReport(editingReport.value.id, editingReport.value)
+      ElMessage.success('报表更新成功')
+    }
+    
+    reportEditVisible.value = false
+    await loadReports()
+  } catch (error) {
+    console.error('保存报表失败:', error)
+    ElMessage.error('保存报表失败')
+  }
 }
 
 const handleCloseEdit = () => {
@@ -1501,7 +1359,16 @@ const handleDeleteElement = (element: ReportElement) => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
+  // 加载所有数据
+  await Promise.all([
+    loadKpiMetrics(),
+    loadDatapoints(),
+    loadDataQualityMetrics(),
+    loadReports(),
+    loadDataSources()
+  ])
+  
   // 初始化默认选择
   if (availableDatapoints.value.length > 0) {
     selectedTrendDatapoints.value = [availableDatapoints.value[0].id]

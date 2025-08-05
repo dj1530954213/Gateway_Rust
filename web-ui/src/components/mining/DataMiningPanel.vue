@@ -570,11 +570,27 @@ async function startMining() {
   mining.value = true
   
   try {
-    // 模拟挖掘过程
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    // 调用真实的数据挖掘API
+    const response = await fetch('/api/v1/analytics/mining', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        taskType: config.value.taskType,
+        algorithm: config.value.algorithm,
+        parameters: config.value.parameters,
+        dataSource: config.value.dataSource,
+        timeRange: config.value.timeRange,
+        filters: config.value.filters
+      })
+    })
     
-    // 生成模拟结果
-    miningResults.value = generateMockResults()
+    if (!response.ok) {
+      throw new Error('数据挖掘请求失败')
+    }
+    
+    miningResults.value = await response.json()
     
     // 初始化图表
     nextTick(() => {
@@ -597,144 +613,6 @@ async function startMining() {
   }
 }
 
-/**
- * 生成模拟挖掘结果
- */
-function generateMockResults() {
-  const baseResult = {
-    summary: {
-      patterns: Math.floor(Math.random() * 20) + 10,
-      anomalies: Math.floor(Math.random() * 15) + 5,
-      associations: Math.floor(Math.random() * 25) + 15,
-      clusters: Math.floor(Math.random() * 8) + 3
-    },
-    insights: [
-      {
-        id: '1',
-        type: 'info',
-        priority: 'high',
-        title: '高温高压模式',
-        content: '发现温度>80°C且压力>2.0MPa的组合模式，出现频率较高，建议加强监控',
-        actionable: true
-      },
-      {
-        id: '2',
-        type: 'warning',
-        priority: 'medium',
-        title: '异常流量模式',
-        content: '检测到深夜时段流量异常升高的模式，可能存在泄漏风险',
-        actionable: true
-      },
-      {
-        id: '3',
-        type: 'success',
-        priority: 'low',
-        title: '效率优化机会',
-        content: '发现特定参数组合下设备效率显著提升，可制定优化策略',
-        actionable: true
-      }
-    ],
-    keyFindings: [
-      { id: '1', text: '温度和压力呈强正相关关系（r=0.85）' },
-      { id: '2', text: '设备A的异常模式主要集中在夜间时段' },
-      { id: '3', text: '发现3个明显的数据聚类，对应不同的运行模式' },
-      { id: '4', text: '关联规则显示pH值异常通常伴随温度波动' }
-    ]
-  }
-  
-  if (config.value.taskType === 'pattern') {
-    baseResult.patterns = [
-      {
-        items: ['高温', '高压', '低流量'],
-        support: 0.45,
-        confidence: 0.82,
-        frequency: 156,
-        significance: '高',
-        description: '高温高压条件下流量通常较低'
-      },
-      {
-        items: ['夜间', '低功率', '正常温度'],
-        support: 0.38,
-        confidence: 0.75,
-        frequency: 142,
-        significance: '中',
-        description: '夜间运行模式特征'
-      },
-      {
-        items: ['pH异常', '温度波动'],
-        support: 0.32,
-        confidence: 0.68,
-        frequency: 98,
-        significance: '高',
-        description: 'pH值与温度存在关联性'
-      }
-    ]
-  }
-  
-  if (config.value.taskType === 'clustering') {
-    baseResult.clustering = {
-      clusters: [
-        {
-          id: 0,
-          size: 234,
-          center: [25.6, 1.2, 150.3],
-          inertia: 45.6,
-          characteristics: '正常运行模式'
-        },
-        {
-          id: 1,
-          size: 156,
-          center: [32.1, 1.8, 98.7],
-          inertia: 38.2,
-          characteristics: '高负荷运行模式'
-        },
-        {
-          id: 2,
-          size: 89,
-          center: [18.3, 0.8, 200.1],
-          inertia: 52.3,
-          characteristics: '低温高流量模式'
-        }
-      ]
-    }
-  }
-  
-  if (config.value.taskType === 'association') {
-    baseResult.association = {
-      rules: [
-        {
-          id: '1',
-          antecedent: ['高温'],
-          consequent: ['高压'],
-          support: 0.42,
-          confidence: 0.85,
-          lift: 2.1,
-          interpretation: '高温条件下很可能出现高压情况'
-        },
-        {
-          id: '2',
-          antecedent: ['夜间', '低负荷'],
-          consequent: ['正常温度'],
-          support: 0.35,
-          confidence: 0.78,
-          lift: 1.8,
-          interpretation: '夜间低负荷运行时温度保持正常'
-        },
-        {
-          id: '3',
-          antecedent: ['pH异常'],
-          consequent: ['温度波动'],
-          support: 0.28,
-          confidence: 0.72,
-          lift: 1.9,
-          interpretation: 'pH异常通常伴随温度不稳定'
-        }
-      ]
-    }
-  }
-  
-  return baseResult
-}
 
 /**
  * 初始化模式图表

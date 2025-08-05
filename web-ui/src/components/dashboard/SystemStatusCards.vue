@@ -192,6 +192,7 @@ import {
 
 import { formatDateTime, formatUptime } from '@/utils/date'
 import { formatFileSize } from '@/utils/format'
+import { systemApi } from '@/api'
 
 // ===== Props & Emits =====
 defineProps<{
@@ -203,92 +204,8 @@ const emit = defineEmits<{
 }>()
 
 // ===== 响应式数据 =====
-const systemComponents = ref([
-  {
-    name: 'data-collector',
-    description: '数据采集服务',
-    status: 'running',
-    uptime: 86400000, // 毫秒
-    pid: 1234,
-    memoryUsage: 128 * 1024 * 1024, // 字节
-    cpuUsage: 15.6,
-    errorCount: 0,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: null
-  },
-  {
-    name: 'driver-manager',
-    description: '驱动管理器',
-    status: 'running',
-    uptime: 86200000,
-    pid: 1235,
-    memoryUsage: 64 * 1024 * 1024,
-    cpuUsage: 8.2,
-    errorCount: 1,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: null
-  },
-  {
-    name: 'alert-engine',
-    description: '告警引擎',
-    status: 'warning',
-    uptime: 85000000,
-    pid: 1236,
-    memoryUsage: 32 * 1024 * 1024,
-    cpuUsage: 5.1,
-    errorCount: 3,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: {
-      time: new Date(Date.now() - 60000).toISOString(),
-      message: 'SMTP服务器连接超时'
-    }
-  },
-  {
-    name: 'web-gateway',
-    description: 'Web网关服务',
-    status: 'running',
-    uptime: 86400000,
-    pid: 1237,
-    memoryUsage: 96 * 1024 * 1024,
-    cpuUsage: 12.3,
-    errorCount: 0,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: null
-  },
-  {
-    name: 'storage-service',
-    description: '存储服务',
-    status: 'error',
-    uptime: 0,
-    pid: null,
-    memoryUsage: 0,
-    cpuUsage: 0,
-    errorCount: 15,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: {
-      time: new Date(Date.now() - 300000).toISOString(),
-      message: '数据库连接失败: connection refused'
-    }
-  },
-  {
-    name: 'message-broker',
-    description: '消息代理',
-    status: 'stopped',
-    uptime: 0,
-    pid: null,
-    memoryUsage: 0,
-    cpuUsage: 0,
-    errorCount: 0,
-    lastCheck: new Date().toISOString(),
-    loading: false,
-    lastError: null
-  }
-])
+const systemComponents = ref<any[]>([])
+const loading = ref(false)
 
 // ===== 计算属性 =====
 const runningCount = computed(() => 
@@ -321,6 +238,25 @@ const systemHealthStatus = computed(() => {
 })
 
 // ===== 方法 =====
+
+/**
+ * 获取系统组件状态
+ */
+async function fetchSystemComponents() {
+  try {
+    loading.value = true
+    const response = await systemApi.getComponentStatus()
+    systemComponents.value = response.data.map((component: any) => ({
+      ...component,
+      loading: false
+    }))
+  } catch (error) {
+    console.error('获取系统组件状态失败:', error)
+    ElMessage.error('获取系统状态失败')
+  } finally {
+    loading.value = false
+  }
+}
 
 /**
  * 获取状态标签类型
@@ -377,18 +313,21 @@ async function startComponent(componentName: string) {
     
     component.loading = true
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    const response = await systemApi.startComponent(componentName)
     
-    component.status = 'running'
-    component.uptime = 0
-    component.pid = Math.floor(Math.random() * 9000) + 1000
-    component.lastCheck = new Date().toISOString()
+    if (response.success) {
+      component.status = 'running'
+      component.lastCheck = new Date().toISOString()
+      ElMessage.success(`${component.description} 启动成功`)
+      await fetchSystemComponents() // 刷新状态
+    } else {
+      throw new Error(response.message || '启动失败')
+    }
     
-    ElMessage.success(`${component.description} 启动成功`)
-  } catch (error) {
+  } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error('启动服务失败')
+      console.error('启动服务失败:', error)
+      ElMessage.error(error.message || '启动服务失败')
     }
   } finally {
     component.loading = false
@@ -416,20 +355,21 @@ async function stopComponent(componentName: string) {
     
     component.loading = true
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const response = await systemApi.stopComponent(componentName)
     
-    component.status = 'stopped'
-    component.uptime = 0
-    component.pid = null
-    component.cpuUsage = 0
-    component.memoryUsage = 0
-    component.lastCheck = new Date().toISOString()
+    if (response.success) {
+      component.status = 'stopped'
+      component.lastCheck = new Date().toISOString()
+      ElMessage.success(`${component.description} 停止成功`)
+      await fetchSystemComponents() // 刷新状态
+    } else {
+      throw new Error(response.message || '停止失败')
+    }
     
-    ElMessage.success(`${component.description} 已停止`)
-  } catch (error) {
+  } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error('停止服务失败')
+      console.error('停止服务失败:', error)
+      ElMessage.error(error.message || '停止服务失败')
     }
   } finally {
     component.loading = false
@@ -457,19 +397,19 @@ async function restartComponent(componentName: string) {
     component.loading = true
     component.status = 'starting'
     
-    // 模拟重启过程
-    await new Promise(resolve => setTimeout(resolve, 3000))
+    const response = await systemApi.restartComponent(componentName)
     
-    component.status = 'running'
-    component.uptime = 0
-    component.errorCount = 0
-    component.lastError = null
-    component.lastCheck = new Date().toISOString()
+    if (response.success) {
+      ElMessage.success(`${component.description} 重启成功`)
+      await fetchSystemComponents() // 刷新状态
+    } else {
+      throw new Error(response.message || '重启失败')
+    }
     
-    ElMessage.success(`${component.description} 重启成功`)
-  } catch (error) {
+  } catch (error: any) {
     if (error !== 'cancel') {
-      ElMessage.error('重启服务失败')
+      console.error('重启服务失败:', error)
+      ElMessage.error(error.message || '重启服务失败')
     }
   } finally {
     component.loading = false
@@ -488,35 +428,22 @@ function viewLogs(componentName: string) {
  */
 async function refreshAll() {
   emit('refresh')
-  
-  // 模拟刷新过程
-  for (const component of systemComponents.value) {
-    component.lastCheck = new Date().toISOString()
-    if (component.status === 'running') {
-      component.uptime += 10000 // 增加10秒
-      component.cpuUsage = Math.max(0, component.cpuUsage + (Math.random() - 0.5) * 5)
-    }
-  }
+  await fetchSystemComponents()
 }
 
 // ===== 生命周期 =====
-onMounted(() => {
-  // 启动定时更新
-  const updateInterval = setInterval(() => {
-    systemComponents.value.forEach(component => {
-      if (component.status === 'running') {
-        component.uptime += 5000 // 增加5秒
-        component.cpuUsage = Math.max(0, Math.min(100, 
-          component.cpuUsage + (Math.random() - 0.5) * 2
-        ))
-        component.lastCheck = new Date().toISOString()
-      }
-    })
-  }, 5000)
+onMounted(async () => {
+  // 初始加载系统组件状态
+  await fetchSystemComponents()
+  
+  // 启动定时刷新（每30秒）
+  const refreshInterval = setInterval(() => {
+    fetchSystemComponents()
+  }, 30000)
   
   // 清理定时器
   onUnmounted(() => {
-    clearInterval(updateInterval)
+    clearInterval(refreshInterval)
   })
 })
 </script>

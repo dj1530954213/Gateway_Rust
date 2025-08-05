@@ -491,10 +491,10 @@ const permissionCategories = computed(() => {
  */
 async function initializeData() {
   try {
-    // 生成模拟数据
-    availableRoles.value = generateMockRoles()
-    departments.value = generateMockDepartments()
-    potentialManagers.value = generateMockManagers()
+    // 从API加载真实数据
+    await loadAvailableRoles()
+    await loadDepartments()
+    await loadPotentialManagers()
 
     // 如果是编辑模式，填充表单数据
     if (!props.isCreate && props.userData) {
@@ -511,97 +511,54 @@ async function initializeData() {
 }
 
 /**
- * 生成模拟角色数据
+ * 加载可用角色
  */
-function generateMockRoles() {
-  return [
-    {
-      id: 'admin',
-      name: '系统管理员',
-      description: '系统最高权限',
-      permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: true },
-        { id: 'system_config', name: '系统配置', category: 'system', granted: true },
-        { id: 'user_manage', name: '用户管理', category: 'system', granted: true },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'network_config', name: '网络配置', category: 'network', granted: true },
-        { id: 'alert_manage', name: '报警管理', category: 'alert', granted: true }
-      ]
-    },
-    {
-      id: 'operator',
-      name: '操作员',
-      description: '设备操作权限',
-      permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: false },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'alert_manage', name: '报警管理', category: 'alert', granted: true }
-      ]
-    },
-    {
-      id: 'viewer',
-      name: '观察员',
-      description: '只读权限',
-      permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: false },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: false },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: false }
-      ]
-    },
-    {
-      id: 'engineer',
-      name: '工程师',
-      description: '工程配置权限',
-      permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'system_config', name: '系统配置', category: 'system', granted: true },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'network_config', name: '网络配置', category: 'network', granted: true }
-      ]
-    },
-    {
-      id: 'manager',
-      name: '管理员',
-      description: '部门管理权限',
-      permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'user_manage', name: '用户管理', category: 'system', granted: true },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'alert_manage', name: '报警管理', category: 'alert', granted: true }
-      ]
+async function loadAvailableRoles() {
+  try {
+    const response = await fetch('/api/v1/users/roles')
+    if (response.ok) {
+      availableRoles.value = await response.json()
+    } else {
+      availableRoles.value = []
     }
-  ]
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    availableRoles.value = []
+  }
 }
 
 /**
- * 生成模拟部门数据
+ * 加载部门列表
  */
-function generateMockDepartments() {
-  return [
-    { id: 'it', name: 'IT部门' },
-    { id: 'production', name: '生产部门' },
-    { id: 'maintenance', name: '维护部门' },
-    { id: 'quality', name: '质量部门' },
-    { id: 'management', name: '管理部门' }
-  ]
+async function loadDepartments() {
+  try {
+    const response = await fetch('/api/v1/users/departments')
+    if (response.ok) {
+      departments.value = await response.json()
+    } else {
+      departments.value = []
+    }
+  } catch (error) {
+    console.error('加载部门列表失败:', error)
+    departments.value = []
+  }
 }
 
 /**
- * 生成模拟管理员数据
+ * 加载潜在管理员
  */
-function generateMockManagers() {
-  return [
-    { id: 'manager1', name: '张经理', departmentName: 'IT部门' },
-    { id: 'manager2', name: '李主管', departmentName: '生产部门' },
-    { id: 'manager3', name: '王总监', departmentName: '质量部门' }
-  ]
+async function loadPotentialManagers() {
+  try {
+    const response = await fetch('/api/v1/users/managers')
+    if (response.ok) {
+      potentialManagers.value = await response.json()
+    } else {
+      potentialManagers.value = []
+    }
+  } catch (error) {
+    console.error('加载管理员列表失败:', error)
+    potentialManagers.value = []
+  }
 }
 
 /**
@@ -689,7 +646,7 @@ function handleAvatarSuccess(response: any) {
  * 生成随机头像
  */
 function generateRandomAvatar() {
-  const seed = Math.random().toString(36).substring(7)
+  const seed = Date.now().toString(36)
   userForm.value.avatar = `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`
   ElMessage.success('头像已生成')
 }
@@ -716,13 +673,23 @@ async function saveUser() {
     
     saving.value = true
     
-    // 模拟保存操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用API保存用户数据
+    const apiUrl = props.isCreate ? '/api/v1/users' : `/api/v1/users/${userForm.value.id}`
+    const method = props.isCreate ? 'POST' : 'PUT'
     
-    const userData = {
-      ...userForm.value,
-      updatedAt: new Date().toISOString()
+    const response = await fetch(apiUrl, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(userForm.value)
+    })
+    
+    if (!response.ok) {
+      throw new Error('保存用户信息失败')
     }
+    
+    const userData = await response.json()
     
     if (props.isCreate) {
       userData.createdAt = new Date().toISOString()

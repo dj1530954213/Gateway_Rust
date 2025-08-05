@@ -4,11 +4,11 @@ use endpoint_kit::{EndpointUrl, NormalizedUrl};
 
 #[test]
 fn test_simple_tcp_url_parsing() {
-    let url = "tcp://192.168.1.100:502";
+    let url = "tcp://[REAL_PLC_IP]:502";
     let parsed = EndpointUrl::parse(url).expect("Failed to parse URL");
     
     assert_eq!(parsed.scheme(), "tcp");
-    assert_eq!(parsed.host(), "192.168.1.100");
+    assert_eq!(parsed.host(), "[REAL_PLC_IP]");
     assert_eq!(parsed.port(), Some(502));
     assert!(parsed.query_params().is_empty());
 }

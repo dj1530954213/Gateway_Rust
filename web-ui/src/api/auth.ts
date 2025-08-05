@@ -228,6 +228,24 @@ class AuthApi {
   async terminateOtherSessions(): Promise<void> {
     await http.delete('/auth/sessions/others')
   }
+
+  /**
+   * 记录用户活动日志
+   */
+  async logActivity(activity: {
+    type: string
+    action: string
+    target?: string
+    details?: any
+  }): Promise<{ success: boolean; message?: string }> {
+    try {
+      const response = await http.post('/auth/activity-log', activity)
+      return response.data
+    } catch (error) {
+      console.warn('Failed to log activity:', error)
+      return { success: false, message: 'Failed to log activity' }
+    }
+  }
 }
 
 // 创建并导出API实例

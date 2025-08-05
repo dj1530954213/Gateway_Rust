@@ -657,12 +657,31 @@ async function initializeData() {
  */
 async function loadAlertRules() {
   try {
-    // 这里应该调用实际的API
-    // const rules = await alertsStore.fetchAlertRules()
+    // 调用真实的API
+    const response = await fetch('/api/v1/alerts/rules', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      params: {
+        page: pagination.value.currentPage,
+        size: pagination.value.pageSize,
+        search: searchKeyword.value,
+        status: filters.value.status,
+        severity: filters.value.severity,
+        deviceId: filters.value.deviceId
+      }
+    })
     
-    // 模拟数据
-    alertRules.value = generateMockRules()
-    pagination.value.total = alertRules.value.length
+    if (response.ok) {
+      const data = await response.json()
+      alertRules.value = data.items || []
+      pagination.value.total = data.total || 0
+    } else {
+      alertRules.value = []
+      pagination.value.total = 0
+      console.error('加载报警规则失败:', response.statusText)
+    }
 
   } catch (error) {
     console.error('加载报警规则失败:', error)
@@ -670,42 +689,6 @@ async function loadAlertRules() {
   }
 }
 
-/**
- * 生成模拟规则数据
- */
-function generateMockRules() {
-  const statuses = ['enabled', 'disabled', 'error']
-  const severities = ['critical', 'warning', 'info']
-  const rules = []
-
-  for (let i = 1; i <= 25; i++) {
-    rules.push({
-      id: `rule_${i}`,
-      name: `报警规则 ${i}`,
-      description: `这是第 ${i} 个报警规则的描述信息`,
-      status: statuses[i % statuses.length],
-      severity: severities[i % severities.length],
-      deviceIds: [`device_${(i % 3) + 1}`, `device_${(i % 5) + 1}`],
-      deviceNames: [`设备-${(i % 3) + 1}`, `设备-${(i % 5) + 1}`],
-      tagIds: [`tag_${i}`, `tag_${i + 10}`],
-      tagNames: [`温度传感器-${i}`, `压力传感器-${i}`],
-      conditions: [
-        {
-          field: 'temperature',
-          operator: '>',
-          value: 80 + (i % 20),
-          unit: '°C'
-        }
-      ],
-      triggerCount: Math.floor(Math.random() * 100),
-      lastTriggered: i % 4 === 0 ? new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString() : null,
-      createdAt: new Date(Date.now() - i * 24 * 60 * 60 * 1000).toISOString(),
-      updatedAt: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString()
-    })
-  }
-
-  return rules
-}
 
 /**
  * 获取规则状态类型

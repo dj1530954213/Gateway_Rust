@@ -1048,7 +1048,7 @@ const loadMockData = () => {
       enabled: true,
       highPriority: false,
       driverId: 'driver_1',
-      deviceAddress: '192.168.1.100',
+      deviceAddress: '',
       registerAddress: 40001,
       functionCode: '03',
       dataLength: 2,

@@ -484,7 +484,7 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
     connectionType: 'TCP',
     protocol: 'Modbus TCP',
     config: {
-      host: '192.168.1.100',
+      host: '',
       port: 502,
       timeout: 5000
     },
@@ -512,7 +512,7 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
     connectionType: 'WebSocket',
     protocol: 'WebSocket',
     config: {
-      url: 'ws://localhost:8080/ws',
+      url: 'ws://localhost:8080/ws/telemetry',
       protocols: ['mqtt', 'wamp']
     },
     configItems: ['WebSocket URL', '子协议', '重连机制', '心跳检测']
@@ -1108,7 +1108,7 @@ const refreshPreview = () => {
 watch(() => connectionForm.value.connectionType, (newType) => {
   const defaultConfigs = {
     tcp: {
-      host: '192.168.1.100',
+      host: '',
       port: 502
     },
     serial: {
@@ -1119,7 +1119,7 @@ watch(() => connectionForm.value.connectionType, (newType) => {
       stopBits: 1
     },
     websocket: {
-      url: 'ws://localhost:8080/ws'
+      url: 'ws://localhost:8080/ws/telemetry'
     },
     http: {
       baseUrl: 'http://localhost:8080'
@@ -1150,7 +1150,7 @@ onMounted(async () => {
       enabled: true,
       autoReconnect: true,
       config: {
-        host: '192.168.1.100',
+        host: '',
         port: 502
       },
       security: {

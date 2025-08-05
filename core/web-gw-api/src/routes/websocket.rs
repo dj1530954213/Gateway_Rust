@@ -8,7 +8,7 @@
 //! - 2025-01-27  Claude  初版
 
 use crate::{dto::*, error::ApiError, bootstrap::AppState};
-use actix::{Actor, Addr, AsyncContext, Handler, Message, StreamHandler};
+use actix::{Actor, ActorContext, Addr, AsyncContext, Handler, Message, StreamHandler};
 use actix_web::{
     web::{self, Data, Path, Query},
     HttpRequest, HttpResponse, Result,
@@ -17,6 +17,7 @@ use actix_web_actors::ws;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
+use std::time::Duration;
 use tokio::sync::RwLock;
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
@@ -59,7 +60,7 @@ impl Default for ConnectionManagerConfig {
 }
 
 /// 全局统计信息
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct GlobalStats {
     pub total_connections_created: u64,
     pub total_connections_closed: u64,
@@ -674,8 +675,10 @@ impl WsConnection {
                 // 重置采样时间戳
                 subscription.reset_sample_timestamp();
 
+                // 克隆一份用于async任务
+                let subscription_for_task = subscription.clone();
                 tokio::spawn(async move {
-                    manager.update_subscription(client_id, subscription.clone()).await;
+                    manager.update_subscription(client_id, subscription_for_task).await;
                 });
 
                 let response = WsMessage::Subscription(WsSubscriptionResponse {
@@ -808,7 +811,7 @@ pub async fn telemetry_websocket(
     let resp = ws::start(connection, &req, stream)
         .map_err(|e| {
             error!("Failed to start WebSocket: {}", e);
-            ApiError::InternalServerError("Failed to start WebSocket connection".to_string())
+            ApiError::internal_error("Failed to start WebSocket connection")
         })?;
 
     Ok(resp)

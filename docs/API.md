@@ -127,7 +127,7 @@ Authorization: Bearer <token>
       "name": "生产线PLC1",
       "type": "modbus-tcp",
       "status": "running",
-      "endpoint": "tcp://192.168.1.100:502",
+      "endpoint": "tcp://[REAL_PLC_IP]:502",
       "enabled": true,
       "statistics": {
         "points_read": 1250,
@@ -156,7 +156,7 @@ Content-Type: application/json
   "id": "modbus_new",
   "name": "新设备",
   "type": "modbus-tcp", 
-  "endpoint": "tcp://192.168.1.101:502",
+  "endpoint": "tcp://[REAL_PLC2_IP]:502",
   "config": {
     "unit_id": 1,
     "polling_interval": "2s",
@@ -296,7 +296,7 @@ Authorization: Bearer <token>
       "id": "alert_001",
       "severity": "high",
       "title": "设备连接丢失",
-      "message": "Modbus设备 192.168.1.100 连接超时",
+      "message": "Modbus设备 [REAL_PLC_IP] 连接超时",
       "source": "modbus_line1",
       "status": "active",
       "created_at": "2024-01-20T12:40:00Z",
@@ -745,7 +745,7 @@ driver = client.drivers.create({
     'id': 'new_modbus',
     'name': '新Modbus设备',
     'type': 'modbus-tcp',
-    'endpoint': 'tcp://192.168.1.102:502'
+    'endpoint': 'tcp://[REAL_PLC3_IP]:502'
 })
 
 # 执行命令

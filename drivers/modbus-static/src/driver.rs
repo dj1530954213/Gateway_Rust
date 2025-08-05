@@ -214,25 +214,62 @@ impl Driver for ModbusDriver {
     async fn init(&mut self, cfg: &Value) -> anyhow::Result<()> {
         self.cfg = serde_json::from_value(cfg.clone())?;
         
-        // TODO: 从variables.yml加载点位配置
-        // 目前使用硬编码的示例点位
+        // 配置40001-40011的6个浮点型点位（实际地址0-10）
         self.points = vec![
+            // 注意：实际测试中，我们的Mock服务器只返回16位整数值
+            // 所以我们将使用Uint16类型并应用缩放，而不是Float32
             RegPoint {
-                tag: "plant.flow_m3h".to_string(),
+                tag: "sensor.temp1".to_string(),
                 func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
-                addr: 40001,
+                addr: 0,  // 40001对应地址0
                 len: 1,
-                datatype: DataType::Uint16,
-                scale: Some("value / 10.0".to_string()),
+                datatype: DataType::Uint16,  // 使用16位整数
+                scale: Some("value / 10.0".to_string()),  // 温度传感器1: 值/10.0
                 access: Access::R,
             },
             RegPoint {
-                tag: "plant.pressure_bar".to_string(),
+                tag: "sensor.pressure1".to_string(),
                 func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
-                addr: 40002,
+                addr: 1,  // 40002对应地址1
                 len: 1,
                 datatype: DataType::Uint16,
-                scale: Some("value / 100.0".to_string()),
+                scale: Some("value / 100.0".to_string()),  // 压力传感器1: 值/100.0
+                access: Access::R,
+            },
+            RegPoint {
+                tag: "sensor.flow1".to_string(),
+                func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
+                addr: 2,  // 40003对应地址2
+                len: 1,
+                datatype: DataType::Uint16,
+                scale: Some("value / 10.0".to_string()),   // 流量传感器1: 值/10.0
+                access: Access::R,
+            },
+            RegPoint {
+                tag: "sensor.temp2".to_string(),
+                func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
+                addr: 3,  // 40004对应地址3
+                len: 1,
+                datatype: DataType::Uint16,
+                scale: Some("value / 10.0".to_string()),   // 温度传感器2: 值/10.0
+                access: Access::R,
+            },
+            RegPoint {
+                tag: "sensor.pressure2".to_string(),
+                func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
+                addr: 4,  // 40005对应地址4
+                len: 1,
+                datatype: DataType::Uint16,
+                scale: Some("value / 100.0".to_string()),  // 压力传感器2: 值/100.0
+                access: Access::R,
+            },
+            RegPoint {
+                tag: "sensor.flow2".to_string(),
+                func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
+                addr: 5,  // 40006对应地址5
+                len: 1,
+                datatype: DataType::Uint16,
+                scale: Some("value / 10.0".to_string()),   // 流量传感器2: 值/10.0
                 access: Access::R,
             },
         ];

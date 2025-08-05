@@ -304,7 +304,7 @@ drivers:
   modbus_plc1:
     enabled: true
     type: "modbus-tcp"
-    endpoint: "tcp://192.168.1.100:502"
+    endpoint: "tcp://[REAL_PLC_IP]:502"
     config:
       unit_id: 1
       polling_interval: "2s"
@@ -394,9 +394,9 @@ graph TB
 # /etc/nginx/sites-available/edge-gateway
 upstream edge_gateway {
     least_conn;
-    server 192.168.1.10:8080 max_fails=3 fail_timeout=30s;
-    server 192.168.1.11:8080 max_fails=3 fail_timeout=30s;
-    server 192.168.1.12:8080 max_fails=3 fail_timeout=30s;
+    server [REAL_SERVER1_IP]:8080 max_fails=3 fail_timeout=30s;
+    server [REAL_SERVER2_IP]:8080 max_fails=3 fail_timeout=30s;
+    server [REAL_SERVER3_IP]:8080 max_fails=3 fail_timeout=30s;
 }
 
 server {
@@ -789,9 +789,9 @@ scrape_configs:
   - job_name: 'edge-gateway-cluster'
     static_configs:
       - targets:
-        - '192.168.1.10:9090'
-        - '192.168.1.11:9090'
-        - '192.168.1.12:9090'
+        - '[REAL_SERVER1_IP]:9090'
+        - '[REAL_SERVER2_IP]:9090'
+        - '[REAL_SERVER3_IP]:9090'
 ```
 
 ### Grafana仪表板
@@ -885,7 +885,7 @@ netstat -tulpn | grep :8080
 #### 2. 驱动连接失败
 ```bash
 # 测试网络连接
-telnet 192.168.1.100 502
+telnet [REAL_PLC_IP] 502
 
 # 检查防火墙
 sudo ufw status

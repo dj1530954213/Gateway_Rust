@@ -362,16 +362,22 @@ impl FrameBusBridge {
         
         let level = data_frame.meta.get("level")
             .and_then(|l| match l.as_str() {
-                "INFO" => Some(AlertLevel::Info),
-                "WARN" => Some(AlertLevel::Warn),
-                "CRIT" => Some(AlertLevel::Crit),
+                "INFO" => Some(AlertLevel::INFO),
+                "WARN" => Some(AlertLevel::WARN),
+                "CRIT" => Some(AlertLevel::CRIT),
                 _ => None,
             })
-            .unwrap_or(AlertLevel::Info);
+            .unwrap_or(AlertLevel::INFO);
 
         let message = data_frame.meta.get("message")
             .cloned()
             .unwrap_or_else(|| "Alert triggered".to_string());
+
+        // 从元数据中提取数值和阈值
+        let value = data_frame.value.as_ref().map(|v| v.to_f64().unwrap_or(0.0));
+        let threshold = data_frame.meta.get("threshold")
+            .and_then(|t| t.parse::<f64>().ok())
+            .unwrap_or(0.0);
 
         // 构造报警通知
         let alert_notification = AlertNotification {
@@ -382,6 +388,8 @@ impl FrameBusBridge {
             level,
             message,
             fired_at: chrono::Utc::now(),
+            value,
+            threshold,
         };
 
         // 广播到WebSocket连接
@@ -458,9 +466,9 @@ impl AlertPublisher {
             .with_qos(2)
             .with_meta("rule_name", rule_name)
             .with_meta("level", match level {
-                AlertLevel::Info => "INFO",
-                AlertLevel::Warn => "WARN", 
-                AlertLevel::Crit => "CRIT",
+                AlertLevel::INFO => "INFO",
+                AlertLevel::WARN => "WARN", 
+                AlertLevel::CRIT => "CRIT",
             })
             .with_meta("message", message);
 

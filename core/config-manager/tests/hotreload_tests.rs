@@ -12,7 +12,7 @@ async fn create_basic_config(temp_dir: &std::path::Path) {
     let endpoints_content = r#"
 endpoints:
   device1:
-    url: "tcp://192.168.1.10:502"
+    url: "tcp://[REAL_DEVICE_IP]:502"
     description: "Device 1"
 "#;
 
@@ -54,11 +54,11 @@ async fn test_single_file_hotreload() {
     let updated_content = r#"
 endpoints:
   device1:
-    url: "tcp://192.168.1.20:502"
+    url: "tcp://[REAL_DEVICE2_IP]:502"
     description: "Updated Device 1"
     timeout: "15s"
   device2:
-    url: "tcp://192.168.1.30:502"
+    url: "tcp://[REAL_DEVICE3_IP]:502"
     description: "New Device 2"
 "#;
 
@@ -77,7 +77,7 @@ endpoints:
                 assert!(endpoints_config.endpoints.contains_key("device2"));
                 
                 let device1 = &endpoints_config.endpoints["device1"];
-                assert_eq!(device1.url, "tcp://192.168.1.20:502");
+                assert_eq!(device1.url, "tcp://[REAL_DEVICE2_IP]:502");
                 assert_eq!(device1.description, "Updated Device 1");
                 assert_eq!(device1.timeout, Duration::from_secs(15));
                 
@@ -91,7 +91,7 @@ endpoints:
     // 验证管理器中的配置已更新
     let current_endpoints = manager.get_endpoints().await;
     assert_eq!(current_endpoints.endpoints.len(), 2);
-    assert_eq!(current_endpoints.endpoints["device1"].url, "tcp://192.168.1.20:502");
+    assert_eq!(current_endpoints.endpoints["device1"].url, "tcp://[REAL_DEVICE2_IP]:502");
 }
 
 #[tokio::test]
@@ -198,7 +198,7 @@ async fn test_rapid_file_changes() {
         let content = format!(r#"
 endpoints:
   device1:
-    url: "tcp://192.168.1.{}:502"
+    url: "tcp://[REAL_DEVICE_IP_{}]:502"
     description: "Device iteration {}"
 "#, 10 + i, i);
 
@@ -226,7 +226,7 @@ endpoints:
 
     // 验证最终状态是最新的
     let final_endpoints = manager.get_endpoints().await;
-    assert!(final_endpoints.endpoints["device1"].url.contains("192.168.1.1")); // 应该是最新的值
+    assert!(final_endpoints.endpoints["device1"].url.contains("[REAL_DEVICE_IP]")); // 应该是最新的值
 }
 
 #[tokio::test]
@@ -248,7 +248,7 @@ async fn test_file_deletion_and_recreation() {
     let new_content = r#"
 endpoints:
   recreated_device:
-    url: "tcp://192.168.1.99:502"
+    url: "tcp://[REAL_DEVICE_99_IP]:502"
     description: "Recreated Device"
 "#;
 
@@ -261,7 +261,7 @@ endpoints:
             if let ConfigEvent::EndpointsChanged(endpoints_config) = event {
                 if endpoints_config.endpoints.contains_key("recreated_device") {
                     received_recreation_event = true;
-                    assert_eq!(endpoints_config.endpoints["recreated_device"].url, "tcp://192.168.1.99:502");
+                    assert_eq!(endpoints_config.endpoints["recreated_device"].url, "tcp://[REAL_DEVICE_99_IP]:502");
                     break;
                 }
             }
@@ -331,7 +331,7 @@ async fn test_hotreload_with_complex_config() {
     let complex_endpoints = r#"
 endpoints:
   plc_main:
-    url: "tcp://192.168.1.100:502"
+    url: "tcp://[REAL_PLC1_IP]:502"
     description: "Main PLC"
     timeout: "10s"
     pool:
@@ -343,7 +343,7 @@ endpoints:
       server_name: "plc.factory.com"
       verify_cert: true
   hmi_station:
-    url: "tcp://192.168.1.101:502"
+    url: "tcp://[REAL_PLC2_IP]:502"
     description: "HMI Station"
     timeout: "5s"
 "#;
@@ -496,7 +496,7 @@ async fn test_hotreload_performance() {
     let updated_content = r#"
 endpoints:
   performance_device:
-    url: "tcp://192.168.1.200:502"
+    url: "tcp://[REAL_PLC3_IP]:502"
     description: "Performance test device"
 "#;
 

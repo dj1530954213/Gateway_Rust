@@ -6,7 +6,7 @@ modbus_line1:
   enabled: true
   type: "modbus-tcp"
   name: "生产线PLC1"
-  endpoint: "tcp://${PLC1_IP:-192.168.1.100}:502"
+  endpoint: "tcp://${PLC1_IP:-[REAL_PLC_IP]}:502"
   
   config:
     unit_id: 1
@@ -114,7 +114,7 @@ modbus_line2:
   enabled: true
   type: "modbus-tcp"
   name: "生产线PLC2"
-  endpoint: "tcp://${PLC2_IP:-192.168.1.101}:502"
+  endpoint: "tcp://${PLC2_IP:-[REAL_PLC2_IP]}:502"
   
   config:
     unit_id: 1
@@ -170,7 +170,7 @@ opcua_scada:
   enabled: false
   type: "opcua"
   name: "SCADA系统"
-  endpoint: "opc.tcp://${SCADA_IP:-192.168.1.200}:4840"
+  endpoint: "opc.tcp://${SCADA_IP:-[REAL_SCADA_IP]}:4840"
   
   config:
     # 安全配置
@@ -220,7 +220,7 @@ ethernet_ip_ab:
   enabled: false
   type: "ethernet-ip"
   name: "Allen-Bradley PLC"
-  endpoint: "enip://${AB_PLC_IP:-192.168.1.150}"
+  endpoint: "enip://${AB_PLC_IP:-[REAL_AB_PLC_IP]}"
   
   config:
     slot: 0
@@ -247,7 +247,7 @@ siemens_s7:
   enabled: false
   type: "s7"
   name: "西门子S7 PLC"
-  endpoint: "s7://${S7_IP:-192.168.1.160}"
+  endpoint: "s7://${S7_IP:-[REAL_S7_IP]}"
   
   config:
     rack: 0
@@ -338,7 +338,7 @@ dnp3_power:
   enabled: false
   type: "dnp3"
   name: "DNP3电力设备"
-  endpoint: "tcp://${DNP3_IP:-192.168.1.170}:20000"
+  endpoint: "tcp://${DNP3_IP:-[REAL_DNP3_IP]}:20000"
   
   config:
     master_address: 1

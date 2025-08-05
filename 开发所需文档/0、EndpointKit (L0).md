@@ -5,7 +5,7 @@
 
 |典型连接|场景|难点|
 |---|---|---|
-|`tcp://192.168.1.10:502`|Modbus-TCP PLC|需要长连接、断线重连|
+|`tcp://[REAL_PLC_IP]:502`|Modbus-TCP PLC|需要长连接、断线重连|
 |`tls+tcp://…`|现场到云，传感器走 TLS|要握手、证书轮换|
 |`serial://COM3?baud=9600`|老旧 RS-485|半双工，收发要排队|
 |`tsn+tcp://…`|高端实时以太网|需要确定时延|
@@ -28,7 +28,7 @@ bash
 
 复制编辑
 
-`tls+tcp://user:pw@192.168.1.10:44818?timeout=2s&rate=200pps ┬──┬──┬────┬──────────────┬──────┬─────────────┬─────────┐ │  │  │    │              │      │             │ │  │  │    │              │      │             └── 每秒 200 帧限速 │  │  │    │              │      └──── 读写超时 2 秒 │  │  │    │              └────── 端口 44818 │  │  │    └────────────────────── PLC IP │  │  └────────────── 用户名:密码（可选） │  └────────────────── 传输层：TCP └───────────────────── 加密方式：TLS`
+`tls+tcp://user:pw@[REAL_PLC_IP]:44818?timeout=2s&rate=200pps ┬──┬──┬────┬──────────────┬──────┬─────────────┬─────────┐ │  │  │    │              │      │             │ │  │  │    │              │      │             └── 每秒 200 帧限速 │  │  │    │              │      └──── 读写超时 2 秒 │  │  │    │              └────── 端口 44818 │  │  │    └────────────────────── PLC IP │  │  └────────────── 用户名:密码（可选） │  └────────────────── 传输层：TCP └───────────────────── 加密方式：TLS`
 
 ### 2.2 为什么这么设计？
 
@@ -153,11 +153,11 @@ key/val      = URL-encoded string
 
 |场景|URL 示例|关键 query|
 |---|---|---|
-|**Modbus TCP**|`tcp://192.168.1.10:502?timeout=1s`|`timeout` 读写超时|
+|**Modbus TCP**|`tcp://[REAL_PLC_IP]:502?timeout=1s`|`timeout` 读写超时|
 |**TLS + TCP**|`tls+tcp://plc:502?ca=/certs/ca.pem`|`ca`, `domain`, `timeout`|
-|**DTLS + UDP**|`dtls+udp://192.168.0.5:5060?psk=mykey`|`psk`, `timeout`|
+|**DTLS + UDP**|`dtls+udp://[REAL_UDP_IP]:5060?psk=mykey`|`psk`, `timeout`|
 |**串口 RS-485**|`serial:///dev/ttyUSB0?baud=9600&parity=N&halfduplex=1`|`baud`, `parity`, `halfduplex`|
-|**双网冗余 PRP**|`prp+tls+tcp://192.168.1.2:44818?iface=eth0,eth1`|`iface` 逗号分割|
+|**双网冗余 PRP**|`prp+tls+tcp://[REAL_PLC2_IP]:44818?iface=eth0,eth1`|`iface` 逗号分割|
 |**时间敏感网 TSN**|`tsn+tcp://robot:1234?priority=5`|`priority` VLAN PCP|
 |**QUIC over 5G**|`quic://edge-gw:443?alpn=modbus-quic`|`alpn`, `timeout`|
 
@@ -281,7 +281,7 @@ let conn = DecoratorBuilder::from(url).await?;
 ```yaml
 plc_tls:
   scheme: tls+tcp
-  host: 192.168.1.10
+  host: [REAL_PLC_IP]
   port: 502
   opts:
     timeout: 1s

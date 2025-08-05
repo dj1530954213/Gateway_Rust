@@ -107,7 +107,7 @@ drivers:
     enabled: true
     type: "modbus-tcp"
     name: "生产线PLC1"
-    endpoint: "tcp://192.168.1.100:502"
+    endpoint: "tcp://[REAL_PLC_IP]:502"
     
     config:
       unit_id: 1
@@ -182,7 +182,7 @@ drivers:
     enabled: true
     type: "opcua"
     name: "SCADA系统"
-    endpoint: "opc.tcp://192.168.1.200:4840"
+    endpoint: "opc.tcp://[REAL_OPC_IP]:4840"
     
     config:
       security_policy: "None"

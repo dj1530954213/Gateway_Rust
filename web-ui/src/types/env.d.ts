@@ -13,7 +13,6 @@ interface ImportMetaEnv {
   readonly VITE_WS_MAX_RECONNECT_ATTEMPTS: string
   readonly VITE_DEBUG: string
   readonly VITE_SHOW_CONSOLE_LOGS: string
-  readonly VITE_ENABLE_MOCK: string
 }
 
 interface ImportMeta {

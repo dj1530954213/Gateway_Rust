@@ -6,19 +6,19 @@
     </div>
     
     <div class="tags-content">
-      <!-- 临时内容，展示Mock数据 -->
+      <!-- 真实数据点位管理 -->
       <el-card class="tags-card">
         <template #header>
           <div class="card-header">
             <span>数据点位</span>
-            <el-button type="primary" size="small">
+            <el-button type="primary" size="small" @click="handleAddTag">
               <el-icon><Plus /></el-icon>
               添加点位
             </el-button>
           </div>
         </template>
         
-        <el-table :data="mockTags" style="width: 100%">
+        <el-table :data="tags" style="width: 100%" v-loading="loading">
           <el-table-column prop="name" label="点位名称" width="180" />
           <el-table-column prop="address" label="地址" width="120" />
           <el-table-column prop="dataType" label="数据类型" width="100" />
@@ -42,48 +42,66 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { ElMessage } from 'element-plus'
+import { ref, onMounted } from 'vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
+import { tagsApi } from '@/api'
 
-// Mock数据
-const mockTags = ref([
-  {
-    id: 1,
-    name: 'Temperature_01',
-    address: '40001',
-    dataType: 'Float',
-    unit: '°C',
-    value: '23.5',
-    timestamp: '2025-01-29 14:30:25'
-  },
-  {
-    id: 2,
-    name: 'Pressure_01', 
-    address: '40002',
-    dataType: 'Float',
-    unit: 'Pa',
-    value: '101325',
-    timestamp: '2025-01-29 14:30:20'
-  },
-  {
-    id: 3,
-    name: 'Status_Motor',
-    address: '10001',
-    dataType: 'Boolean',
-    unit: '',
-    value: 'true',
-    timestamp: '2025-01-29 14:30:15'
+// 状态管理
+const tags = ref<any[]>([])
+const loading = ref(false)
+
+// 加载标签数据
+const loadTags = async () => {
+  try {
+    loading.value = true
+    const response = await tagsApi.list()
+    if (response.success && response.data) {
+      tags.value = response.data
+    }
+  } catch (error) {
+    console.error('Failed to load tags:', error)
+    ElMessage.error('加载点位数据失败')
+  } finally {
+    loading.value = false
   }
-])
-
-const editTag = (tag: any) => {
-  ElMessage.info(`编辑点位: ${tag.name}`)
 }
 
-const deleteTag = (tag: any) => {
-  ElMessage.warning(`删除点位: ${tag.name}`)
+const handleAddTag = () => {
+  ElMessage.info('添加点位功能开发中')
 }
+
+const editTag = async (tag: any) => {
+  ElMessage.info('编辑点位功能开发中')
+}
+
+const deleteTag = async (tag: any) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除点位 "${tag.name}" 吗？`,
+      '确认删除',
+      {
+        type: 'warning',
+        confirmButtonText: '删除',
+        cancelButtonText: '取消'
+      }
+    )
+    
+    await tagsApi.delete(tag.id)
+    ElMessage.success('删除成功')
+    await loadTags()
+  } catch (error: any) {
+    if (error !== 'cancel') {
+      console.error('Failed to delete tag:', error)
+      ElMessage.error('删除失败')
+    }
+  }
+}
+
+// 生命周期
+onMounted(async () => {
+  await loadTags()
+})
 </script>
 
 <style scoped lang="scss">

@@ -240,7 +240,7 @@ impl ConfigManager {
         
         let mut endpoints = HashMap::new();
         endpoints.insert("plc1".to_string(), EndpointCfg {
-            url: "tcp://192.168.1.100:502".to_string(),
+            url: "tcp://[REAL_PLC_IP]:502".to_string(),
             description: "PLC设备1".to_string(),
             timeout: std::time::Duration::from_secs(10),
             pool: PoolCfg::default(),

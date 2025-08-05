@@ -23,6 +23,7 @@ use url::Url;
 /// 报警管理路由范围
 pub fn scope() -> Scope {
     web::scope("/alerts")
+        .route("", web::get().to(get_alerts_list))
         .route("/health", web::get().to(proxy_health))
         .route("/ready", web::get().to(proxy_ready))
         .route("/stats", web::get().to(proxy_stats))
@@ -106,15 +107,17 @@ async fn proxy_request(
         }
     }
     
-    // 设置内容类型和body
-    if let Some(body) = body {
-        client_req = client_req
-            .content_type("application/json")
-            .send_body(body);
-    }
-    
     // 发送请求
-    match client_req.send().await {
+    let send_result = if let Some(body) = body {
+        client_req
+            .content_type("application/json")
+            .send_body(body)
+            .await
+    } else {
+        client_req.send().await
+    };
+    
+    match send_result {
         Ok(mut response) => {
             debug!("Alert-engine response status: {}", response.status());
             
@@ -375,4 +378,22 @@ async fn proxy_channels_types(
     req: HttpRequest,
 ) -> ApiResult<HttpResponse> {
     proxy_request(state, req, "/channels/types", None).await
+}
+
+/// 获取报警列表
+async fn get_alerts_list(
+    _state: web::Data<AppState>,
+    req: HttpRequest,
+) -> ApiResult<HttpResponse> {
+    // 暂时返回空的报警列表，与驱动API格式保持一致
+    let response = serde_json::json!({
+        "alerts": [],
+        "total": 0,
+        "page": 1,
+        "page_size": 20,
+        "total_pages": 0
+    });
+    
+    debug!("返回报警列表: {}", response);
+    Ok(HttpResponse::Ok().json(response))
 }

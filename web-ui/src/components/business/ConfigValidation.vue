@@ -328,6 +328,7 @@ import {
 } from '@element-plus/icons-vue'
 import { SearchBox, BaseTable, BaseForm, StatusTag } from '../base'
 import { ElMessage } from 'element-plus'
+import { configApi } from '@/api'
 
 export type ValidationType = 'success' | 'warning' | 'error'
 
@@ -659,73 +660,26 @@ const handleValidate = async () => {
   validating.value = true
   validationProgress.value = 0
   progressText.value = '开始验证...'
+  const startTime = Date.now()
   
   try {
-    // 模拟验证过程
-    const steps = [
-      '检查基本配置...',
-      '验证连接参数...',
-      '检查协议设置...',
-      '验证安全配置...',
-      '检查高级选项...',
-      '生成验证报告...'
-    ]
+    progressText.value = '开始验证配置...'
     
-    const mockResults: ValidationResult[] = [
-      {
-        id: '1',
-        title: 'IP地址格式验证',
-        category: '连接配置',
-        type: 'success',
-        message: 'IP地址格式正确'
-      },
-      {
-        id: '2',
-        title: '端口范围验证',
-        category: '连接配置',
-        type: 'error',
-        message: '端口号超出有效范围',
-        fixable: true,
-        details: {
-          path: 'connection.port',
-          expected: '1-65535',
-          actual: '70000',
-          suggestion: '请输入1-65535范围内的端口号'
-        }
-      },
-      {
-        id: '3',
-        title: '超时时间验证',
-        category: '高级配置',
-        type: 'warning',
-        message: '超时时间可能过短',
-        details: {
-          path: 'advanced.timeout',
-          expected: '≥ 5000ms',
-          actual: '1000ms',
-          suggestion: '建议设置5秒以上的超时时间'
-        }
-      }
-    ]
+    // 调用配置验证API
+    const response = await configApi.validateConfig(props.modelValue)
     
-    for (let i = 0; i < steps.length; i++) {
-      progressText.value = steps[i]
-      validationProgress.value = ((i + 1) / steps.length) * 100
-      
-      await new Promise(resolve => setTimeout(resolve, 500))
-    }
-    
-    validationResults.value = mockResults
+    validationResults.value = response.results || []
+    validationProgress.value = 100
     
     // 记录验证历史
     const historyRecord: ValidationHistoryRecord = {
       id: Date.now().toString(),
       timestamp: new Date(),
-      totalCount: mockResults.length,
-      passedCount: mockResults.filter(r => r.type === 'success').length,
-      warningCount: mockResults.filter(r => r.type === 'warning').length,
-      errorCount: mockResults.filter(r => r.type === 'error').length,
-      duration: 3000
+      totalCount: validationResults.value.length,
+      passedCount: validationResults.value.filter(r => r.type === 'success').length,
+      warningCount: validationResults.value.filter(r => r.type === 'warning').length,
+      errorCount: validationResults.value.filter(r => r.type === 'error').length,
+      duration: Date.now() - startTime
     }
     
     validationHistory.value.unshift(historyRecord)
@@ -734,8 +688,9 @@ const handleValidate = async () => {
     
     ElMessage.success('验证完成')
     
-  } catch (error) {
-    ElMessage.error('验证过程中发生错误')
+  } catch (error: any) {
+    console.error('配置验证失败:', error)
+    ElMessage.error(error.message || '验证过程中发生错误')
   } finally {
     validating.value = false
     validationProgress.value = 100

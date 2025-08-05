@@ -4,13 +4,22 @@
 
 本目录包含边缘网关的完整集成测试套件，包括端到端数据流测试、故障恢复测试和性能基准测试。
 
+## 🚫 重要声明
+
+**本系统为生产级产品，所有集成测试必须使用真实设备和真实数据！**
+
+- ❌ 不允许使用任何模拟或虚假数据
+- ✅ 必须连接真实的Modbus设备
+- ✅ 必须使用真实的MQTT代理
+- ✅ 必须使用真实的时序数据
+
 ## 目录结构
 
 ```
 tests/integration/
 ├── README.md                    # 本文件
 ├── Makefile                     # 测试环境管理
-├── docker-compose.yml          # 测试服务定义
+├── docker-compose.yml          # 测试服务定义（仅真实服务）
 ├── mod.rs                       # 模块声明
 ├── common/                      # 公共测试工具
 │   ├── mod.rs
@@ -22,9 +31,6 @@ tests/integration/
 │   ├── prometheus.yml          # 监控配置
 │   ├── influxdb-init.sh        # 数据库初始化
 │   └── toxiproxy.json          # 故障注入配置
-├── mock-plc/                    # Mock PLC模拟器
-│   ├── modbus_simulator.py     # Python模拟器
-│   └── requirements.txt        # Python依赖
 ├── test_config/                 # 测试配置
 ├── e2e/                         # 端到端测试
 │   ├── mod.rs
@@ -83,61 +89,57 @@ make logs
 make teardown
 ```
 
-## 测试服务
+## 真实测试环境要求
 
-集成测试环境包含以下服务：
+### 必需的真实设备连接
 
-| 服务 | 端口 | 描述 |
+测试环境需要以下真实设备和服务：
+
+| 组件 | 要求 | 说明 |
 |------|------|------|
-| MQTT Broker | 1883, 9001 | Eclipse Mosquitto |
-| InfluxDB | 8086 | 时序数据库 |
-| Mock PLC | 1502, 8080 | Modbus TCP模拟器 |
-| Redis | 6379 | 缓存数据库 |
-| Grafana | 3000 | 监控面板 |
-| Prometheus | 9090 | 指标收集 |
-| Toxiproxy | 8474, 21883 | 故障注入代理 |
+| **Modbus设备** | 真实PLC/传感器 | 必须连接实际的工业设备，不允许模拟 |
+| **MQTT Broker** | 1883, 9001 | Eclipse Mosquitto（真实代理） |
+| **InfluxDB** | 8086 | 时序数据库（存储真实数据） |
+| **Redis** | 6379 | 缓存数据库 |
+| **Grafana** | 3000 | 监控面板（展示真实指标） |
+| **Prometheus** | 9090 | 指标收集（真实系统指标） |
+| **Toxiproxy** | 8474, 21883 | 网络故障注入代理 |
 
-## Mock PLC 模拟器
+### 真实设备配置示例
 
-Mock PLC提供以下功能：
+在测试配置文件中指定真实设备连接：
 
-### 数据模式
-
-- **温度传感器** (40001-40010): 正弦波数据
-- **压力传感器** (40011-40020): 随机游走
-- **流量传感器** (40021-40030): 阶跃函数  
-- **液位传感器** (40031-40040): 线性斜坡
-
-### 故障注入API
-
-```bash
-# 注入10%错误率，500ms延迟
-curl -X POST http://localhost:8080/ \
-  -H "Content-Type: application/json" \
-  -d '{"command": "inject_fault", "error_rate": 0.1, "response_delay": 0.5}'
-
-# 清除故障
-curl -X POST http://localhost:8080/ \
-  -H "Content-Type: application/json" \
-  -d '{"command": "clear_faults"}'
-
-# 查看状态
-curl http://localhost:8080/
+```yaml
+# test_config/devices.yml
+devices:
+  - name: "Production_PLC_01"
+    protocol: "ModbusTcp"
+    endpoint: "tcp://[REAL_PLC_IP]:502"  # 真实PLC IP地址
+    config:
+      slave_id: 1
+      timeout: 5000
+  - name: "Temperature_Sensor_Module"
+    protocol: "ModbusTcp"  
+    endpoint: "tcp://[REAL_SENSOR_IP]:502"  # 真实传感器模块
+    config:
+      slave_id: 2
+      timeout: 3000
 ```
 
 ## 测试类型
 
 ### 1. 端到端数据流测试
 
-验证完整的数据链路：Mock PLC → Modbus → FrameBus → MQTT
+验证完整的数据链路：真实PLC设备 → Modbus → FrameBus → MQTT
 
 ```rust
 #[tokio::test]
 async fn test_end_to_end_data_flow() -> Result<()> {
-    // 启动测试环境
-    // 配置网关
-    // 验证数据流
-    // 检查准确性和延迟
+    // 连接真实PLC设备
+    // 配置网关连接参数
+    // 验证真实数据流转
+    // 检查数据准确性和延迟
+    // 确保无数据丢失
 }
 ```
 
@@ -243,11 +245,11 @@ tail -f /tmp/gateway.log
 3. 遵循现有的测试模式
 4. 添加适当的断言和验证
 
-### 扩展Mock服务
+### 扩展真实设备支持
 
-1. 修改`mock-plc/modbus_simulator.py`
-2. 添加新的数据模式或协议支持
-3. 更新配置文件和文档
+1. 在`test_config/`中添加新设备配置
+2. 更新真实设备的协议支持
+3. 确保所有新增设备都是真实的工业设备
 
 ### 性能调优
 

@@ -15,14 +15,14 @@ async fn create_test_config_dir() -> tempfile::TempDir {
     let endpoints_content = r#"
 endpoints:
   plc1:
-    url: "tcp://192.168.1.100:502"
+    url: "tcp://[REAL_PLC1_IP]:502"
     description: "Main PLC"
     timeout: "10s"
     pool:
       min_connections: 1
       max_connections: 5
   plc2:
-    url: "tcp://192.168.1.101:502"
+    url: "tcp://[REAL_PLC2_IP]:502"
     description: "Secondary PLC"
 "#;
 
@@ -138,7 +138,7 @@ async fn test_config_content_verification() {
     // 验证端点配置内容
     let endpoints = manager.get_endpoints().await;
     let plc1 = endpoints.endpoints.get("plc1").expect("plc1 should exist");
-    assert_eq!(plc1.url, "tcp://192.168.1.100:502");
+    assert_eq!(plc1.url, "tcp://[REAL_PLC1_IP]:502");
     assert_eq!(plc1.description, "Main PLC");
     assert_eq!(plc1.timeout, Duration::from_secs(10));
     assert_eq!(plc1.pool.min_connections, 1);
@@ -186,10 +186,10 @@ async fn test_manual_reload() {
     let new_endpoints_content = r#"
 endpoints:
   plc1:
-    url: "tcp://192.168.1.200:502"
+    url: "tcp://[REAL_PLC3_IP]:502"
     description: "Updated PLC"
   plc3:
-    url: "tcp://192.168.1.102:502"
+    url: "tcp://[REAL_PLC4_IP]:502"
     description: "New PLC"
 "#;
 
@@ -207,7 +207,7 @@ endpoints:
     assert!(!endpoints.endpoints.contains_key("plc2")); // 应该已删除
 
     let plc1 = endpoints.endpoints.get("plc1").unwrap();
-    assert_eq!(plc1.url, "tcp://192.168.1.200:502");
+    assert_eq!(plc1.url, "tcp://[REAL_PLC3_IP]:502");
     assert_eq!(plc1.description, "Updated PLC");
 
     // 应该收到配置变更事件

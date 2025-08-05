@@ -14,7 +14,7 @@ use crate::bootstrap::AppState;
 use crate::dto::{TagCreateReq, TagPatchReq, TagQuery, TagVO, PagedResponse, TagDataType};
 use crate::error::{ApiError, ApiResult};
 use actix_web::{web, HttpResponse, Scope};
-use pg_repo::{TagFilter, TagRepoImpl, NewTag, TagUpdate, DbTagDataType};
+use pg_repo::{TagFilter, TagRepoImpl, NewTag, TagUpdate, DbTagDataType, TagRepo};
 use tracing::{info, error, instrument};
 use uuid::Uuid;
 use utoipa::ToSchema;
@@ -22,6 +22,16 @@ use utoipa::ToSchema;
 /// 点位管理路由作用域
 pub fn scope() -> Scope {
     web::scope("/tags")
+        .route("", web::post().to(create_tag))
+        .route("", web::get().to(list_tags))
+        .route("/{id}", web::get().to(get_tag))
+        .route("/{id}", web::put().to(update_tag))
+        .route("/{id}", web::delete().to(delete_tag))
+}
+
+/// datapoints别名路由作用域 (指向tags)
+pub fn scope_as_datapoints() -> Scope {
+    web::scope("/datapoints")
         .route("", web::post().to(create_tag))
         .route("", web::get().to(list_tags))
         .route("/{id}", web::get().to(get_tag))
@@ -53,7 +63,7 @@ async fn create_tag(
     let tag_repo = TagRepoImpl::new(state.pg_pool.clone());
     
     // 检查设备中地址是否已存在
-    if tag_repo.address_exists_for_device(req.device_id, &req.address, None).await? {
+    if tag_repo.address_exists(req.device_id, &req.address, None).await? {
         return Err(ApiError::conflict("Tag address already exists for this device"));
     }
     
@@ -125,9 +135,16 @@ async fn list_tags(
     };
     
     // 并行查询列表和总数
+    let filter_for_count = TagFilter {
+        device_id: filter.device_id,
+        data_type: filter.data_type.clone(),
+        enabled: filter.enabled,
+        limit: None,
+        offset: None,
+    };
     let (tags, total) = tokio::try_join!(
-        tag_repo.list(filter.clone()),
-        tag_repo.count(filter)
+        tag_repo.list(filter),
+        tag_repo.count(filter_for_count)
     )?;
     
     let items: Vec<TagVO> = tags.into_iter()
@@ -234,7 +251,7 @@ async fn update_tag(
     
     // 检查地址冲突（如果地址有变化）
     if let Some(address) = &req.address {
-        if tag_repo.address_exists_for_device(existing_tag.device_id, address, Some(tag_id)).await? {
+        if tag_repo.address_exists(existing_tag.device_id, address, Some(tag_id)).await? {
             return Err(ApiError::conflict("Tag address already exists for this device"));
         }
     }

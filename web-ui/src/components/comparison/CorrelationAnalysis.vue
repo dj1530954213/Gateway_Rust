@@ -392,11 +392,31 @@ async function runAnalysis() {
   analyzing.value = true
   
   try {
-    // 模拟分析过程
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    if (selectedVariables.value.length < 2) {
+      ElMessage.warning('请选择至少两个变量进行分析')
+      return
+    }
     
-    // 生成模拟结果
-    analysisResults.value = generateMockResults()
+    // 调用后端API进行相关性分析
+    const response = await fetch('/api/v1/analytics/correlation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        variables: selectedVariables.value,
+        method: config.value.method,
+        significance: parseFloat(config.value.significance),
+        lag_range: config.value.lagRange,
+        time_range: config.value.timeRange
+      })
+    })
+    
+    if (!response.ok) {
+      throw new Error('相关性分析请求失败')
+    }
+    
+    analysisResults.value = await response.json()
     
     // 初始化图表
     nextTick(() => {
@@ -422,92 +442,60 @@ async function runAnalysis() {
 }
 
 /**
- * 生成模拟分析结果
+ * 生成相关性描述
  */
-function generateMockResults() {
-  const vars = variables.value
-  const n = vars.length
+function generateCorrelationDescription(correlation: number, pValue: number): string {
+  const absCorr = Math.abs(correlation)
+  const direction = correlation > 0 ? '正相关' : '负相关'
   
-  // 生成相关矩阵
-  const correlationMatrix = []
-  const pValueMatrix = []
-  const correlations = []
-  
-  for (let i = 0; i < n; i++) {
-    correlationMatrix[i] = []
-    pValueMatrix[i] = []
-    
-    for (let j = 0; j < n; j++) {
-      if (i === j) {
-        correlationMatrix[i][j] = 1.0
-        pValueMatrix[i][j] = 0.0
-      } else {
-        const corr = (Math.random() - 0.5) * 2 * 0.9  // -0.9 to 0.9
-        const pValue = Math.random() * 0.2  // 0 to 0.2
-        
-        correlationMatrix[i][j] = corr
-        pValueMatrix[i][j] = pValue
-        
-        if (i < j) {  // 避免重复
-          correlations.push({
-            pair: `${vars[i]} vs ${vars[j]}`,
-            var1: vars[i],
-            var2: vars[j],
-            correlation: corr,
-            pValue,
-            description: generateCorrelationDescription(corr, pValue)
-          })
-        }
-      }
-    }
+  let strength = ''
+  if (absCorr >= 0.8) {
+    strength = '非常强'
+  } else if (absCorr >= 0.6) {
+    strength = '强'
+  } else if (absCorr >= 0.4) {
+    strength = '中等'
+  } else if (absCorr >= 0.2) {
+    strength = '弱'
+  } else {
+    strength = '非常弱'
   }
   
-  // 生成配对统计
-  const pairStats: { [key: string]: any } = {}
-  variablePairs.value.forEach(pair => {
-    const corr = correlationMatrix[pair.index1][pair.index2]
-    pairStats[pair.key] = {
-      correlation: corr.toFixed(3),
-      pValue: pValueMatrix[pair.index1][pair.index2].toFixed(4),
-      rSquared: (corr * corr).toFixed(3),
-      sampleSize: 1000 + Math.floor(Math.random() * 500)
-    }
-  })
+  const significance = pValue < 0.01 ? '非常显著' : pValue < 0.05 ? '显著' : '不显著'
   
-  return {
-    correlationMatrix,
-    pValueMatrix,
-    correlations,
-    pairStats,
-    lagInsights: [
-      {
-        id: '1',
-        text: '温度与压力在滞后2小时时达到最大相关性 (r=0.85)',
-        icon: 'SuccessFilled'
-      },
-      {
-        id: '2',
-        text: '流量变化领先功率变化约30分钟',
-        icon: 'InfoFilled'
-      },
-      {
-        id: '3',
-        text: 'pH值与其他变量存在显著的非线性关系',
-        icon: 'WarningFilled'
-      }
-    ]
+  return `${strength}${direction}（${significance}）`
+}
+
+/**
+ * 获取散点图数据
+ */
+async function fetchScatterData(var1: string, var2: string) {
+  try {
+    const response = await fetch(`/api/v1/analytics/scatter-data?var1=${var1}&var2=${var2}&limit=200`)
+    if (response.ok) {
+      return await response.json()
+    }
+    return []
+  } catch (error) {
+    console.error('获取散点数据失败:', error)
+    return []
   }
 }
 
 /**
- * 生成相关性描述
+ * 获取滞后分析数据
  */
-function generateCorrelationDescription(corr: number, pValue: number): string {
-  const strength = getStrengthText(corr)
-  const significance = pValue < 0.05 ? '显著' : '不显著'
-  const direction = corr > 0 ? '正相关' : '负相关'
-  
-  return `${strength}${direction}，统计${significance}`
+async function fetchLagData(var1: string, var2: string) {
+  try {
+    const response = await fetch(`/api/v1/analytics/lag-analysis?var1=${var1}&var2=${var2}&range=${config.value.lagRange}`)
+    if (response.ok) {
+      return await response.json()
+    }
+    return []
+  } catch (error) {
+    console.error('获取滞后数据失败:', error)
+    return []
+  }
 }
 
 /**
@@ -600,7 +588,7 @@ function updateHeatmap() {
 /**
  * 初始化散点图
  */
-function initScatterPlot() {
+async function initScatterPlot() {
   if (!scatterRef.value) return
   
   scatterChart.value = echarts.init(scatterRef.value)
@@ -610,22 +598,14 @@ function initScatterPlot() {
 /**
  * 更新散点图
  */
-function updateScatterPlot() {
+async function updateScatterPlot() {
   if (!scatterChart.value || !selectedPair.value) return
   
   const pair = variablePairs.value.find(p => p.key === selectedPair.value)
   if (!pair) return
   
-  // 生成模拟散点数据
-  const data = []
-  const n = 200
-  const corr = analysisResults.value.correlationMatrix[pair.index1][pair.index2]
-  
-  for (let i = 0; i < n; i++) {
-    const x = Math.random() * 100
-    const y = x * corr + Math.random() * 30 * (1 - Math.abs(corr))
-    data.push([x, y])
-  }
+  // 从后端获取散点数据
+  const data = await fetchScatterData(pair.var1, pair.var2)
   
   const option = {
     animation: true,
@@ -676,19 +656,16 @@ function updateScatterPlot() {
 /**
  * 初始化滞后图表
  */
-function initLagChart() {
+async function initLagChart() {
   if (!lagRef.value) return
   
   lagChart.value = echarts.init(lagRef.value)
   
-  // 生成滞后相关数据
-  const lagData = []
-  const maxLag = config.value.lagRange
+  // 从后端获取滞后分析数据
+  const pair = variablePairs.value.find(p => p.key === selectedPair.value)
+  if (!pair) return
   
-  for (let lag = -maxLag; lag <= maxLag; lag++) {
-    const correlation = 0.6 * Math.exp(-Math.abs(lag - 2) / 3) + Math.random() * 0.1 - 0.05
-    lagData.push([lag, correlation])
-  }
+  const lagData = await fetchLagData(pair.var1, pair.var2)
   
   const option = {
     animation: true,

@@ -323,6 +323,15 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/test-mode',
+    name: 'TestMode',
+    component: () => import('@/pages/TestMode.vue'),
+    meta: {
+      title: '测试模式验证',
+      requiresAuth: false,
+    },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
     component: () => import('@/views/error/NotFound.vue'),
@@ -353,17 +362,12 @@ router.beforeEach(async (to, from, next) => {
     document.title = `${to.meta.title} - Gateway Rust`
   }
   
-  // 在Mock模式下跳过所有认证检查
-  if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
-    console.log('Mock mode: skipping auth checks')
-    next()
-    return
-  }
+  // 🚫 生产级系统：严格执行认证检查，不允许任何绕过机制
   
   const authStore = useAuthStore()
   
   // Skip auth for specific paths
-  const skipAuthPaths = ['/login', '/diagnostic', '/route-test']
+  const skipAuthPaths = ['/login', '/diagnostic', '/route-test', '/test-mode']
   
   if (!skipAuthPaths.includes(to.path) && 
       to.meta?.requiresAuth !== false && 

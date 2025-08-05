@@ -382,6 +382,9 @@ import {
 } from '../../components/base'
 import { ConnectionStatus } from '../../components/business'
 
+// 导入API
+import { connectorApi } from '@/api/connector'
+
 // 类型定义
 interface Connector {
   id: string
@@ -436,97 +439,8 @@ const filterParams = ref({
   configValid: ''
 })
 
-// 模拟数据
-const connectors = ref<Connector[]>([
-  {
-    id: '1',
-    name: 'MQTT Production',
-    type: 'mqtt',
-    status: 'connected',
-    config: {
-      host: '192.168.1.100',
-      port: 1883,
-      username: 'gateway',
-      topic: 'industrial/data',
-      qos: 1
-    },
-    configValid: true,
-    protocol: 'MQTT 3.1.1',
-    host: '192.168.1.100',
-    port: 1883,
-    messagesSent: 12567,
-    errorCount: 2,
-    avgLatency: 45,
-    uptime: 168,
-    createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000)
-  },
-  {
-    id: '2',
-    name: 'InfluxDB Historian',
-    type: 'influxdb',
-    status: 'connected',
-    config: {
-      url: 'http://influxdb:8086',
-      database: 'industrial_data',
-      username: 'admin',
-      batchSize: 1000
-    },
-    configValid: true,
-    protocol: 'HTTP/1.1',
-    host: 'influxdb',
-    port: 8086,
-    messagesSent: 8943,
-    errorCount: 0,
-    avgLatency: 120,
-    uptime: 156,
-    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 30 * 60 * 1000)
-  },
-  {
-    id: '3',
-    name: 'HTTP API Endpoint',
-    type: 'http',
-    status: 'error',
-    config: {
-      url: 'https://api.example.com/data',
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 5000
-    },
-    configValid: false,
-    protocol: 'HTTPS',
-    host: 'api.example.com',
-    port: 443,
-    messagesSent: 3421,
-    errorCount: 156,
-    avgLatency: 0,
-    uptime: 0,
-    lastError: '连接超时：无法访问目标服务器',
-    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 15 * 60 * 1000)
-  },
-  {
-    id: '4',
-    name: 'WebSocket Real-time',
-    type: 'websocket',
-    status: 'disconnected',
-    config: {
-      url: 'ws://localhost:8080/ws',
-      heartbeat: 30
-    },
-    configValid: true,
-    protocol: 'WebSocket',
-    host: 'localhost',
-    port: 8080,
-    messagesSent: 1876,
-    errorCount: 8,
-    avgLatency: 25,
-    uptime: 24,
-    createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000)
-  }
-])
+// 连接器数据 - 从API获取
+const connectors = ref<Connector[]>([])
 
 let updateInterval: NodeJS.Timeout | null = null
 
@@ -690,6 +604,18 @@ const formRules = {
     { min: 2, max: 50, message: '名称长度应在2-50字符之间', trigger: 'blur' }
   ],
   type: [{ required: true, message: '请选择连接器类型', trigger: 'change' }]
+}
+
+// API调用方法
+const loadConnectors = async () => {
+  try {
+    const response = await connectorApi.getConnectors()
+    connectors.value = response.data || []
+  } catch (error) {
+    console.error('获取连接器列表失败:', error)
+    // 如果API未实现，使用空数组
+    connectors.value = []
+  }
 }
 
 // 方法
@@ -934,31 +860,19 @@ const getTypeSpecificFields = (type: string) => {
 }
 
 // 事件处理
-const handleRefresh = () => {
+const handleRefresh = async () => {
   loading.value = true
   
-  // 模拟刷新操作
-  setTimeout(() => {
-    // 更新连接器状态
-    connectors.value.forEach(conn => {
-      // 模拟状态变化
-      if (Math.random() < 0.1) {
-        const statuses = ['connected', 'disconnected', 'connecting', 'error']
-        conn.status = statuses[Math.floor(Math.random() * statuses.length)] as any
-      }
-      
-      // 更新指标
-      if (conn.status === 'connected') {
-        conn.messagesSent += Math.floor(Math.random() * 100)
-        conn.avgLatency = Math.floor(Math.random() * 200) + 10
-      }
-      
-      conn.updatedAt = new Date()
-    })
-    
-    loading.value = false
+  try {
+    // 调用真实的连接器列表API
+    await loadConnectors()
     ElMessage.success('连接器状态已刷新')
-  }, 1000)
+  } catch (error) {
+    console.error('刷新连接器失败:', error)
+    ElMessage.error('刷新连接器失败')
+  } finally {
+    loading.value = false
+  }
 }
 
 const handleSearch = () => {
@@ -1026,53 +940,50 @@ const handleRowAction = (action: string, connector: Connector) => {
   }
 }
 
-const handleBatchAction = (command: string) => {
+const handleBatchAction = async (command: string) => {
   const count = selectedConnectors.value.length
+  const connectorIds = selectedConnectors.value.map(conn => conn.id)
   
-  switch (command) {
-    case 'start':
-      ElMessage.success(`已启动 ${count} 个连接器`)
-      selectedConnectors.value.forEach(conn => {
-        conn.status = 'connecting'
-        setTimeout(() => {
-          conn.status = Math.random() > 0.2 ? 'connected' : 'error'
-        }, 1000)
-      })
-      break
-      
-    case 'stop':
-      ElMessage.success(`已停止 ${count} 个连接器`)
-      selectedConnectors.value.forEach(conn => {
-        conn.status = 'disconnected'
-      })
-      break
-      
-    case 'restart':
-      ElMessage.success(`已重启 ${count} 个连接器`)
-      selectedConnectors.value.forEach(conn => {
-        conn.status = 'connecting'
-        setTimeout(() => {
-          conn.status = Math.random() > 0.1 ? 'connected' : 'error'
-        }, 1500)
-      })
-      break
-      
-    case 'delete':
-      ElMessageBox.confirm(
-        `确定要删除选中的 ${count} 个连接器吗？此操作不可撤销。`,
-        '确认删除',
-        {
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          type: 'warning'
-        }
-      ).then(() => {
-        const idsToDelete = selectedConnectors.value.map(conn => conn.id)
-        connectors.value = connectors.value.filter(conn => !idsToDelete.includes(conn.id))
+  try {
+    switch (command) {
+      case 'start':
+        await connectorApi.batchStartConnectors(connectorIds)
+        ElMessage.success(`已启动 ${count} 个连接器`)
+        break
+        
+      case 'stop':
+        await connectorApi.batchStopConnectors(connectorIds)
+        ElMessage.success(`已停止 ${count} 个连接器`)
+        break
+        
+      case 'restart':
+        await connectorApi.batchRestartConnectors(connectorIds)
+        ElMessage.success(`已重启 ${count} 个连接器`)
+        break
+        
+      case 'delete':
+        await ElMessageBox.confirm(
+          `确定要删除选中的 ${count} 个连接器吗？此操作不可撤销。`,
+          '确认删除',
+          {
+            confirmButtonText: '删除',
+            cancelButtonText: '取消',
+            type: 'warning'
+          }
+        )
+        
+        await connectorApi.batchDeleteConnectors(connectorIds)
         selectedConnectors.value = []
         ElMessage.success(`已删除 ${count} 个连接器`)
-      })
-      break
+        break
+    }
+    
+    await handleRefresh()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('批量操作失败:', error)
+      ElMessage.error('批量操作失败')
+    }
   }
 }
 
@@ -1116,42 +1027,59 @@ const handleExportConfig = () => {
   ElMessage.success('配置导出成功')
 }
 
-const handleStartConnector = (connector: Connector) => {
+const handleStartConnector = async (connector: Connector) => {
   connector.status = 'connecting'
   ElMessage.info(`正在启动连接器: ${connector.name}`)
   
-  setTimeout(() => {
-    connector.status = Math.random() > 0.2 ? 'connected' : 'error'
-    if (connector.status === 'connected') {
-      ElMessage.success(`连接器 ${connector.name} 已启动`)
-    } else {
-      ElMessage.error(`连接器 ${connector.name} 启动失败`)
-      connector.lastError = '连接超时或配置错误'
-    }
-  }, 2000)
+  try {
+    // 调用真实的连接器启动API
+    await connectorApi.startConnector(connector.id)
+    connector.status = 'connected'
+    ElMessage.success(`连接器 ${connector.name} 已启动`)
+    await handleRefresh()
+  } catch (error) {
+    console.error('启动连接器失败:', error)
+    connector.status = 'error'
+    connector.lastError = '启动失败'
+    ElMessage.error(`连接器 ${connector.name} 启动失败`)
+  }
 }
 
-const handleStopConnector = (connector: Connector) => {
-  connector.status = 'disconnected'
-  ElMessage.success(`连接器 ${connector.name} 已停止`)
+const handleStopConnector = async (connector: Connector) => {
+  try {
+    // 调用真实的连接器停止API
+    await connectorApi.stopConnector(connector.id)
+    connector.status = 'disconnected'
+    ElMessage.success(`连接器 ${connector.name} 已停止`)
+    await handleRefresh()
+  } catch (error) {
+    console.error('停止连接器失败:', error)
+    ElMessage.error(`连接器 ${connector.name} 停止失败`)
+  }
 }
 
-const handleDeleteConnector = (connector: Connector) => {
-  ElMessageBox.confirm(
-    `确定要删除连接器 "${connector.name}" 吗？此操作不可撤销。`,
-    '确认删除',
-    {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning'
+const handleDeleteConnector = async (connector: Connector) => {
+  try {
+    await ElMessageBox.confirm(
+      `确定要删除连接器 "${connector.name}" 吗？此操作不可撤销。`,
+      '确认删除',
+      {
+        confirmButtonText: '删除',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }
+    )
+    
+    // 调用真实的删除API
+    await connectorApi.deleteConnector(connector.id)
+    ElMessage.success(`连接器 ${connector.name} 已删除`)
+    await handleRefresh()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除连接器失败:', error)
+      ElMessage.error('删除连接器失败')
     }
-  ).then(() => {
-    const index = connectors.value.findIndex(conn => conn.id === connector.id)
-    if (index > -1) {
-      connectors.value.splice(index, 1)
-      ElMessage.success(`连接器 ${connector.name} 已删除`)
-    }
-  })
+  }
 }
 
 const handleTestConnection = async (connector?: Connector) => {
@@ -1161,70 +1089,65 @@ const handleTestConnection = async (connector?: Connector) => {
   testing.value = true
   
   try {
-    // 模拟连接测试
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 调用真实的连接测试API
+    const result = await connectorApi.testConnection(testConnector.id || testConnector)
     
-    const success = Math.random() > 0.3
     testResult.value = {
-      success,
-      message: success ? '连接测试成功，服务器响应正常' : '连接测试失败，请检查配置参数',
-      responseTime: Math.floor(Math.random() * 500) + 50,
+      success: result.success,
+      message: result.message,
+      responseTime: result.responseTime,
       timestamp: new Date(),
-      details: success 
-        ? `成功连接到 ${getConnectionTarget(testConnector)}` 
-        : '错误详情：连接超时或目标服务器不可达'
+      details: result.details
     }
     
     testResultVisible.value = true
     
-    if (success) {
+    if (result.success) {
       ElMessage.success('连接测试成功')
     } else {
       ElMessage.error('连接测试失败')
     }
   } catch (error) {
+    console.error('连接测试失败:', error)
+    testResult.value = {
+      success: false,
+      message: '连接测试异常',
+      responseTime: 0,
+      timestamp: new Date(),
+      details: '测试过程中发生错误'
+    }
+    testResultVisible.value = true
     ElMessage.error('连接测试异常')
   } finally {
     testing.value = false
   }
 }
 
-const handleSave = () => {
+const handleSave = async () => {
   if (!editingConnector.value) return
   
   saving.value = true
   
-  setTimeout(() => {
-    if (editingConnector.value!.id) {
+  try {
+    if (editingConnector.value.id) {
       // 更新现有连接器
-      const index = connectors.value.findIndex(conn => conn.id === editingConnector.value!.id)
-      if (index > -1) {
-        connectors.value[index] = {
-          ...editingConnector.value!,
-          updatedAt: new Date()
-        }
-        ElMessage.success('连接器配置已更新')
-      }
+      await connectorApi.updateConnector(editingConnector.value.id, editingConnector.value)
+      ElMessage.success('连接器配置已更新')
     } else {
       // 创建新连接器
-      const newConnector = {
-        ...editingConnector.value!,
-        id: Date.now().toString(),
-        status: 'disconnected' as const,
-        messagesSent: 0,
-        errorCount: 0,
-        avgLatency: 0,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }
-      connectors.value.push(newConnector)
+      await connectorApi.createConnector(editingConnector.value)
       ElMessage.success('连接器创建成功')
     }
     
     formVisible.value = false
     editingConnector.value = null
+    await handleRefresh()
+  } catch (error) {
+    console.error('保存连接器失败:', error)
+    ElMessage.error('保存连接器失败')
+  } finally {
     saving.value = false
-  }, 1000)
+  }
 }
 
 const handleFormClose = () => {
@@ -1232,29 +1155,15 @@ const handleFormClose = () => {
   editingConnector.value = null
 }
 
-// 实时更新
+// 实时更新 - 从API获取最新状态
 const startRealtimeUpdate = () => {
-  updateInterval = setInterval(() => {
-    connectors.value.forEach(conn => {
-      if (conn.status === 'connected') {
-        // 更新消息计数
-        conn.messagesSent += Math.floor(Math.random() * 10)
-        
-        // 更新延迟
-        conn.avgLatency = Math.floor(Math.random() * 100) + 20
-        
-        // 偶尔产生错误
-        if (Math.random() < 0.05) {
-          conn.errorCount++
-        }
-        
-        // 更新运行时间
-        if (conn.uptime !== undefined) {
-          conn.uptime = Math.floor((Date.now() - conn.createdAt.getTime()) / (1000 * 60 * 60))
-        }
-      }
-    })
-  }, 5000)
+  updateInterval = setInterval(async () => {
+    try {
+      await loadConnectors()
+    } catch (error) {
+      console.warn('自动刷新连接器状态失败:', error)
+    }
+  }, 30000) // 每30秒更新一次
 }
 
 const stopRealtimeUpdate = () => {
@@ -1265,7 +1174,8 @@ const stopRealtimeUpdate = () => {
 }
 
 // 生命周期
-onMounted(() => {
+onMounted(async () => {
+  await loadConnectors()
   startRealtimeUpdate()
 })
 

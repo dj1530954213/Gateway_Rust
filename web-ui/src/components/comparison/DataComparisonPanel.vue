@@ -503,11 +503,27 @@ async function executeComparison() {
   comparing.value = true
   
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 调用真实的对比分析API
+    const response = await fetch('/api/v1/analytics/comparison', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        dimension: config.value.dimension,
+        type: config.value.type,
+        method: config.value.method,
+        targets: config.value.targets,
+        timeRange: config.value.timeRange,
+        filters: config.value.filters
+      })
+    })
     
-    // 生成模拟对比结果
-    comparisonResults.value = generateMockResults()
+    if (!response.ok) {
+      throw new Error('对比分析请求失败')
+    }
+    
+    comparisonResults.value = await response.json()
     
     // 初始化图表
     nextTick(() => {
@@ -525,111 +541,6 @@ async function executeComparison() {
   }
 }
 
-/**
- * 生成模拟对比结果
- */
-function generateMockResults() {
-  return {
-    summary: {
-      dataPoints: 1440,
-      variance: 12.5,
-      anomalies: 8,
-      correlation: 78
-    },
-    statistics: [
-      {
-        target: '目标1',
-        mean: 25.6,
-        median: 25.2,
-        std: 3.2,
-        cv: 0.125,
-        range: 15.8
-      },
-      {
-        target: '目标2',
-        mean: 28.1,
-        median: 27.9,
-        std: 2.8,
-        cv: 0.100,
-        range: 12.3
-      }
-    ],
-    tests: {
-      tTest: {
-        statistic: 2.34,
-        pValue: 0.019,
-        significant: true
-      },
-      fTest: {
-        statistic: 1.31,
-        pValue: 0.156,
-        significant: false
-      },
-      correlation: {
-        coefficient: 0.78,
-        pValue: 0.001
-      }
-    },
-    anomalies: [
-      {
-        timestamp: '2025-07-27 10:15:00',
-        target: '目标1',
-        value: 35.2,
-        score: 2.8,
-        type: '上限异常',
-        description: '超出正常范围上限'
-      },
-      {
-        timestamp: '2025-07-27 14:30:00',
-        target: '目标2',
-        value: 18.1,
-        score: -2.1,
-        type: '下限异常',
-        description: '低于正常范围下限'
-      }
-    ],
-    insights: [
-      {
-        id: '1',
-        text: '目标2的平均值比目标1高出9.8%，差异具有统计学意义',
-        type: 'info',
-        priority: 'high'
-      },
-      {
-        id: '2',
-        text: '两个目标的数据呈现强正相关关系（r=0.78）',
-        type: 'success',
-        priority: 'medium'
-      },
-      {
-        id: '3',
-        text: '检测到8个异常点，主要集中在上午10-11点时段',
-        type: 'warning',
-        priority: 'high'
-      }
-    ],
-    recommendations: [
-      {
-        id: '1',
-        title: '优化设备参数',
-        description: '建议调整目标1的控制参数，减少数值波动',
-        priority: 'high'
-      },
-      {
-        id: '2',
-        title: '加强监控',
-        description: '在10-11点时段增加数据采集频率',
-        priority: 'medium'
-      },
-      {
-        id: '3',
-        title: '设置告警',
-        description: '为检测到的异常模式设置自动告警规则',
-        priority: 'medium'
-      }
-    ]
-  }
-}
 
 /**
  * 初始化对比图表

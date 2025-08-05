@@ -14,7 +14,8 @@ import 'nprogress/nprogress.css'
 import CryptoJS from 'crypto-js'
 
 // 基础配置
-const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+const IS_DEV = import.meta.env.DEV
+const BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:50010'
 const REQUEST_TIMEOUT = 30000
 const RETRY_COUNT = 3
 const RETRY_DELAY = 1000
@@ -24,7 +25,7 @@ NProgress.configure({ showSpinner: false })
 
 // 创建 Axios 实例
 const http: AxiosInstance = axios.create({
-  baseURL: `${BASE_URL}/api/v1`,
+  baseURL: BASE_URL,
   timeout: REQUEST_TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
@@ -195,10 +196,7 @@ http.interceptors.response.use(
           ElMessage.error('权限不足，无法访问该资源')
           break
         case 404:
-          // 在开发模式下不显示404错误消息，避免干扰
-          if (import.meta.env.VITE_ENABLE_MOCK !== 'true') {
-            ElMessage.error(data?.detail || '请求的资源不存在')
-          }
+          ElMessage.error(data?.detail || '请求的资源不存在')
           break
         case 409:
           ElMessage.error(data?.detail || '资源冲突')
@@ -213,7 +211,10 @@ http.interceptors.response.use(
         case 502:
         case 503:
         case 504:
-          ElMessage.error('服务器错误，请稍后重试')
+          // 对于API未实现的情况，不显示错误消息，让API层自己处理
+          if (!config?.url?.includes('/metrics/') && !config?.url?.includes('/system/health')) {
+            ElMessage.error('服务器错误，请稍后重试')
+          }
           break
         default:
           ElMessage.error(data?.detail || `请求失败 (${status})`)

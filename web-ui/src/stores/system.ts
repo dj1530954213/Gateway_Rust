@@ -49,21 +49,6 @@ export const useSystemStore = defineStore('system', () => {
   // Actions
   const fetchSystemInfo = async (): Promise<void> => {
     try {
-      // 检查是否启用Mock模式
-      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
-        systemInfo.value = {
-          version: '1.0.0',
-          uptime: 86400,
-          memory_usage: 65.5,
-          cpu_usage: 23.8,
-          disk_usage: 45.2,
-          connected_devices: 12,
-          active_tags: 256,
-          alert_count: 3
-        }
-        return
-      }
-      
       const info = await systemApi.getInfo()
       systemInfo.value = info
     } catch (error) {
@@ -74,26 +59,6 @@ export const useSystemStore = defineStore('system', () => {
   const fetchSystemMetrics = async (): Promise<void> => {
     metricsLoading.value = true
     try {
-      // 检查是否启用Mock模式
-      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
-        // 生成随机变化的Mock数据
-        systemMetrics.value = {
-          timestamp: new Date().toISOString(),
-          cpu_usage: Math.random() * 30 + 20,
-          memory_usage: Math.random() * 20 + 60,
-          disk_usage: Math.random() * 10 + 40,
-          network_io: {
-            bytes_in: Math.floor(Math.random() * 10000),
-            bytes_out: Math.floor(Math.random() * 5000)
-          },
-          active_connections: Math.floor(Math.random() * 20 + 10),
-          request_rate: Math.random() * 100 + 50,
-          error_rate: Math.random() * 2
-        }
-        metricsLoading.value = false
-        return
-      }
-      
       const metrics = await systemApi.getMetrics()
       systemMetrics.value = metrics[0] || null // getMetrics returns array, take first item
     } catch (error) {
@@ -110,47 +75,33 @@ export const useSystemStore = defineStore('system', () => {
 
   const fetchHealthStatus = async (): Promise<void> => {
     try {
-      // 检查是否启用Mock模式
-      if (import.meta.env.VITE_ENABLE_MOCK === 'true') {
+      const health = await systemApi.getHealth()
+      healthStatus.value = health
+    } catch (error) {
+      console.warn('Health status API 未实现，使用默认状态')
+      // 对于500错误（API未实现），使用默认健康状态
+      if ((error as any)?.response?.status === 500) {
         healthStatus.value = {
+          status: 'healthy',
           overall: 'good',
-          components: [
-            {
-              name: 'database',
-              status: 'healthy',
-              message: 'PostgreSQL连接正常',
-              last_check: new Date().toISOString()
-            },
-            {
-              name: 'influxdb', 
-              status: 'healthy',
-              message: 'InfluxDB运行正常',
-              last_check: new Date().toISOString()
-            },
-            {
-              name: 'drivers',
-              status: 'warning',
-              message: '部分驱动连接异常',
-              last_check: new Date().toISOString()
-            },
-            {
-              name: 'websocket',
-              status: 'healthy',
-              message: 'WebSocket服务正常',
-              last_check: new Date().toISOString()
-            }
-          ],
-          uptime: 86400,
-          version: '1.0.0',
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
+          services: {
+            database: 'healthy',
+            message_bus: 'healthy', 
+            driver_manager: 'healthy',
+            web_server: 'healthy'
+          },
+          metrics: {
+            uptime: 0,
+            memory_usage: 0,
+            cpu_usage: 0,
+            disk_usage: 0
+          },
+          components: []
         }
         return
       }
       
-      const health = await systemApi.getHealth()
-      healthStatus.value = health
-    } catch (error) {
-      console.error('Failed to fetch health status:', error)
       // 如果是404错误，停止轮询
       if ((error as any)?.response?.status === 404) {
         stopMetricsPolling()

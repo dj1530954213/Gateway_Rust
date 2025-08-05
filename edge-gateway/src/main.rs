@@ -95,7 +95,7 @@ impl Gateway {
         use std::net::SocketAddr;
         
         // 使用50000+端口范围（开发调试环境）
-        let bind_addr: SocketAddr = "127.0.0.1:50013".parse()
+        let bind_addr: SocketAddr = "127.0.0.1:50010".parse()
             .context("Invalid REST API bind address")?;
             
         let server_config = ServerConfig {

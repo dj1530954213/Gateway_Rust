@@ -494,14 +494,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document, Refresh, Delete, Download, Setting, Search, Warning,
   Folder, VideoPlay, List, Monitor, Clock
 } from '@element-plus/icons-vue'
+import { systemLogsApi, wsClient, type SystemLog } from '../../api'
 // import StatCard from '../../components/common/StatCard.vue' // 暂时注释掉不存在的组件
-import { LogViewer } from '../../components/business'
+// import { LogViewer } from '../../components/business' // 暂时注释掉不存在的组件
 
 // 响应式数据
 const loading = ref(false)
@@ -517,14 +518,14 @@ const consoleContainer = ref<HTMLElement>()
 
 // 日志统计
 const logStats = ref({
-  todayCount: 25847,
-  todayTrend: 8.5,
-  errorCount: 156,
-  errorTrend: -12.3,
-  warningCount: 892,
-  warningTrend: 5.7,
-  storageSize: 245.6,
-  storageTrend: 15.8
+  todayCount: 0,
+  todayTrend: 0,
+  errorCount: 0,
+  errorTrend: 0,
+  warningCount: 0,
+  warningTrend: 0,
+  storageSize: 0,
+  storageTrend: 0
 })
 
 // 筛选条件
@@ -551,133 +552,10 @@ const pagination = ref({
 })
 
 // 日志来源
-const logSources = ref([
-  { label: '网关核心', value: 'gateway-core' },
-  { label: 'Modbus 驱动', value: 'modbus-driver' },
-  { label: 'OPC UA 驱动', value: 'opcua-driver' },
-  { label: 'MQTT 代理', value: 'mqtt-broker' },
-  { label: '数据处理器', value: 'data-processor' },
-  { label: 'Web API', value: 'web-api' },
-  { label: '告警引擎', value: 'alert-engine' },
-  { label: '系统监控', value: 'system-monitor' }
-])
+const logSources = ref<Array<{label: string, value: string}>>([])
 
 // 日志数据
-const logs = ref([
-  {
-    id: 1,
-    timestamp: '2024-01-20 15:30:25.123',
-    level: 'info',
-    source: 'gateway-core',
-    thread: 'main',
-    message: '系统启动完成，所有服务正常运行',
-    details: {
-      file: 'main.rs',
-      line: 145,
-      function: 'startup_complete',
-      context: {
-        version: '2.1.0',
-        build: 'release',
-        uptime: '00:00:05'
-      }
-    }
-  },
-  {
-    id: 2,
-    timestamp: '2024-01-20 15:30:24.856',
-    level: 'warn',
-    source: 'opcua-driver',
-    thread: 'driver-pool-2',
-    message: '连接到 OPC UA 服务器响应超时，正在重试... (尝试次数: 3/5)',
-    details: {
-      file: 'opcua_client.rs',
-      line: 278,
-      function: 'connect_with_retry',
-      context: {
-        endpoint: 'opc.tcp://192.168.1.100:4840',
-        timeout: 5000,
-        retryAttempt: 3,
-        maxRetries: 5
-      }
-    }
-  },
-  {
-    id: 3,
-    timestamp: '2024-01-20 15:30:23.445',
-    level: 'error',
-    source: 'alert-engine',
-    thread: 'alert-worker-1',
-    message: '告警引擎服务连接失败: Connection refused (os error 111)',
-    details: {
-      file: 'alert_engine.rs',
-      line: 89,
-      function: 'start_engine',
-      context: {
-        error: 'Connection refused (os error 111)',
-        service: 'alert-engine',
-        port: 8081,
-        lastAttempt: '2024-01-20 15:30:23'
-      }
-    }
-  },
-  {
-    id: 4,
-    timestamp: '2024-01-20 15:30:22.789',
-    level: 'info',
-    source: 'data-processor',
-    thread: 'processor-1',
-    message: '已处理 1000 条数据记录，当前队列长度: 25',
-    details: {
-      file: 'data_processor.rs',
-      line: 156,
-      function: 'process_batch',
-      context: {
-        processedCount: 1000,
-        queueLength: 25,
-        processingTime: '245ms',
-        throughput: '4081 records/sec'
-      }
-    }
-  },
-  {
-    id: 5,
-    timestamp: '2024-01-20 15:30:21.234',
-    level: 'debug',
-    source: 'mqtt-broker',
-    thread: 'mqtt-handler-3',
-    message: '新客户端连接建立: client_id=sensor_001, ip=192.168.1.50',
-    details: {
-      file: 'mqtt_handler.rs',
-      line: 67,
-      function: 'handle_connect',
-      context: {
-        clientId: 'sensor_001',
-        clientIp: '192.168.1.50',
-        keepAlive: 60,
-        cleanSession: true
-      }
-    }
-  },
-  {
-    id: 6,
-    timestamp: '2024-01-20 15:30:20.678',
-    level: 'info',
-    source: 'modbus-driver',
-    thread: 'modbus-scanner',
-    message: '设备扫描完成，发现 5 个活跃设备',
-    details: {
-      file: 'modbus_scanner.rs',
-      line: 123,
-      function: 'scan_devices',
-      context: {
-        activeDevices: 5,
-        totalDevices: 8,
-        scanDuration: '1.5s',
-        lastScan: '2024-01-20 15:30:20'
-      }
-    }
-  }
-])
+const logs = ref<SystemLog[]>([])
 
 // 日志设置
 const logSettings = ref({
@@ -737,40 +615,57 @@ const filteredLogs = computed(() => {
 })
 
 // 方法
-const refreshLogs = async () => {
+// 加载日志数据
+const loadLogs = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const params = {
+      page: pagination.value.page,
+      size: pagination.value.size,
+      search: filters.value.search,
+      level: filters.value.level,
+      source: filters.value.source,
+      timeRange: filters.value.timeRange
+    }
     
-    // 模拟新增日志
-    const newLogs = Array.from({ length: 10 }, (_, index) => ({
-      id: logs.value.length + index + 1,
-      timestamp: new Date().toISOString().slice(0, 23).replace('T', ' '),
-      level: ['info', 'warn', 'error', 'debug'][Math.floor(Math.random() * 4)],
-      source: logSources.value[Math.floor(Math.random() * logSources.value.length)].value,
-      thread: `thread-${Math.floor(Math.random() * 10)}`,
-      message: `新生成的日志消息 ${Date.now()}`,
-      details: {
-        file: 'system.rs',
-        line: Math.floor(Math.random() * 1000),
-        function: 'log_entry',
-        context: {}
-      }
-    }))
-    
-    // 添加到日志列表开头
-    logs.value = [...newLogs, ...logs.value]
-    
-    // 更新统计信息
-    logStats.value.todayCount += newLogs.length
-    
-    ElMessage.success('日志刷新成功')
+    const response = await systemLogsApi.list(params)
+    logs.value = response.data.items || []
+    pagination.value.total = response.data.total || 0
   } catch (error) {
-    ElMessage.error('日志刷新失败')
+    console.error('加载日志失败:', error)
+    ElMessage.error('加载日志失败')
   } finally {
     loading.value = false
   }
+}
+
+// 加载日志统计
+const loadLogStats = async () => {
+  try {
+    const response = await systemLogsApi.getStats()
+    logStats.value = response.data
+  } catch (error) {
+    console.error('加载日志统计失败:', error)
+  }
+}
+
+// 加载日志来源
+const loadLogSources = async () => {
+  try {
+    const response = await systemLogsApi.getSources()
+    logSources.value = response.data || []
+  } catch (error) {
+    console.error('加载日志来源失败:', error)
+  }
+}
+
+// 刷新日志
+const refreshLogs = async () => {
+  await Promise.all([
+    loadLogs(),
+    loadLogStats()
+  ])
+  ElMessage.success('日志刷新成功')
 }
 
 const clearAllLogs = async () => {
@@ -785,24 +680,35 @@ const clearAllLogs = async () => {
       }
     )
     
+    await systemLogsApi.clearAll()
+    
     logs.value = []
-    logStats.value.todayCount = 0
-    logStats.value.errorCount = 0
-    logStats.value.warningCount = 0
+    await loadLogStats()
     
     ElMessage.success('日志已清空')
   } catch (error) {
-    // 用户取消操作
+    if (error !== 'cancel') {
+      console.error('清空日志失败:', error)
+      ElMessage.error('清空日志失败')
+    }
   }
 }
 
 const downloadLogs = async () => {
   try {
     ElMessage.info('正在准备日志下载...')
-    await new Promise(resolve => setTimeout(resolve, 2000))
     
-    // 模拟下载
-    const blob = new Blob([JSON.stringify(logs.value, null, 2)], { type: 'application/json' })
+    const params = {
+      search: filters.value.search,
+      level: filters.value.level,
+      source: filters.value.source,
+      timeRange: filters.value.timeRange
+    }
+    
+    const response = await systemLogsApi.export(params)
+    
+    // 创建下载链接
+    const blob = new Blob([response.data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
     const a = document.createElement('a')
     a.href = url
@@ -814,6 +720,7 @@ const downloadLogs = async () => {
     
     ElMessage.success('日志下载完成')
   } catch (error) {
+    console.error('日志下载失败:', error)
     ElMessage.error('日志下载失败')
   }
 }
@@ -834,37 +741,53 @@ const startRealTimeMode = () => {
     clearInterval(refreshTimer.value)
   }
   
-  refreshTimer.value = setInterval(() => {
-    // 模拟实时日志
-    const newLog = {
-      id: logs.value.length + 1,
-      timestamp: new Date().toISOString().slice(0, 23).replace('T', ' '),
-      level: ['info', 'warn', 'error', 'debug'][Math.floor(Math.random() * 4)],
-      source: logSources.value[Math.floor(Math.random() * logSources.value.length)].value,
-      thread: `thread-${Math.floor(Math.random() * 10)}`,
-      message: `实时日志消息 ${Date.now()}`,
-      details: {
-        file: 'realtime.rs',
-        line: Math.floor(Math.random() * 1000),
-        function: 'realtime_log',
-        context: {}
-      }
+  // 使用WebSocket获取实时日志
+  try {
+    if (!wsClient.isConnected) {
+      wsClient.connect()
     }
     
-    logs.value.unshift(newLog)
-    
-    // 限制日志数量
-    if (logs.value.length > logSettings.value.maxLogLines) {
-      logs.value = logs.value.slice(0, logSettings.value.maxLogLines)
-    }
-    
-    // 自动滚动到顶部（最新日志）
-    nextTick(() => {
-      if (viewMode.value === 'console' && consoleContainer.value) {
-        consoleContainer.value.scrollTop = 0
+    // 监听实时日志
+    wsClient.on('system_log', (logData: SystemLog) => {
+      // 检查是否符合当前筛选条件
+      const matchesFilter = (
+        (!filters.value.level || logData.level === filters.value.level) &&
+        (!filters.value.source || logData.source === filters.value.source) &&
+        (!filters.value.search || 
+          logData.message.toLowerCase().includes(filters.value.search.toLowerCase()) ||
+          logData.source.toLowerCase().includes(filters.value.search.toLowerCase())
+        )
+      )
+      
+      if (matchesFilter) {
+        logs.value.unshift(logData)
+        
+        // 限制日志数量
+        if (logs.value.length > logSettings.value.maxLogLines) {
+          logs.value = logs.value.slice(0, logSettings.value.maxLogLines)
+        }
+        
+        // 自动滚动到顶部（最新日志）
+        nextTick(() => {
+          if (viewMode.value === 'console' && consoleContainer.value) {
+            consoleContainer.value.scrollTop = 0
+          }
+        })
       }
     })
-  }, 2000)
+    
+    // 备用定时器，防止WebSocket连接问题
+    refreshTimer.value = setInterval(() => {
+      loadLogStats()
+    }, 30000) // 每30秒更新统计数据
+    
+  } catch (error) {
+    console.error('启动实时模式失败:', error)
+    // 降级到定时刷新
+    refreshTimer.value = setInterval(() => {
+      loadLogs()
+    }, 5000)
+  }
 }
 
 const stopRealTimeMode = () => {
@@ -886,10 +809,12 @@ const setViewMode = (mode: string) => {
 
 const handleSearch = () => {
   pagination.value.page = 1
+  loadLogs()
 }
 
 const handleFilter = () => {
   pagination.value.page = 1
+  loadLogs()
 }
 
 const resetFilters = () => {
@@ -900,6 +825,7 @@ const resetFilters = () => {
     timeRange: null
   }
   pagination.value.page = 1
+  loadLogs()
 }
 
 const handleSortChange = ({ prop, order }: any) => {
@@ -925,11 +851,13 @@ const handleSortChange = ({ prop, order }: any) => {
 
 const handlePageChange = (page: number) => {
   pagination.value.page = page
+  loadLogs()
 }
 
 const handlePageSizeChange = (size: number) => {
   pagination.value.size = size
   pagination.value.page = 1
+  loadLogs()
 }
 
 const showLogDetail = (log: any) => {
@@ -968,18 +896,25 @@ const scrollToTop = () => {
   }
 }
 
-const saveSettings = () => {
-  // 应用设置
-  if (refreshTimer.value) {
-    clearInterval(refreshTimer.value)
+const saveSettings = async () => {
+  try {
+    await systemLogsApi.updateSettings(logSettings.value)
+    
+    // 应用设置
+    if (refreshTimer.value) {
+      clearInterval(refreshTimer.value)
+    }
+    
+    if (realTimeMode.value && logSettings.value.refreshInterval > 0) {
+      startRealTimeMode()
+    }
+    
+    showSettings.value = false
+    ElMessage.success('设置已保存')
+  } catch (error) {
+    console.error('保存设置失败:', error)
+    ElMessage.error('保存设置失败')
   }
-  
-  if (realTimeMode.value && logSettings.value.refreshInterval > 0) {
-    startRealTimeMode()
-  }
-  
-  showSettings.value = false
-  ElMessage.success('设置已保存')
 }
 
 // 工具函数
@@ -1021,14 +956,43 @@ const getRowClassName = ({ row }: any) => {
 }
 
 // 生命周期
-onMounted(() => {
-  refreshLogs()
+onMounted(async () => {
+  await Promise.all([
+    loadLogs(),
+    loadLogStats(),
+    loadLogSources(),
+    loadLogSettings()
+  ])
+})
+
+// 加载日志设置
+const loadLogSettings = async () => {
+  try {
+    const response = await systemLogsApi.getSettings()
+    Object.assign(logSettings.value, response.data)
+  } catch (error) {
+    console.error('加载日志设置失败:', error)
+  }
+}
+
+// 监听筛选参数变化
+watch([() => filters.value.search, () => filters.value.level, () => filters.value.source, () => filters.value.timeRange], () => {
+  pagination.value.page = 1
+  loadLogs()
+}, { debounce: 300 })
+
+// 监听分页变化
+watch([() => pagination.value.page, () => pagination.value.size], () => {
+  loadLogs()
 })
 
 onUnmounted(() => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
+  
+  // 清理WebSocket监听器
+  wsClient.off('system_log')
 })
 </script>
 

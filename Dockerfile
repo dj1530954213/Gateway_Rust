@@ -21,6 +21,7 @@ COPY Cargo.toml Cargo.lock ./
 COPY core/ ./core/
 COPY drivers/ ./drivers/
 COPY connectors/ ./connectors/
+COPY infra/ ./infra/
 COPY edge-gateway/ ./edge-gateway/
 COPY web/ ./web/
 

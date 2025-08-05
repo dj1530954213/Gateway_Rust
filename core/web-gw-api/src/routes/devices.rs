@@ -14,7 +14,8 @@ use crate::bootstrap::AppState;
 use crate::dto::{DeviceCreateReq, DevicePatchReq, DeviceQuery, DeviceVO, PagedResponse, ProtocolKind};
 use crate::error::{ApiError, ApiResult};
 use actix_web::{web, HttpResponse, Scope};
-use pg_repo::{DeviceFilter, DeviceRepoImpl, NewDevice, DeviceUpdate, DbProtocolKind};
+use pg_repo::{DeviceFilter, DeviceRepoImpl, NewDevice, DeviceUpdate, DbProtocolKind, DeviceRepo};
+use driver_manager::manager::ProtocolKind as DriverProtocolKind;
 use tracing::{info, error, instrument};
 use uuid::Uuid;
 use utoipa::ToSchema;
@@ -74,7 +75,7 @@ async fn create_device(
     
     // 注册到驱动管理器
     if device.enabled {
-        if let Err(e) = state.driver_manager.register_device(req.protocol.clone(), device_id).await {
+        if let Err(e) = state.driver_manager.register_device(convert_to_driver_protocol_kind(&req.protocol), device_id).await {
             error!("Failed to register device to driver manager: {}", e);
             // 不阻塞设备创建，只记录错误
         }
@@ -127,9 +128,15 @@ async fn list_devices(
     };
     
     // 并行查询列表和总数
+    let filter_for_count = DeviceFilter {
+        protocol: filter.protocol.clone(),
+        enabled: filter.enabled,
+        limit: None,
+        offset: None,
+    };
     let (devices, total) = tokio::try_join!(
-        device_repo.list(filter.clone()),
-        device_repo.count(filter)
+        device_repo.list(filter),
+        device_repo.count(filter_for_count)
     )?;
     
     let items: Vec<DeviceVO> = devices.into_iter()
@@ -255,7 +262,7 @@ async fn update_device(
         (false, true) => {
             // 启用设备：注册到驱动
             if let Err(e) = state.driver_manager.register_device(
-                convert_db_protocol_kind(&updated_device.protocol)?, 
+                convert_to_driver_protocol_kind(&convert_db_protocol_kind(&updated_device.protocol)?), 
                 device_id
             ).await {
                 error!("Failed to register device to driver manager: {}", e);
@@ -346,5 +353,13 @@ fn convert_db_protocol_kind(protocol: &DbProtocolKind) -> ApiResult<ProtocolKind
         DbProtocolKind::ModbusTcp => Ok(ProtocolKind::ModbusTcp),
         DbProtocolKind::OpcUa => Ok(ProtocolKind::OpcUa),
         DbProtocolKind::Mqtt => Ok(ProtocolKind::Mqtt),
+    }
+}
+
+fn convert_to_driver_protocol_kind(protocol: &ProtocolKind) -> DriverProtocolKind {
+    match protocol {
+        ProtocolKind::ModbusTcp => DriverProtocolKind::ModbusTcp,
+        ProtocolKind::OpcUa => DriverProtocolKind::OpcUa,
+        ProtocolKind::Mqtt => DriverProtocolKind::Mqtt,
     }
 }

@@ -445,7 +445,6 @@ async function handleDeviceChange() {
  */
 function handleTimeRangeChange() {
   // 时间范围选择器组件会自动更新startTime和endTime
-  console.log('时间范围已更新:', queryForm.value.timeRange)
 }
 
 /**

@@ -100,7 +100,8 @@ async fn query_points(
     }
 
     // 执行查询
-    let points = app_state.history_service.query_points(query.into_inner()).await?;
+    let query_data = query.clone().into_inner();
+    let points = app_state.history_service.query_points(query_data).await?;
     let returned_count = points.len();
 
     info!(
@@ -197,7 +198,8 @@ async fn query_stats(
     }
 
     // 执行聚合查询
-    let stats = app_state.history_service.query_stats(query.into_inner()).await?;
+    let query_data = query.clone().into_inner();
+    let stats = app_state.history_service.query_stats(query_data).await?;
     let total_windows = stats.len();
 
     info!(
@@ -285,7 +287,7 @@ async fn query_aggregated(
     }
 
     // 转换为HistoryQuery
-    let mut history_query = HistoryQuery {
+    let history_query = HistoryQuery {
         device_id: query.device_id,
         tag_id: query.tag_id,
         start_time: query.start_time,

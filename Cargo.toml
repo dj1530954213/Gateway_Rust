@@ -13,8 +13,8 @@ members = [
     "core/protocol-bridge",
     "core/web-gw-api",           # ➕ 新增 Actix-Web HTTP+WS 服务
     "core/driver-sdk",           # ➕ 新增驱动SDK
-    "core/alert-engine",         # ➕ 新增独立报警引擎
-    # "infra/pg-repo",             # ➕ 暂时禁用PostgreSQL仓储层
+    # "core/alert-engine",         # ➕ 新增独立报警引擎 - 暂时禁用编译错误
+    "infra/pg-repo",             # ➕ PostgreSQL仓储层
     # "core/advanced-features",  # 暂时禁用以解决链接问题
     "drivers/modbus-static",
     "connectors/mqtt5",

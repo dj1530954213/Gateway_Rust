@@ -539,37 +539,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
 import {
   Plus, Operation, Search, RefreshRight, User, UserFilled,
   Connection, ArrowDown
 } from '@element-plus/icons-vue'
+import { usersApi, wsClient, type User as UserItem } from '../../api'
 
-interface UserItem {
-  id: string
-  username: string
-  email: string
-  role: 'admin' | 'operator' | 'viewer' | 'guest'
-  department: string
-  status: 'active' | 'disabled' | 'locked'
-  avatar?: string
-  realName?: string
-  phone?: string
-  note?: string
-  isOnline: boolean
-  lastLogin?: string
-  createdAt: string
-  loginCount: number
-  permissions: string[]
-  recentActivities: Array<{
-    id: string
-    action: string
-    timestamp: string
-    result: 'success' | 'failed'
-  }>
-}
+// UserItem 类型已从 API 模块导入
 
 interface UserStats {
   totalUsers: number
@@ -779,51 +758,53 @@ const saveUser = async () => {
     await userFormRef.value.validate()
     submitting.value = true
 
-    // 模拟保存用户
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
     if (isEditMode.value && selectedUser.value) {
       // 更新用户
+      const updateData = {
+        username: userForm.username,
+        email: userForm.email,
+        role: userForm.role,
+        department: userForm.department,
+        status: userForm.status,
+        realName: userForm.realName,
+        phone: userForm.phone,
+        note: userForm.note
+      }
+      
+      await usersApi.update(selectedUser.value.id, updateData)
+      
+      // 更新本地数据
       const index = users.value.findIndex(u => u.id === selectedUser.value!.id)
       if (index > -1) {
-        Object.assign(users.value[index], {
-          username: userForm.username,
-          email: userForm.email,
-          role: userForm.role,
-          department: userForm.department,
-          status: userForm.status,
-          realName: userForm.realName,
-          phone: userForm.phone,
-          note: userForm.note
-        })
+        Object.assign(users.value[index], updateData)
       }
+      
       ElMessage.success('用户更新成功')
     } else {
       // 创建新用户
-      const newUser: UserItem = {
-        id: `user_${Date.now()}`,
+      const createData = {
         username: userForm.username,
         email: userForm.email,
-        role: userForm.role as any,
+        password: userForm.password,
+        role: userForm.role,
         department: userForm.department,
-        status: userForm.status as any,
+        status: userForm.status,
         realName: userForm.realName,
         phone: userForm.phone,
-        note: userForm.note,
-        isOnline: false,
-        createdAt: new Date().toISOString(),
-        loginCount: 0,
-        permissions: getDefaultPermissions(userForm.role),
-        recentActivities: []
+        note: userForm.note
       }
-      users.value.unshift(newUser)
+      
+      const response = await usersApi.create(createData)
+      users.value.unshift(response.data)
+      
       ElMessage.success('用户创建成功')
     }
 
-    updateStats()
+    await loadUserStats()
     closeUserDialog()
   } catch (error) {
     console.error('保存用户失败:', error)
+    ElMessage.error('保存用户失败')
   } finally {
     submitting.value = false
   }
@@ -842,11 +823,15 @@ const toggleUserStatus = async (user: UserItem) => {
       }
     )
 
+    await usersApi.toggleStatus(user.id, newStatus)
     user.status = newStatus
-    updateStats()
+    await loadUserStats()
     ElMessage.success(`用户已${action}`)
   } catch (error) {
-    // 用户取消
+    if (error !== 'cancel') {
+      console.error('切换用户状态失败:', error)
+      ElMessage.error('操作失败')
+    }
   }
 }
 
@@ -856,14 +841,38 @@ const handleUserAction = async (command: string, user: UserItem) => {
       await resetPassword(user)
       break
     case 'permissions':
-      ElMessage.info('权限设置功能开发中...')
+      await manageUserPermissions(user)
       break
     case 'sessions':
-      ElMessage.info('会话管理功能开发中...')
+      await manageUserSessions(user)
       break
     case 'delete':
       await deleteUser(user)
       break
+  }
+}
+
+// 管理用户权限
+const manageUserPermissions = async (user: UserItem) => {
+  try {
+    const response = await usersApi.getPermissions(user.id)
+    // 这里可以打开权限管理对话框
+    ElMessage.info(`用户 ${user.username} 当前拥有 ${response.data.permissions.length} 个权限`)
+  } catch (error) {
+    console.error('获取用户权限失败:', error)
+    ElMessage.error('获取用户权限失败')
+  }
+}
+
+// 管理用户会话
+const manageUserSessions = async (user: UserItem) => {
+  try {
+    const response = await usersApi.getSessions(user.id)
+    // 这里可以打开会话管理对话框
+    ElMessage.info(`用户 ${user.username} 当前有 ${response.data.sessions.length} 个活跃会话`)
+  } catch (error) {
+    console.error('获取用户会话失败:', error)
+    ElMessage.error('获取用户会话失败')
   }
 }
 
@@ -877,11 +886,13 @@ const resetPassword = async (user: UserItem) => {
       }
     )
 
-    // 模拟重置密码
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await usersApi.resetPassword(user.id)
     ElMessage.success('密码已重置，新密码已发送到用户邮箱')
   } catch (error) {
-    // 用户取消
+    if (error !== 'cancel') {
+      console.error('重置密码失败:', error)
+      ElMessage.error('重置密码失败')
+    }
   }
 }
 
@@ -897,14 +908,19 @@ const deleteUser = async (user: UserItem) => {
       }
     )
 
+    await usersApi.delete(user.id)
+    
     const index = users.value.findIndex(u => u.id === user.id)
     if (index > -1) {
       users.value.splice(index, 1)
-      updateStats()
+      await loadUserStats()
       ElMessage.success('用户删除成功')
     }
   } catch (error) {
-    // 用户取消
+    if (error !== 'cancel') {
+      console.error('删除用户失败:', error)
+      ElMessage.error('删除用户失败')
+    }
   }
 }
 
@@ -935,18 +951,24 @@ const executeBatchOperation = async () => {
 
   try {
     batchProcessing.value = true
+    const userIds = selectedUsers.value.map(u => u.id)
     
-    // 模拟批量操作
-    await new Promise(resolve => setTimeout(resolve, 2000))
-
     switch (batchOperation.value) {
       case 'enable':
+        await usersApi.batchOperation({
+          userIds,
+          operation: 'enable'
+        })
         selectedUsers.value.forEach(user => {
           user.status = 'active'
         })
         ElMessage.success(`已启用 ${selectedUsers.value.length} 个用户`)
         break
       case 'disable':
+        await usersApi.batchOperation({
+          userIds,
+          operation: 'disable'
+        })
         selectedUsers.value.forEach(user => {
           user.status = 'disabled'
         })
@@ -957,6 +979,11 @@ const executeBatchOperation = async () => {
           ElMessage.warning('请选择新角色')
           return
         }
+        await usersApi.batchOperation({
+          userIds,
+          operation: 'changeRole',
+          newRole: newRole.value
+        })
         selectedUsers.value.forEach(user => {
           user.role = newRole.value as any
           user.permissions = getDefaultPermissions(newRole.value)
@@ -969,17 +996,20 @@ const executeBatchOperation = async () => {
           '批量删除用户',
           { type: 'warning' }
         )
-        const idsToDelete = selectedUsers.value.map(u => u.id)
-        users.value = users.value.filter(u => !idsToDelete.includes(u.id))
+        await usersApi.batchDelete(userIds)
+        users.value = users.value.filter(u => !userIds.includes(u.id))
         ElMessage.success(`已删除 ${selectedUsers.value.length} 个用户`)
         break
     }
 
-    updateStats()
+    await loadUserStats()
     selectedUsers.value = []
     batchOperationVisible.value = false
   } catch (error) {
-    console.error('批量操作失败:', error)
+    if (error !== 'cancel') {
+      console.error('批量操作失败:', error)
+      ElMessage.error('批量操作失败')
+    }
   } finally {
     batchProcessing.value = false
   }
@@ -989,6 +1019,8 @@ const resetFilters = () => {
   searchQuery.value = ''
   selectedRole.value = ''
   selectedStatus.value = ''
+  currentPage.value = 1
+  loadUsers()
 }
 
 const getDefaultPermissions = (role: string): string[] => {
@@ -1007,122 +1039,108 @@ const getDefaultPermissions = (role: string): string[] => {
   return permissionSets[role as keyof typeof permissionSets] || []
 }
 
-const updateStats = () => {
-  userStats.value.totalUsers = users.value.length
-  userStats.value.activeUsers = users.value.filter(u => u.status === 'active').length
-  userStats.value.onlineUsers = users.value.filter(u => u.isOnline).length
-  userStats.value.adminUsers = users.value.filter(u => u.role === 'admin').length
+// 加载用户统计数据
+const loadUserStats = async () => {
+  try {
+    const response = await usersApi.getStats()
+    userStats.value = response.data
+  } catch (error) {
+    console.error('加载用户统计失败:', error)
+    // 使用本地计算作为备用
+    userStats.value.totalUsers = users.value.length
+    userStats.value.activeUsers = users.value.filter(u => u.status === 'active').length
+    userStats.value.onlineUsers = users.value.filter(u => u.isOnline).length
+    userStats.value.adminUsers = users.value.filter(u => u.role === 'admin').length
+  }
 }
 
-// 模拟数据加载
-const loadMockData = () => {
-  const mockUsers: UserItem[] = [
-    {
-      id: 'user_1',
-      username: 'admin',
-      email: 'admin@gateway.com',
-      role: 'admin',
-      department: 'IT部门',
-      status: 'active',
-      realName: '系统管理员',
-      phone: '13800138001',
-      note: '系统默认管理员账户',
-      isOnline: true,
-      lastLogin: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-      createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
-      loginCount: 256,
-      permissions: [
-        'user.view', 'user.create', 'user.edit', 'user.delete',
-        'driver.view', 'driver.manage',
-        'system.config', 'system.monitor'
-      ],
-      recentActivities: [
-        {
-          id: 'act_1',
-          action: '修改系统配置',
-          timestamp: new Date(Date.now() - 10 * 60 * 1000).toISOString(),
-          result: 'success'
-        },
-        {
-          id: 'act_2',
-          action: '创建新用户',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          result: 'success'
-        }
-      ]
-    },
-    {
-      id: 'user_2',
-      username: 'operator1',
-      email: 'operator1@gateway.com',
-      role: 'operator',
-      department: '运维部门',
-      status: 'active',
-      realName: '张三',
-      phone: '13800138002',
-      isOnline: false,
-      lastLogin: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date(Date.now() - 20 * 24 * 60 * 60 * 1000).toISOString(),
-      loginCount: 89,
-      permissions: [
-        'user.view', 'driver.view', 'driver.manage', 'system.monitor'
-      ],
-      recentActivities: [
-        {
-          id: 'act_3',
-          action: '重启驱动服务',
-          timestamp: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          result: 'success'
-        }
-      ]
-    },
-    {
-      id: 'user_3',
-      username: 'viewer1',
-      email: 'viewer1@gateway.com',
-      role: 'viewer',
-      department: '业务部门',
-      status: 'active',
-      realName: '李四',
-      phone: '13800138003',
-      isOnline: true,
-      lastLogin: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000).toISOString(),
-      loginCount: 45,
-      permissions: ['user.view', 'driver.view', 'system.monitor'],
-      recentActivities: [
-        {
-          id: 'act_4',
-          action: '查看系统监控',
-          timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString(),
-          result: 'success'
-        }
-      ]
-    },
-    {
-      id: 'user_4',
-      username: 'guest1',
-      email: 'guest1@gateway.com',
-      role: 'guest',
-      department: '访客',
-      status: 'disabled',
-      realName: '王五',
-      isOnline: false,
-      lastLogin: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      createdAt: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
-      loginCount: 3,
-      permissions: ['user.view', 'driver.view'],
-      recentActivities: []
+// 加载用户数据
+const loadUsers = async () => {
+  loading.value = true
+  try {
+    const params = {
+      page: currentPage.value,
+      size: pageSize.value,
+      search: searchQuery.value,
+      role: selectedRole.value,
+      status: selectedStatus.value
     }
-  ]
+    
+    const response = await usersApi.list(params)
+    users.value = response.data.items || []
+  } catch (error) {
+    console.error('加载用户数据失败:', error)
+    users.value = []
+    ElMessage.error('加载用户数据失败')
+  } finally {
+    loading.value = false
+  }
+}
 
-  users.value = mockUsers
-  updateStats()
+// 刷新数据
+const refreshData = async () => {
+  await Promise.all([
+    loadUsers(),
+    loadUserStats()
+  ])
 }
 
 // 生命周期
-onMounted(() => {
-  loadMockData()
+onMounted(async () => {
+  await refreshData()
+  
+  // 连接WebSocket监听用户状态变化
+  try {
+    if (!wsClient.isConnected) {
+      await wsClient.connect()
+    }
+    
+    // 监听用户状态变化
+    wsClient.on('user_status_changed', (data: any) => {
+      const user = users.value.find(u => u.id === data.userId)
+      if (user) {
+        user.isOnline = data.isOnline
+        user.lastLogin = data.lastLogin
+      }
+      loadUserStats()
+    })
+    
+    // 监听新用户创建
+    wsClient.on('user_created', (data: any) => {
+      users.value.unshift(data.user)
+      loadUserStats()
+    })
+    
+    // 监听用户删除
+    wsClient.on('user_deleted', (data: any) => {
+      const index = users.value.findIndex(u => u.id === data.userId)
+      if (index > -1) {
+        users.value.splice(index, 1)
+        loadUserStats()
+      }
+    })
+  } catch (error) {
+    console.error('WebSocket连接失败:', error)
+  }
+})
+
+// 监听搜索参数变化
+watch([searchQuery, selectedRole, selectedStatus], () => {
+  currentPage.value = 1
+  loadUsers()
+}, { debounce: 300 })
+
+// 监听分页变化
+watch([currentPage, pageSize], () => {
+  loadUsers()
+})
+
+// 清理资源
+onUnmounted(() => {
+  // 清理WebSocket监听器
+  wsClient.off('user_status_changed')
+  wsClient.off('user_created')
+  wsClient.off('user_deleted')
 })
 </script>
 

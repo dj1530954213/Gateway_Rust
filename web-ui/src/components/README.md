@@ -227,7 +227,7 @@ const connectionInfo: ConnectionInfo = {
   name: 'Modbus设备1',
   status: 'connected',
   protocol: 'Modbus TCP',
-  host: '192.168.1.100',
+  host: '',
   port: 502,
   lastUpdate: new Date(),
   metrics: {

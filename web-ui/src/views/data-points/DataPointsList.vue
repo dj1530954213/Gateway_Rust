@@ -431,6 +431,9 @@ import { BaseTable, SearchBox, FilterPanel, ActionButtons, LoadingCard, StatusTa
 // 导入业务组件
 import { DataPointSelector, TimeRangePicker, ChartContainer, FileUploader } from '../../components/business'
 
+// 导入API
+import { datapointsApi } from '@/api'
+
 // 类型定义
 export interface DataPoint {
   id: string
@@ -487,127 +490,11 @@ export interface AlarmRule {
   createTime: Date
 }
 
-// 状态管理
-const datapoints = ref<DataPoint[]>([
-  {
-    id: '1',
-    name: '反应器温度',
-    description: '主反应器内部温度传感器',
-    address: '40001',
-    dataType: 'float',
-    driverId: '1',
-    groupId: 'temp_group',
-    status: 'active',
-    quality: 'good',
-    currentValue: 75.6,
-    lastReadTime: new Date(),
-    unit: '°C',
-    scaling: { factor: 0.1, offset: 0 },
-    limits: { min: 0, max: 200 },
-    createTime: new Date('2024-01-15'),
-    updateTime: new Date()
-  },
-  {
-    id: '2',
-    name: '进料流量',
-    description: '主管道进料流量计',
-    address: '40002',
-    dataType: 'float',
-    driverId: '1',
-    groupId: 'flow_group',
-    status: 'active',
-    quality: 'good',
-    currentValue: 150.2,
-    lastReadTime: new Date(Date.now() - 5000),
-    unit: 'L/min',
-    scaling: { factor: 1, offset: 0 },
-    limits: { min: 0, max: 500 },
-    createTime: new Date('2024-01-16'),
-    updateTime: new Date(Date.now() - 5000)
-  },
-  {
-    id: '3',
-    name: '压力开关',
-    description: '高压保护开关状态',
-    address: '00001',
-    dataType: 'boolean',
-    driverId: '2',
-    groupId: 'safety_group',
-    status: 'active',
-    quality: 'good',
-    currentValue: false,
-    lastReadTime: new Date(Date.now() - 2000),
-    unit: '',
-    createTime: new Date('2024-01-10'),
-    updateTime: new Date(Date.now() - 2000)
-  },
-  {
-    id: '4',
-    name: '设备状态',
-    description: '主设备运行状态代码',
-    address: '40010',
-    dataType: 'integer',
-    driverId: '3',
-    groupId: 'status_group',
-    status: 'active',
-    quality: 'uncertain',
-    currentValue: 2,
-    lastReadTime: new Date(Date.now() - 30000),
-    unit: '',
-    createTime: new Date('2024-01-12'),
-    updateTime: new Date(Date.now() - 30000)
-  },
-  {
-    id: '5',
-    name: '批次编号',
-    description: '当前生产批次编号',
-    address: '40020',
-    dataType: 'string',
-    driverId: '4',
-    groupId: 'info_group',
-    status: 'active',
-    quality: 'good',
-    currentValue: 'BATCH_20240121_001',
-    lastReadTime: new Date(Date.now() - 10000),
-    unit: '',
-    createTime: new Date('2024-01-20'),
-    updateTime: new Date(Date.now() - 10000)
-  }
-])
+// 状态管理（从API获取真实数据）
+const datapoints = ref<DataPoint[]>([])
 
-// 数据点分组
-const datapointGroups = ref<DataPointGroup[]>([
-  {
-    id: 'temp_group',
-    name: '温度监控',
-    description: '各部位温度传感器',
-    createTime: new Date('2024-01-01')
-  },
-  {
-    id: 'flow_group', 
-    name: '流量监控',
-    description: '流量和液位传感器',
-    createTime: new Date('2024-01-01')
-  },
-  {
-    id: 'safety_group',
-    name: '安全监控',
-    description: '安全相关开关和传感器',
-    createTime: new Date('2024-01-01')
-  },
-  {
-    id: 'status_group',
-    name: '状态监控',
-    description: '设备状态和控制信息',
-    createTime: new Date('2024-01-01')
-  },
-  {
-    id: 'info_group',
-    name: '信息监控',
-    description: '生产信息和标识',
-    createTime: new Date('2024-01-01')
-  }
-])
+// 数据点分组（从API获取真实数据）
+const datapointGroups = ref<DataPointGroup[]>([])
 
 const loading = ref(false)
 const loadingProgress = ref(0)
@@ -635,8 +522,33 @@ const historyTimeRange = ref({
   endTime: new Date()
 })
 
-// WebSocket连接（模拟实时数据）
-const wsConnection: WebSocket | null = null
+// WebSocket连接（实时数据）
+const wsConnection = ref<WebSocket | null>(null)
+
+// 数据加载函数
+const loadDatapoints = async () => {
+  try {
+    loading.value = true
+    const response = await datapointsApi.list()
+    if (response.success && response.data) {
+      datapoints.value = response.data.items || []
+    }
+  } catch (error) {
+    console.error('Failed to load datapoints:', error)
+    ElMessage.error('加载数据点列表失败')
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadDatapointGroups = async () => {
+  try {
+    const groups = await datapointsApi.getGroups()
+    datapointGroups.value = groups
+  } catch (error) {
+    console.error('Failed to load datapoint groups:', error)
+  }
+}
 
 // 计算属性
 const datapointsStats = computed<DatapointsStats>(() => {
@@ -1236,13 +1148,10 @@ const handleEditDatapoint = (datapoint: DataPoint) => {
 const handleActivateDatapoint = async (datapoint: DataPoint) => {
   try {
     ElMessage.loading('正在激活数据点...', 0)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await datapointsApi.activate(datapoint.id)
     
-    const index = datapoints.value.findIndex(dp => dp.id === datapoint.id)
-    if (index > -1) {
-      datapoints.value[index].status = 'active'
-      datapoints.value[index].updateTime = new Date()
-    }
+    // 重新加载数据点列表
+    await loadDatapoints()
     
     ElMessage.closeAll()
     ElMessage.success(`数据点 ${datapoint.name} 激活成功`)
@@ -1255,13 +1164,10 @@ const handleActivateDatapoint = async (datapoint: DataPoint) => {
 const handleDeactivateDatapoint = async (datapoint: DataPoint) => {
   try {
     ElMessage.loading('正在停用数据点...', 0)
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    await datapointsApi.deactivate(datapoint.id)
     
-    const index = datapoints.value.findIndex(dp => dp.id === datapoint.id)
-    if (index > -1) {
-      datapoints.value[index].status = 'inactive'
-      datapoints.value[index].updateTime = new Date()
-    }
+    // 重新加载数据点列表
+    await loadDatapoints()
     
     ElMessage.closeAll()
     ElMessage.success(`数据点 ${datapoint.name} 停用成功`)
@@ -1271,11 +1177,13 @@ const handleDeactivateDatapoint = async (datapoint: DataPoint) => {
   }
 }
 
-const handleDeleteDatapoint = (datapoint: DataPoint) => {
-  const index = datapoints.value.findIndex(dp => dp.id === datapoint.id)
-  if (index > -1) {
-    datapoints.value.splice(index, 1)
+const handleDeleteDatapoint = async (datapoint: DataPoint) => {
+  try {
+    await datapointsApi.delete(datapoint.id)
+    await loadDatapoints()
     ElMessage.success(`数据点 ${datapoint.name} 删除成功`)
+  } catch (error) {
+    ElMessage.error('数据点删除失败')
   }
 }
 
@@ -1286,15 +1194,21 @@ const handleBatchActivate = async () => {
     return
   }
   
-  ElMessage.loading(`正在激活 ${inactiveDatapoints.length} 个数据点...`, 0)
-  
-  for (const dp of inactiveDatapoints) {
-    await handleActivateDatapoint(dp)
+  try {
+    ElMessage.loading(`正在激活 ${inactiveDatapoints.length} 个数据点...`, 0)
+    
+    const ids = inactiveDatapoints.map(dp => dp.id)
+    const result = await datapointsApi.batchActivate(ids)
+    
+    await loadDatapoints()
+    
+    ElMessage.closeAll()
+    ElMessage.success(`成功激活 ${result.successCount} 个数据点`)
+    selectedDatapoints.value = []
+  } catch (error) {
+    ElMessage.closeAll()
+    ElMessage.error('批量激活失败')
   }
-  
-  ElMessage.closeAll()
-  ElMessage.success(`成功激活 ${inactiveDatapoints.length} 个数据点`)
-  selectedDatapoints.value = []
 }
 
 const handleBatchDeactivate = async () => {
@@ -1304,27 +1218,35 @@ const handleBatchDeactivate = async () => {
     return
   }
   
-  ElMessage.loading(`正在停用 ${activeDatapoints.length} 个数据点...`, 0)
-  
-  for (const dp of activeDatapoints) {
-    await handleDeactivateDatapoint(dp)
+  try {
+    ElMessage.loading(`正在停用 ${activeDatapoints.length} 个数据点...`, 0)
+    
+    const ids = activeDatapoints.map(dp => dp.id)
+    const result = await datapointsApi.batchDeactivate(ids)
+    
+    await loadDatapoints()
+    
+    ElMessage.closeAll()
+    ElMessage.success(`成功停用 ${result.successCount} 个数据点`)
+    selectedDatapoints.value = []
+  } catch (error) {
+    ElMessage.closeAll()
+    ElMessage.error('批量停用失败')
   }
-  
-  ElMessage.closeAll()
-  ElMessage.success(`成功停用 ${activeDatapoints.length} 个数据点`)
-  selectedDatapoints.value = []
 }
 
-const handleBatchDelete = () => {
-  selectedDatapoints.value.forEach(datapoint => {
-    const index = datapoints.value.findIndex(dp => dp.id === datapoint.id)
-    if (index > -1) {
-      datapoints.value.splice(index, 1)
-    }
-  })
-  
-  ElMessage.success(`成功删除 ${selectedDatapoints.value.length} 个数据点`)
-  selectedDatapoints.value = []
+const handleBatchDelete = async () => {
+  try {
+    const ids = selectedDatapoints.value.map(dp => dp.id)
+    const result = await datapointsApi.batchDelete(ids)
+    
+    await loadDatapoints()
+    
+    ElMessage.success(`成功删除 ${result.successCount} 个数据点`)
+    selectedDatapoints.value = []
+  } catch (error) {
+    ElMessage.error('批量删除失败')
+  }
 }
 
 const handleAddDatapoint = () => {
@@ -1388,19 +1310,9 @@ const handleExportDatapoints = () => {
   ElMessage.success('数据点配置导出成功')
 }
 
-const handleRefresh = () => {
-  loading.value = true
-  loadingProgress.value = 0
-  
-  const interval = setInterval(() => {
-    loadingProgress.value += 10
-    if (loadingProgress.value >= 100) {
-      clearInterval(interval)
-      loading.value = false
-      loadingProgress.value = 0
-      ElMessage.success('数据刷新成功')
-    }
-  }, 100)
+const handleRefresh = async () => {
+  await loadDatapoints()
+  ElMessage.success('数据刷新成功')
 }
 
 // 对话框处理
@@ -1593,114 +1505,121 @@ const hasAlarm = (datapoint: DataPoint) => {
            Number(datapoint.currentValue) > (datapoint.limits.max || Infinity)))
 }
 
-const getDatapointChartData = (datapoint: DataPoint) => {
-  // 生成模拟的历史数据
-  const now = Date.now()
-  const data = []
-  
-  for (let i = 119; i >= 0; i--) {
-    const time = now - i * 60000 // 2小时的数据，每分钟一个点
-    let value = Number(datapoint.currentValue) || 0
-    value += (Math.random() - 0.5) * value * 0.1 // 添加10%的随机变化
+const getDatapointChartData = async (datapoint: DataPoint) => {
+  try {
+    const endTime = new Date()
+    const startTime = new Date(endTime.getTime() - 2 * 60 * 60 * 1000) // 2小时前
     
-    data.push({
-      timestamp: new Date(time),
-      value: Number(value.toFixed(2))
+    const historyData = await datapointsApi.getHistory({
+      datapointId: datapoint.id,
+      startTime,
+      endTime,
+      interval: '1m'
     })
-  }
-  
-  return {
-    series: [
-      {
+    
+    return {
+      series: [
+        {
+          name: datapoint.name,
+          data: historyData.map(d => ({ x: d.timestamp, y: d.value })),
+          unit: datapoint.unit
+        }
+      ]
+    }
+  } catch (error) {
+    console.error('Failed to load chart data:', error)
+    return {
+      series: [{
         name: datapoint.name,
-        data: data.map(d => ({ x: d.timestamp, y: d.value })),
+        data: [],
         unit: datapoint.unit
-      }
-    ]
+      }]
+    }
   }
 }
 
-const getDatapointAlarmRules = (datapoint: DataPoint) => {
-  // 返回模拟的报警规则数据
-  return [
-    {
-      id: '1',
-      datapointId: datapoint.id,
-      name: '高温报警',
-      condition: 'gt',
-      value: 80,
-      priority: 'high',
-      enabled: true,
-      createTime: new Date('2024-01-15')
-    },
-    {
-      id: '2',
-      datapointId: datapoint.id,
-      name: '异常值报警',
-      condition: 'range',
-      value: 0,
-      highValue: 200,
-      priority: 'medium',
-      enabled: true,
-      createTime: new Date('2024-01-16')
-    }
-  ]
+const getDatapointAlarmRules = async (datapoint: DataPoint) => {
+  try {
+    return await datapointsApi.getAlarmRules(datapoint.id)
+  } catch (error) {
+    console.error('Failed to load alarm rules:', error)
+    return []
+  }
 }
 
 const configDialogTitle = computed(() => {
   return editingDatapoint.value ? `编辑数据点 - ${editingDatapoint.value.name}` : '新增数据点'
 })
 
-// 实时数据更新
+// 实时数据更新（通过WebSocket）
 const startRealtimeUpdate = () => {
-  const updateInterval = setInterval(() => {
-    datapoints.value.forEach(dp => {
-      if (dp.status === 'active') {
-        // 模拟数据值变化
-        const baseValue = Number(dp.currentValue) || 0
-        const variation = (Math.random() - 0.5) * baseValue * 0.05 // 5%变化
-        
-        switch (dp.dataType) {
-          case 'float':
-            dp.currentValue = Number((baseValue + variation).toFixed(2))
-            break
-          case 'integer':
-            dp.currentValue = Math.round(baseValue + variation)
-            break
-          case 'boolean':
-            if (Math.random() < 0.1) { // 10%概率切换
-              dp.currentValue = !dp.currentValue
-            }
-            break
-        }
-        
-        dp.lastReadTime = new Date()
-        dp.updateTime = new Date()
-        
-        // 随机改变数据质量
-        if (Math.random() < 0.05) { // 5%概率质量变化
-          dp.quality = ['good', 'uncertain', 'bad'][Math.floor(Math.random() * 3)] as any
-        } else {
-          dp.quality = 'good'
-        }
-      }
-    })
-  }, 3000) // 每3秒更新一次
+  // 建立WebSocket连接获取实时数据
+  const wsUrl = `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/datapoints`
   
-  return updateInterval
+  try {
+    wsConnection.value = new WebSocket(wsUrl)
+    
+    wsConnection.value.onopen = () => {
+      console.log('DataPoints WebSocket connected')
+    }
+    
+    wsConnection.value.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'datapoint_update') {
+          // 更新对应的数据点
+          const index = datapoints.value.findIndex(dp => dp.id === data.id)
+          if (index > -1) {
+            datapoints.value[index] = {
+              ...datapoints.value[index],
+              currentValue: data.value,
+              quality: data.quality,
+              lastReadTime: new Date(data.timestamp),
+              updateTime: new Date()
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error)
+      }
+    }
+    
+    wsConnection.value.onerror = (error) => {
+      console.error('DataPoints WebSocket error:', error)
+    }
+    
+    wsConnection.value.onclose = () => {
+      console.log('DataPoints WebSocket disconnected')
+      // 5秒后重连
+      setTimeout(() => {
+        if (!wsConnection.value || wsConnection.value.readyState === WebSocket.CLOSED) {
+          startRealtimeUpdate()
+        }
+      }, 5000)
+    }
+  } catch (error) {
+    console.error('Failed to establish WebSocket connection:', error)
+  }
 }
 
 // 生命周期钩子
-onMounted(() => {
-  // 启动实时更新
-  const updateInterval = startRealtimeUpdate()
+onMounted(async () => {
+  // 加载数据点列表和分组
+  await Promise.all([
+    loadDatapoints(),
+    loadDatapointGroups()
+  ])
   
-  // 组件卸载时清理
-  onUnmounted(() => {
-    if (updateInterval) {
-      clearInterval(updateInterval)
-    }
-  })
+  // 启动实时数据更新
+  startRealtimeUpdate()
+})
+
+onUnmounted(() => {
+  // 关闭WebSocket连接
+  if (wsConnection.value) {
+    wsConnection.value.close()
+    wsConnection.value = null
+  }
 })
 </script>
 

@@ -9,7 +9,7 @@ CREATE TABLE devices (
     name        VARCHAR(64) NOT NULL UNIQUE,
     protocol    protocol_kind NOT NULL,
     location    VARCHAR(128),
-    endpoint    TEXT,                    -- 连接地址，如 tcp://192.168.1.100:502
+    endpoint    TEXT,                    -- 连接地址，如 tcp://[IP]:[PORT]
     config      JSONB,                   -- 协议特定配置
     enabled     BOOLEAN NOT NULL DEFAULT TRUE,
     created_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -24,7 +24,7 @@ CREATE TABLE tags (
     address     VARCHAR(32) NOT NULL,    -- 寄存器地址，如 "40001"
     data_type   tag_data_type NOT NULL,
     scaling     DOUBLE PRECISION,        -- 比例因子
-    offset      DOUBLE PRECISION,        -- 偏移量
+    "offset"    DOUBLE PRECISION,        -- 偏移量
     unit        VARCHAR(16),             -- 单位
     description TEXT,                    -- 描述
     enabled     BOOLEAN NOT NULL DEFAULT TRUE,

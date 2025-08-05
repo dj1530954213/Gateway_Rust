@@ -4,7 +4,7 @@
 endpoints:
   # PLC设备1 - Modbus TCP
   plc1:
-    url: "tcp://192.168.1.100:502"
+    url: "tcp://[REAL_PLC_IP]:502"
     description: "生产线PLC控制器"
     timeout: "10s"
     pool:
@@ -15,7 +15,7 @@ endpoints:
   
   # PLC设备2 - Modbus TCP with TLS
   plc2:
-    url: "tls://192.168.1.101:502"
+    url: "tls://[REAL_PLC2_IP]:502"
     description: "包装线PLC控制器"
     timeout: "10s"
     pool:

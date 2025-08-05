@@ -542,17 +542,9 @@ const advancedSettings = ref({
   failover: false
 })
 
-// 常用联系方式
-const commonEmails = ref([
-  'admin@company.com',
-  'ops@company.com',
-  'support@company.com'
-])
-
-const commonPhones = ref([
-  '13800138000',
-  '13900139000'
-])
+// 从后端API加载的常用联系方式
+const commonEmails = ref<string[]>([])
+const commonPhones = ref<string[]>([])
 
 // 可用的通知渠道类型
 const availableChannelTypes = [
@@ -754,17 +746,30 @@ async function testNotification(index: number) {
   testingChannels.value[index] = true
 
   try {
-    // 模拟测试通知
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 调用真实API测试通知渠道
+    const response = await fetch('/api/v1/notifications/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        type: notification.type,
+        config: notification.config,
+        testMessage: `这是一条${getChannelTypeName(notification.type)}测试消息`
+      })
+    })
     
-    ElMessage.success(`${getChannelTypeName(notification.type)} 测试通知已发送`)
-    
-    // 这里应该调用实际的测试API
-    // await notificationApi.testChannel(notification)
+    if (response.ok) {
+      const result = await response.json()
+      ElMessage.success(`${getChannelTypeName(notification.type)} 测试通知已发送`)
+    } else {
+      const errorData = await response.json()
+      throw new Error(errorData.message || '测试失败')
+    }
     
   } catch (error) {
     console.error('测试通知失败:', error)
-    ElMessage.error('测试通知失败')
+    ElMessage.error(`测试通知失败: ${error.message}`)
   } finally {
     testingChannels.value[index] = false
   }

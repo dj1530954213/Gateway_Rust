@@ -483,6 +483,9 @@ import {
   VideoPlay
 } from '@element-plus/icons-vue'
 
+// API导入
+import { devicesApi, tagsApi } from '@/api'
+
 // 组件导入
 import AlertConditionConfig from './AlertConditionConfig.vue'
 import AlertNotificationSettings from './AlertNotificationSettings.vue'
@@ -664,14 +667,12 @@ const hasValidScope = computed(() => {
  */
 async function initializeData() {
   try {
-    // 加载可用设备
-    availableDevices.value = generateMockDevices()
-    
-    // 加载可用标签
-    availableTags.value = generateMockTags()
-    
-    // 加载设备分组
-    deviceGroups.value = generateMockGroups()
+    // 加载可用设备、标签和分组数据
+    await Promise.all([
+      fetchAvailableDevices(),
+      fetchAvailableTags(),
+      fetchDeviceGroups()
+    ])
 
     // 如果是编辑模式，填充表单数据
     if (isEditMode.value && props.ruleData) {
@@ -685,45 +686,59 @@ async function initializeData() {
 }
 
 /**
- * 生成模拟设备数据
+ * 获取可用设备列表
  */
-function generateMockDevices() {
-  return Array.from({ length: 10 }, (_, i) => ({
-    id: `device_${i + 1}`,
-    name: `设备-${i + 1}`,
-    protocol: ['ModbusTCP', 'OPC-UA', 'S7'][i % 3],
-    status: 'online'
-  }))
-}
-
-/**
- * 生成模拟标签数据
- */
-function generateMockTags() {
-  const tags = []
-  for (let i = 1; i <= 20; i++) {
-    tags.push({
-      id: `tag_${i}`,
-      name: `标签-${i}`,
-      address: `40${String(i).padStart(3, '0')}`,
-      deviceId: `device_${((i - 1) % 10) + 1}`,
-      deviceName: `设备-${((i - 1) % 10) + 1}`,
-      dataType: ['float', 'integer', 'boolean'][i % 3],
-      unit: ['°C', 'bar', 'Hz', 'V', 'A'][i % 5]
-    })
+async function fetchAvailableDevices() {
+  try {
+    const response = await devicesApi.list({ enabled: true, size: 1000 })
+    availableDevices.value = response.items.map(device => ({
+      id: device.id,
+      name: device.device_name,
+      protocol: device.protocol,
+      status: device.enabled ? 'online' : 'offline'
+    }))
+  } catch (error) {
+    console.error('获取设备列表失败:', error)
+    ElMessage.error('获取设备列表失败')
   }
-  return tags
 }
 
 /**
- * 生成模拟分组数据
+ * 获取可用标签列表
  */
-function generateMockGroups() {
-  return [
-    { id: 'group_1', name: '生产线A', deviceCount: 5 },
-    { id: 'group_2', name: '生产线B', deviceCount: 3 },
-    { id: 'group_3', name: '辅助设备', deviceCount: 2 }
-  ]
+async function fetchAvailableTags() {
+  try {
+    const response = await tagsApi.list({ size: 1000 })
+    availableTags.value = response.items.map(tag => ({
+      id: tag.id,
+      name: tag.tag_name,
+      address: tag.address,
+      deviceId: tag.device_id,
+      deviceName: tag.device_name,
+      dataType: tag.data_type,
+      unit: tag.unit
+    }))
+  } catch (error) {
+    console.error('获取标签列表失败:', error)
+    ElMessage.error('获取标签列表失败')
+  }
+}
+
+/**
+ * 获取设备分组列表
+ */
+async function fetchDeviceGroups() {
+  try {
+    const response = await devicesApi.getGroups()
+    deviceGroups.value = response.items.map(group => ({
+      id: group.id,
+      name: group.group_name,
+      deviceCount: group.device_count
+    }))
+  } catch (error) {
+    console.error('获取设备分组失败:', error)
+    ElMessage.error('获取设备分组失败')
+  }
 }
 
 /**
@@ -853,7 +868,6 @@ async function testRule() {
  * 处理测试完成
  */
 function handleTestComplete(result: any) {
-  console.log('测试完成:', result)
   ElMessage.success(`测试完成，触发率: ${result.summary.successRate}%`)
 }
 

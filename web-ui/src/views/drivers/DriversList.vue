@@ -25,6 +25,9 @@
           <el-button :icon="MoreFilled" />
           <template #dropdown>
             <el-dropdown-menu>
+              <el-dropdown-item command="upload-driver" :icon="Upload">
+                上传驱动文件
+              </el-dropdown-item>
               <el-dropdown-item command="import" :icon="Upload">
                 导入配置
               </el-dropdown-item>
@@ -147,7 +150,7 @@
         v-model:selection="selectedDrivers"
         :data="filteredDrivers"
         :columns="tableColumns"
-        :loading="loading"
+        :loading="driversStore.isLoading"
         :pagination="paginationConfig"
         show-selection
         @action="handleTableAction"
@@ -328,12 +331,82 @@
         @success="handleConfigUploadSuccess"
       />
     </el-dialog>
+    
+    <!-- 驱动文件上传对话框 -->
+    <el-dialog
+      v-model="driverUploadDialogVisible"
+      title="上传驱动文件"
+      width="600px"
+      :before-close="handleDriverUploadDialogClose"
+    >
+      <div class="driver-upload-content">
+        <el-alert
+          title="上传须知"
+          type="info"
+          :closable="false"
+          style="margin-bottom: 20px"
+        >
+          <template #default>
+            <p>请上传编译好的驱动动态库文件：</p>
+            <ul>
+              <li>Windows: .dll 文件</li>
+              <li>Linux: .so 文件</li>
+              <li>macOS: .dylib 文件</li>
+            </ul>
+            <p>驱动文件必须包含 get_driver_meta 和 create_driver 符号。</p>
+          </template>
+        </el-alert>
+        
+        <el-upload
+          ref="driverUploadRef"
+          class="driver-upload"
+          drag
+          :action="driverUploadUrl"
+          :before-upload="beforeDriverUpload"
+          :on-success="handleDriverUploadSuccess"
+          :on-error="handleDriverUploadError"
+          :on-progress="handleDriverUploadProgress"
+          :on-change="handleDriverFileChange"
+          :accept="driverFileAccept"
+          :auto-upload="false"
+          :limit="1"
+          :file-list="driverFileList"
+        >
+          <el-icon class="el-icon--upload">
+            <upload-filled />
+          </el-icon>
+          <div class="el-upload__text">
+            将驱动文件拖到此处，或<em>点击上传</em>
+          </div>
+          <template #tip>
+            <div class="el-upload__tip">
+              只能上传 .dll/.so/.dylib 文件，且不超过 50MB
+            </div>
+          </template>
+        </el-upload>
+      </div>
+      
+      <template #footer>
+        <div class="dialog-footer">
+          <el-button @click="handleDriverUploadDialogClose">取消</el-button>
+          <el-button 
+            type="primary" 
+            @click="submitDriverUpload"
+            :loading="driverUploading"
+            :disabled="driverFileList.length === 0"
+          >
+            上传驱动
+          </el-button>
+        </div>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, reactive, onMounted, onUnmounted, h } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { useRouter } from 'vue-router'
 import {
   Connection,
   Plus,
@@ -345,7 +418,8 @@ import {
   Monitor,
   VideoPlay,
   VideoPause,
-  Warning
+  Warning,
+  UploadFilled
 } from '@element-plus/icons-vue'
 
 // 导入基础组件
@@ -353,6 +427,9 @@ import { BaseTable, SearchBox, FilterPanel, ActionButtons, LoadingCard, StatusTa
 
 // 导入业务组件
 import { ConnectionStatus, ProtocolConfig, ChartContainer, LogViewer, FileUploader } from '../../components/business'
+
+// 导入 Store
+import { useDriversStore } from '@/stores/drivers'
 
 // 类型定义
 export interface Driver {
@@ -387,74 +464,29 @@ export interface DriverTemplate {
   createTime: Date
 }
 
-// 状态管理
-const drivers = ref<Driver[]>([
-  {
-    id: '1',
-    name: 'PLC主控制器',
-    protocol: 'modbus_tcp',
-    address: '192.168.1.100',
-    port: 502,
-    status: 'running',
-    createTime: new Date('2024-01-15'),
-    updateTime: new Date(),
-    dataPointCount: 156,
-    messageRate: 2.5,
-    avgLatency: 45,
-    errorRate: 0.2
-  },
-  {
-    id: '2', 
-    name: '温度传感器组',
-    protocol: 'modbus_rtu',
-    address: '/dev/ttyUSB0',
-    status: 'running',
-    createTime: new Date('2024-01-16'),
-    updateTime: new Date(Date.now() - 300000),
-    dataPointCount: 24,
-    messageRate: 1.2,
-    avgLatency: 120,
-    errorRate: 0.0
-  },
-  {
-    id: '3',
-    name: 'SCADA系统',
-    protocol: 'opcua',
-    address: 'opc.tcp://192.168.1.50:4840',
-    status: 'error',
-    createTime: new Date('2024-01-10'),
-    updateTime: new Date(Date.now() - 1800000),
-    dataPointCount: 89,
-    messageRate: 0,
-    avgLatency: 0,
-    errorRate: 100
-  },
-  {
-    id: '4',
-    name: 'MQTT网关',
-    protocol: 'mqtt5',
-    address: 'mqtt://broker.hivemq.com:1883',
-    status: 'stopped',
-    createTime: new Date('2024-01-12'),
-    updateTime: new Date(Date.now() - 7200000),
-    dataPointCount: 67,
-    messageRate: 0,
-    avgLatency: 0,
-    errorRate: 0
-  }
-])
+// 使用驱动 Store
+const driversStore = useDriversStore()
 
-const loading = ref(false)
-const loadingProgress = ref(0)
-const selectedDrivers = ref<Driver[]>([])
+// 使用 Router
+const router = useRouter()
+
 const searchKeyword = ref('')
 const filterConditions = ref<any>({})
+const selectedDrivers = ref<any[]>([])
 
 // 对话框状态
 const detailDrawerVisible = ref(false)
 const configDialogVisible = ref(false)
 const templateDialogVisible = ref(false)
 const uploadDialogVisible = ref(false)
+const driverUploadDialogVisible = ref(false)
+
+// 驱动上传相关状态
+const driverUploading = ref(false)
+const driverFileList = ref([])
+const driverUploadRef = ref()
+const driverUploadUrl = computed(() => '/api/v1/drivers')
+const driverFileAccept = '.dll,.so,.dylib'
 
 // 选中的驱动和配置
 const selectedDriver = ref<Driver | null>(null)
@@ -462,42 +494,35 @@ const editingDriver = ref<Driver | null>(null)
 const driverConfig = ref<any>({})
 const detailActiveTab = ref('basic')
 
-// 驱动模板
-const driverTemplates = ref<DriverTemplate[]>([
-  {
-    id: '1',
-    name: 'Modbus TCP 标准模板',
-    protocol: 'modbus_tcp',
-    description: '适用于标准Modbus TCP设备',
-    config: {
-      basic: { deviceId: 1, scanRate: 1000 },
-      connection: { timeout: 5000, retries: 3 }
-    },
-    createTime: new Date('2024-01-01')
-  }
-])
+// 驱动模板（从API获取真实数据）
+const driverTemplates = ref<DriverTemplate[]>([])
 
 // WebSocket连接（模拟实时数据）
 const wsConnection: WebSocket | null = null
 
+// 加载状态
+const loading = ref(false)
+const loadingProgress = ref(0)
+
 // 计算属性
 const driversStats = computed<DriversStats>(() => {
+  const storeDrivers = driversStore.state.drivers || []
   const stats = {
-    total: drivers.value.length,
+    total: storeDrivers.length,
     running: 0,
     stopped: 0,
     error: 0
   }
   
-  drivers.value.forEach(driver => {
+  storeDrivers.forEach(driver => {
     switch (driver.status) {
-      case 'running':
+      case 'Loaded':
         stats.running++
         break
-      case 'stopped':
+      case 'Unloaded':
         stats.stopped++
         break
-      case 'error':
+      case 'Failed':
         stats.error++
         break
     }
@@ -506,27 +531,36 @@ const driversStats = computed<DriversStats>(() => {
   return stats
 })
 
+// 驱动列表计算属性
+const drivers = computed(() => driversStore.state.drivers || [])
+
 const filteredDrivers = computed(() => {
-  let result = drivers.value
+  const storeDrivers = driversStore.state.drivers || []
+  let result = storeDrivers
   
   // 搜索过滤
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
     result = result.filter(driver => 
-      driver.name.toLowerCase().includes(keyword) ||
-      driver.protocol.toLowerCase().includes(keyword) ||
-      driver.address.toLowerCase().includes(keyword)
+      driver.filename.toLowerCase().includes(keyword) ||
+      (driver.info?.protocol || '').toLowerCase().includes(keyword) ||
+      (driver.info?.name || '').toLowerCase().includes(keyword)
     )
   }
   
   // 状态过滤
   if (filterConditions.value.status) {
-    result = result.filter(driver => driver.status === filterConditions.value.status)
+    const statusMap = {
+      'running': 'Loaded',
+      'stopped': 'Unloaded', 
+      'error': 'Failed'
+    }
+    result = result.filter(driver => driver.status === statusMap[filterConditions.value.status])
   }
   
   // 协议过滤
   if (filterConditions.value.protocol) {
-    result = result.filter(driver => driver.protocol === filterConditions.value.protocol)
+    result = result.filter(driver => driver.info?.protocol === filterConditions.value.protocol)
   }
   
   return result
@@ -534,10 +568,11 @@ const filteredDrivers = computed(() => {
 
 const searchSuggestions = computed(() => {
   const suggestions = []
-  drivers.value.forEach(driver => {
-    suggestions.push(driver.name)
-    suggestions.push(driver.protocol)
-    suggestions.push(driver.address)
+  const storeDrivers = driversStore.state.drivers
+  storeDrivers.forEach(driver => {
+    suggestions.push(driver.filename)
+    if (driver.info?.protocol) suggestions.push(driver.info.protocol)
+    if (driver.info?.name) suggestions.push(driver.info.name)
   })
   return [...new Set(suggestions)]
 })
@@ -633,68 +668,66 @@ const batchActions = [
 // 表格列配置
 const tableColumns = [
   {
-    key: 'name',
-    label: '驱动名称',
+    key: 'filename',
+    label: '驱动文件',
     width: 200,
     sortable: true
   },
   {
-    key: 'protocol',
+    key: 'info.name',
+    label: '驱动名称',
+    width: 150,
+    formatter: (row: any) => row.info?.name || '未知'
+  },
+  {
+    key: 'info.protocol',
     label: '协议类型',
     width: 120,
     type: 'tag',
-    formatter: (row: Driver) => {
-      const protocolMap: Record<string, string> = {
-        modbus_tcp: 'Modbus TCP',
-        modbus_rtu: 'Modbus RTU',
-        opcua: 'OPC UA',
-        mqtt5: 'MQTT5',
-        ethernet_ip: 'Ethernet/IP'
-      }
-      return protocolMap[row.protocol] || row.protocol
-    }
+    formatter: (row: any) => row.info?.protocol || '未知'
   },
   {
-    key: 'address',
-    label: '连接地址',
-    width: 180,
-    showOverflowTooltip: true
+    key: 'info.version',
+    label: '版本',
+    width: 100,
+    formatter: (row: any) => row.info?.version || '未知'
   },
   {
     key: 'status',
     label: '运行状态',
     width: 100,
     type: 'custom',
-    render: (row: Driver) => {
-      return h(StatusTag, { status: row.status })
+    render: (row: any) => {
+      const statusMap = {
+        'Loaded': 'running',
+        'Unloaded': 'stopped',
+        'Failed': 'error'
+      }
+      return h(StatusTag, { status: statusMap[row.status] || 'stopped' })
     }
   },
   {
-    key: 'dataPointCount',
-    label: '数据点',
-    width: 80,
-    align: 'center',
-    formatter: (row: Driver) => row.dataPointCount || 0
-  },
-  {
-    key: 'messageRate',
-    label: '消息率',
+    key: 'file_size',
+    label: '文件大小',
     width: 100,
     align: 'center',
-    formatter: (row: Driver) => `${(row.messageRate || 0).toFixed(1)}/s`
+    formatter: (row: any) => {
+      const size = row.file_size || 0
+      return size > 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)}MB` : `${(size / 1024).toFixed(1)}KB`
+    }
   },
   {
-    key: 'avgLatency',
-    label: '平均延迟',
-    width: 100,
-    align: 'center',
-    formatter: (row: Driver) => `${row.avgLatency || 0}ms`
-  },
-  {
-    key: 'updateTime',
-    label: '最后更新',
+    key: 'uploaded_at',
+    label: '上传时间',
     width: 160,
     type: 'datetime'
+  },
+  {
+    key: 'last_loaded_at',
+    label: '最后加载',
+    width: 160,
+    type: 'datetime',
+    formatter: (row: any) => row.last_loaded_at || '未加载'
   },
   {
     key: 'actions',
@@ -744,12 +777,16 @@ const tableColumns = [
 ]
 
 // 分页配置
-const paginationConfig = {
-  pageSize: 10,
+const paginationConfig = computed(() => ({
+  current: driversStore.state.currentPage,
+  pageSize: driversStore.state.pageSize,
+  total: driversStore.state.total,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: true
-}
+  showTotal: true,
+  onChange: (page: number) => driversStore.changePage(page),
+  onShowSizeChange: (current: number, size: number) => driversStore.changePageSize(size)
+}))
 
 // 模板表格列
 const templateColumns = [
@@ -861,8 +898,7 @@ const handleDriverStart = async (driver: Driver) => {
     // 更新驱动状态
     const index = drivers.value.findIndex(d => d.id === driver.id)
     if (index > -1) {
-      drivers.value[index].status = 'running'
-      drivers.value[index].updateTime = new Date()
+      driversStore.updateDriverStatus(driver.id, 'Loaded')
     }
     
     ElMessage.closeAll()
@@ -881,9 +917,7 @@ const handleDriverStop = async (driver: Driver) => {
     
     const index = drivers.value.findIndex(d => d.id === driver.id)
     if (index > -1) {
-      drivers.value[index].status = 'stopped'
-      drivers.value[index].updateTime = new Date()
-      drivers.value[index].messageRate = 0
+      driversStore.updateDriverStatus(driver.id, 'Unloaded')
     }
     
     ElMessage.closeAll()
@@ -911,10 +945,11 @@ const handleDriverDisconnect = (connection: any) => {
 }
 
 const handleDeleteDriver = async (driver: Driver) => {
-  const index = drivers.value.findIndex(d => d.id === driver.id)
-  if (index > -1) {
-    drivers.value.splice(index, 1)
+  try {
+    await driversStore.deleteDriver(driver.id)
     ElMessage.success(`驱动 ${driver.name} 删除成功`)
+  } catch (error) {
+    ElMessage.error(`删除驱动失败: ${error}`)
   }
 }
 
@@ -969,25 +1004,31 @@ const handleBatchRestart = async () => {
   selectedDrivers.value = []
 }
 
-const handleBatchDelete = () => {
-  selectedDrivers.value.forEach(driver => {
-    const index = drivers.value.findIndex(d => d.id === driver.id)
-    if (index > -1) {
-      drivers.value.splice(index, 1)
-    }
-  })
-  
-  ElMessage.success(`成功删除 ${selectedDrivers.value.length} 个驱动`)
-  selectedDrivers.value = []
+const handleBatchDelete = async () => {
+  try {
+    const deletePromises = selectedDrivers.value.map(driver => 
+      driversStore.deleteDriver(driver.id)
+    )
+    await Promise.all(deletePromises)
+    
+    ElMessage.success(`成功删除 ${selectedDrivers.value.length} 个驱动`)
+    selectedDrivers.value = []
+  } catch (error) {
+    ElMessage.error(`批量删除失败: ${error}`)
+  }
 }
 
 const handleAddDriver = () => {
-  // 跳转到添加驱动页面或打开对话框
-  ElMessage.info('跳转到添加驱动页面')
+  // 导航到驱动配置创建页面
+  router.push('/drivers/create')
 }
 
 const handleHeaderAction = (command: string) => {
   switch (command) {
+    case 'upload-driver':
+      driverUploadDialogVisible.value = true
+      driverFileList.value = []
+      break
     case 'import':
       uploadDialogVisible.value = true
       break
@@ -1056,15 +1097,15 @@ const handleConfigDialogClose = () => {
   driverConfig.value = {}
 }
 
-const handleConfigSave = (config: any) => {
+const handleConfigSave = async (config: any) => {
   if (editingDriver.value) {
-    const index = drivers.value.findIndex(d => d.id === editingDriver.value!.id)
-    if (index > -1) {
-      drivers.value[index].config = config
-      drivers.value[index].updateTime = new Date()
+    try {
+      await driversStore.updateDriverConfig(editingDriver.value.id, config)
+      ElMessage.success('配置保存成功')
+      handleConfigDialogClose()
+    } catch (error) {
+      ElMessage.error(`配置保存失败: ${error}`)
     }
-    ElMessage.success('配置保存成功')
-    handleConfigDialogClose()
   }
 }
 
@@ -1126,6 +1167,71 @@ const handleConfigUploadSuccess = (file: any, response: any) => {
   ElMessage.success(`配置文件 ${file.name} 上传成功`)
   handleUploadDialogClose()
   // 这里可以解析上传的配置文件并更新驱动列表
+}
+
+// 驱动文件上传处理函数
+const handleDriverUploadDialogClose = () => {
+  driverUploadDialogVisible.value = false
+  driverFileList.value = []
+  driverUploading.value = false
+}
+
+const beforeDriverUpload = (file: any) => {
+  const isValidType = /\.(dll|so|dylib)$/i.test(file.name)
+  if (!isValidType) {
+    ElMessage.error('只能上传 .dll, .so, .dylib 格式的驱动文件!')
+    return false
+  }
+
+  const isLt50M = file.size / 1024 / 1024 < 50
+  if (!isLt50M) {
+    ElMessage.error('驱动文件大小不能超过 50MB!')
+    return false
+  }
+
+  return true
+}
+
+const submitDriverUpload = () => {
+  if (driverFileList.value.length === 0) {
+    ElMessage.warning('请选择要上传的驱动文件')
+    return
+  }
+  
+  driverUploading.value = true
+  driverUploadRef.value?.submit()
+}
+
+const handleDriverUploadProgress = (event: any, file: any, fileList: any) => {
+  // 可以在这里更新上传进度
+}
+
+const handleDriverUploadSuccess = async (response: any, file: any, fileList: any) => {
+  driverUploading.value = false
+  
+  if (response.success) {
+    ElMessage.success(`驱动文件 ${file.name} 上传成功`)
+    handleDriverUploadDialogClose()
+    
+    // 刷新驱动列表
+    await driversStore.fetchDrivers()
+    await driversStore.fetchDriverStatus()
+  } else {
+    ElMessage.warning(`驱动上传完成，但加载失败: ${response.message}`)
+    
+    // 即使加载失败也要刷新列表，因为文件可能已经上传
+    await driversStore.fetchDrivers()
+    await driversStore.fetchDriverStatus()
+  }
+}
+
+const handleDriverUploadError = (error: any, file: any, fileList: any) => {
+  driverUploading.value = false
+  ElMessage.error(`驱动文件上传失败: ${error.message || '未知错误'}`)
+}
+
+const handleDriverFileChange = (file: any, fileList: any) => {
+  driverFileList.value = fileList
 }
 
 // 辅助方法
@@ -1229,24 +1335,27 @@ const configDialogTitle = computed(() => {
 
 // 实时数据更新
 const startRealtimeUpdate = () => {
-  // 模拟WebSocket连接
-  const updateInterval = setInterval(() => {
-    drivers.value.forEach(driver => {
-      if (driver.status === 'running') {
-        // 更新实时指标
-        driver.messageRate = Math.max(0, (driver.messageRate || 0) + (Math.random() - 0.5) * 0.2)
-        driver.avgLatency = Math.max(1, (driver.avgLatency || 50) + (Math.random() - 0.5) * 10)
-        driver.errorRate = Math.max(0, Math.min(100, (driver.errorRate || 0) + (Math.random() - 0.5) * 0.1))
-        driver.updateTime = new Date()
-      }
-    })
+  // 实时数据更新已移至driversStore处理
+  // 这里只保留基本的定时刷新
+  const updateInterval = setInterval(async () => {
+    try {
+      await driversStore.fetchDriverStatus()
+    } catch (error) {
+      console.warn('Failed to update driver status:', error)
+    }
   }, 5000)
   
   return updateInterval
 }
 
 // 生命周期钩子
-onMounted(() => {
+onMounted(async () => {
+  // 加载驱动列表数据
+  await driversStore.fetchDrivers()
+  
+  // 加载驱动状态统计
+  await driversStore.fetchDriverStatus()
+  
   // 启动实时更新
   const updateInterval = startRealtimeUpdate()
   
@@ -1424,6 +1533,25 @@ onMounted(() => {
     display: flex;
     gap: 8px;
     margin-bottom: 16px;
+  }
+}
+
+.driver-upload-content {
+  .driver-upload {
+    .el-upload-dragger {
+      width: 100%;
+    }
+  }
+  
+  .el-alert {
+    ul {
+      margin: 8px 0;
+      padding-left: 20px;
+      
+      li {
+        margin: 4px 0;
+      }
+    }
   }
 }
 

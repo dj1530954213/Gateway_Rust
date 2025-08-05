@@ -694,7 +694,8 @@ const startRealtimeUpdate = () => {
   }
   
   realtimeTimer = setInterval(() => {
-    addMockLog()
+    // 从WebSocket或API拉取新日志
+    fetchLatestLogs()
     if (autoScroll.value) {
       scrollToBottom()
     }
@@ -708,31 +709,32 @@ const stopRealtimeUpdate = () => {
   }
 }
 
-const addMockLog = () => {
-  const levels: LogLevel[] = ['debug', 'info', 'warn', 'error']
-  const sources = ['Gateway', 'ModbusTCP', 'OPCUA', 'MQTT', 'System']
-  const messages = [
-    'Connection established successfully',
-    'Data point updated: Temperature = 25.6°C',
-    'Warning: High memory usage detected',
-    'Error: Connection timeout',
-    'Debug: Processing message queue'
-  ]
-  
-  const newLog: LogEntry = {
-    id: Date.now().toString(),
-    timestamp: new Date(),
-    level: levels[Math.floor(Math.random() * levels.length)],
-    source: sources[Math.floor(Math.random() * sources.length)],
-    thread: `Thread-${Math.floor(Math.random() * 10) + 1}`,
-    message: messages[Math.floor(Math.random() * messages.length)]
-  }
-  
-  logs.value.push(newLog)
-  
-  // 限制日志数量
-  if (logs.value.length > props.maxLogs) {
-    logs.value = logs.value.slice(-props.maxLogs)
+/**
+ * 从API获取最新日志
+ */
+const fetchLatestLogs = async () => {
+  try {
+    // 获取最新的日志条目
+    const response = await fetch('/api/v1/logs/latest', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      const newLogs = await response.json()
+      if (newLogs.length > 0) {
+        logs.value.push(...newLogs)
+        
+        // 限制日志数量
+        if (logs.value.length > props.maxLogs) {
+          logs.value = logs.value.slice(-props.maxLogs)
+        }
+      }
+    }
+  } catch (error) {
+    console.error('获取最新日志失败:', error)
   }
 }
 
@@ -840,16 +842,34 @@ const handleTimestampToggle = () => {
   // 时间戳显示切换处理
 }
 
-const handleLoadMore = () => {
+const handleLoadMore = async () => {
   loadingMore.value = true
   
-  setTimeout(() => {
-    // 模拟加载更多日志
-    for (let i = 0; i < 50; i++) {
-      addMockLog()
+  try {
+    // 获取更多历史日志
+    const oldestLog = logs.value[0]
+    const before = oldestLog ? oldestLog.timestamp : new Date().toISOString()
+    
+    const response = await fetch(`/api/v1/logs?before=${before}&limit=50`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      const olderLogs = await response.json()
+      if (olderLogs.length > 0) {
+        logs.value.unshift(...olderLogs)
+      } else {
+        hasMoreLogs.value = false
+      }
     }
+  } catch (error) {
+    console.error('加载更多日志失败:', error)
+  } finally {
     loadingMore.value = false
-  }, 1000)
+  }
 }
 
 const handlePageSizeChange = (size: number) => {
@@ -883,9 +903,9 @@ watch(() => props.logs, (newLogs) => {
 
 // 生命周期
 onMounted(() => {
-  // 初始化一些模拟日志
-  for (let i = 0; i < 20; i++) {
-    addMockLog()
+  // 初始化加载日志
+  if (props.logs.length === 0) {
+    fetchLatestLogs()
   }
 })
 

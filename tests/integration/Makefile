@@ -51,8 +51,9 @@ logs:
 logs-mqtt:
 	docker-compose logs -f mqtt-broker
 
-logs-plc:
-	docker-compose logs -f mock-plc
+# 🚫 Mock PLC日志命令已移除
+# logs-plc命令已删除，因为本系统为生产级产品，不使用模拟PLC
+# 如需查看真实设备日志，请连接真实PLC的日志接口
 
 logs-influx:
 	docker-compose logs -f influxdb
@@ -73,8 +74,9 @@ health:
 	@docker exec gateway-test-mqtt mosquitto_pub -h localhost -t test -m "test" >/dev/null 2>&1 && echo "  ✅ MQTT OK" || echo "  ❌ MQTT Failed"
 	@echo "InfluxDB:"
 	@curl -s http://localhost:8086/ping >/dev/null 2>&1 && echo "  ✅ InfluxDB OK" || echo "  ❌ InfluxDB Failed"
-	@echo "Mock PLC:"
-	@curl -s http://localhost:8080/ >/dev/null 2>&1 && echo "  ✅ Mock PLC OK" || echo "  ❌ Mock PLC Failed"
+	@echo "🚫 Mock PLC健康检查已移除:"
+	@echo "  本系统为生产级产品，必须连接真实PLC设备"
+	@echo "  请检查真实设备的网络连接和Modbus通信状态"
 
 # 清理 Docker 资源
 clean: teardown

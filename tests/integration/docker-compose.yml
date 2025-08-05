@@ -39,25 +39,8 @@ services:
       timeout: 5s
       retries: 3
 
-  # Mock PLC Server - 模拟Modbus设备
-  mock-plc:
-    image: python:3.11-slim
-    container_name: gateway-test-mock-plc
-    ports:
-      - "1502:502"
-      - "8080:8080"   # Control API
-    volumes:
-      - ./mock-plc:/app
-    working_dir: /app
-    command: sh -c "pip install -r requirements.txt && python modbus_simulator.py"
-    restart: unless-stopped
-    depends_on:
-      - mqtt-broker
-    healthcheck:
-      test: ["CMD", "python", "-c", "import socket; s = socket.socket(); s.connect(('localhost', 502)); s.close()"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
+  # 🚫 模拟PLC服务已移除 - 集成测试需要连接真实的Modbus设备
+  # 请在tests/integration/README.md中查看真实设备连接配置说明
 
   # Redis - 用于测试缓存和状态管理
   redis:

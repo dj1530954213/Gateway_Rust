@@ -7,8 +7,10 @@ pub mod config;
 pub mod dto;
 pub mod error;
 pub mod routes;
+pub mod services;
 
 // 重新导出常用类型和函数
 pub use bootstrap::{init_state, AppState};
-pub use config::{load_config, ApiConfig};
+pub use config::ApiConfig;
+pub use bootstrap::load_config;
 pub use error::{ApiError, ApiResult};

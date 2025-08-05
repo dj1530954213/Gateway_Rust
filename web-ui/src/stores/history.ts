@@ -755,7 +755,6 @@ export const useHistoryStore = defineStore('history', () => {
     cacheStats.value.totalHits = 0
     cacheStats.value.totalMisses = 0
     ElMessage.success(`已清空 ${count} 个缓存项`)
-    console.log('历史数据缓存已清空')
   }
 
   /**
@@ -803,7 +802,6 @@ export const useHistoryStore = defineStore('history', () => {
     })
     
     await Promise.allSettled(promises)
-    console.log('缓存预热完成')
     ElMessage.success('缓存预热完成')
   }
 

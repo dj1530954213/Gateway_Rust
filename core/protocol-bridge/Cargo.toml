@@ -29,7 +29,7 @@ dlopen_derive = "0.1"
 
 # IPC and shared memory
 shared_memory = "0.12"
-mmap = "0.1"
+# mmap = "0.1"  # 临时禁用，有编译错误
 
 [dev-dependencies]
 tokio-test = "0.4"

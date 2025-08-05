@@ -511,7 +511,7 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search,
@@ -521,6 +521,7 @@ import {
   Timer,
   ArrowDown
 } from '@element-plus/icons-vue'
+import { alertsApi, devicesApi } from '@/api'
 
 // ===== Props =====
 const props = defineProps<{
@@ -583,9 +584,9 @@ const hasSelection = computed(() => {
  */
 async function initializeData() {
   try {
-    // 生成模拟数据
-    availableDevices.value = generateMockDevices()
-    availableRules.value = generateMockRules()
+    // 从API加载设备和规则数据
+    await loadAvailableDevices()
+    await loadAvailableRules()
     
     // 设置默认时间范围（最近7天）
     const now = new Date()
@@ -605,72 +606,29 @@ async function initializeData() {
 }
 
 /**
- * 生成模拟设备数据
+ * 加载可用设备列表
  */
-function generateMockDevices() {
-  return Array.from({ length: 10 }, (_, i) => ({
-    id: `device_${i + 1}`,
-    name: `设备-${i + 1}`,
-    protocol: ['ModbusTCP', 'OPC-UA', 'S7'][i % 3]
-  }))
-}
-
-/**
- * 生成模拟规则数据
- */
-function generateMockRules() {
-  return Array.from({ length: 15 }, (_, i) => ({
-    id: `rule_${i + 1}`,
-    name: `报警规则-${i + 1}`,
-    description: `规则描述-${i + 1}`
-  }))
-}
-
-/**
- * 生成模拟报警数据
- */
-function generateMockAlerts() {
-  const alerts = []
-  const now = Date.now()
-  const severities = ['info', 'warning', 'critical']
-  const statuses = ['firing', 'resolved', 'acknowledged', 'suppressed']
-
-  for (let i = 0; i < 50; i++) {
-    const severity = severities[i % severities.length]
-    const status = statuses[i % statuses.length]
-    const triggerTime = new Date(now - Math.random() * 7 * 24 * 60 * 60 * 1000)
-    const resolveTime = status === 'resolved' ? 
-      new Date(triggerTime.getTime() + Math.random() * 2 * 60 * 60 * 1000) : null
-
-    alerts.push({
-      id: `alert_${i + 1}`,
-      title: `${severity === 'critical' ? '严重' : severity === 'warning' ? '警告' : '信息'}报警 ${i + 1}`,
-      description: `这是一条${getSeverityLabel(severity)}报警的详细描述信息，包含了报警的具体原因和可能的影响。`,
-      severity,
-      status,
-      deviceId: `device_${(i % 10) + 1}`,
-      deviceName: `设备-${(i % 10) + 1}`,
-      tagId: `tag_${(i % 20) + 1}`,
-      tagName: `标签-${(i % 20) + 1}`,
-      ruleId: `rule_${(i % 15) + 1}`,
-      ruleName: `报警规则-${(i % 15) + 1}`,
-      triggerTime: triggerTime.toISOString(),
-      resolveTime: resolveTime?.toISOString() || null,
-      triggerValue: Math.random() * 100,
-      threshold: 80,
-      unit: '°C',
-      labels: {
-        location: `车间${i % 3 + 1}`,
-        zone: `区域${i % 5 + 1}`
-      },
-      annotations: {
-        runbook_url: 'https://example.com/runbook',
-        summary: '温度超过阈值'
-      }
-    })
+async function loadAvailableDevices() {
+  try {
+    const response = await devicesApi.list()
+    availableDevices.value = response.items || []
+  } catch (error) {
+    console.error('加载设备列表失败:', error)
+    availableDevices.value = []
   }
+}
 
-  return alerts
+/**
+ * 加载可用规则列表
+ */
+async function loadAvailableRules() {
+  try {
+    const response = await alertsApi.getRules()
+    availableRules.value = response.items || []
+  } catch (error) {
+    console.error('加载报警规则失败:', error)
+    availableRules.value = []
+  }
 }
 
 /**
@@ -680,66 +638,31 @@ async function searchAlerts() {
   try {
     loading.value = true
 
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-
-    let mockAlerts = generateMockAlerts()
-
-    // 应用筛选条件
-    if (filterForm.value.severity) {
-      mockAlerts = mockAlerts.filter(alert => alert.severity === filterForm.value.severity)
+    // 构建查询参数
+    const queryParams = {
+      page: pagination.value.page,
+      size: pagination.value.size,
+      severity: filterForm.value.severity || undefined,
+      status: filterForm.value.status || undefined,
+      device_id: filterForm.value.deviceId || undefined,
+      rule_id: filterForm.value.ruleId || undefined,
+      keyword: filterForm.value.keyword || undefined,
+      start_time: filterForm.value.dateRange?.[0] || undefined,
+      end_time: filterForm.value.dateRange?.[1] || undefined,
+      sort_field: sortField.value,
+      sort_order: sortOrder.value
     }
 
-    if (filterForm.value.status) {
-      mockAlerts = mockAlerts.filter(alert => alert.status === filterForm.value.status)
-    }
-
-    if (filterForm.value.deviceId) {
-      mockAlerts = mockAlerts.filter(alert => alert.deviceId === filterForm.value.deviceId)
-    }
-
-    if (filterForm.value.ruleId) {
-      mockAlerts = mockAlerts.filter(alert => alert.ruleId === filterForm.value.ruleId)
-    }
-
-    if (filterForm.value.keyword) {
-      const keyword = filterForm.value.keyword.toLowerCase()
-      mockAlerts = mockAlerts.filter(alert => 
-        alert.title.toLowerCase().includes(keyword) ||
-        alert.description.toLowerCase().includes(keyword)
-      )
-    }
-
-    if (filterForm.value.dateRange && filterForm.value.dateRange.length === 2) {
-      const [startTime, endTime] = filterForm.value.dateRange
-      mockAlerts = mockAlerts.filter(alert => {
-        const triggerTime = new Date(alert.triggerTime)
-        return triggerTime >= new Date(startTime) && triggerTime <= new Date(endTime)
-      })
-    }
-
-    // 排序
-    mockAlerts.sort((a, b) => {
-      const aValue = a[sortField.value]
-      const bValue = b[sortField.value]
-      
-      if (sortOrder.value === 'desc') {
-        return bValue > aValue ? 1 : -1
-      } else {
-        return aValue > bValue ? 1 : -1
-      }
-    })
-
-    // 分页
-    const start = (pagination.value.page - 1) * pagination.value.size
-    const end = start + pagination.value.size
-    alertList.value = mockAlerts.slice(start, end)
-    pagination.value.total = mockAlerts.length
+    // 调用后端API
+    const response = await alertsApi.getAlertHistory(queryParams)
+    
+    alertList.value = response.items
+    pagination.value.total = response.total
 
     // 更新统计
-    updateStats(mockAlerts)
+    updateStats(response.items)
 
-    if (mockAlerts.length === 0) {
+    if (response.items.length === 0) {
       ElMessage.info('未找到符合条件的报警记录')
     }
 
@@ -793,8 +716,20 @@ async function exportAlerts() {
   try {
     exporting.value = true
     
-    // 模拟导出过程
-    await new Promise(resolve => setTimeout(resolve, 2000))
+    // 构建查询参数
+    const queryParams = {
+      severity: filterForm.value.severity || undefined,
+      status: filterForm.value.status || undefined,
+      device_id: filterForm.value.deviceId || undefined,
+      rule_id: filterForm.value.ruleId || undefined,
+      keyword: filterForm.value.keyword || undefined,
+      start_time: filterForm.value.dateRange?.[0] || undefined,
+      end_time: filterForm.value.dateRange?.[1] || undefined,
+      format: 'xlsx'
+    }
+    
+    // 调用导出API
+    await alertsApi.exportAlertHistory(queryParams)
     
     ElMessage.success('报警数据导出成功')
     
@@ -877,8 +812,9 @@ async function handleBatchAction(command: string) {
       }
     )
 
-    // 模拟批量操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用批量操作API
+    const alertIds = selectedRows.value.map(row => row.id)
+    await alertsApi.batchUpdateAlerts(alertIds, { action: command })
     
     ElMessage.success(`已${actionName} ${selectedRows.value.length} 条报警记录`)
     selectedRows.value = []
@@ -925,10 +861,11 @@ function showAlertDetail(alert: any) {
  */
 async function acknowledgeAlert(alert: any) {
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await alertsApi.updateAlert(alert.id, { status: 'acknowledged' })
     ElMessage.success('报警已确认')
     await searchAlerts()
   } catch (error) {
+    console.error('确认报警失败:', error)
     ElMessage.error('确认报警失败')
   }
 }
@@ -938,10 +875,11 @@ async function acknowledgeAlert(alert: any) {
  */
 async function resolveAlert(alert: any) {
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await alertsApi.updateAlert(alert.id, { status: 'resolved' })
     ElMessage.success('报警已标记为已解决')
     await searchAlerts()
   } catch (error) {
+    console.error('解决报警失败:', error)
     ElMessage.error('操作失败')
   }
 }
@@ -951,10 +889,11 @@ async function resolveAlert(alert: any) {
  */
 async function suppressAlert(alert: any) {
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await alertsApi.updateAlert(alert.id, { status: 'suppressed' })
     ElMessage.success('报警已抑制')
     await searchAlerts()
   } catch (error) {
+    console.error('抑制报警失败:', error)
     ElMessage.error('抑制报警失败')
   }
 }
@@ -1065,11 +1004,19 @@ watch(() => [filterForm.value.deviceId, filterForm.value.ruleId], () => {
 })
 
 // 自动刷新
+let refreshTimer: NodeJS.Timeout | null = null
 if (props.autoRefresh) {
-  setInterval(() => {
+  refreshTimer = setInterval(() => {
     searchAlerts()
   }, 30000) // 30秒刷新一次
 }
+
+// 清理定时器
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+  }
+})
 </script>
 
 <style scoped lang="scss">

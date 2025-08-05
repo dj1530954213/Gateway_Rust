@@ -10,6 +10,7 @@
 use actix_web::{HttpResponse, ResponseError};
 use serde::{Deserialize, Serialize};
 use std::fmt;
+use utoipa::ToSchema;
 
 /// API统一错误类型
 #[derive(Debug, thiserror::Error)]
@@ -45,7 +46,7 @@ pub enum ApiError {
     Database(#[from] sqlx::Error),
     
     #[error("InfluxDB error: {0}")]
-    InfluxDb(#[from] influxdb2::Error),
+    InfluxDb(String),
     
     #[error("Validation error: {0}")]
     Validation(String),
@@ -55,6 +56,12 @@ pub enum ApiError {
     
     #[error("IO error: {0}")]
     Io(#[from] std::io::Error),
+
+    #[error("Generic error: {0}")]
+    Anyhow(#[from] anyhow::Error),
+    
+    #[error("Repository error: {0}")]
+    Repository(#[from] pg_repo::RepoError),
     
     #[error("Frame bus error: {0}")]
     FrameBus(String),
@@ -215,6 +222,11 @@ impl ApiError {
         ApiError::BadRequest { message: message.into() }
     }
     
+    /// 创建服务不可用错误
+    pub fn service_unavailable(service: impl Into<String>) -> Self {
+        ApiError::ServiceUnavailable { service: service.into() }
+    }
+    
     /// 创建内部服务器错误
     pub fn internal_error(message: impl Into<String>) -> Self {
         tracing::error!("Internal error: {}", message.into());
@@ -225,6 +237,17 @@ impl ApiError {
     pub fn payload_too_large(message: impl Into<String>) -> Self {
         ApiError::PayloadTooLarge { message: message.into() }
     }
+}
+
+/// 用于OpenAPI文档的错误响应结构体
+#[derive(Debug, Serialize, Deserialize, ToSchema)]
+pub struct ErrorResponse {
+    /// 错误类型
+    pub error: String,
+    /// 错误消息
+    pub message: String,
+    /// HTTP状态码
+    pub status: u16,
 }
 
 pub type ApiResult<T> = Result<T, ApiError>;

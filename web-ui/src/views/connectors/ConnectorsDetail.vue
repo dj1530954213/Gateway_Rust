@@ -883,7 +883,7 @@ const initializeData = () => {
     errorCount: 5,
     activeConnections: 3,
     config: {
-      host: '192.168.1.100',
+      host: '',
       port: 502,
       timeout: 5000,
       unitId: 1
@@ -938,7 +938,7 @@ const generateMockEvents = () => {
       timestamp: new Date(Date.now() - 10 * 60000),
       type: 'success',
       title: '连接成功',
-      description: '与设备 192.168.1.100:502 建立连接成功'
+      description: '与设备 :502 建立连接成功'
     },
     {
       id: '2',

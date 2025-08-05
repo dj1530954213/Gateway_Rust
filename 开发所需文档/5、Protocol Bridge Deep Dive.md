@@ -98,7 +98,7 @@ bridges:
 
 ```
 
-- **listen** 支持多网卡 `"opc.tcp://192.168.1.5:4840"`
+- **listen** 支持多网卡 `"opc.tcp://[REAL_OPC_IP]:4840"`
     
 - 未列 `mapping` 时用自动生成策略。
     

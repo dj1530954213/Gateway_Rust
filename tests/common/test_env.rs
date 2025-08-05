@@ -1,17 +1,19 @@
 //! 测试环境管理器，提供完整的测试基础设施
+//! 
+//! 🚫 重要提示：本系统为生产级产品，测试必须使用真实设备和真实数据
+//! 不允许使用任何模拟PLC或虚假数据
 
 use std::path::PathBuf;
 use tempfile::TempDir;
 use anyhow::Result;
 use tokio::time::Duration;
 
-use crate::common::mock_plc::MockPLCServer;
 use config_manager::{EndpointsConfig, DriversConfig, VariablesConfig};
 
-/// 测试环境管理器
+/// 测试环境管理器（仅支持真实设备测试）
 pub struct TestEnvironment {
     temp_dir: TempDir,
-    mock_plc: Option<MockPLCServer>,
+    // 🚫 mock_plc字段已移除 - 必须使用真实PLC设备
 }
 
 impl TestEnvironment {
@@ -21,7 +23,6 @@ impl TestEnvironment {
         
         Ok(Self {
             temp_dir,
-            mock_plc: None,
         })
     }
     
@@ -30,36 +31,22 @@ impl TestEnvironment {
         self.temp_dir.path()
     }
     
-    /// 启动Mock PLC服务器
-    pub async fn start_mock_plc(&mut self) -> Result<&MockPLCServer> {
-        let plc = MockPLCServer::new().await?;
-        
-        // 设置一些默认测试数据
-        plc.set_holding_register(40001, 1000).await; // 流量计 100.0 m³/h
-        plc.set_holding_register(40002, 500).await;  // 压力计 5.0 bar
-        plc.set_holding_register(40003, 250).await;  // 温度计 25.0 °C
-        plc.set_coil(1, true).await;                 // 水泵运行
-        
-        self.mock_plc = Some(plc);
-        Ok(self.mock_plc.as_ref().unwrap())
-    }
-    
-    /// 获取Mock PLC引用
-    pub fn mock_plc(&self) -> Option<&MockPLCServer> {
-        self.mock_plc.as_ref()
-    }
+    // 🚫 Mock PLC相关方法已移除
+    // 
+    // 原有的start_mock_plc()、mock_plc()等方法已删除，
+    // 因为本系统为生产级产品，必须连接真实的PLC设备进行测试。
+    //
+    // 测试时请配置真实设备的IP地址和端口。
     
     /// 创建测试配置目录和文件
+    /// 
+    /// 🚫 注意：配置必须指向真实设备，不允许使用模拟器
     pub async fn setup_test_configs(&self) -> Result<PathBuf> {
         let config_dir = self.temp_dir.path().join("config");
         tokio::fs::create_dir_all(&config_dir).await?;
         
-        // 创建endpoints.yml
-        let endpoints_config = if let Some(plc) = &self.mock_plc {
-            self.create_endpoints_config_with_plc(plc)
-        } else {
-            self.create_default_endpoints_config()
-        };
+        // 创建endpoints.yml - 仅支持真实设备配置
+        let endpoints_config = self.create_real_device_endpoints_config();
         
         let endpoints_yaml = serde_yaml::to_string(&endpoints_config)?;
         tokio::fs::write(config_dir.join("endpoints.yml"), endpoints_yaml).await?;
@@ -77,15 +64,18 @@ impl TestEnvironment {
         Ok(config_dir)
     }
     
-    /// 创建包含Mock PLC的端点配置
-    fn create_endpoints_config_with_plc(&self, plc: &MockPLCServer) -> EndpointsConfig {
+    /// 创建真实设备端点配置
+    /// 
+    /// 🚫 仅支持真实工业设备，不允许模拟器
+    fn create_real_device_endpoints_config(&self) -> EndpointsConfig {
         use std::collections::HashMap;
         use config_manager::{EndpointCfg, PoolCfg};
         
         let mut endpoints = HashMap::new();
-        endpoints.insert("test_plc".to_string(), EndpointCfg {
-            url: plc.endpoint_url(),
-            description: "测试PLC模拟器".to_string(),
+        // 示例：真实PLC设备配置（需要根据实际设备修改）
+        endpoints.insert("production_plc".to_string(), EndpointCfg {
+            url: "tcp://[REAL_PLC_IP]:502".to_string(), // 真实PLC IP地址
+            description: "生产线主PLC - 西门子S7-1200".to_string(),
             timeout: Duration::from_secs(5),
             pool: PoolCfg {
                 min_connections: 1,
@@ -100,23 +90,12 @@ impl TestEnvironment {
         EndpointsConfig { endpoints }
     }
     
-    /// 创建默认端点配置
-    fn create_default_endpoints_config(&self) -> EndpointsConfig {
-        use std::collections::HashMap;
-        use config_manager::{EndpointCfg, PoolCfg};
-        
-        let mut endpoints = HashMap::new();
-        endpoints.insert("test_plc".to_string(), EndpointCfg {
-            url: "tcp://127.0.0.1:5020".to_string(),
-            description: "测试端点".to_string(),
-            timeout: Duration::from_secs(5),
-            pool: PoolCfg::default(),
-            tls: None,
-            serial: None,
-        });
-        
-        EndpointsConfig { endpoints }
-    }
+    // 🚫 默认端点配置函数已移除
+    // 
+    // 原有的create_default_endpoints_config()函数已删除，
+    // 因为它包含localhost测试端点，这不符合生产级标准。
+    // 
+    // 所有端点配置必须指向真实的工业设备。
     
     /// 创建驱动配置
     fn create_drivers_config(&self) -> DriversConfig {
@@ -267,17 +246,21 @@ mod tests {
     
     #[tokio::test]
     async fn test_environment_setup() {
-        let mut env = TestEnvironment::new().unwrap();
+        let env = TestEnvironment::new().unwrap();
         
-        // 启动Mock PLC
-        let plc = env.start_mock_plc().await.unwrap();
-        assert!(plc.get_holding_register(40001).await.is_some());
+        // 🚫 Mock PLC测试已移除 - 必须使用真实设备
+        // 原有的start_mock_plc()调用已删除，因为本系统为生产级产品
         
-        // 创建配置文件
+        // 创建配置文件（仅真实设备配置）
         let config_dir = env.setup_test_configs().await.unwrap();
         assert!(config_dir.join("endpoints.yml").exists());
         assert!(config_dir.join("drivers.yml").exists());
         assert!(config_dir.join("variables.yml").exists());
+        
+        // 验证配置文件内容指向真实设备
+        let endpoints_content = tokio::fs::read_to_string(config_dir.join("endpoints.yml")).await.unwrap();
+        assert!(endpoints_content.contains("[REAL_PLC_IP]")); // 真实PLC IP
+        assert!(!endpoints_content.contains("localhost")); // 不允许本地模拟
     }
     
     #[test]

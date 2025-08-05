@@ -528,51 +528,10 @@ import {
   MoreFilled, RefreshRight, Download, CircleCheck, Delete,
   FolderOpened, WarningFilled
 } from '@element-plus/icons-vue'
+import { backupApi, wsClient } from '@/api'
+import type { BackupItem, BackupStats, BackupCreateReq, BackupSchedule, BackupOperation } from '@/api/backup'
 
-interface BackupItem {
-  id: string
-  name: string
-  type: 'full' | 'config' | 'data' | 'incremental'
-  status: 'success' | 'failed' | 'running' | 'pending'
-  size: number
-  createdAt: string
-  compressionRatio: number
-  encrypted: boolean
-  contents: Array<{
-    name: string
-    size: number
-  }>
-  verification?: {
-    md5: string
-    integrity: boolean
-    lastVerified: string
-  }
-}
-
-interface BackupStats {
-  totalBackups: number
-  totalSize: number
-  successRate: number
-  scheduledTasks: number
-}
-
-interface Operation {
-  id: string
-  name: string
-  type: string
-  progress: number
-  status: 'running' | 'completed' | 'error'
-  currentStep: string
-}
-
-interface Schedule {
-  id: string
-  name: string
-  backupType: string
-  cron: string
-  enabled: boolean
-  retention: number
-}
+// 使用从 API 导入的类型
 
 // 响应式数据
 const loading = ref(false)
@@ -593,8 +552,8 @@ const createBackupForm = ref<FormInstance>()
 
 // 备份数据
 const backups = ref<BackupItem[]>([])
-const activeOperations = ref<Operation[]>([])
-const schedules = ref<Schedule[]>([])
+const activeOperations = ref<BackupOperation[]>([])
+const schedules = ref<BackupSchedule[]>([])
 
 // 统计信息
 const backupStats = ref<BackupStats>({
@@ -730,70 +689,21 @@ const createBackup = async () => {
     await createBackupForm.value.validate()
     creating.value = true
 
-    // 模拟备份创建过程
-    const operationId = `backup_${Date.now()}`
-    const operation: Operation = {
-      id: operationId,
+    const backupRequest: BackupCreateReq = {
       name: createBackupData.name,
-      type: '创建备份',
-      progress: 0,
-      status: 'running',
-      currentStep: '初始化备份...'
-    }
-    
-    activeOperations.value.push(operation)
-
-    // 模拟进度更新
-    const progressSteps = [
-      { progress: 10, step: '收集备份内容...' },
-      { progress: 30, step: '压缩数据...' },
-      { progress: 60, step: '加密处理...' },
-      { progress: 85, step: '生成校验值...' },
-      { progress: 100, step: '备份完成' }
-    ]
-
-    for (const step of progressSteps) {
-      await new Promise(resolve => setTimeout(resolve, 800))
-      operation.progress = step.progress
-      operation.currentStep = step.step
+      type: createBackupData.type,
+      contents: createBackupData.contents,
+      compress: createBackupData.compress,
+      encrypt: createBackupData.encrypt,
+      password: createBackupData.password,
+      description: createBackupData.description
     }
 
-    operation.status = 'completed'
-
-    // 添加到备份列表
-    const newBackup: BackupItem = {
-      id: operationId,
-      name: createBackupData.name,
-      type: createBackupData.type as any,
-      status: 'success',
-      size: Math.floor(Math.random() * 1000000000) + 50000000,
-      createdAt: new Date().toISOString(),
-      compressionRatio: createBackupData.compress ? Math.floor(Math.random() * 30) + 60 : 100,
-      encrypted: createBackupData.encrypt,
-      contents: createBackupData.contents.map(content => ({
-        name: content,
-        size: Math.floor(Math.random() * 100000000) + 1000000
-      })),
-      verification: {
-        md5: Array.from({length: 32}, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-        integrity: true,
-        lastVerified: new Date().toISOString()
-      }
-    }
-
-    backups.value.unshift(newBackup)
-    updateStats()
-
-    // 清理操作记录
-    setTimeout(() => {
-      const index = activeOperations.value.findIndex(op => op.id === operationId)
-      if (index > -1) {
-        activeOperations.value.splice(index, 1)
-      }
-    }, 2000)
-
+    await backupApi.create(backupRequest)
     ElMessage.success('备份创建成功')
     closeCreateBackupDialog()
+    await loadBackups()
+    await loadOperations()
   } catch (error) {
     console.error('创建备份失败:', error)
     ElMessage.error('创建备份失败')
@@ -815,45 +725,14 @@ const confirmRestore = async () => {
   try {
     restoring.value = true
     
-    // 模拟恢复过程
-    const operationId = `restore_${Date.now()}`
-    const operation: Operation = {
-      id: operationId,
-      name: `恢复 ${restoreTarget.value.name}`,
-      type: '恢复备份',
-      progress: 0,
-      status: 'running',
-      currentStep: '准备恢复...'
-    }
-    
-    activeOperations.value.push(operation)
-
-    const progressSteps = [
-      { progress: 15, step: '验证备份完整性...' },
-      { progress: 30, step: '解密备份文件...' },
-      { progress: 50, step: '停止系统服务...' },
-      { progress: 70, step: '恢复数据...' },
-      { progress: 90, step: '重启系统服务...' },
-      { progress: 100, step: '恢复完成' }
-    ]
-
-    for (const step of progressSteps) {
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      operation.progress = step.progress
-      operation.currentStep = step.step
-    }
-
-    operation.status = 'completed'
-
-    setTimeout(() => {
-      const index = activeOperations.value.findIndex(op => op.id === operationId)
-      if (index > -1) {
-        activeOperations.value.splice(index, 1)
-      }
-    }, 3000)
+    await backupApi.restore({
+      backupId: restoreTarget.value.id,
+      password: restorePassword.value
+    })
 
     ElMessage.success('系统恢复成功')
     restoreDialogVisible.value = false
+    await loadOperations()
   } catch (error) {
     console.error('恢复失败:', error)
     ElMessage.error('恢复失败')
@@ -862,30 +741,38 @@ const confirmRestore = async () => {
   }
 }
 
-const downloadBackup = (backup: BackupItem) => {
-  ElMessage.info(`开始下载备份: ${backup.name}`)
-  // 实际实现中这里会触发文件下载
+const downloadBackup = async (backup: BackupItem) => {
+  try {
+    ElMessage.info(`开始下载备份: ${backup.name}`)
+    const response = await backupApi.download(backup.id)
+    
+    // 创建下载链接
+    const url = window.URL.createObjectURL(new Blob([response.data]))
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `${backup.name}.backup`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
+    ElMessage.success('备份下载完成')
+  } catch (error) {
+    console.error('下载备份失败:', error)
+    ElMessage.error('下载备份失败')
+  }
 }
 
 const verifyBackup = async (backup: BackupItem) => {
   try {
     ElMessage.info('开始验证备份完整性...')
     
-    // 模拟验证过程
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    
-    if (backup.verification) {
-      backup.verification.lastVerified = new Date().toISOString()
-      backup.verification.integrity = Math.random() > 0.1 // 90%成功率
-    }
-
-    if (backup.verification?.integrity) {
-      ElMessage.success('备份验证通过')
-    } else {
-      ElMessage.error('备份验证失败')
-    }
+    await backupApi.verify(backup.id)
+    ElMessage.success('备份验证通过')
+    await loadBackups()
   } catch (error) {
-    ElMessage.error('验证失败')
+    console.error('验证备份失败:', error)
+    ElMessage.error('备份验证失败')
   }
 }
 
@@ -901,28 +788,31 @@ const deleteBackup = async (backup: BackupItem) => {
       }
     )
 
-    const index = backups.value.findIndex(b => b.id === backup.id)
-    if (index > -1) {
-      backups.value.splice(index, 1)
-      updateStats()
-      
-      if (selectedBackup.value?.id === backup.id) {
-        selectedBackup.value = null
-      }
-      
-      ElMessage.success('备份删除成功')
+    await backupApi.delete(backup.id)
+    
+    if (selectedBackup.value?.id === backup.id) {
+      selectedBackup.value = null
     }
+    
+    ElMessage.success('备份删除成功')
+    await loadBackups()
+    await loadStats()
   } catch (error) {
-    // 用户取消删除
+    if (error !== 'cancel') {
+      console.error('删除备份失败:', error)
+      ElMessage.error('删除备份失败')
+    }
   }
 }
 
-const cancelOperation = (operationId: string) => {
-  const operation = activeOperations.value.find(op => op.id === operationId)
-  if (operation) {
-    operation.status = 'error'
-    operation.currentStep = '操作已取消'
+const cancelOperation = async (operationId: string) => {
+  try {
+    await backupApi.cancelOperation(operationId)
     ElMessage.warning('操作已取消')
+    await loadOperations()
+  } catch (error) {
+    console.error('取消操作失败:', error)
+    ElMessage.error('取消操作失败')
   }
 }
 
@@ -949,45 +839,55 @@ const updateCronExpression = () => {
   }
 }
 
-const createSchedule = () => {
+const createSchedule = async () => {
   if (!newSchedule.name) {
     ElMessage.error('请输入任务名称')
     return
   }
 
-  const schedule: Schedule = {
-    id: `schedule_${Date.now()}`,
-    name: newSchedule.name,
-    backupType: newSchedule.backupType,
-    cron: newSchedule.cron,
-    enabled: true,
-    retention: newSchedule.retention
+  try {
+    await backupApi.createSchedule({
+      name: newSchedule.name,
+      backupType: newSchedule.backupType,
+      cron: newSchedule.cron,
+      retention: newSchedule.retention
+    })
+
+    Object.assign(newSchedule, {
+      name: '',
+      backupType: 'full',
+      frequency: 'daily',
+      time: '02:00',
+      cron: '0 2 * * *',
+      retention: 7
+    })
+
+    ElMessage.success('计划任务创建成功')
+    await loadSchedules()
+    await loadStats()
+  } catch (error) {
+    console.error('创建计划任务失败:', error)
+    ElMessage.error('创建计划任务失败')
   }
-
-  schedules.value.push(schedule)
-  updateStats()
-
-  Object.assign(newSchedule, {
-    name: '',
-    backupType: 'full',
-    frequency: 'daily',
-    time: '02:00',
-    cron: '0 2 * * *',
-    retention: 7
-  })
-
-  ElMessage.success('计划任务创建成功')
 }
 
-const toggleSchedule = (schedule: Schedule) => {
-  ElMessage.success(`计划任务已${schedule.enabled ? '启用' : '禁用'}`)
+const toggleSchedule = async (schedule: BackupSchedule) => {
+  try {
+    await backupApi.toggleSchedule(schedule.id, schedule.enabled)
+    ElMessage.success(`计划任务已${schedule.enabled ? '启用' : '禁用'}`)
+  } catch (error) {
+    // 回滚状态
+    schedule.enabled = !schedule.enabled
+    console.error('切换计划任务状态失败:', error)
+    ElMessage.error('切换计划任务状态失败')
+  }
 }
 
 const editSchedule = (schedule: Schedule) => {
   ElMessage.info('编辑功能开发中...')
 }
 
-const deleteSchedule = async (schedule: Schedule) => {
+const deleteSchedule = async (schedule: BackupSchedule) => {
   try {
     await ElMessageBox.confirm(
       `确定要删除计划任务 "${schedule.name}" 吗？`,
@@ -997,118 +897,105 @@ const deleteSchedule = async (schedule: Schedule) => {
       }
     )
 
-    const index = schedules.value.findIndex(s => s.id === schedule.id)
-    if (index > -1) {
-      schedules.value.splice(index, 1)
-      updateStats()
-      ElMessage.success('计划任务删除成功')
+    await backupApi.deleteSchedule(schedule.id)
+    ElMessage.success('计划任务删除成功')
+    await loadSchedules()
+    await loadStats()
+  } catch (error) {
+    if (error !== 'cancel') {
+      console.error('删除计划任务失败:', error)
+      ElMessage.error('删除计划任务失败')
+    }
+  }
+}
+
+const loadStats = async () => {
+  try {
+    const response = await backupApi.getStats()
+    backupStats.value = response.data
+  } catch (error) {
+    console.error('加载统计信息失败:', error)
+  }
+}
+
+// 数据加载函数
+const loadBackups = async () => {
+  try {
+    loading.value = true
+    const response = await backupApi.list({
+      search: searchQuery.value,
+      type: selectedType.value,
+      page: 1,
+      size: 100
+    })
+    backups.value = response.data.items || response.data
+    
+    // 选中第一个备份
+    if (backups.value.length > 0 && !selectedBackup.value) {
+      selectedBackup.value = backups.value[0]
     }
   } catch (error) {
-    // 用户取消
+    console.error('加载备份列表失败:', error)
+    ElMessage.error('加载备份列表失败')
+  } finally {
+    loading.value = false
   }
 }
 
-const updateStats = () => {
-  backupStats.value.totalBackups = backups.value.length
-  backupStats.value.totalSize = backups.value.reduce((sum, backup) => sum + backup.size, 0)
-  backupStats.value.scheduledTasks = schedules.value.filter(s => s.enabled).length
-  
-  const successCount = backups.value.filter(b => b.status === 'success').length
-  backupStats.value.successRate = backups.value.length > 0 ? 
-    Math.round((successCount / backups.value.length) * 100) : 100
+const loadOperations = async () => {
+  try {
+    const response = await backupApi.getOperations()
+    activeOperations.value = response.data
+  } catch (error) {
+    console.error('加载操作列表失败:', error)
+  }
 }
 
-// 模拟数据加载
-const loadMockData = () => {
-  // 生成模拟备份数据
-  const mockBackups: BackupItem[] = [
-    {
-      id: 'backup_1',
-      name: 'Daily_Backup_2024_01_20',
-      type: 'full',
-      status: 'success',
-      size: 856000000,
-      createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-      compressionRatio: 75,
-      encrypted: true,
-      contents: [
-        { name: '系统配置', size: 12000000 },
-        { name: '驱动配置', size: 8500000 },
-        { name: '历史数据', size: 800000000 },
-        { name: '用户数据', size: 35500000 }
-      ],
-      verification: {
-        md5: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6',
-        integrity: true,
-        lastVerified: new Date().toISOString()
-      }
-    },
-    {
-      id: 'backup_2',
-      name: 'Config_Backup_2024_01_19',
-      type: 'config',
-      status: 'success',
-      size: 45000000,
-      createdAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
-      compressionRatio: 88,
-      encrypted: false,
-      contents: [
-        { name: '系统配置', size: 12000000 },
-        { name: '驱动配置', size: 8500000 },
-        { name: '连接器配置', size: 15000000 },
-        { name: '告警规则', size: 9500000 }
-      ]
-    },
-    {
-      id: 'backup_3',
-      name: 'Emergency_Backup_2024_01_18',
-      type: 'full',
-      status: 'failed',
-      size: 0,
-      createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
-      compressionRatio: 0,
-      encrypted: false,
-      contents: []
-    }
-  ]
-
-  // 生成模拟计划任务
-  const mockSchedules: Schedule[] = [
-    {
-      id: 'schedule_1',
-      name: '每日完整备份',
-      backupType: 'full',
-      cron: '0 2 * * *',
-      enabled: true,
-      retention: 7
-    },
-    {
-      id: 'schedule_2',
-      name: '配置备份',
-      backupType: 'config',
-      cron: '0 12 * * *',
-      enabled: true,
-      retention: 30
-    }
-  ]
-
-  backups.value = mockBackups
-  schedules.value = mockSchedules
-  updateStats()
-
-  // 选中第一个备份
-  if (mockBackups.length > 0) {
-    selectedBackup.value = mockBackups[0]
+const loadSchedules = async () => {
+  try {
+    const response = await backupApi.getSchedules()
+    schedules.value = response.data
+  } catch (error) {
+    console.error('加载计划任务失败:', error)
   }
+}
+
+const initializeData = async () => {
+  await Promise.all([
+    loadBackups(),
+    loadStats(),
+    loadOperations(),
+    loadSchedules()
+  ])
 }
 
 // 生命周期
-onMounted(() => {
-  loadMockData()
+onMounted(async () => {
+  await initializeData()
+  
+  // 设置WebSocket监听器
+  wsClient.on('backup_progress', (data: BackupOperation) => {
+    const index = activeOperations.value.findIndex(op => op.id === data.id)
+    if (index > -1) {
+      activeOperations.value[index] = data
+    } else {
+      activeOperations.value.push(data)
+    }
+  })
+  
+  wsClient.on('backup_completed', async (data: { operationId: string }) => {
+    const index = activeOperations.value.findIndex(op => op.id === data.operationId)
+    if (index > -1) {
+      activeOperations.value.splice(index, 1)
+    }
+    await loadBackups()
+    await loadStats()
+  })
 })
 
 onUnmounted(() => {
-  // 清理定时器等资源
+  wsClient.off('backup_progress')
+  wsClient.off('backup_completed')
 })
 </script>
 

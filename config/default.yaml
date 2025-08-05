@@ -2,14 +2,13 @@
 # 所有环境共用基线配置，不包含敏感信息
 
 # HTTP服务配置
-http_addr: "0.0.0.0:8080"
-metrics_addr: "0.0.0.0:8081" 
+http_addr: "0.0.0.0:50010"
+metrics_addr: "0.0.0.0:50011" 
 ws_path: "/ws"
 
-# CORS跨域配置
+# CORS跨域配置 - 测试期间允许所有来源
 cors_allowed:
-  - "http://localhost:5173"
-  - "http://127.0.0.1:5173"
+  - "*"
 
 # 数据库配置（使用默认值）
 pg_dsn: "postgres://postgres:postgres@localhost:5432/iot"

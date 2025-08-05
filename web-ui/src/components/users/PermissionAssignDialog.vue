@@ -545,12 +545,14 @@ const permissionChanges = computed(() => {
  */
 async function initializeData() {
   try {
-    // 生成模拟数据
-    availableRoles.value = generateMockRoles()
-    departments.value = generateMockDepartments()
+    // 从API加载真实数据
+    await Promise.all([
+      loadAvailableRoles(),
+      loadDepartments()
+    ])
     
     // 加载用户权限
-    loadUserPermissions()
+    await loadUserPermissions()
     
   } catch (error) {
     console.error('初始化权限分配对话框失败:', error)
@@ -561,36 +563,49 @@ async function initializeData() {
 /**
  * 加载用户权限
  */
-function loadUserPermissions() {
-  // 模拟从用户角色和个人权限加载数据
-  const userRole = availableRoles.value.find(r => r.id === props.userData?.role)
-  const rolePermissions = userRole?.permissions || []
-  
-  // 更新权限状态
-  permissionCategories.value.forEach(category => {
-    category.permissions.forEach(permission => {
-      const rolePermission = rolePermissions.find((p: any) => p.id === permission.id)
-      
-      if (rolePermission) {
-        permission.granted = rolePermission.granted
-        permission.fromRole = true
-        permission.canOverride = rolePermission.canOverride !== false
-      } else {
-        permission.granted = false
-        permission.fromRole = false
-        permission.canOverride = true
-      }
-      
-      // 模拟一些个人权限
-      if (Math.random() > 0.8) {
-        permission.fromUser = true
-        permission.granted = true
+async function loadUserPermissions() {
+  try {
+    // 从真实API加载用户权限数据
+    const response = await fetch(`/api/v1/users/${props.userData?.id}/permissions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
       }
     })
-  })
-  
-  // 保存原始状态
-  saveOriginalState()
+    
+    if (response.ok) {
+      const userPermissions = await response.json()
+      
+      // 更新权限状态
+      permissionCategories.value.forEach(category => {
+        category.permissions.forEach(permission => {
+          const userPermission = userPermissions.find((p: any) => p.id === permission.id)
+          
+          if (userPermission) {
+            permission.granted = userPermission.granted
+            permission.fromRole = userPermission.fromRole || false
+            permission.fromUser = userPermission.fromUser || false
+            permission.canOverride = userPermission.canOverride !== false
+          } else {
+            permission.granted = false
+            permission.fromRole = false
+            permission.fromUser = false
+            permission.canOverride = true
+          }
+        })
+      })
+    } else {
+      console.error('加载用户权限失败:', response.statusText)
+      ElMessage.error('加载用户权限失败')
+    }
+    
+    // 保存原始状态
+    saveOriginalState()
+    
+  } catch (error) {
+    console.error('加载用户权限失败:', error)
+    ElMessage.error('加载用户权限失败')
+  }
 }
 
 /**
@@ -609,58 +624,51 @@ function saveOriginalState() {
 }
 
 /**
- * 生成模拟角色数据
+ * 从API加载可用角色
  */
-function generateMockRoles() {
-  return [
-    {
-      id: 'admin',
-      name: '系统管理员',
-      permissions: [
-        { id: 'device_read', granted: true, canOverride: false },
-        { id: 'device_write', granted: true, canOverride: true },
-        { id: 'system_config', granted: true, canOverride: false },
-        { id: 'user_manage', granted: true, canOverride: true },
-        { id: 'data_read', granted: true, canOverride: false },
-        { id: 'data_export', granted: true, canOverride: true },
-        { id: 'alert_read', granted: true, canOverride: false },
-        { id: 'alert_ack', granted: true, canOverride: true }
-      ]
-    },
-    {
-      id: 'operator',
-      name: '操作员',
-      permissions: [
-        { id: 'device_read', granted: true, canOverride: false },
-        { id: 'device_write', granted: true, canOverride: true },
-        { id: 'data_read', granted: true, canOverride: false },
-        { id: 'alert_read', granted: true, canOverride: false },
-        { id: 'alert_ack', granted: true, canOverride: true }
-      ]
-    },
-    {
-      id: 'viewer',
-      name: '观察员',
-      permissions: [
-        { id: 'device_read', granted: true, canOverride: false },
-        { id: 'data_read', granted: true, canOverride: false },
-        { id: 'alert_read', granted: true, canOverride: false }
-      ]
+async function loadAvailableRoles() {
+  try {
+    const response = await fetch('/api/v1/roles', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      availableRoles.value = await response.json()
+    } else {
+      availableRoles.value = []
+      console.error('加载角色列表失败:', response.statusText)
     }
-  ]
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    availableRoles.value = []
+  }
 }
 
 /**
- * 生成模拟部门数据
+ * 从API加载部门数据
  */
-function generateMockDepartments() {
-  return [
-    { id: 'it', name: 'IT部门' },
-    { id: 'production', name: '生产部门' },
-    { id: 'maintenance', name: '维护部门' },
-    { id: 'quality', name: '质量部门' },
-    { id: 'management', name: '管理部门' }
-  ]
+async function loadDepartments() {
+  try {
+    const response = await fetch('/api/v1/users/departments', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      departments.value = await response.json()
+    } else {
+      departments.value = []
+      console.error('加载部门列表失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载部门列表失败:', error)
+    departments.value = []
+  }
 }
 
 /**
@@ -909,9 +917,7 @@ async function savePermissions() {
   try {
     saving.value = true
     
-    // 模拟保存操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    // 准备要保存的权限数据
     const permissionData = {
       userId: props.userData?.id,
       permissions: []
@@ -929,14 +935,28 @@ async function savePermissions() {
       })
     })
     
-    emit('save', permissionData)
-    dialogVisible.value = false
+    // 调用真实API保存权限
+    const response = await fetch(`/api/v1/users/${props.userData?.id}/permissions`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(permissionData)
+    })
     
-    ElMessage.success('权限保存成功')
+    if (response.ok) {
+      const result = await response.json()
+      emit('save', result)
+      dialogVisible.value = false
+      ElMessage.success('权限保存成功')
+    } else {
+      const errorData = await response.json()
+      throw new Error(errorData.message || '保存失败')
+    }
     
   } catch (error) {
     console.error('保存权限失败:', error)
-    ElMessage.error('保存权限失败')
+    ElMessage.error(`保存权限失败: ${error.message}`)
   } finally {
     saving.value = false
   }

@@ -529,6 +529,7 @@ import {
   Clock, Refresh, Download, Setting, Search, Warning, Bell, Timer,
   Check, List, User
 } from '@element-plus/icons-vue'
+import { alertsApi, wsClient } from '../../api'
 // import StatCard from '../../components/common/StatCard.vue' // 暂时注释掉不存在的组件
 // import AlertSeverity from '../../components/business/AlertSeverity.vue' // 暂时注释掉不存在的组件
 // import AlertStatus from '../../components/business/AlertStatus.vue' // 暂时注释掉不存在的组件
@@ -545,14 +546,14 @@ const refreshTimer = ref<NodeJS.Timeout | null>(null)
 
 // 统计数据
 const stats = ref({
-  todayAlerts: 156,
-  todayTrend: 12.5,
-  weekAlerts: 892,
-  weekTrend: -8.3,
-  avgResponseTime: 45,
-  responseTrend: -15.2,
-  handleRate: 94.8,
-  handleTrend: 3.2
+  todayAlerts: 0,
+  todayTrend: 0,
+  weekAlerts: 0,
+  weekTrend: 0,
+  avgResponseTime: 0,
+  responseTrend: 0,
+  handleRate: 0,
+  handleTrend: 0
 })
 
 // 筛选条件
@@ -590,111 +591,10 @@ const displaySettings = ref({
 })
 
 // 告警源列表
-const alertSources = ref([
-  { id: 'driver_001', name: 'Modbus TCP Driver' },
-  { id: 'driver_002', name: 'OPC UA Driver' },
-  { id: 'conn_001', name: 'PLC Connection 1' },
-  { id: 'conn_002', name: 'SCADA Connection' },
-  { id: 'system', name: '系统监控' }
-])
+const alertSources = ref<any[]>([])
 
 // 告警历史数据
-const alertHistory = ref([
-  {
-    id: 'AL001234',
-    severity: 'critical',
-    type: 'datapoint',
-    title: '温度传感器超出安全范围',
-    description: '温度传感器 T001 读数超出设定安全范围 (85°C)',
-    source: 'Modbus TCP Driver',
-    status: 'handled',
-    priority: 'high',
-    triggered_at: '2024-01-20 14:30:25',
-    resolved_at: '2024-01-20 14:45:10',
-    acknowledged: true,
-    acknowledged_by: 'admin',
-    acknowledged_at: '2024-01-20 14:32:15',
-    operator: '张工程师',
-    duration: 885, // 秒
-    value: 87.5,
-    threshold: 85,
-    tags: ['temperature', 'safety', 'critical']
-  },
-  {
-    id: 'AL001235',
-    severity: 'major',
-    type: 'driver',
-    title: 'OPC UA 连接异常',
-    description: 'OPC UA 驱动连接到服务器失败，连续重试 3 次失败',
-    source: 'OPC UA Driver',
-    status: 'handling',
-    priority: 'high',
-    triggered_at: '2024-01-20 13:25:10',
-    resolved_at: null,
-    acknowledged: true,
-    acknowledged_by: 'operator1',
-    acknowledged_at: '2024-01-20 13:26:30',
-    operator: '李技术员',
-    duration: 4515,
-    tags: ['connection', 'opc-ua', 'driver']
-  },
-  {
-    id: 'AL001236',
-    severity: 'warning',
-    type: 'connection',
-    title: '网络延迟过高',
-    description: 'PLC 连接网络延迟超过 500ms，可能影响数据采集',
-    source: 'PLC Connection 1',
-    status: 'unhandled',
-    priority: 'medium',
-    triggered_at: '2024-01-20 12:15:45',
-    resolved_at: null,
-    acknowledged: false,
-    acknowledged_by: null,
-    acknowledged_at: null,
-    operator: null,
-    duration: 8745,
-    value: 625,
-    threshold: 500,
-    tags: ['network', 'latency', 'performance']
-  },
-  {
-    id: 'AL001237',
-    severity: 'info',
-    type: 'system',
-    title: '系统维护完成',
-    description: '定期系统维护任务已完成，所有服务恢复正常',
-    source: '系统监控',
-    status: 'handled',
-    priority: 'low',
-    triggered_at: '2024-01-20 10:00:00',
-    resolved_at: '2024-01-20 10:05:30',
-    acknowledged: true,
-    acknowledged_by: 'system',
-    acknowledged_at: '2024-01-20 10:00:05',
-    operator: 'System',
-    duration: 330,
-    tags: ['maintenance', 'system', 'info']
-  },
-  {
-    id: 'AL001238',
-    severity: 'critical',
-    type: 'datapoint',
-    title: '压力传感器故障',
-    description: '压力传感器 P003 无数据返回，设备可能已损坏',
-    source: 'Modbus RTU Driver',
-    status: 'handled',
-    priority: 'high',
-    triggered_at: '2024-01-20 09:30:15',
-    resolved_at: '2024-01-20 11:20:45',
-    acknowledged: true,
-    acknowledged_by: 'admin',
-    acknowledged_at: '2024-01-20 09:32:00',
-    operator: '王维修工',
-    duration: 6630,
-    tags: ['sensor', 'pressure', 'hardware']
-  }
-])
+const alertHistory = ref<any[]>([])
 
 // 计算属性
 const filteredHistory = computed(() => {
@@ -783,26 +683,67 @@ const filteredHistory = computed(() => {
 const refreshData = async () => {
   loading.value = true
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 更新统计数据
-    stats.value = {
-      todayAlerts: Math.floor(Math.random() * 200) + 100,
-      todayTrend: (Math.random() - 0.5) * 30,
-      weekAlerts: Math.floor(Math.random() * 1000) + 500,
-      weekTrend: (Math.random() - 0.5) * 20,
-      avgResponseTime: Math.floor(Math.random() * 60) + 20,
-      responseTrend: (Math.random() - 0.5) * 40,
-      handleRate: 90 + Math.random() * 10,
-      handleTrend: (Math.random() - 0.5) * 10
-    }
-
+    await Promise.all([
+      loadAlertHistory(),
+      loadAlertStats(),
+      loadAlertSources()
+    ])
     ElMessage.success('数据刷新成功')
   } catch (error) {
+    console.error('刷新数据失败:', error)
     ElMessage.error('数据刷新失败')
   } finally {
     loading.value = false
+  }
+}
+
+// 加载告警历史数据
+const loadAlertHistory = async () => {
+  try {
+    const params = {
+      page: pagination.value.page,
+      size: pagination.value.size,
+      ...filters.value,
+      sort_by: sortInfo.value.prop,
+      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc'
+    }
+    const response = await alertsApi.getHistory(params)
+    alertHistory.value = response.data.items || []
+    pagination.value.total = response.data.total || 0
+  } catch (error) {
+    console.error('加载告警历史失败:', error)
+    alertHistory.value = []
+    pagination.value.total = 0
+  }
+}
+
+// 加载告警统计数据
+const loadAlertStats = async () => {
+  try {
+    const response = await alertsApi.getStats()
+    stats.value = response.data || {
+      todayAlerts: 0,
+      todayTrend: 0,
+      weekAlerts: 0,
+      weekTrend: 0,
+      avgResponseTime: 0,
+      responseTrend: 0,
+      handleRate: 0,
+      handleTrend: 0
+    }
+  } catch (error) {
+    console.error('加载告警统计失败:', error)
+  }
+}
+
+// 加载告警源列表
+const loadAlertSources = async () => {
+  try {
+    const response = await alertsApi.getSources()
+    alertSources.value = response.data || []
+  } catch (error) {
+    console.error('加载告警源失败:', error)
+    alertSources.value = []
   }
 }
 
@@ -812,6 +753,7 @@ const handleSearch = () => {
 
 const handleFilter = () => {
   pagination.value.page = 1
+  loadAlertHistory()
 }
 
 const resetFilters = () => {
@@ -835,15 +777,18 @@ const handleSelectionChange = (selection: any[]) => {
 
 const handleSortChange = ({ prop, order }: any) => {
   sortInfo.value = { prop, order }
+  loadAlertHistory()
 }
 
 const handlePageChange = (page: number) => {
   pagination.value.page = page
+  loadAlertHistory()
 }
 
 const handlePageSizeChange = (size: number) => {
   pagination.value.size = size
   pagination.value.page = 1
+  loadAlertHistory()
 }
 
 const showAlertDetail = (alert: any) => {
@@ -853,9 +798,9 @@ const showAlertDetail = (alert: any) => {
 
 const acknowledgeAlert = async (alertId: string) => {
   try {
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
+    await alertsApi.acknowledge(alertId)
     
+    // 更新本地数据
     const alert = alertHistory.value.find(a => a.id === alertId)
     if (alert) {
       alert.acknowledged = true
@@ -868,6 +813,7 @@ const acknowledgeAlert = async (alertId: string) => {
       detailDialogVisible.value = false
     }
   } catch (error) {
+    console.error('确认告警失败:', error)
     ElMessage.error('确认告警失败')
   }
 }
@@ -888,9 +834,10 @@ const batchAcknowledge = async () => {
       }
     )
 
-    // 模拟批量操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const alertIds = selectedAlerts.value.map(alert => alert.id)
+    await alertsApi.batchAcknowledge(alertIds)
     
+    // 更新本地数据
     selectedAlerts.value.forEach(alert => {
       const originalAlert = alertHistory.value.find(a => a.id === alert.id)
       if (originalAlert) {
@@ -903,16 +850,32 @@ const batchAcknowledge = async () => {
     selectedAlerts.value = []
     ElMessage.success('批量确认成功')
   } catch (error) {
-    // 用户取消操作
+    if (error !== 'cancel') {
+      console.error('批量确认失败:', error)
+      ElMessage.error('批量确认失败')
+    }
   }
 }
 
 const batchExport = async () => {
   try {
-    // 模拟导出操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const alertIds = selectedAlerts.value.map(alert => alert.id)
+    const response = await alertsApi.exportHistory(alertIds)
+    
+    // 创建下载链接
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `alert_history_${new Date().getTime()}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
     ElMessage.success('导出成功')
   } catch (error) {
+    console.error('导出失败:', error)
     ElMessage.error('导出失败')
   }
 }
@@ -929,25 +892,45 @@ const batchDelete = async () => {
       }
     )
 
-    // 模拟批量删除
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const alertIds = selectedAlerts.value.map(alert => alert.id)
+    await alertsApi.batchDelete(alertIds)
     
-    const idsToDelete = selectedAlerts.value.map(alert => alert.id)
-    alertHistory.value = alertHistory.value.filter(alert => !idsToDelete.includes(alert.id))
+    // 从本地数据中移除
+    alertHistory.value = alertHistory.value.filter(alert => !alertIds.includes(alert.id))
     
     selectedAlerts.value = []
     ElMessage.success('批量删除成功')
   } catch (error) {
-    // 用户取消操作
+    if (error !== 'cancel') {
+      console.error('批量删除失败:', error)
+      ElMessage.error('批量删除失败')
+    }
   }
 }
 
 const exportHistory = async () => {
   try {
-    // 模拟导出操作
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    const params = {
+      ...filters.value,
+      sort_by: sortInfo.value.prop,
+      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc'
+    }
+    const response = await alertsApi.exportHistory([], params)
+    
+    // 创建下载链接
+    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `alert_history_${new Date().getTime()}.xlsx`
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    window.URL.revokeObjectURL(url)
+    
     ElMessage.success('告警历史已导出到本地文件')
   } catch (error) {
+    console.error('导出失败:', error)
     ElMessage.error('导出失败')
   }
 }
@@ -1062,14 +1045,53 @@ const getSeverityClass = (severity: string) => {
 }
 
 // 生命周期
-onMounted(() => {
-  refreshData()
+onMounted(async () => {
+  await refreshData()
+  
+  // 连接WebSocket监听实时告警更新
+  try {
+    if (!wsClient.isConnected) {
+      await wsClient.connect()
+    }
+    
+    // 监听告警事件
+    wsClient.on('alert_triggered', (data: any) => {
+      alertHistory.value.unshift(data)
+      pagination.value.total += 1
+      ElMessage.warning(`新告警: ${data.title}`)
+    })
+    
+    wsClient.on('alert_acknowledged', (data: any) => {
+      const alert = alertHistory.value.find(a => a.id === data.alert_id)
+      if (alert) {
+        alert.acknowledged = true
+        alert.acknowledged_by = data.acknowledged_by
+        alert.acknowledged_at = data.acknowledged_at
+      }
+    })
+    
+    wsClient.on('alert_resolved', (data: any) => {
+      const alert = alertHistory.value.find(a => a.id === data.alert_id)
+      if (alert) {
+        alert.status = 'handled'
+        alert.resolved_at = data.resolved_at
+        alert.operator = data.operator
+      }
+    })
+  } catch (error) {
+    console.error('WebSocket连接失败:', error)
+  }
 })
 
 onUnmounted(() => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
+  
+  // 清理WebSocket监听器
+  wsClient.off('alert_triggered')
+  wsClient.off('alert_acknowledged')
+  wsClient.off('alert_resolved')
 })
 </script>
 

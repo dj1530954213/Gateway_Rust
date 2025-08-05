@@ -491,8 +491,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { alertsApi } from '@/api'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
@@ -619,36 +620,9 @@ const ruleRules = {
   ]
 }
 
-// 计算属性
+// 计算属性 - 现在分页在后端处理，直接返回rules
 const filteredRules = computed(() => {
-  let filtered = rules.value
-  
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(rule => 
-      rule.name.toLowerCase().includes(query) ||
-      rule.description.toLowerCase().includes(query)
-    )
-  }
-  
-  if (severityFilter.value) {
-    filtered = filtered.filter(rule => rule.severity === severityFilter.value)
-  }
-  
-  if (statusFilter.value) {
-    const enabled = statusFilter.value === 'enabled'
-    filtered = filtered.filter(rule => rule.enabled === enabled)
-  }
-  
-  if (typeFilter.value) {
-    filtered = filtered.filter(rule => rule.type === typeFilter.value)
-  }
-  
-  totalRules.value = filtered.length
-  
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filtered.slice(start, end)
+  return rules.value
 })
 
 // 方法
@@ -736,49 +710,88 @@ const handleGoBack = () => {
   router.push('/alerts')
 }
 
-const handleRefresh = async () => {
-  loading.value = true
+// 数据加载函数
+const loadRules = async () => {
   try {
-    await generateMockRules()
-    updateRuleStats()
-    ElMessage.success('刷新成功')
+    loading.value = true
+    const response = await alertsApi.getRules({
+      page: currentPage.value,
+      size: pageSize.value,
+      severity: severityFilter.value || undefined,
+      enabled: statusFilter.value === 'enabled' ? true : statusFilter.value === 'disabled' ? false : undefined,
+      type: typeFilter.value || undefined,
+      keyword: searchQuery.value || undefined
+    })
+    
+    if (response.success && response.data) {
+      rules.value = response.data.items || []
+      totalRules.value = response.data.total || 0
+    }
+  } catch (error) {
+    console.error('Failed to load alert rules:', error)
+    ElMessage.error('加载告警规则失败')
   } finally {
     loading.value = false
   }
 }
 
-const handleSearch = () => {
-  currentPage.value = 1
+const loadRuleStats = async () => {
+  try {
+    const stats = await alertsApi.getRuleStats()
+    ruleStats.value = stats
+  } catch (error) {
+    console.error('Failed to load rule stats:', error)
+  }
 }
 
-const handleResetFilters = () => {
+const handleRefresh = async () => {
+  await Promise.all([
+    loadRules(),
+    loadRuleStats()
+  ])
+  ElMessage.success('刷新成功')
+}
+
+const handleSearch = async () => {
+  currentPage.value = 1
+  await loadRules()
+}
+
+const handleResetFilters = async () => {
   searchQuery.value = ''
   severityFilter.value = ''
   statusFilter.value = ''
   typeFilter.value = ''
   currentPage.value = 1
+  await loadRules()
 }
 
 const handleSelectionChange = (selection: AlertRule[]) => {
   selectedRules.value = selection
 }
 
-const handleSizeChange = (size: number) => {
+const handleSizeChange = async (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  await loadRules()
 }
 
-const handleCurrentChange = (page: number) => {
+const handleCurrentChange = async (page: number) => {
   currentPage.value = page
+  await loadRules()
 }
 
 const handleToggleRule = async (rule: AlertRule) => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 300))
-    ElMessage.success(`规则已${rule.enabled ? '启用' : '禁用'}`)
-    updateRuleStats()
+    if (rule.enabled) {
+      await alertsApi.disableRule(rule.id)
+    } else {
+      await alertsApi.enableRule(rule.id)
+    }
+    await loadRules()
+    await loadRuleStats()
+    ElMessage.success(`规则已${rule.enabled ? '禁用' : '启用'}`)
   } catch (error) {
-    rule.enabled = !rule.enabled
     ElMessage.error('操作失败')
   }
 }
@@ -965,149 +978,19 @@ const handleBulkDisable = async () => {
   }
 }
 
-const updateRuleStats = () => {
-  const stats = {
-    active: 0,
-    disabled: 0,
-    triggered: 0,
-    total: rules.value.length
-  }
-  
-  rules.value.forEach(rule => {
-    if (rule.enabled) {
-      stats.active++
-    } else {
-      stats.disabled++
-    }
-    
-    if (rule.isTriggered) {
-      stats.triggered++
-    }
-  })
-  
-  ruleStats.value = stats
-}
 
-// 数据初始化
-const generateMockRules = async () => {
-  const types = ['datapoint', 'driver', 'connection', 'system'] as const
-  const severities = ['critical', 'warning', 'info'] as const
-  const operators = ['gt', 'gte', 'lt', 'lte', 'eq', 'neq'] as const
-  
-  const ruleNames = {
-    datapoint: [
-      '温度过高告警',
-      '压力异常告警',
-      '流量监控告警',
-      '液位告警规则',
-      '振动监测告警'
-    ],
-    driver: [
-      '驱动连接中断',
-      '通信超时告警',
-      '设备离线告警',
-      '数据采集异常',
-      '驱动重启告警'
-    ],
-    connection: [
-      '网络连接断开',
-      '连接池耗尽',
-      '连接延迟过高',
-      'SSL证书过期',
-      '连接数异常'
-    ],
-    system: [
-      'CPU使用率过高',
-      '内存不足告警',
-      '磁盘空间告警',
-      '系统负载告警',
-      '服务异常告警'
-    ]
-  }
-  
-  const descriptions = {
-    datapoint: [
-      '监控设备温度数据，当温度超过安全阈值时触发告警',
-      '监控系统压力变化，及时发现压力异常情况',
-      '实时监控流量数据，确保系统运行在正常范围内',
-      '监控液位高度，防止溢出或空罐情况发生',
-      '监控设备振动频率，预防设备故障'
-    ],
-    driver: [
-      '监控驱动连接状态，连接中断时立即告警',
-      '监控通信响应时间，超时时触发告警通知',
-      '检测设备在线状态，离线时发送告警信息',
-      '监控数据采集过程，发现异常时及时处理',
-      '监控驱动服务状态，重启时通知相关人员'
-    ],
-    connection: [
-      '监控网络连接状态，断开时立即告警',
-      '监控连接池使用情况，避免资源耗尽',
-      '监控网络延迟，确保通信质量',
-      '监控SSL证书有效期，提前通知续期',
-      '监控系统连接数，防止过载情况'
-    ],
-    system: [
-      '监控系统CPU使用率，避免性能问题',
-      '监控系统内存使用情况，及时释放资源',
-      '监控磁盘空间，防止存储不足',
-      '监控系统整体负载，确保稳定运行',
-      '监控关键服务状态，服务异常时告警'
-    ]
-  }
-  
-  rules.value = Array.from({ length: 45 }, (_, i) => {
-    const type = types[Math.floor(Math.random() * types.length)]
-    const severity = severities[Math.floor(Math.random() * severities.length)]
-    const operator = operators[Math.floor(Math.random() * operators.length)]
-    
-    const names = ruleNames[type]
-    const descs = descriptions[type]
-    
-    const name = names[Math.floor(Math.random() * names.length)]
-    const description = descs[Math.floor(Math.random() * descs.length)]
-    
-    const enabled = Math.random() > 0.2
-    const triggerCount = Math.floor(Math.random() * 50)
-    const isTriggered = enabled && triggerCount > 0 && Math.random() > 0.7
-    
-    return {
-      id: (i + 1).toString(),
-      name: `${name}${i > 4 ? ` ${Math.floor(i / 5) + 1}` : ''}`,
-      description,
-      type,
-      severity,
-      enabled,
-      isTriggered,
-      triggerCount,
-      lastTriggered: triggerCount > 0 ? new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) : undefined,
-      condition: {
-        target: `${type}_target_${i + 1}`,
-        operator,
-        threshold: (Math.random() * 1000).toFixed(2),
-        duration: Math.floor(Math.random() * 300) + 60
-      },
-      actions: ['email', 'log'].concat(Math.random() > 0.5 ? ['sms'] : []).concat(Math.random() > 0.7 ? ['webhook'] : []),
-      createdBy: '管理员',
-      updatedBy: '管理员',
-      createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000), // Last 30 days
-      updatedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Last 7 days
-    } as AlertRule
-  })
-  
-  // 按更新时间排序
-  rules.value.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime())
-}
+// 监听筛选器变化
+watch([severityFilter, statusFilter, typeFilter], async () => {
+  currentPage.value = 1
+  await loadRules()
+})
 
 // 生命周期
 onMounted(async () => {
-  loading.value = true
-  try {
-    await generateMockRules()
-    updateRuleStats()
-  } finally {
-    loading.value = false
-  }
+  await Promise.all([
+    loadRules(),
+    loadRuleStats()
+  ])
 })
 </script>
 

@@ -544,19 +544,26 @@ function initPreviewChart() {
 }
 
 /**
- * 生成预览图表数据
+ * 从真实API获取预览图表数据
  */
-function generatePreviewChartData() {
-  const data = []
-  const now = new Date()
-  
-  for (let i = 0; i < 24; i++) {
-    const time = new Date(now.getTime() - (23 - i) * 60 * 60 * 1000)
-    const value = 20 + Math.random() * 10 + Math.sin(i / 4) * 5
-    data.push([time, value.toFixed(2)])
+async function generatePreviewChartData() {
+  try {
+    const response = await fetch('/api/v1/reports/preview-data', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      return await response.json()
+    } else {
+      throw new Error('获取预览数据失败')
+    }
+  } catch (error) {
+    console.error('获取预览数据失败:', error)
+    return []
   }
-  
-  return data
 }
 
 /**
@@ -569,38 +576,37 @@ async function generateReport() {
   generationMessage.value = '准备生成报表'
   
   try {
-    // 模拟生成过程
-    for (let i = 0; i <= 100; i += 10) {
-      await new Promise(resolve => setTimeout(resolve, 200))
-      generationProgress.value = i
+    // 调用真实API生成报表
+    const response = await fetch('/api/v1/reports/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: reportConfig.value.name,
+        template: selectedTemplate.value,
+        config: reportConfig.value
+      })
+    })
+    
+    if (response.ok) {
+      const reportInfo = await response.json()
       
-      if (i === 20) generationMessage.value = '收集数据'
-      else if (i === 40) generationMessage.value = '生成图表'
-      else if (i === 60) generationMessage.value = '格式化内容'
-      else if (i === 80) generationMessage.value = '导出文件'
-      else if (i === 100) generationMessage.value = '完成'
+      generationStatus.value = 'success'
+      generationProgress.value = 100
+      generationMessage.value = '完成'
+      
+      emit('report-generated', reportInfo)
+      ElMessage.success('报表生成成功！')
+      
+      // 延迟关闭对话框
+      setTimeout(() => {
+        handleClose()
+      }, 1000)
+    } else {
+      const errorData = await response.json()
+      throw new Error(errorData.message || '生成失败')
     }
-    
-    generationStatus.value = 'success'
-    
-    // 构建报表信息
-    const reportInfo = {
-      id: Date.now().toString(),
-      name: reportConfig.value.name,
-      template: selectedTemplate.value,
-      config: { ...reportConfig.value },
-      generatedAt: new Date().toISOString(),
-      formats: reportConfig.value.formats,
-      dataCount: estimatedDataCount.value
-    }
-    
-    emit('report-generated', reportInfo)
-    ElMessage.success('报表生成成功！')
-    
-    // 延迟关闭对话框
-    setTimeout(() => {
-      handleClose()
-    }, 1000)
     
   } catch (error) {
     console.error('生成报表失败:', error)

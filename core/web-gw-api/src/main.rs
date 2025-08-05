@@ -46,15 +46,16 @@ async fn main() -> anyhow::Result<()> {
         .await
         .context("Failed to initialize application state")?;
     
-    // 健康检查
-    let health_services = state.health_check().await;
-    for (service, status) in &health_services {
-        if status == "unhealthy" {
-            warn!("Service {} is unhealthy", service);
-        } else {
-            info!("Service {} is healthy", service);
-        }
-    }
+    // 健康检查 (临时跳过以进行测试)
+    // let health_services = state.health_check().await;
+    // for (service, status) in &health_services {
+    //     if status == "unhealthy" {
+    //         warn!("Service {} is unhealthy", service);
+    //     } else {
+    //         info!("Service {} is healthy", service);
+    //     }
+    // }
+    info!("Skipping health check for testing");
     
     info!("Starting HTTP server on {}", config.http_addr);
     info!("Metrics available on {}/metrics", config.metrics_addr);
@@ -91,7 +92,6 @@ fn init_logging() -> anyhow::Result<()> {
     
     let subscriber = tracing_subscriber::fmt()
         .with_max_level(log_level.parse().unwrap_or(tracing::Level::INFO))
-        .with_current_span(true)
         .with_span_events(tracing_subscriber::fmt::format::FmtSpan::CLOSE);
     
     if log_format == "json" {

@@ -330,6 +330,9 @@ import {
   ConnectionStatus
 } from '../../components/business'
 
+// 导入API
+import { driverConfigsApi } from '../../api/drivers'
+
 // 类型定义
 interface DriverForm {
   id: string
@@ -465,7 +468,7 @@ const driverTemplates = ref<DriverTemplate[]>([
     description: '标准的Modbus TCP连接模板，适用于大多数PLC设备',
     protocol: 'Modbus TCP',
     config: {
-      host: '192.168.1.100',
+      host: '',
       port: 502,
       unitId: 1,
       timeout: 5000
@@ -817,22 +820,76 @@ const handleSave = async () => {
   saving.value = true
   
   try {
-    // 模拟保存操作
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    
     if (isEditing.value) {
+      // 更新驱动配置
+      const updateReq = {
+        name: driverForm.value.name,
+        description: driverForm.value.description,
+        protocol: driverForm.value.protocol,
+        connection_type: driverForm.value.connectionType,
+        enabled: driverForm.value.enabled,
+        config: driverForm.value.config,
+        scan_interval: driverForm.value.performance.scanInterval,
+        timeout: driverForm.value.performance.timeout,
+        max_concurrent: driverForm.value.performance.maxConcurrentRequests,
+        batch_size: driverForm.value.performance.batchSize,
+        max_retries: driverForm.value.retry.maxRetries,
+        retry_interval: driverForm.value.retry.retryInterval,
+        exponential_backoff: driverForm.value.retry.exponentialBackoff,
+        max_retry_interval: driverForm.value.retry.maxRetryInterval,
+        log_level: driverForm.value.logging.level,
+        enable_request_log: driverForm.value.logging.enableRequestLog,
+        enable_response_log: driverForm.value.logging.enableResponseLog,
+        max_log_size: driverForm.value.logging.maxLogSize,
+        enable_ssl: driverForm.value.security.enableSsl,
+        verify_certificate: driverForm.value.security.verifyCertificate,
+        client_cert_path: driverForm.value.security.clientCertPath,
+        client_key_path: driverForm.value.security.clientKeyPath,
+      }
+      
+      await driverConfigsApi.update(driverForm.value.id, updateReq)
       ElMessage.success('驱动配置已更新')
     } else {
+      // 创建驱动配置
+      const createReq = {
+        name: driverForm.value.name,
+        description: driverForm.value.description,
+        protocol: driverForm.value.protocol,
+        connection_type: driverForm.value.connectionType,
+        enabled: driverForm.value.enabled,
+        config: driverForm.value.config,
+        scan_interval: driverForm.value.performance.scanInterval,
+        timeout: driverForm.value.performance.timeout,
+        max_concurrent: driverForm.value.performance.maxConcurrentRequests,
+        batch_size: driverForm.value.performance.batchSize,
+        max_retries: driverForm.value.retry.maxRetries,
+        retry_interval: driverForm.value.retry.retryInterval,
+        exponential_backoff: driverForm.value.retry.exponentialBackoff,
+        max_retry_interval: driverForm.value.retry.maxRetryInterval,
+        log_level: driverForm.value.logging.level,
+        enable_request_log: driverForm.value.logging.enableRequestLog,
+        enable_response_log: driverForm.value.logging.enableResponseLog,
+        max_log_size: driverForm.value.logging.maxLogSize,
+        enable_ssl: driverForm.value.security.enableSsl,
+        verify_certificate: driverForm.value.security.verifyCertificate,
+        client_cert_path: driverForm.value.security.clientCertPath,
+        client_key_path: driverForm.value.security.clientKeyPath,
+      }
+      
+      const response = await driverConfigsApi.create(createReq)
+      driverForm.value.id = response.driver_config.id
       ElMessage.success('驱动创建成功')
     }
     
-    // 可选择是否返回列表
+    // 返回列表
     setTimeout(() => {
       router.push('/drivers')
     }, 1000)
     
-  } catch (error) {
-    ElMessage.error('保存失败，请重试')
+  } catch (error: any) {
+    console.error('保存驱动配置失败:', error)
+    const errorMessage = error?.response?.data?.message || error?.message || '保存失败，请重试'
+    ElMessage.error(errorMessage)
   } finally {
     saving.value = false
   }
@@ -1019,7 +1076,7 @@ watch(() => driverForm.value.protocol, (newProtocol) => {
   // 根据协议类型设置默认配置
   const defaultConfigs = {
     modbus_tcp: {
-      host: '192.168.1.100',
+      host: '',
       port: 502,
       unitId: 1
     },
@@ -1037,11 +1094,11 @@ watch(() => driverForm.value.protocol, (newProtocol) => {
       topic: 'data/#'
     },
     ethernet_ip: {
-      host: '192.168.1.100',
+      host: '',
       port: 44818
     },
     bacnet: {
-      host: '192.168.1.255',
+      host: '',
       port: 47808,
       deviceId: 1001
     }
@@ -1067,7 +1124,7 @@ onMounted(async () => {
       connectionType: 'ethernet' as const,
       enabled: true,
       config: {
-        host: '192.168.1.100',
+        host: '',
         port: 502,
         unitId: 1
       },

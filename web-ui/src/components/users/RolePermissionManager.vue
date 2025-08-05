@@ -354,10 +354,12 @@ async function initializeData() {
   try {
     loading.value = true
     
-    // 生成模拟数据
-    roleList.value = generateMockRoles()
-    permissionCategories.value = generateMockPermissionCategories()
-    allPermissions.value = generateMockPermissions()
+    // 从API加载真实数据
+    await Promise.all([
+      loadRoles(),
+      loadPermissionCategories(),
+      loadAllPermissions()
+    ])
     
     // 选择第一个角色
     if (roleList.value.length > 0) {
@@ -373,163 +375,80 @@ async function initializeData() {
 }
 
 /**
- * 生成模拟角色数据
+ * 从API加载角色列表
  */
-function generateMockRoles() {
-  return [
-    {
-      id: 'admin',
-      name: '系统管理员',
-      description: '拥有系统的最高权限，可以管理所有功能和用户',
-      status: 'active',
-      isBuiltIn: true,
-      userCount: 2,
-      createdAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-07-27T10:00:00Z'
-    },
-    {
-      id: 'operator',
-      name: '操作员',
-      description: '负责日常设备操作和监控，具有设备控制权限',
-      status: 'active',
-      isBuiltIn: true,
-      userCount: 8,
-      createdAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-07-27T10:00:00Z'
-    },
-    {
-      id: 'viewer',
-      name: '观察员',
-      description: '只能查看数据和报表，无法进行修改操作',
-      status: 'active',
-      isBuiltIn: true,
-      userCount: 15,
-      createdAt: '2025-01-01T00:00:00Z',
-      updatedAt: '2025-07-27T10:00:00Z'
-    },
-    {
-      id: 'engineer',
-      name: '工程师',
-      description: '负责系统配置和工程项目管理',
-      status: 'active',
-      isBuiltIn: false,
-      userCount: 5,
-      createdAt: '2025-02-15T00:00:00Z',
-      updatedAt: '2025-07-27T10:00:00Z'
-    },
-    {
-      id: 'manager',
-      name: '部门经理',
-      description: '负责部门用户管理和审批流程',
-      status: 'active',
-      isBuiltIn: false,
-      userCount: 3,
-      createdAt: '2025-03-01T00:00:00Z',
-      updatedAt: '2025-07-27T10:00:00Z'
+async function loadRoles() {
+  try {
+    const response = await fetch('/api/v1/roles', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      roleList.value = await response.json()
+    } else {
+      roleList.value = []
+      console.error('加载角色列表失败:', response.statusText)
     }
-  ]
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    roleList.value = []
+  }
 }
 
 /**
- * 生成模拟权限分类
+ * 从API加载权限分类
  */
-function generateMockPermissionCategories() {
-  return [
-    {
-      id: 'device',
-      name: '设备管理',
-      description: '设备相关的所有操作权限',
-      icon: 'Monitor',
-      permissions: []
-    },
-    {
-      id: 'system',
-      name: '系统管理',
-      description: '系统配置和用户管理权限',
-      icon: 'Setting',
-      permissions: []
-    },
-    {
-      id: 'data',
-      name: '数据管理',
-      description: '数据查询、导出和分析权限',
-      icon: 'Document',
-      permissions: []
-    },
-    {
-      id: 'network',
-      name: '网络管理',
-      description: '网络配置和连接管理权限',
-      icon: 'Connection',
-      permissions: []
-    },
-    {
-      id: 'alert',
-      name: '报警管理',
-      description: '报警规则和通知管理权限',
-      icon: 'Bell',
-      permissions: []
-    },
-    {
-      id: 'security',
-      name: '安全管理',
-      description: '安全策略和访问控制权限',
-      icon: 'Shield',
-      permissions: []
+async function loadPermissionCategories() {
+  try {
+    const response = await fetch('/api/v1/permissions/categories', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      permissionCategories.value = await response.json()
+    } else {
+      permissionCategories.value = []
+      console.error('加载权限分类失败:', response.statusText)
     }
-  ]
+  } catch (error) {
+    console.error('加载权限分类失败:', error)
+    permissionCategories.value = []
+  }
 }
 
 /**
- * 生成模拟权限数据
+ * 从API加载所有权限
  */
-function generateMockPermissions() {
-  const permissions = [
-    // 设备管理权限
-    { id: 'device_view', name: '查看设备', code: 'device:view', description: '查看设备列表和详细信息', categoryId: 'device', riskLevel: 'low' },
-    { id: 'device_create', name: '创建设备', code: 'device:create', description: '添加新设备到系统', categoryId: 'device', riskLevel: 'medium' },
-    { id: 'device_update', name: '编辑设备', code: 'device:update', description: '修改设备配置和参数', categoryId: 'device', riskLevel: 'medium' },
-    { id: 'device_delete', name: '删除设备', code: 'device:delete', description: '从系统中删除设备', categoryId: 'device', riskLevel: 'high' },
-    { id: 'device_control', name: '控制设备', code: 'device:control', description: '远程控制设备运行状态', categoryId: 'device', riskLevel: 'high' },
-
-    // 系统管理权限
-    { id: 'system_config', name: '系统配置', code: 'system:config', description: '修改系统配置参数', categoryId: 'system', riskLevel: 'high' },
-    { id: 'user_view', name: '查看用户', code: 'user:view', description: '查看用户列表和信息', categoryId: 'system', riskLevel: 'low' },
-    { id: 'user_create', name: '创建用户', code: 'user:create', description: '创建新用户账户', categoryId: 'system', riskLevel: 'medium' },
-    { id: 'user_update', name: '编辑用户', code: 'user:update', description: '修改用户信息和权限', categoryId: 'system', riskLevel: 'medium' },
-    { id: 'user_delete', name: '删除用户', code: 'user:delete', description: '删除用户账户', categoryId: 'system', riskLevel: 'high' },
-    { id: 'role_manage', name: '角色管理', code: 'role:manage', description: '管理系统角色和权限', categoryId: 'system', riskLevel: 'high' },
-
-    // 数据管理权限
-    { id: 'data_view', name: '查看数据', code: 'data:view', description: '查看历史数据和报表', categoryId: 'data', riskLevel: 'low' },
-    { id: 'data_export', name: '导出数据', code: 'data:export', description: '导出数据到文件', categoryId: 'data', riskLevel: 'medium' },
-    { id: 'data_import', name: '导入数据', code: 'data:import', description: '从文件导入数据', categoryId: 'data', riskLevel: 'medium' },
-    { id: 'data_delete', name: '删除数据', code: 'data:delete', description: '删除历史数据记录', categoryId: 'data', riskLevel: 'high' },
-
-    // 网络管理权限
-    { id: 'network_view', name: '查看网络', code: 'network:view', description: '查看网络连接状态', categoryId: 'network', riskLevel: 'low' },
-    { id: 'network_config', name: '网络配置', code: 'network:config', description: '配置网络连接参数', categoryId: 'network', riskLevel: 'high' },
-    { id: 'protocol_manage', name: '协议管理', code: 'protocol:manage', description: '管理通信协议配置', categoryId: 'network', riskLevel: 'medium' },
-
-    // 报警管理权限
-    { id: 'alert_view', name: '查看报警', code: 'alert:view', description: '查看报警记录和状态', categoryId: 'alert', riskLevel: 'low' },
-    { id: 'alert_config', name: '配置报警', code: 'alert:config', description: '配置报警规则和阈值', categoryId: 'alert', riskLevel: 'medium' },
-    { id: 'alert_handle', name: '处理报警', code: 'alert:handle', description: '确认和处理报警事件', categoryId: 'alert', riskLevel: 'medium' },
-    { id: 'notification_manage', name: '通知管理', code: 'notification:manage', description: '管理报警通知设置', categoryId: 'alert', riskLevel: 'medium' },
-
-    // 安全管理权限
-    { id: 'security_view', name: '查看安全日志', code: 'security:view', description: '查看系统安全日志', categoryId: 'security', riskLevel: 'medium' },
-    { id: 'security_config', name: '安全配置', code: 'security:config', description: '配置安全策略和规则', categoryId: 'security', riskLevel: 'high' },
-    { id: 'audit_manage', name: '审计管理', code: 'audit:manage', description: '管理系统审计功能', categoryId: 'security', riskLevel: 'high' },
-    { id: 'backup_manage', name: '备份管理', code: 'backup:manage', description: '管理系统备份和恢复', categoryId: 'security', riskLevel: 'high' }
-  ]
-
-  // 将权限分配到对应的分类中
-  permissionCategories.value.forEach(category => {
-    category.permissions = permissions.filter(p => p.categoryId === category.id)
-  })
-
-  return permissions
+async function loadAllPermissions() {
+  try {
+    const response = await fetch('/api/v1/permissions', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      allPermissions.value = await response.json()
+      
+      // 将权限分配到对应的分类中
+      permissionCategories.value.forEach(category => {
+        category.permissions = allPermissions.value.filter(p => p.categoryId === category.id)
+      })
+    } else {
+      allPermissions.value = []
+      console.error('加载权限列表失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载权限列表失败:', error)
+    allPermissions.value = []
+  }
 }
 
 /**
@@ -547,43 +466,25 @@ async function loadRolePermissions(roleId: string) {
   try {
     loadingPermissions.value = true
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const response = await fetch(`/api/v1/roles/${roleId}/permissions`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     
-    // 根据角色生成对应的权限
-    const rolePermissionMap: { [key: string]: string[] } = {
-      admin: allPermissions.value.map(p => p.id), // 管理员拥有所有权限
-      operator: [
-        'device_view', 'device_create', 'device_update', 'device_control',
-        'data_view', 'data_export',
-        'alert_view', 'alert_handle',
-        'network_view'
-      ],
-      viewer: [
-        'device_view',
-        'data_view',
-        'alert_view',
-        'network_view'
-      ],
-      engineer: [
-        'device_view', 'device_create', 'device_update',
-        'data_view', 'data_export', 'data_import',
-        'network_view', 'network_config', 'protocol_manage',
-        'alert_view', 'alert_config'
-      ],
-      manager: [
-        'device_view',
-        'user_view', 'user_create', 'user_update',
-        'data_view', 'data_export',
-        'alert_view', 'alert_config', 'notification_manage'
-      ]
+    if (response.ok) {
+      const permissions = await response.json()
+      rolePermissions.value = permissions.map((p: any) => p.id)
+    } else {
+      rolePermissions.value = []
+      console.error('加载角色权限失败:', response.statusText)
     }
-    
-    rolePermissions.value = rolePermissionMap[roleId] || []
     
   } catch (error) {
     console.error('加载角色权限失败:', error)
     ElMessage.error('加载角色权限失败')
+    rolePermissions.value = []
   } finally {
     loadingPermissions.value = false
   }
@@ -600,15 +501,8 @@ function refreshRoles() {
  * 获取权限数量
  */
 function getPermissionCount(role: any): number {
-  // 这里应该从实际的权限分配中计算
-  const permissionCounts: { [key: string]: number } = {
-    admin: allPermissions.value.length,
-    operator: 9,
-    viewer: 4,
-    engineer: 10,
-    manager: 9
-  }
-  return permissionCounts[role.id] || 0
+  // 从角色对象中获取权限数量，如果没有则为0
+  return role.permissionCount || 0
 }
 
 /**
@@ -717,10 +611,21 @@ async function savePermissions() {
   try {
     savingPermissions.value = true
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const response = await fetch(`/api/v1/roles/${selectedRole.value.id}/permissions`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        permissionIds: rolePermissions.value
+      })
+    })
     
-    ElMessage.success('权限保存成功')
+    if (response.ok) {
+      ElMessage.success('权限保存成功')
+    } else {
+      throw new Error('保存权限失败')
+    }
     
   } catch (error) {
     console.error('保存权限失败:', error)
@@ -764,18 +669,28 @@ function editRole(role: any) {
  */
 async function copyRole(role: any) {
   try {
-    const copiedRole = {
-      ...role,
-      id: `${role.id}_copy_${Date.now()}`,
-      name: `${role.name} - 副本`,
-      isBuiltIn: false
+    const response = await fetch(`/api/v1/roles/${role.id}/copy`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: `${role.name} - 副本`
+      })
+    })
+    
+    if (response.ok) {
+      const copiedRole = await response.json()
+      editingRole.value = copiedRole
+      isCreateMode.value = false
+      showEditRole.value = true
+      ElMessage.success('角色复制成功')
+    } else {
+      throw new Error('复制角色失败')
     }
     
-    editingRole.value = copiedRole
-    isCreateMode.value = true
-    showEditRole.value = true
-    
   } catch (error) {
+    console.error('复制角色失败:', error)
     ElMessage.error('复制角色失败')
   }
 }
@@ -798,14 +713,25 @@ async function deleteRole(role: any) {
       }
     )
     
-    // 模拟删除操作
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const response = await fetch(`/api/v1/roles/${role.id}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
     
-    ElMessage.success('角色删除成功')
-    await refreshRoles()
+    if (response.ok) {
+      ElMessage.success('角色删除成功')
+      await refreshRoles()
+    } else {
+      throw new Error('删除角色失败')
+    }
     
   } catch (error) {
-    // 用户取消删除
+    if (error instanceof Error && error.message !== 'cancel') {
+      console.error('删除角色失败:', error)
+      ElMessage.error('删除角色失败')
+    }
   }
 }
 

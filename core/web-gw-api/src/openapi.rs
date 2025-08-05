@@ -9,7 +9,7 @@
 //! - 2025-01-27  Claude  初版
 
 use crate::dto::*;
-use crate::error::ApiError;
+use crate::error::ErrorResponse;
 use actix_web::{web, HttpResponse, Result, Scope};
 use std::fs;
 use utoipa::{
@@ -64,14 +64,13 @@ use utoipa_swagger_ui::SwaggerUi;
         crate::routes::drivers::unload_driver,
         
         // 历史数据查询
-        crate::routes::history::query_time_series,
-        crate::routes::history::query_aggregated,
-        crate::routes::history::export_csv,
+        crate::routes::history::query_points,
+        crate::routes::history::query_stats,
     ),
     components(
         schemas(
             // 基础响应类型
-            ApiError,
+            ErrorResponse,
             PagedResponse<DeviceVO>,
             PagedResponse<TagVO>,
             PagedResponse<DriverInfo>,
@@ -86,13 +85,10 @@ use utoipa_swagger_ui::SwaggerUi;
             TagDataType,
             
             // 驱动相关类型
-            DriverInfo, DriverLoadHistory, DriverReloadRequest,
-            LoadResult, LoadAction,
+            DriverInfo, DriverReloadRequest,
             
             // 历史数据相关类型
-            TimeSeriesQuery, TimeSeriesPoint, TimeSeriesData,
-            AggregatedQuery, AggregatedPoint, AggregatedData,
-            AggregationType, CsvExportRequest,
+            HistoryQuery, HistoryPointVO, HistoryStatsVO, HistoryExportRequest,
         )
     ),
     tags(

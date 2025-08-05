@@ -10,7 +10,8 @@
       "Bash(cargo test:*)",
       "Bash(set PROTOC=C:toolsprotocbinprotoc.exe)",
       "Bash(set LIBCLANG_PATH=C:Program FilesLLVMbin)",
-      "Bash(find:*)"
+      "Bash(find:*)",
+      "Bash(cargo run:*)"
     ],
     "deny": []
   }

@@ -22,12 +22,23 @@ use tokio::fs;
 use tracing::{error, info, warn};
 use utoipa::OpenApi;
 
+/// 验证驱动文件扩展名
+fn is_valid_driver_file(filename: &str) -> bool {
+    let path = std::path::Path::new(filename);
+    if let Some(ext) = path.extension() {
+        matches!(ext.to_str(), Some("so") | Some("dll") | Some("dylib"))
+    } else {
+        false
+    }
+}
+
 /// 驱动管理OpenAPI文档
 #[derive(OpenApi)]
 #[openapi(
     paths(
         upload_driver,
         list_drivers,
+        get_drivers_status,
         get_driver_details,
         search_drivers,
         get_registry_overview,
@@ -48,6 +59,7 @@ use utoipa::OpenApi;
         UnifiedDriverEntryVO,
         RegistryOverviewVO,
         DriverStatisticsVO,
+        DriverStatusVO,
     ))
 )]
 pub struct DriversApiDoc;
@@ -57,6 +69,7 @@ pub fn scope() -> actix_web::Scope {
     web::scope("/drivers")
         .route("", web::post().to(upload_driver))
         .route("", web::get().to(list_drivers))
+        .route("/status", web::get().to(get_drivers_status))
         .route("/search", web::get().to(search_drivers))
         .route("/overview", web::get().to(get_registry_overview))
         .route("/{driver_id}", web::get().to(get_driver_details))
@@ -91,9 +104,7 @@ async fn upload_driver(
     // 确保上传目录存在
     if let Err(e) = fs::create_dir_all(&upload_dir).await {
         error!("Failed to create upload directory: {}", e);
-        return Err(ApiError::InternalServerError(
-            "Failed to create upload directory".to_string()
-        ));
+        return Err(ApiError::internal_error("Failed to create upload directory"));
     }
 
     let mut uploaded_files = Vec::new();
@@ -102,32 +113,34 @@ async fn upload_driver(
     // 处理multipart数据
     while let Some(mut field) = payload.try_next().await.map_err(|e| {
         error!("Failed to read multipart field: {}", e);
-        ApiError::BadRequest("Invalid multipart data".to_string())
+        ApiError::bad_request("Invalid multipart data")
     })? {
-        let content_disposition = field.content_disposition();
+        // 先获取文件名，避免借用冲突
+        let filename_opt = field.content_disposition().get_filename().map(|s| s.to_string());
         
-        if let Some(filename) = content_disposition.get_filename() {
+        if let Some(filename) = filename_opt {
             // 验证文件扩展名
-            if !is_valid_driver_file(filename) {
-                return Err(ApiError::BadRequest(
+            if !is_valid_driver_file(&filename) {
+                return Err(ApiError::bad_request(
                     format!("Invalid driver file extension. Expected .so, .dll, or .dylib, got: {}", filename)
                 ));
             }
 
-            let filepath = std::path::PathBuf::from(&upload_dir).join(filename);
+            let filepath = std::path::PathBuf::from(&upload_dir).join(&filename);
+            let filepath_for_create = filepath.clone();
             
             info!("Uploading driver file: {}", filepath.display());
 
             // 创建文件
-            let mut file = web::block(move || std::fs::File::create(filepath.clone()))
+            let mut file = web::block(move || std::fs::File::create(filepath_for_create))
                 .await
                 .map_err(|e| {
                     error!("Failed to create file: {}", e);
-                    ApiError::InternalServerError("Failed to create file".to_string())
+                    ApiError::internal_error("Failed to create file")
                 })?
                 .map_err(|e| {
                     error!("Failed to create file: {}", e);
-                    ApiError::InternalServerError("Failed to create file".to_string())
+                    ApiError::internal_error("Failed to create file")
                 })?;
 
             let mut file_size = 0;
@@ -135,7 +148,7 @@ async fn upload_driver(
             // 写入文件数据
             while let Some(chunk) = field.try_next().await.map_err(|e| {
                 error!("Failed to read file chunk: {}", e);
-                ApiError::BadRequest("Failed to read file data".to_string())
+                ApiError::bad_request("Failed to read file data")
             })? {
                 file_size += chunk.len();
                 
@@ -143,7 +156,7 @@ async fn upload_driver(
                 if file_size > max_file_size {
                     // 删除部分上传的文件
                     let _ = std::fs::remove_file(&filepath);
-                    return Err(ApiError::BadRequest(
+                    return Err(ApiError::bad_request(
                         format!("File too large. Maximum size is {}MB", max_file_size / 1024 / 1024)
                     ));
                 }
@@ -152,11 +165,11 @@ async fn upload_driver(
                     .await
                     .map_err(|e| {
                         error!("Failed to write file chunk: {}", e);
-                        ApiError::InternalServerError("Failed to write file".to_string())
+                        ApiError::internal_error("Failed to write file")
                     })?
                     .map_err(|e| {
                         error!("Failed to write file chunk: {}", e);
-                        ApiError::InternalServerError("Failed to write file".to_string())
+                        ApiError::internal_error("Failed to write file")
                     })?;
             }
 
@@ -165,11 +178,11 @@ async fn upload_driver(
                 .await
                 .map_err(|e| {
                     error!("Failed to sync file: {}", e);
-                    ApiError::InternalServerError("Failed to sync file".to_string())
+                    ApiError::internal_error("Failed to sync file")
                 })?
                 .map_err(|e| {
                     error!("Failed to sync file: {}", e);
-                    ApiError::InternalServerError("Failed to sync file".to_string())
+                    ApiError::internal_error("Failed to sync file")
                 })?;
 
             // 尝试加载驱动
@@ -200,8 +213,8 @@ async fn upload_driver(
     }
 
     if uploaded_files.is_empty() {
-        return Err(ApiError::BadRequest(
-            "No valid driver files found in upload".to_string()
+        return Err(ApiError::bad_request(
+            "No valid driver files found in upload"
         ));
     }
 
@@ -278,7 +291,7 @@ async fn list_drivers(
         .into_iter()
         .map(|entry| UnifiedDriverEntryVO {
             driver_id: entry.driver_id,
-            driver_kind: entry.driver_kind,
+            driver_kind: entry.driver_kind.to_string(),
             name: entry.name,
             version: entry.version,
             protocol: entry.protocol,
@@ -335,7 +348,7 @@ async fn get_driver_details(
         Some(entry) => {
             let driver_vo = UnifiedDriverEntryVO {
                 driver_id: entry.driver_id,
-                driver_kind: entry.driver_kind,
+                driver_kind: entry.driver_kind.to_string(),
                 name: entry.name,
                 version: entry.version,
                 protocol: entry.protocol,
@@ -360,7 +373,7 @@ async fn get_driver_details(
 
             Ok(HttpResponse::Ok().json(response))
         }
-        None => Err(ApiError::NotFound(format!("Driver not found: {}", driver_id))),
+        None => Err(ApiError::not_found(format!("Driver not found: {}", driver_id))),
     }
 }
 
@@ -385,7 +398,7 @@ async fn search_drivers(
     let query = query.into_inner();
     
     if query.q.is_empty() {
-        return Err(ApiError::BadRequest("Search query cannot be empty".to_string()));
+        return Err(ApiError::bad_request("Search query cannot be empty"));
     }
 
     let results = app_state.driver_manager.search_drivers(&query.q);
@@ -394,7 +407,7 @@ async fn search_drivers(
         .into_iter()
         .map(|entry| UnifiedDriverEntryVO {
             driver_id: entry.driver_id,
-            driver_kind: entry.driver_kind,
+            driver_kind: entry.driver_kind.to_string(),
             name: entry.name,
             version: entry.version,
             protocol: entry.protocol,
@@ -414,10 +427,11 @@ async fn search_drivers(
         })
         .collect();
 
+    let total = drivers.len() as u32;
     let response = DriverSearchResponse {
         query: query.q,
         results: drivers,
-        total: drivers.len() as u32,
+        total,
     };
 
     Ok(HttpResponse::Ok().json(response))
@@ -561,8 +575,30 @@ async fn unload_driver(
     }
 }
 
-/// 验证是否为有效的驱动文件
-fn is_valid_driver_file(filename: &str) -> bool {
-    let filename = filename.to_lowercase();
-    filename.ends_with(".so") || filename.ends_with(".dll") || filename.ends_with(".dylib")
+
+/// 获取驱动状态统计
+///
+/// 获取系统中所有驱动的状态统计信息
+#[utoipa::path(
+    get,
+    path = "/api/v1/drivers/status",
+    responses(
+        (status = 200, description = "获取成功", body = DriverStatusVO),
+        (status = 500, description = "服务器内部错误", body = ApiErrorResponse)
+    ),
+    tag = "drivers"
+)]
+async fn get_drivers_status(
+    app_state: Data<crate::bootstrap::AppState>,
+) -> Result<impl Responder, ApiError> {
+    let overview = app_state.driver_manager.get_registry_overview();
+    
+    let status_vo = DriverStatusVO {
+        loaded_count: overview.running_drivers,
+        failed_count: overview.error_drivers,
+        unloaded_count: overview.total_drivers - overview.running_drivers - overview.error_drivers,
+        total_count: overview.total_drivers,
+    };
+
+    Ok(HttpResponse::Ok().json(status_vo))
 }

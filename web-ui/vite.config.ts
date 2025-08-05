@@ -70,7 +70,6 @@ export default defineConfig(({ mode }) => {
           target: env.VITE_API_BASE_URL || 'http://localhost:50010',
           changeOrigin: true,
           secure: false,
-          rewrite: (path) => path.replace(/^\/api/, '/api/v1'),
           configure: (proxy, options) => {
             proxy.on('error', (err, req, res) => {
               console.error('API代理错误:', err.message);
@@ -85,7 +84,7 @@ export default defineConfig(({ mode }) => {
         },
         // WebSocket代理
         '/ws': {
-          target: env.VITE_WS_BASE_URL || 'ws://localhost:50013',
+          target: env.VITE_WS_BASE_URL || 'ws://localhost:8080',
           ws: true,
           changeOrigin: true,
           rewrite: (path) => path.replace(/^\/ws/, '/ws')

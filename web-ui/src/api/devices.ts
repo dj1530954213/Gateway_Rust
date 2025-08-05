@@ -9,25 +9,28 @@ export interface DeviceVO {
   id: string
   name: string
   protocol: ProtocolKind
-  connection_string: string
-  description?: string
+  location?: string
+  endpoint?: string
+  config?: any
   enabled: boolean
   created_at: string
+  updated_at: string
 }
 
 export interface DeviceCreateReq {
   name: string
   protocol: ProtocolKind
-  connection_string: string
-  description?: string
+  location?: string
+  endpoint?: string
+  config?: any
   enabled?: boolean
 }
 
 export interface DevicePatchReq {
   name?: string
-  protocol?: ProtocolKind
-  connection_string?: string
-  description?: string
+  location?: string
+  endpoint?: string
+  config?: any
   enabled?: boolean
 }
 

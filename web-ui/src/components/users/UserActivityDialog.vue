@@ -395,9 +395,11 @@ const groupedActivities = computed(() => {
  */
 async function initializeData() {
   try {
-    // 生成模拟数据
-    availableRoles.value = generateMockRoles()
-    departments.value = generateMockDepartments()
+    // 从API加载真实数据
+    await Promise.all([
+      loadAvailableRoles(),
+      loadDepartments()
+    ])
     
     // 加载活动数据
     await loadActivities()
@@ -415,53 +417,39 @@ async function loadActivities() {
   try {
     loading.value = true
     
-    // 模拟API调用
-    await new Promise(resolve => setTimeout(resolve, 500))
+    const response = await fetch(`/api/v1/users/${props.userData.id}/activities`, {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      params: {
+        page: pagination.value.currentPage,
+        size: pagination.value.pageSize,
+        type: filters.value.activityType,
+        dateRange: filters.value.dateRange
+      }
+    })
     
-    activities.value = generateMockActivities()
-    pagination.value.total = activities.value.length
+    if (response.ok) {
+      const data = await response.json()
+      activities.value = data.items || []
+      pagination.value.total = data.total || 0
+    } else {
+      activities.value = []
+      pagination.value.total = 0
+      console.error('加载活动数据失败:', response.statusText)
+    }
     
   } catch (error) {
     console.error('加载活动数据失败:', error)
     ElMessage.error('加载活动数据失败')
+    activities.value = []
+    pagination.value.total = 0
   } finally {
     loading.value = false
   }
 }
 
-/**
- * 生成模拟活动数据
- */
-function generateMockActivities() {
-  const mockActivities = []
-  const activityTypes = ['login', 'operation', 'config', 'data', 'system']
-  const levels = ['info', 'warning', 'error', 'critical']
-  
-  for (let i = 0; i < 50; i++) {
-    const type = activityTypes[Math.floor(Math.random() * activityTypes.length)]
-    const level = levels[Math.floor(Math.random() * levels.length)]
-    const timestamp = new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000)
-    
-    mockActivities.push({
-      id: `activity_${i + 1}`,
-      type,
-      level,
-      timestamp: timestamp.toISOString(),
-      time: timestamp.toLocaleTimeString('zh-CN'),
-      title: generateActivityTitle(type, level),
-      description: generateActivityDescription(type, level),
-      ip: generateRandomIP(),
-      device: generateRandomDevice(),
-      details: generateActivityDetails(type),
-      error: level === 'error' || level === 'critical' ? generateErrorInfo() : null,
-      relatedData: Math.random() > 0.7 ? generateRelatedData() : null
-    })
-  }
-  
-  return mockActivities.sort((a, b) => 
-    new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
-  )
-}
 
 /**
  * 生成活动标题
@@ -562,29 +550,51 @@ function generateRelatedData() {
 }
 
 /**
- * 生成模拟角色数据
+ * 从API加载可用角色
  */
-function generateMockRoles() {
-  return [
-    { id: 'admin', name: '系统管理员' },
-    { id: 'operator', name: '操作员' },
-    { id: 'viewer', name: '观察员' },
-    { id: 'engineer', name: '工程师' },
-    { id: 'manager', name: '管理员' }
-  ]
+async function loadAvailableRoles() {
+  try {
+    const response = await fetch('/api/v1/roles', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      availableRoles.value = await response.json()
+    } else {
+      availableRoles.value = []
+      console.error('加载角色列表失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载角色列表失败:', error)
+    availableRoles.value = []
+  }
 }
 
 /**
- * 生成模拟部门数据
+ * 从API加载部门数据
  */
-function generateMockDepartments() {
-  return [
-    { id: 'it', name: 'IT部门' },
-    { id: 'production', name: '生产部门' },
-    { id: 'maintenance', name: '维护部门' },
-    { id: 'quality', name: '质量部门' },
-    { id: 'management', name: '管理部门' }
-  ]
+async function loadDepartments() {
+  try {
+    const response = await fetch('/api/v1/users/departments', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      departments.value = await response.json()
+    } else {
+      departments.value = []
+      console.error('加载部门列表失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载部门列表失败:', error)
+    departments.value = []
+  }
 }
 
 /**

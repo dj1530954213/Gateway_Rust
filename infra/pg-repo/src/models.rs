@@ -295,3 +295,95 @@ pub struct AlertHistoryFilter {
     pub limit: Option<i64>,
     pub offset: Option<i64>,
 }
+
+// ========== 驱动配置模型 ==========
+
+#[derive(Debug, Clone, FromRow, Serialize, Deserialize)]
+pub struct DriverConfig {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub protocol: String,
+    pub connection_type: String,
+    pub enabled: bool,
+    pub config: serde_json::Value,
+    pub scan_interval: i32,
+    pub timeout: i32,
+    pub max_concurrent: i32,
+    pub batch_size: i32,
+    pub max_retries: i32,
+    pub retry_interval: i32,
+    pub exponential_backoff: bool,
+    pub max_retry_interval: i32,
+    pub log_level: String,
+    pub enable_request_log: bool,
+    pub enable_response_log: bool,
+    pub max_log_size: i32,
+    pub enable_ssl: bool,
+    pub verify_certificate: bool,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct NewDriverConfig {
+    pub name: String,
+    pub description: Option<String>,
+    pub protocol: String,
+    pub connection_type: String,
+    pub enabled: bool,
+    pub config: serde_json::Value,
+    pub scan_interval: i32,
+    pub timeout: i32,
+    pub max_concurrent: i32,
+    pub batch_size: i32,
+    pub max_retries: i32,
+    pub retry_interval: i32,
+    pub exponential_backoff: bool,
+    pub max_retry_interval: i32,
+    pub log_level: String,
+    pub enable_request_log: bool,
+    pub enable_response_log: bool,
+    pub max_log_size: i32,
+    pub enable_ssl: bool,
+    pub verify_certificate: bool,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct DriverConfigUpdate {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub protocol: Option<String>,
+    pub connection_type: Option<String>,
+    pub enabled: Option<bool>,
+    pub config: Option<serde_json::Value>,
+    pub scan_interval: Option<i32>,
+    pub timeout: Option<i32>,
+    pub max_concurrent: Option<i32>,
+    pub batch_size: Option<i32>,
+    pub max_retries: Option<i32>,
+    pub retry_interval: Option<i32>,
+    pub exponential_backoff: Option<bool>,
+    pub max_retry_interval: Option<i32>,
+    pub log_level: Option<String>,
+    pub enable_request_log: Option<bool>,
+    pub enable_response_log: Option<bool>,
+    pub max_log_size: Option<i32>,
+    pub enable_ssl: Option<bool>,
+    pub verify_certificate: Option<bool>,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct DriverConfigFilter {
+    pub protocol: Option<String>,
+    pub enabled: Option<bool>,
+    pub name_contains: Option<String>,
+    pub limit: Option<i64>,
+    pub offset: Option<i64>,
+}

@@ -431,9 +431,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { ref, computed, reactive, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { alertsApi } from '@/api'
 import {
   Setting,
   Clock,
@@ -541,49 +542,9 @@ const alertRules = {
   ]
 }
 
-// 计算属性
+// 计算属性 - 现在分页在后端处理，这里直接返回alerts
 const filteredAlerts = computed(() => {
-  let filtered = alerts.value
-  
-  // 搜索过滤
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(alert => 
-      alert.title.toLowerCase().includes(query) ||
-      alert.message.toLowerCase().includes(query)
-    )
-  }
-  
-  // 严重等级过滤
-  if (severityFilter.value) {
-    filtered = filtered.filter(alert => alert.severity === severityFilter.value)
-  }
-  
-  // 状态过滤
-  if (statusFilter.value) {
-    filtered = filtered.filter(alert => alert.status === statusFilter.value)
-  }
-  
-  // 来源过滤
-  if (sourceFilter.value) {
-    filtered = filtered.filter(alert => alert.source === sourceFilter.value)
-  }
-  
-  // 时间过滤
-  if (dateRange.value && dateRange.value[0] && dateRange.value[1]) {
-    const start = new Date(dateRange.value[0])
-    const end = new Date(dateRange.value[1])
-    filtered = filtered.filter(alert => 
-      alert.timestamp >= start && alert.timestamp <= end
-    )
-  }
-  
-  totalAlerts.value = filtered.length
-  
-  // 分页
-  const start = (currentPage.value - 1) * pageSize.value
-  const end = start + pageSize.value
-  return filtered.slice(start, end)
+  return alerts.value
 })
 
 // 方法
@@ -706,23 +667,19 @@ const formatContextKey = (key: string) => {
 }
 
 // 事件处理
-const handleSearch = () => {
+const handleSearch = async () => {
   currentPage.value = 1
+  await loadAlerts()
 }
 
-const handleDateRangeChange = () => {
+const handleDateRangeChange = async () => {
   currentPage.value = 1
+  await loadAlerts()
 }
 
 const handleRefresh = async () => {
-  loading.value = true
-  try {
-    await generateMockAlerts()
-    updateAlertStats()
-    ElMessage.success('刷新成功')
-  } finally {
-    loading.value = false
-  }
+  await loadAlerts()
+  ElMessage.success('刷新成功')
 }
 
 const handleResetFilters = () => {
@@ -738,13 +695,15 @@ const handleSelectionChange = (selection: Alert[]) => {
   selectedAlerts.value = selection
 }
 
-const handleSizeChange = (size: number) => {
+const handleSizeChange = async (size: number) => {
   pageSize.value = size
   currentPage.value = 1
+  await loadAlerts()
 }
 
-const handleCurrentChange = (page: number) => {
+const handleCurrentChange = async (page: number) => {
   currentPage.value = page
+  await loadAlerts()
 }
 
 const handleViewDetail = (alert: Alert) => {
@@ -759,12 +718,8 @@ const handleViewDetail = (alert: Alert) => {
 
 const handleAcknowledge = async (alert: Alert) => {
   try {
-    await new Promise(resolve => setTimeout(resolve, 500))
-    alert.status = 'acknowledged'
-    alert.acknowledgedBy = '当前用户'
-    alert.acknowledgedAt = new Date()
-    
-    updateAlertStats()
+    await alertsApi.acknowledge(alert.id)
+    await loadAlerts()
     ElMessage.success('告警已确认')
     
     if (showDetailDialog.value) {
@@ -787,12 +742,8 @@ const handleResolve = async (alert: Alert) => {
       }
     )
     
-    await new Promise(resolve => setTimeout(resolve, 500))
-    alert.status = 'resolved'
-    alert.resolvedBy = '当前用户'
-    alert.resolvedAt = new Date()
-    
-    updateAlertStats()
+    await alertsApi.resolve(alert.id)
+    await loadAlerts()
     ElMessage.success('告警已解决')
     
     if (showDetailDialog.value) {
@@ -815,21 +766,14 @@ const handleBulkAcknowledge = async () => {
       }
     )
     
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    const ids = selectedAlerts.value.map(alert => alert.id)
+    await alertsApi.batchAcknowledge(ids)
+    await loadAlerts()
     
-    selectedAlerts.value.forEach(alert => {
-      if (alert.status === 'active') {
-        alert.status = 'acknowledged'
-        alert.acknowledgedBy = '当前用户'
-        alert.acknowledgedAt = new Date()
-      }
-    })
-    
-    updateAlertStats()
     ElMessage.success(`已批量确认 ${selectedAlerts.value.length} 个告警`)
     selectedAlerts.value = []
   } catch (error) {
-    // 取消操作
+    ElMessage.error('批量确认失败')
   }
 }
 
@@ -845,21 +789,14 @@ const handleBulkResolve = async () => {
       }
     )
     
-    await new Promise(resolve => setTimeout(resolve, 1200))
+    const ids = selectedAlerts.value.map(alert => alert.id)
+    await alertsApi.batchResolve(ids)
+    await loadAlerts()
     
-    selectedAlerts.value.forEach(alert => {
-      if (alert.status !== 'resolved') {
-        alert.status = 'resolved'
-        alert.resolvedBy = '当前用户'
-        alert.resolvedAt = new Date()
-      }
-    })
-    
-    updateAlertStats()
     ElMessage.success(`已批量解决 ${selectedAlerts.value.length} 个告警`)
     selectedAlerts.value = []
   } catch (error) {
-    // 取消操作
+    ElMessage.error('批量解决失败')
   }
 }
 
@@ -887,218 +824,129 @@ const handleSubmitAlert = async () => {
     await alertFormRef.value?.validate()
     
     submitting.value = true
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
-    // 创建新告警
-    const alert: Alert = {
-      id: Date.now().toString(),
+    await alertsApi.create({
       title: newAlert.title,
       message: newAlert.message,
       severity: newAlert.severity,
-      status: 'active',
-      source: newAlert.source,
-      count: 1,
-      timestamp: new Date(),
-      isNew: true
-    }
+      source: newAlert.source
+    })
     
-    alerts.value.unshift(alert)
-    updateAlertStats()
-    
+    await loadAlerts()
     ElMessage.success('手动告警创建成功')
     showCreateDialog.value = false
   } catch (error) {
-    ElMessage.error('表单填写不完整')
+    ElMessage.error('创建告警失败')
   } finally {
     submitting.value = false
   }
 }
 
-const updateAlertStats = () => {
-  const stats = {
-    critical: 0,
-    warning: 0,
-    info: 0,
-    acknowledged: 0,
-    total: alerts.value.length
-  }
-  
-  alerts.value.forEach(alert => {
-    stats[alert.severity]++
-    if (alert.status === 'acknowledged') {
-      stats.acknowledged++
-    }
-  })
-  
-  alertStats.value = stats
-}
-
-// 数据初始化
-const generateMockAlerts = async () => {
-  const severities = ['critical', 'warning', 'info'] as const
-  const sources = ['driver', 'connection', 'datapoint', 'system'] as const
-  const statuses = ['active', 'acknowledged', 'resolved'] as const
-  
-  const alertTitles = {
-    critical: [
-      '驱动通信中断',
-      '设备连接失败',
-      '系统内存不足',
-      '硬盘空间告急',
-      '数据库连接异常'
-    ],
-    warning: [
-      '数据采集延迟',
-      '网络延迟较高',
-      'CPU使用率过高',
-      '数据点质量异常',
-      '驱动重连频繁'
-    ],
-    info: [
-      '系统启动完成',
-      '驱动配置更新',
-      '定时任务执行',
-      '数据备份完成',
-      '用户登录成功'
-    ]
-  }
-  
-  const alertMessages = {
-    critical: [
-      '驱动与设备的通信已中断，无法获取数据。请检查网络连接和设备状态。',
-      '设备连接失败，无法建立通信链路。可能原因：网络故障、设备断电或配置错误。',
-      '系统内存使用率已超过98%，可能影响系统正常运行。建议立即释放内存或重启系统。',
-      '硬盘空间使用率已超过95%，系统即将无法写入新数据。请立即清理不必要的文件。',
-      '数据库连接中断，数据存储功能受影响。请检查数据库服务器状态和网络连接。'
-    ],
-    warning: [
-      '数据采集延迟超过预设阈值，当前延迟为2.5秒。可能影响实时性。',
-      '网络延迟较高，平均响应时间为150ms。建议检查网络环境。',
-      'CPU使用率持续处于85%以上，可能影响系统性能。建议优化进程或增加资源。',
-      '数据点值质量状态为“不确定”，可能影响数据可靠性。',
-      '驱动在过10分钟内发生了3次重连，建议检查连接稳定性。'
-    ],
-    info: [
-      '系统已成功启动，所有模块初始化完成。当前版本：v2.1.0',
-      '驱动配置已更新，扫描间隔调整为1000ms。配置立即生效。',
-      '定时任务已执行：数据备份任务在凌晨2:00执行完成。',
-      '数据备份操作已成功完成，共备份125MB数据。备份文件存储于/backup/目录。',
-      '用户“admin”于09:30成功登录系统，IP地址：192.168.1.100。'
-    ]
-  }
-  
-  alerts.value = Array.from({ length: 150 }, (_, i) => {
-    const severity = severities[Math.floor(Math.random() * severities.length)]
-    const source = sources[Math.floor(Math.random() * sources.length)]
-    const status = statuses[Math.floor(Math.random() * statuses.length)]
-    
-    const titles = alertTitles[severity]
-    const messages = alertMessages[severity]
-    
-    const title = titles[Math.floor(Math.random() * titles.length)]
-    const message = messages[Math.floor(Math.random() * messages.length)]
-    
-    const timestamp = new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // Last 7 days
-    
-    const alert: Alert = {
-      id: (i + 1).toString(),
-      title,
-      message,
-      severity,
-      status,
-      source,
-      count: Math.floor(Math.random() * 10) + 1,
-      timestamp,
-      isNew: Math.random() > 0.8 && status === 'active'
-    }
-    
-    // 添加确认信息
-    if (status === 'acknowledged' || status === 'resolved') {
-      alert.acknowledgedBy = '管理员'
-      alert.acknowledgedAt = new Date(timestamp.getTime() + Math.random() * 60 * 60 * 1000)
-    }
-    
-    // 添加解决信息
-    if (status === 'resolved') {
-      alert.resolvedBy = '管理员'
-      alert.resolvedAt = new Date(timestamp.getTime() + Math.random() * 2 * 60 * 60 * 1000)
-    }
-    
-    // 添加上下文信息
-    if (source === 'driver') {
-      alert.context = {
-        driverName: '主控制器驱动',
-        deviceAddress: '192.168.1.100:502'
-      }
-    } else if (source === 'datapoint') {
-      alert.context = {
-        datapointName: `数据点${Math.floor(Math.random() * 100)}`,
-        value: (Math.random() * 1000).toFixed(2),
-        threshold: '500.00'
-      }
-    }
-    
-    return alert
-  })
-  
-  // 按时间排序，最新的在前
-  alerts.value.sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-}
-
-// 定时刷新
-let refreshTimer: NodeJS.Timeout
-
-const startAutoRefresh = () => {
-  refreshTimer = setInterval(() => {
-    // 模拟新告警
-    if (Math.random() > 0.7) {
-      const severities = ['critical', 'warning', 'info'] as const
-      const sources = ['driver', 'connection', 'datapoint', 'system'] as const
-      
-      const severity = severities[Math.floor(Math.random() * severities.length)]
-      const source = sources[Math.floor(Math.random() * sources.length)]
-      
-      const newAlert: Alert = {
-        id: Date.now().toString(),
-        title: '实时告警测试',
-        message: '这是一个模拟的实时告警消息。',
-        severity,
-        status: 'active',
-        source,
-        count: 1,
-        timestamp: new Date(),
-        isNew: true
-      }
-      
-      alerts.value.unshift(newAlert)
-      updateAlertStats()
-      
-      // 只保留最近的200条记录
-      if (alerts.value.length > 200) {
-        alerts.value = alerts.value.slice(0, 200)
-      }
-    }
-    
-    // 更新统计数据
-    updateAlertStats()
-  }, 30000) // Every 30 seconds
-}
-
-// 生命周期
-onMounted(async () => {
-  loading.value = true
+// 数据加载函数
+const loadAlerts = async () => {
   try {
-    await generateMockAlerts()
-    updateAlertStats()
-    startAutoRefresh()
+    loading.value = true
+    const response = await alertsApi.list({
+      page: currentPage.value,
+      size: pageSize.value,
+      severity: severityFilter.value || undefined,
+      status: statusFilter.value || undefined,
+      source: sourceFilter.value || undefined,
+      startTime: dateRange.value?.[0] || undefined,
+      endTime: dateRange.value?.[1] || undefined,
+      keyword: searchQuery.value || undefined
+    })
+    
+    if (response.success && response.data) {
+      alerts.value = response.data.items || []
+      totalAlerts.value = response.data.total || 0
+    }
+  } catch (error) {
+    console.error('Failed to load alerts:', error)
+    ElMessage.error('加载告警列表失败')
   } finally {
     loading.value = false
   }
+}
+
+const loadAlertStats = async () => {
+  try {
+    const stats = await alertsApi.getStats()
+    alertStats.value = stats
+  } catch (error) {
+    console.error('Failed to load alert stats:', error)
+  }
+}
+
+// WebSocket实时更新
+let wsConnection: WebSocket | null = null
+
+const startRealtimeUpdate = () => {
+  const wsUrl = `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/alerts`
+  
+  try {
+    wsConnection = new WebSocket(wsUrl)
+    
+    wsConnection.onopen = () => {
+      console.log('Alerts WebSocket connected')
+    }
+    
+    wsConnection.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        if (data.type === 'new_alert') {
+          // 添加新告警到列表顶部
+          alerts.value.unshift(data.alert)
+          loadAlertStats()
+        } else if (data.type === 'alert_updated') {
+          // 更新现有告警
+          const index = alerts.value.findIndex(alert => alert.id === data.alert.id)
+          if (index > -1) {
+            alerts.value[index] = data.alert
+            loadAlertStats()
+          }
+        }
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error)
+      }
+    }
+    
+    wsConnection.onerror = (error) => {
+      console.error('Alerts WebSocket error:', error)
+    }
+    
+    wsConnection.onclose = () => {
+      console.log('Alerts WebSocket disconnected')
+      // 5秒后重连
+      setTimeout(() => {
+        if (!wsConnection || wsConnection.readyState === WebSocket.CLOSED) {
+          startRealtimeUpdate()
+        }
+      }, 5000)
+    }
+  } catch (error) {
+    console.error('Failed to establish WebSocket connection:', error)
+  }
+}
+
+// 监听筛选器变化
+watch([severityFilter, statusFilter, sourceFilter], async () => {
+  currentPage.value = 1
+  await loadAlerts()
+})
+
+// 生命周期
+onMounted(async () => {
+  await Promise.all([
+    loadAlerts(),
+    loadAlertStats()
+  ])
+  startRealtimeUpdate()
 })
 
 onUnmounted(() => {
-  if (refreshTimer) {
-    clearInterval(refreshTimer)
+  if (wsConnection) {
+    wsConnection.close()
+    wsConnection = null
   }
 })
 </script>

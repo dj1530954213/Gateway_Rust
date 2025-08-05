@@ -5,6 +5,9 @@ import type { User, LoginRequest, LoginResponse } from '@/types/auth'
 import { authApi } from '@/api'
 
 export const useAuthStore = defineStore('auth', () => {
+  // 测试模式检查
+  const isTestMode = import.meta.env.VITE_BYPASS_AUTH === 'true'
+  
   // State
   const token = ref<string | null>(localStorage.getItem('token'))
   const user = ref<User | null>(
@@ -14,8 +17,29 @@ export const useAuthStore = defineStore('auth', () => {
   )
   const loading = ref(false)
 
+  // 如果是测试模式，创建虚拟用户
+  if (isTestMode && !user.value) {
+    const testUser = {
+      id: 'test-user-001',
+      username: 'test-admin',
+      email: 'test@gateway.local',
+      full_name: '测试管理员',
+      role: 'admin',
+      permissions: ['*'], // 所有权限
+      is_active: true,
+      created_at: new Date().toISOString()
+    }
+    user.value = testUser
+    token.value = `test-token-${  Date.now()}`
+    localStorage.setItem('user', JSON.stringify(testUser))
+    localStorage.setItem('token', token.value)
+  }
+
   // Getters
-  const isAuthenticated = computed(() => !!token.value && !!user.value)
+  const isAuthenticated = computed(() => {
+    if (isTestMode) return true // 测试模式下始终认为已认证
+    return !!token.value && !!user.value
+  })
   const userRole = computed(() => user.value?.role)
   const userName = computed(() => user.value?.full_name || user.value?.username)
 
@@ -23,41 +47,35 @@ export const useAuthStore = defineStore('auth', () => {
   const login = async (credentials: LoginRequest): Promise<void> => {
     loading.value = true
     try {
-      // Use mock authentication when API is not available
-      const useMockAuth = true // Set to false when backend is ready
-      
-      console.log('Login attempt:', credentials)
-      
-      if (useMockAuth) {
-        // Mock login validation
-        if (credentials.username && credentials.password) {
-          const mockToken = `mock-jwt-token-${  Date.now()}`
-          const mockUser = {
-            id: 1,
-            username: credentials.username,
-            full_name: credentials.username === 'admin' ? '管理员' : '用户',
-            email: `${credentials.username}@example.com`,
-            role: credentials.username === 'admin' ? 'admin' : 'operator',
-            status: 'active',
-            last_login: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-          
-          token.value = mockToken
-          user.value = mockUser
-          
-          // Store token and user in localStorage
-          localStorage.setItem('token', mockToken)
-          localStorage.setItem('user', JSON.stringify(mockUser))
-          
-          ElMessage.success('登录成功')
-          return
-        } else {
-          throw new Error('用户名和密码不能为空')
+      // 测试模式下直接模拟成功登录
+      if (isTestMode) {
+        // 模拟API延迟
+        await new Promise(resolve => setTimeout(resolve, 500))
+        
+        const testUser = {
+          id: 'test-user-001',
+          username: credentials.username || 'test-admin',
+          email: 'test@gateway.local',
+          full_name: `测试用户-${credentials.username}`,
+          role: 'admin',
+          permissions: ['*'], // 所有权限
+          is_active: true,
+          created_at: new Date().toISOString()
         }
+        
+        const testToken = `test-token-${  Date.now()}`
+        
+        token.value = testToken
+        user.value = testUser
+        
+        localStorage.setItem('token', testToken)
+        localStorage.setItem('user', JSON.stringify(testUser))
+        
+        ElMessage.success('登录成功 (测试模式)')
+        return
       }
       
+      // 正常模式下调用真实API
       const response = await authApi.login(credentials)
       
       if (response.success && response.data) {
@@ -74,8 +92,10 @@ export const useAuthStore = defineStore('auth', () => {
         throw new Error(response.message || '登录失败')
       }
     } catch (error: any) {
-      ElMessage.error(error.message || '登录失败')
-      throw error
+      if (!isTestMode) {
+        ElMessage.error(error.message || '登录失败')
+        throw error
+      }
     } finally {
       loading.value = false
     }
@@ -100,47 +120,19 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return
     
     try {
-      // Use mock data when API is not available
-      const useMockData = true // Set to false when backend is ready
-      
-      if (useMockData) {
-        // Mock user data for development
-        if (!user.value && token.value) {
-          user.value = {
-            id: 1,
-            username: 'admin',
-            full_name: '管理员',
-            email: 'admin@example.com',
-            role: 'admin',
-            status: 'active',
-            last_login: new Date().toISOString(),
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
-        }
-        return
-      }
-      
       const response = await authApi.getUserInfo()
       if (response.success && response.data) {
         user.value = response.data as User
+        localStorage.setItem('user', JSON.stringify(user.value))
       }
     } catch (error) {
       console.error('Failed to fetch user info:', error)
-      // Use mock data instead of clearing auth state
-      if (!user.value && token.value) {
-        user.value = {
-          id: 1,
-          username: 'admin',
-          full_name: '管理员',
-          email: 'admin@example.com',
-          role: 'admin',
-          status: 'active',
-          last_login: new Date().toISOString(),
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }
-      }
+      // Clear invalid authentication state
+      token.value = null
+      user.value = null
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      throw error
     }
   }
 
@@ -227,6 +219,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const hasRole = (role: string): boolean => {
+    // 测试模式下，admin角色始终返回 true，其他角色基于测试用户配置
+    if (isTestMode) {
+      return role === 'admin' || user.value?.role === role
+    }
+    
     return user.value?.role === role
   }
 
@@ -237,45 +234,27 @@ export const useAuthStore = defineStore('auth', () => {
   const getSessions = async (): Promise<void> => {
     if (!user.value) return
     
+    // 测试模式下返回模拟会话数据
+    if (isTestMode) {
+      sessions.value = [{
+        id: 'test-session-001',
+        ip_address: '127.0.0.1',
+        user_agent: 'Test Browser',
+        location: '本地测试',
+        is_active: true,
+        created_at: new Date().toISOString(),
+        last_used_at: new Date().toISOString()
+      }]
+      console.log('🔧 测试模式 - 会话列表: 返回测试数据')
+      return
+    }
+    
     sessionLoading.value = true
     try {
-      // Mock session data for development
-      const mockSessions = [
-        {
-          id: 'session_1',
-          userId: user.value.id,
-          deviceInfo: {
-            type: 'desktop',
-            name: 'Chrome on Windows',
-            browser: 'Chrome 119.0',
-            os: 'Windows 10'
-          },
-          ip: '192.168.1.100',
-          location: '北京市',
-          loginTime: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-          lastActivity: new Date().toISOString(),
-          status: 'active',
-          current: true
-        },
-        {
-          id: 'session_2',
-          userId: user.value.id,
-          deviceInfo: {
-            type: 'mobile',
-            name: 'Safari on iPhone',
-            browser: 'Safari 17.0',
-            os: 'iOS 17'
-          },
-          ip: '192.168.1.101',
-          location: '上海市',
-          loginTime: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
-          lastActivity: new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString(),
-          status: 'active',
-          current: false
-        }
-      ]
-      
-      sessions.value = mockSessions
+      const response = await authApi.getSessions()
+      if (response.success && response.data) {
+        sessions.value = response.data
+      }
     } catch (error) {
       console.error('Failed to fetch sessions:', error)
       ElMessage.error('获取会话信息失败')
@@ -286,37 +265,31 @@ export const useAuthStore = defineStore('auth', () => {
 
   const terminateSession = async (sessionId: string): Promise<void> => {
     try {
-      // Mock terminate session
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      const sessionIndex = sessions.value.findIndex(s => s.id === sessionId)
-      if (sessionIndex > -1) {
-        sessions.value[sessionIndex].status = 'terminated'
+      const response = await authApi.terminateSession(sessionId)
+      if (response.success) {
+        await getSessions() // Refresh sessions list
+        ElMessage.success('会话已终止')
+      } else {
+        throw new Error(response.message || '终止会话失败')
       }
-      
-      ElMessage.success('会话已终止')
-    } catch (error) {
+    } catch (error: any) {
       console.error('Failed to terminate session:', error)
-      ElMessage.error('终止会话失败')
+      ElMessage.error(error.message || '终止会话失败')
     }
   }
 
   const terminateAllOtherSessions = async (): Promise<void> => {
     try {
-      // Mock terminate all other sessions
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      sessions.value = sessions.value.map(session => {
-        if (!session.current) {
-          return { ...session, status: 'terminated' }
-        }
-        return session
-      })
-      
-      ElMessage.success('已终止其他所有会话')
-    } catch (error) {
+      const response = await authApi.terminateAllOtherSessions()
+      if (response.success) {
+        await getSessions() // Refresh sessions list
+        ElMessage.success('已终止其他所有会话')
+      } else {
+        throw new Error(response.message || '终止其他会话失败')
+      }
+    } catch (error: any) {
       console.error('Failed to terminate other sessions:', error)
-      ElMessage.error('终止其他会话失败')
+      ElMessage.error(error.message || '终止其他会话失败')
     }
   }
 
@@ -330,25 +303,16 @@ export const useAuthStore = defineStore('auth', () => {
     target?: string
     details?: any
   }): Promise<void> => {
+    // 测试模式下跳过API调用，只在控制台记录
+    if (isTestMode) {
+      console.log('🔧 测试模式 - 活动记录:', activity)
+      return
+    }
+    
     try {
-      const activityRecord = {
-        id: `activity_${Date.now()}`,
-        userId: user.value?.id,
-        type: activity.type,
-        action: activity.action,
-        target: activity.target,
-        details: activity.details,
-        timestamp: new Date().toISOString(),
-        ip: '192.168.1.100', // Should be detected from request
-        userAgent: navigator.userAgent
-      }
-      
-      // Add to local activities (in real app, send to server)
-      activities.value.unshift(activityRecord)
-      
-      // Keep only last 100 activities in memory
-      if (activities.value.length > 100) {
-        activities.value = activities.value.slice(0, 100)
+      const response = await authApi.logActivity(activity)
+      if (!response.success) {
+        console.warn('Failed to log activity:', response.message)
       }
     } catch (error) {
       console.error('Failed to log activity:', error)
@@ -360,35 +324,27 @@ export const useAuthStore = defineStore('auth', () => {
     dateRange?: [Date, Date]
     limit?: number
   }): Promise<void> => {
+    // 测试模式下返回测试活动记录
+    if (isTestMode) {
+      activities.value = [{
+        id: 'test-activity-001',
+        activity_type: 'login',
+        action: '用户登录',
+        target: 'test-admin',
+        details: { message: '测试模式登录' },
+        ip_address: '127.0.0.1',
+        created_at: new Date().toISOString()
+      }]
+      console.log('🔧 测试模式 - 活动记录: 返回测试数据')
+      return
+    }
+    
     activityLoading.value = true
     try {
-      // Mock activity data
-      const mockActivities = [
-        {
-          id: 'activity_1',
-          userId: user.value?.id,
-          type: 'auth',
-          action: 'login',
-          target: 'system',
-          timestamp: new Date().toISOString(),
-          ip: '192.168.1.100',
-          userAgent: navigator.userAgent,
-          details: { method: 'password' }
-        },
-        {
-          id: 'activity_2',
-          userId: user.value?.id,
-          type: 'device',
-          action: 'view',
-          target: 'device_list',
-          timestamp: new Date(Date.now() - 5 * 60 * 1000).toISOString(),
-          ip: '192.168.1.100',
-          userAgent: navigator.userAgent,
-          details: { page: 'devices' }
-        }
-      ]
-      
-      activities.value = mockActivities
+      const response = await authApi.getActivities(filters)
+      if (response.success && response.data) {
+        activities.value = response.data
+      }
     } catch (error) {
       console.error('Failed to fetch activities:', error)
       ElMessage.error('获取活动记录失败')
@@ -403,48 +359,28 @@ export const useAuthStore = defineStore('auth', () => {
   const loadUserPermissions = async (): Promise<void> => {
     if (!user.value) return
     
+    // 测试模式下直接设置所有权限
+    if (isTestMode) {
+      permissions.value = ['*']
+      console.log('🔧 测试模式 - 权限加载: 已授予所有权限')
+      return
+    }
+    
     try {
-      // Mock permissions based on role
-      const rolePermissions: Record<string, string[]> = {
-        admin: [
-          'users:create', 'users:read', 'users:update', 'users:delete',
-          'roles:create', 'roles:read', 'roles:update', 'roles:delete',
-          'permissions:assign', 'permissions:revoke',
-          'devices:create', 'devices:read', 'devices:update', 'devices:delete',
-          'devices:control', 'devices:monitor',
-          'data:read', 'data:export', 'data:import', 'data:delete',
-          'alerts:create', 'alerts:read', 'alerts:update', 'alerts:delete',
-          'alerts:acknowledge', 'alerts:configure',
-          'system:config', 'system:logs', 'system:backup', 'system:restore',
-          'reports:generate', 'reports:export'
-        ],
-        manager: [
-          'users:read', 'users:update',
-          'roles:read',
-          'devices:read', 'devices:update', 'devices:control',
-          'data:read', 'data:export',
-          'alerts:read', 'alerts:acknowledge', 'alerts:configure',
-          'reports:generate', 'reports:export'
-        ],
-        operator: [
-          'devices:read', 'devices:control', 'devices:monitor',
-          'data:read',
-          'alerts:read', 'alerts:acknowledge'
-        ],
-        viewer: [
-          'devices:read',
-          'data:read',
-          'alerts:read'
-        ]
+      const response = await authApi.getUserPermissions()
+      if (response.success && response.data) {
+        permissions.value = response.data
       }
-      
-      permissions.value = rolePermissions[user.value.role] || []
     } catch (error) {
       console.error('Failed to load permissions:', error)
+      permissions.value = []
     }
   }
 
   const checkPermission = (permission: string): boolean => {
+    // 测试模式下始终返回 true
+    if (isTestMode) return true
+    
     if (!user.value) return false
     
     // Admin has all permissions
@@ -455,6 +391,9 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   const checkMultiplePermissions = (requiredPermissions: string[], requireAll = true): boolean => {
+    // 测试模式下始终返回 true
+    if (isTestMode) return true
+    
     if (!user.value) return false
     
     if (user.value.role === 'admin') return true
@@ -468,34 +407,27 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize store
   const init = async (): Promise<void> => {
-    // 在Mock模式下自动登录
-    if (import.meta.env.VITE_ENABLE_MOCK === 'true' && !token.value) {
-      console.log('Auto-login in Mock mode')
-      const mockToken = `mock-jwt-token-${Date.now()}`
-      const mockUser = {
-        id: 1,
-        username: 'admin',
-        full_name: '管理员',
-        email: 'admin@example.com',
-        role: 'admin',
-        status: 'active',
-        last_login: new Date().toISOString(),
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      }
-      
-      token.value = mockToken
-      user.value = mockUser
-      
-      localStorage.setItem('token', mockToken)
-      localStorage.setItem('user', JSON.stringify(mockUser))
+    // 测试模式下跳过初始化API调用
+    if (isTestMode) {
+      console.log('🔧 测试模式 - 跳过认证初始化')
+      await loadUserPermissions() // 仍然需要加载权限以设置测试权限
+      return
     }
     
     if (token.value) {
-      await fetchUserInfo()
-      await loadUserPermissions()
-      await getSessions()
-      await getActivities()
+      try {
+        await fetchUserInfo()
+        await loadUserPermissions()
+        await getSessions()
+        await getActivities()
+      } catch (error) {
+        console.error('Failed to initialize auth store:', error)
+        // Clear invalid authentication state
+        token.value = null
+        user.value = null
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
     }
   }
 

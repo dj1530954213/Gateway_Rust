@@ -427,10 +427,12 @@ const canSave = computed(() => {
  */
 async function initializeData() {
   try {
-    // 生成模拟数据
-    availableParentRoles.value = generateMockParentRoles()
-    departments.value = generateMockDepartments()
-    permissionTemplates.value = generateMockPermissionTemplates()
+    // 从API加载真实数据
+    await Promise.all([
+      loadAvailableParentRoles(),
+      loadDepartments(),
+      loadPermissionTemplates()
+    ])
 
     // 如果是编辑模式，填充表单数据
     if (!props.isCreate && props.roleData) {
@@ -447,55 +449,75 @@ async function initializeData() {
 }
 
 /**
- * 生成模拟上级角色数据
+ * 从API加载可用的上级角色
  */
-function generateMockParentRoles() {
-  return [
-    { id: 'admin', name: '系统管理员' },
-    { id: 'manager', name: '部门经理' },
-    { id: 'supervisor', name: '主管' }
-  ]
-}
-
-/**
- * 生成模拟部门数据
- */
-function generateMockDepartments() {
-  return [
-    { id: 'it', name: 'IT部门' },
-    { id: 'production', name: '生产部门' },
-    { id: 'maintenance', name: '维护部门' },
-    { id: 'quality', name: '质量部门' },
-    { id: 'management', name: '管理部门' }
-  ]
-}
-
-/**
- * 生成模拟权限模板数据
- */
-function generateMockPermissionTemplates() {
-  return [
-    {
-      id: 'basic_operator',
-      name: '基础操作员',
-      description: '包含设备查看、数据查看等基础权限'
-    },
-    {
-      id: 'advanced_operator',
-      name: '高级操作员',
-      description: '包含设备控制、数据导出等高级权限'
-    },
-    {
-      id: 'system_admin',
-      name: '系统管理员',
-      description: '包含用户管理、系统配置等管理权限'
-    },
-    {
-      id: 'data_analyst',
-      name: '数据分析师',
-      description: '包含数据查看、分析、导出等数据相关权限'
+async function loadAvailableParentRoles() {
+  try {
+    const response = await fetch('/api/v1/roles?filter=parent', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      availableParentRoles.value = await response.json()
+    } else {
+      availableParentRoles.value = []
+      console.error('加载上级角色失败:', response.statusText)
     }
-  ]
+  } catch (error) {
+    console.error('加载上级角色失败:', error)
+    availableParentRoles.value = []
+  }
+}
+
+/**
+ * 从API加载部门数据
+ */
+async function loadDepartments() {
+  try {
+    const response = await fetch('/api/v1/users/departments', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      departments.value = await response.json()
+    } else {
+      departments.value = []
+      console.error('加载部门列表失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载部门列表失败:', error)
+    departments.value = []
+  }
+}
+
+/**
+ * 从API加载权限模板
+ */
+async function loadPermissionTemplates() {
+  try {
+    const response = await fetch('/api/v1/permissions/templates', {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json'
+      }
+    })
+    
+    if (response.ok) {
+      permissionTemplates.value = await response.json()
+    } else {
+      permissionTemplates.value = []
+      console.error('加载权限模板失败:', response.statusText)
+    }
+  } catch (error) {
+    console.error('加载权限模板失败:', error)
+    permissionTemplates.value = []
+  }
 }
 
 /**
@@ -590,25 +612,31 @@ async function saveRole() {
     
     saving.value = true
     
-    // 模拟保存操作
-    await new Promise(resolve => setTimeout(resolve, 1000))
+    // 调用真实API保存角色
+    const apiUrl = props.isCreate ? '/api/v1/roles' : `/api/v1/roles/${roleForm.value.id}`
+    const method = props.isCreate ? 'POST' : 'PUT'
     
-    const roleData = {
-      ...roleForm.value,
-      updatedAt: new Date().toISOString()
+    const response = await fetch(apiUrl, {
+      method,
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(roleForm.value)
+    })
+    
+    if (response.ok) {
+      const roleData = await response.json()
+      emit('save', roleData)
+      dialogVisible.value = false
+      ElMessage.success(props.isCreate ? '角色创建成功' : '角色更新成功')
+    } else {
+      const errorData = await response.json()
+      throw new Error(errorData.message || '保存失败')
     }
-    
-    if (props.isCreate) {
-      roleData.createdAt = new Date().toISOString()
-      roleData.id = `role_${Date.now()}`
-    }
-    
-    emit('save', roleData)
-    dialogVisible.value = false
     
   } catch (error) {
     console.error('保存角色失败:', error)
-    ElMessage.error('保存角色失败')
+    ElMessage.error(`保存角色失败: ${error.message}`)
   } finally {
     saving.value = false
   }

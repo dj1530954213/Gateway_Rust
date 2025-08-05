@@ -293,6 +293,17 @@ import { formatTime, formatUptime } from '@/utils/date'
 import { formatNetworkSpeed, formatStatus } from '@/utils/format'
 import { systemApi, alertsApi, driversApi, realtimeApi } from '@/services/api'
 
+// Element Plus图标导入
+import {
+  ArrowUp,
+  ArrowDown,
+  Minus,
+  Plus,
+  Connection,
+  Setting,
+  Download,
+} from '@element-plus/icons-vue'
+
 // Register ECharts components
 use([
   CanvasRenderer,
@@ -317,39 +328,39 @@ const loading = ref(false)
 const selectedTimeRange = ref('1h')
 const selectedDataPoints = ref<string[]>([])
 
-// Stats data
+// Stats data - 从API动态获取
 const statsCards = ref([
   {
     key: 'devices',
     label: '在线设备',
-    value: '12',
-    change: '+2',
-    changeType: 'increase',
+    value: '0',
+    change: '0',
+    changeType: 'stable',
     type: 'primary',
     icon: 'Connection',
   },
   {
     key: 'dataPoints',
     label: '数据点',
-    value: '2,847',
-    change: '+15%',
-    changeType: 'increase',
+    value: '0',
+    change: '0%',
+    changeType: 'stable',
     type: 'success',
     icon: 'SetUp',
   },
   {
     key: 'alerts',
     label: '活跃告警',
-    value: '3',
-    change: '-2',
-    changeType: 'decrease',
+    value: '0',
+    change: '0',
+    changeType: 'stable',
     type: 'warning',
     icon: 'Warning',
   },
   {
     key: 'throughput',
     label: '数据吞吐量',
-    value: '8.5K/s',
+    value: '0K/s',
     change: '0%',
     changeType: 'stable',
     type: 'info',
@@ -357,99 +368,33 @@ const statsCards = ref([
   },
 ])
 
-// System components status
-const systemComponents = ref([
-  {
-    name: '数据采集',
-    status: 'running',
-    uptime: 86400,
-    errorCount: 0,
-  },
-  {
-    name: '数据传输',
-    status: 'running',
-    uptime: 86200,
-    errorCount: 1,
-  },
-  {
-    name: '告警系统',
-    status: 'running',
-    uptime: 86400,
-    errorCount: 0,
-  },
-  {
-    name: '存储服务',
-    status: 'warning',
-    uptime: 85000,
-    errorCount: 3,
-  },
-])
+// System components status - 从API获取
+const systemComponents = ref<any[]>([])
 
-// System metrics
+// System metrics - 从API获取
 const systemMetrics = reactive({
-  cpuUsage: 45,
-  memoryUsage: 68,
-  diskUsage: 32,
-  networkIn: 1024000,
-  networkOut: 2048000,
+  cpuUsage: 0,
+  memoryUsage: 0,
+  diskUsage: 0,
+  networkIn: 0,
+  networkOut: 0,
 })
 
-// Recent alerts
-const recentAlerts = ref([
-  {
-    id: '1',
-    message: 'PLC-001温度传感器读取异常',
-    level: 'error',
-    source: 'Driver: ModbusTCP-PLC001',
-    created_at: new Date().toISOString(),
-    acknowledged: false,
-  },
-  {
-    id: '2',
-    message: 'MQTT连接器连接中断',
-    level: 'warning',
-    source: 'Connector: MQTT-Cloud',
-    created_at: new Date(Date.now() - 300000).toISOString(),
-    acknowledged: true,
-  },
-])
+// Recent alerts - 从API获取
+const recentAlerts = ref<any[]>([])
 
-// Device statistics
+// Device statistics - 从API获取
 const deviceStats = reactive({
-  total: 15,
-  online: 12,
-  offline: 3,
+  total: 0,
+  online: 0,
+  offline: 0,
 })
 
-// Recent devices
-const recentDevices = ref([
-  {
-    id: '1',
-    name: 'PLC-001',
-    type: 'Modbus TCP',
-    status: 'running',
-  },
-  {
-    id: '2',
-    name: 'OPC-Server-01',
-    type: 'OPC UA',
-    status: 'running',
-  },
-  {
-    id: '3',
-    name: 'Sensor-Hub-02',
-    type: 'Modbus RTU',
-    status: 'stopped',
-  },
-])
+// Recent devices - 从API获取
+const recentDevices = ref<any[]>([])
 
-// Available data points for chart
-const availableDataPoints = ref([
-  { id: 'temp_001', name: '温度传感器-001' },
-  { id: 'pressure_001', name: '压力传感器-001' },
-  { id: 'flow_001', name: '流量计-001' },
-  { id: 'level_001', name: '液位计-001' },
-])
+// Available data points for chart - 从API获取
+const availableDataPoints = ref<any[]>([])
 
 // Chart configuration
 const chartOption = computed(() => ({
@@ -492,7 +437,7 @@ const chartOption = computed(() => ({
     name: availableDataPoints.value.find(p => p.id === pointId)?.name || pointId,
     type: 'line',
     smooth: true,
-    data: generateMockData(),
+    data: [], // 🚫 生产级系统 - 数据从真实 API 获取，初始为空数组
     itemStyle: {
       color: getChartColor(index),
     },
@@ -542,13 +487,8 @@ const generateTimeLabels = () => {
   return labels
 }
 
-const generateMockData = () => {
-  const data = []
-  for (let i = 0; i < 13; i++) {
-    data.push((Math.random() * 100).toFixed(1))
-  }
-  return data
-}
+// 🚫 生产级系统 - 已移除模拟数据生成函数
+// 图表数据现在直接从真实 API 获取，不再使用随机生成
 
 const acknowledgeAlert = async (alertId: string) => {
   try {
@@ -571,40 +511,17 @@ const handleChartClick = (params: any) => {
   console.log('Chart clicked:', params)
 }
 
+// 🚫 生产级系统 - 已移除随机数据更新函数
+// 实时数据现在通过 WebSocket 和 API 调用获取真实数据
 const updateRealTimeData = () => {
-  // Update system metrics
-  systemMetrics.cpuUsage = Math.max(0, Math.min(100, 
-    systemMetrics.cpuUsage + (Math.random() - 0.5) * 10
-  ))
-  systemMetrics.memoryUsage = Math.max(0, Math.min(100, 
-    systemMetrics.memoryUsage + (Math.random() - 0.5) * 5
-  ))
-  systemMetrics.networkIn = Math.max(0, 
-    systemMetrics.networkIn + (Math.random() - 0.5) * 500000
-  )
-  systemMetrics.networkOut = Math.max(0, 
-    systemMetrics.networkOut + (Math.random() - 0.5) * 800000
-  )
+  // 这个函数现在只负责刷新真实数据，不再生成随机数据
+  loadDashboardData()
 }
 
 // Load dashboard data from API
 const loadDashboardData = async () => {
   try {
     loading.value = true
-    
-    // Use mock data when API is not available
-    const useMockData = true // Set to false when backend is ready
-    
-    if (useMockData) {
-      // Mock successful data loading
-      console.log('Using mock data for dashboard')
-      
-      // Mock delay to simulate API call
-      await new Promise(resolve => setTimeout(resolve, 500))
-      
-      // Data is already initialized with mock values, no need to change
-      return
-    }
     
     // Load system metrics
     const metricsResponse = await systemApi.getSystemMetrics()
@@ -614,6 +531,12 @@ const loadDashboardData = async () => {
       systemMetrics.diskUsage = metricsResponse.data.diskUsage
       systemMetrics.networkIn = metricsResponse.data.activeConnections * 1024
       systemMetrics.networkOut = metricsResponse.data.messagesPerSecond * 512
+    }
+
+    // Load system components status
+    const componentsResponse = await systemApi.getComponentStatus()
+    if (componentsResponse.success && componentsResponse.data) {
+      systemComponents.value = componentsResponse.data
     }
     
     // Load drivers and update stats
@@ -649,11 +572,15 @@ const loadDashboardData = async () => {
       statsCards.value[2].value = activeAlerts.toString()
       recentAlerts.value = alerts.slice(0, 5)
     }
+
+    // Load available data points for chart
+    const dataPointsResponse = await realtimeApi.getDataPoints()
+    if (dataPointsResponse.success && dataPointsResponse.data) {
+      availableDataPoints.value = dataPointsResponse.data
+    }
     
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
-    // Use fallback mock data instead of showing error
-    console.log('Falling back to mock data due to API error')
   } finally {
     loading.value = false
   }
@@ -664,10 +591,13 @@ let dataUpdateTimer: NodeJS.Timeout | null = null
 
 // Initialize component
 onMounted(async () => {
-  selectedDataPoints.value = ['temp_001', 'pressure_001']
-  
   // Load initial data from API
   await loadDashboardData()
+  
+  // Select first 2 data points after loading
+  if (availableDataPoints.value.length >= 2) {
+    selectedDataPoints.value = availableDataPoints.value.slice(0, 2).map(p => p.id)
+  }
   
   // Start real-time updates
   dataUpdateTimer = setInterval(() => {

@@ -1084,7 +1084,7 @@ const initializeData = () => {
     scanRate: 35,
     errorCount: 2,
     config: {
-      host: '192.168.1.100',
+      host: '',
       port: 502,
       unitId: 1,
       timeout: 5000

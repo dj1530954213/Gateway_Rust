@@ -10,7 +10,7 @@
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
-use utoipa::ToSchema;
+use utoipa::{ToSchema, IntoParams};
 
 // ========== 枚举类型 ==========
 
@@ -94,7 +94,7 @@ pub struct DevicePatchReq {
     pub enabled: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct DeviceQuery {
     pub protocol: Option<ProtocolKind>,
     pub enabled: Option<bool>,
@@ -145,7 +145,7 @@ pub struct TagPatchReq {
     pub enabled: Option<bool>,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct TagQuery {
     pub device_id: Option<Uuid>,
     pub data_type: Option<TagDataType>,
@@ -203,6 +203,14 @@ pub struct DriverStatisticsVO {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct DriverStatusVO {
+    pub loaded_count: u32,
+    pub failed_count: u32,
+    pub unloaded_count: u32,
+    pub total_count: u32,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub struct RegistryOverviewVO {
     pub total_drivers: u32,
     pub static_drivers: u32,
@@ -231,7 +239,7 @@ pub struct DriverUploadResponse {
 }
 
 // 驱动列表查询相关
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct DriverListQuery {
     pub driver_kind: Option<String>,
     pub protocol: Option<String>,
@@ -272,7 +280,7 @@ pub struct DriverDetailResponse {
 }
 
 // 驱动搜索相关
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct DriverSearchQuery {
     pub q: String,
 }
@@ -322,7 +330,7 @@ pub struct ApiErrorResponse {
 
 // ========== 历史数据相关 DTO ==========
 
-#[derive(Debug, Deserialize, ToSchema, Default)]
+#[derive(Debug, Clone, Deserialize, ToSchema, IntoParams, Default)]
 pub struct HistoryQuery {
     pub device_id: Option<Uuid>,
     pub tag_id: Option<Uuid>,
@@ -363,7 +371,7 @@ pub struct HistoryExportRequest {
     pub timestamp_format: String, // "ISO8601", "UNIX", "UNIX_MS", "FORMATTED"
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct AggregatedQuery {
     pub device_id: Option<Uuid>,
     pub tag_id: Option<Uuid>,
@@ -379,7 +387,7 @@ pub struct SeriesPoint {
     pub value: f64,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct StatsQuery {
     #[serde(flatten)]
     pub base: HistoryQuery,
@@ -458,7 +466,7 @@ pub struct AlertEventVO {
     pub status: String,
 }
 
-#[derive(Debug, Deserialize, ToSchema)]
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
 pub struct AlertHistoryQuery {
     pub device_id: Option<Uuid>,
     pub tag_id: Option<Uuid>,
@@ -513,6 +521,144 @@ pub struct HealthResponse {
     pub services: std::collections::HashMap<String, String>,
 }
 
+// ========== 驱动配置相关 DTO ==========
+
+#[derive(Debug, Clone, Serialize, Deserialize, ToSchema)]
+pub struct DriverConfigVO {
+    pub id: Uuid,
+    pub name: String,
+    pub description: Option<String>,
+    pub protocol: String,
+    pub connection_type: String,
+    pub enabled: bool,
+    pub config: serde_json::Value,
+    
+    // 性能设置
+    pub scan_interval: i32,
+    pub timeout: i32,
+    pub max_concurrent: i32,
+    pub batch_size: i32,
+    
+    // 重连策略
+    pub max_retries: i32,
+    pub retry_interval: i32,
+    pub exponential_backoff: bool,
+    pub max_retry_interval: i32,
+    
+    // 日志设置
+    pub log_level: String,
+    pub enable_request_log: bool,
+    pub enable_response_log: bool,
+    pub max_log_size: i32,
+    
+    // 安全配置
+    pub enable_ssl: bool,
+    pub verify_certificate: bool,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+    
+    pub created_at: DateTime<Utc>,
+    pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct DriverConfigCreateReq {
+    pub name: String,
+    pub description: Option<String>,
+    pub protocol: String,  // 'modbus_tcp', 'modbus_rtu', 'opcua', 'mqtt', 'ethernet_ip', 'bacnet'
+    pub connection_type: String,  // 'ethernet', 'serial'
+    #[serde(default = "default_true")]
+    pub enabled: bool,
+    pub config: serde_json::Value,
+    
+    // 性能设置
+    #[serde(default = "default_scan_interval")]
+    pub scan_interval: i32,
+    #[serde(default = "default_timeout")]
+    pub timeout: i32,
+    #[serde(default = "default_max_concurrent")]
+    pub max_concurrent: i32,
+    #[serde(default = "default_batch_size")]
+    pub batch_size: i32,
+    
+    // 重连策略
+    #[serde(default = "default_max_retries")]
+    pub max_retries: i32,
+    #[serde(default = "default_retry_interval")]  
+    pub retry_interval: i32,
+    #[serde(default = "default_true")]
+    pub exponential_backoff: bool,
+    #[serde(default = "default_max_retry_interval")]
+    pub max_retry_interval: i32,
+    
+    // 日志设置
+    #[serde(default = "default_log_level")]
+    pub log_level: String,
+    #[serde(default)]
+    pub enable_request_log: bool,
+    #[serde(default)]
+    pub enable_response_log: bool,
+    #[serde(default = "default_max_log_size")]
+    pub max_log_size: i32,
+    
+    // 安全配置
+    #[serde(default)]
+    pub enable_ssl: bool,
+    #[serde(default = "default_true")]
+    pub verify_certificate: bool,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, ToSchema)]
+pub struct DriverConfigUpdateReq {
+    pub name: Option<String>,
+    pub description: Option<String>,
+    pub protocol: Option<String>,
+    pub connection_type: Option<String>,
+    pub enabled: Option<bool>,
+    pub config: Option<serde_json::Value>,
+    pub scan_interval: Option<i32>,
+    pub timeout: Option<i32>,
+    pub max_concurrent: Option<i32>,
+    pub batch_size: Option<i32>,
+    pub max_retries: Option<i32>,
+    pub retry_interval: Option<i32>,
+    pub exponential_backoff: Option<bool>,
+    pub max_retry_interval: Option<i32>,
+    pub log_level: Option<String>,
+    pub enable_request_log: Option<bool>,
+    pub enable_response_log: Option<bool>,
+    pub max_log_size: Option<i32>,
+    pub enable_ssl: Option<bool>,
+    pub verify_certificate: Option<bool>,
+    pub client_cert_path: Option<String>,
+    pub client_key_path: Option<String>,
+}
+
+#[derive(Debug, Deserialize, ToSchema, IntoParams)]
+pub struct DriverConfigQuery {
+    pub protocol: Option<String>,
+    pub enabled: Option<bool>,
+    pub name_contains: Option<String>,
+    pub page: Option<u32>,
+    pub page_size: Option<u32>,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct DriverConfigResponse {
+    pub driver_config: DriverConfigVO,
+}
+
+#[derive(Debug, Serialize, ToSchema)]
+pub struct DriverConfigListResponse {
+    pub driver_configs: Vec<DriverConfigVO>,
+    pub total: i64,
+    pub page: u32,
+    pub page_size: u32,
+    pub total_pages: u32,
+}
+
 // ========== 辅助函数 ==========
 
 fn default_true() -> bool {
@@ -521,6 +667,43 @@ fn default_true() -> bool {
 
 fn default_iso8601() -> String {
     "ISO8601".to_string()
+}
+
+// 驱动配置默认值函数
+fn default_scan_interval() -> i32 {
+    1000
+}
+
+fn default_timeout() -> i32 {
+    5000
+}
+
+fn default_max_concurrent() -> i32 {
+    10
+}
+
+fn default_batch_size() -> i32 {
+    100
+}
+
+fn default_max_retries() -> i32 {
+    3
+}
+
+fn default_retry_interval() -> i32 {
+    1000
+}
+
+fn default_max_retry_interval() -> i32 {
+    10000
+}
+
+fn default_log_level() -> String {
+    "info".to_string()
+}
+
+fn default_max_log_size() -> i32 {
+    10
 }
 
 impl std::fmt::Display for ProtocolKind {
