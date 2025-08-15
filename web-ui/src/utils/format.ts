@@ -8,13 +8,13 @@
 export function formatBytes(bytes: number, decimals: number = 2): string {
   if (bytes === 0) return '0 B'
   if (bytes < 0) return '-'
-  
+
   const k = 1024
   const dm = decimals < 0 ? 0 : decimals
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB', 'PB']
-  
+
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  
+
   return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`
 }
 
@@ -30,7 +30,7 @@ export function formatFileSize(bytes: number, decimals: number = 2): string {
  */
 export function formatPercentage(value: number, decimals: number = 1): string {
   if (typeof value !== 'number' || isNaN(value)) return '-'
-  
+
   return `${value.toFixed(decimals)}%`
 }
 
@@ -39,16 +39,16 @@ export function formatPercentage(value: number, decimals: number = 1): string {
  */
 export function formatNumber(value: number, decimals?: number): string {
   if (typeof value !== 'number' || isNaN(value)) return '-'
-  
+
   const options: Intl.NumberFormatOptions = {
     useGrouping: true,
   }
-  
+
   if (typeof decimals === 'number') {
     options.minimumFractionDigits = decimals
     options.maximumFractionDigits = decimals
   }
-  
+
   return new Intl.NumberFormat('zh-CN', options).format(value)
 }
 
@@ -58,10 +58,10 @@ export function formatNumber(value: number, decimals?: number): string {
 export function formatLargeNumber(value: number, decimals: number = 1): string {
   if (typeof value !== 'number' || isNaN(value)) return '-'
   if (value === 0) return '0'
-  
+
   const absValue = Math.abs(value)
   const sign = value < 0 ? '-' : ''
-  
+
   if (absValue >= 1e9) {
     return `${sign}${(absValue / 1e9).toFixed(decimals)}B`
   } else if (absValue >= 1e6) {
@@ -82,7 +82,7 @@ export function formatCurrency(
   locale: string = 'zh-CN'
 ): string {
   if (typeof value !== 'number' || isNaN(value)) return '-'
-  
+
   return new Intl.NumberFormat(locale, {
     style: 'currency',
     currency,
@@ -94,16 +94,16 @@ export function formatCurrency(
  */
 export function formatNetworkSpeed(bps: number): string {
   if (typeof bps !== 'number' || isNaN(bps) || bps < 0) return '-'
-  
+
   const units = ['bps', 'Kbps', 'Mbps', 'Gbps', 'Tbps']
   let value = bps
   let unitIndex = 0
-  
+
   while (value >= 1000 && unitIndex < units.length - 1) {
     value /= 1000
     unitIndex++
   }
-  
+
   const decimals = value >= 100 ? 0 : value >= 10 ? 1 : 2
   return `${value.toFixed(decimals)} ${units[unitIndex]}`
 }
@@ -113,7 +113,7 @@ export function formatNetworkSpeed(bps: number): string {
  */
 export function formatLatency(ms: number): string {
   if (typeof ms !== 'number' || isNaN(ms) || ms < 0) return '-'
-  
+
   if (ms < 1) {
     return `${(ms * 1000).toFixed(0)}μs`
   } else if (ms < 1000) {
@@ -126,14 +126,17 @@ export function formatLatency(ms: number): string {
 /**
  * Format temperature with unit
  */
-export function formatTemperature(celsius: number, unit: 'C' | 'F' = 'C'): string {
+export function formatTemperature(
+  celsius: number,
+  unit: 'C' | 'F' = 'C'
+): string {
   if (typeof celsius !== 'number' || isNaN(celsius)) return '-'
-  
+
   if (unit === 'F') {
     const fahrenheit = (celsius * 9) / 5 + 32
     return `${fahrenheit.toFixed(1)}°F`
   }
-  
+
   return `${celsius.toFixed(1)}°C`
 }
 
@@ -142,18 +145,21 @@ export function formatTemperature(celsius: number, unit: 'C' | 'F' = 'C'): strin
  */
 export function formatIPAddress(ip: string): string {
   if (!ip || typeof ip !== 'string') return '-'
-  
+
   // IPv6 compression (basic)
   if (ip.includes(':')) {
-    return ip.toLowerCase().replace(/^0+|:0+/g, ':').replace(/::+/g, '::')
+    return ip
+      .toLowerCase()
+      .replace(/^0+|:0+/g, ':')
+      .replace(/::+/g, '::')
   }
-  
+
   // IPv4 validation
   const ipv4Regex = /^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/
   if (ipv4Regex.test(ip)) {
     return ip
   }
-  
+
   return ip
 }
 
@@ -162,12 +168,12 @@ export function formatIPAddress(ip: string): string {
  */
 export function formatMACAddress(mac: string): string {
   if (!mac || typeof mac !== 'string') return '-'
-  
+
   // Remove any existing separators and normalize
   const clean = mac.replace(/[:-]/g, '').toLowerCase()
-  
+
   if (clean.length !== 12) return mac
-  
+
   // Add colons every 2 characters
   return clean.match(/.{2}/g)?.join(':') || mac
 }
@@ -177,13 +183,13 @@ export function formatMACAddress(mac: string): string {
  */
 export function formatErrorMessage(error: any): string {
   if (!error) return '未知错误'
-  
+
   if (typeof error === 'string') return error
-  
+
   if (error.message) return error.message
-  
+
   if (error.error) return error.error
-  
+
   return JSON.stringify(error)
 }
 
@@ -192,7 +198,7 @@ export function formatErrorMessage(error: any): string {
  */
 export function formatEndpoint(endpoint: string): string {
   if (!endpoint) return '-'
-  
+
   try {
     const url = new URL(endpoint)
     return `${url.protocol}//${url.host}${url.pathname}`
@@ -206,16 +212,16 @@ export function formatEndpoint(endpoint: string): string {
  */
 export function formatVersion(version: string): string {
   if (!version) return '-'
-  
+
   // Remove 'v' prefix if present
   const clean = version.replace(/^v/, '')
-  
+
   // Split by dots and ensure numeric parts
   const parts = clean.split('.')
   if (parts.length >= 3) {
     return parts.slice(0, 3).join('.')
   }
-  
+
   return clean
 }
 
@@ -240,12 +246,14 @@ export function formatStatus(status: string): {
     enabled: { text: '启用', type: 'success', icon: 'Check' },
     disabled: { text: '禁用', type: 'info', icon: 'Close' },
   }
-  
-  return statusMap[status?.toLowerCase()] || {
-    text: status || '未知',
-    type: 'info',
-    icon: 'QuestionFilled',
-  }
+
+  return (
+    statusMap[status?.toLowerCase()] || {
+      text: status || '未知',
+      type: 'info',
+      icon: 'QuestionFilled',
+    }
+  )
 }
 
 /**
@@ -262,11 +270,13 @@ export function formatLogLevel(level: string): {
     warn: { text: 'WARN', type: 'warning' },
     error: { text: 'ERROR', type: 'danger' },
   }
-  
-  return levelMap[level?.toLowerCase()] || {
-    text: level?.toUpperCase() || 'UNKNOWN',
-    type: 'info',
-  }
+
+  return (
+    levelMap[level?.toLowerCase()] || {
+      text: level?.toUpperCase() || 'UNKNOWN',
+      type: 'info',
+    }
+  )
 }
 
 /**
@@ -284,12 +294,14 @@ export function formatHealthLevel(level: string): {
     critical: { text: '严重', type: 'danger', color: '#f56c6c' },
     failed: { text: '失败', type: 'danger', color: '#ff4757' },
   }
-  
-  return healthMap[level?.toLowerCase()] || {
-    text: level || '未知',
-    type: 'info',
-    color: '#909399',
-  }
+
+  return (
+    healthMap[level?.toLowerCase()] || {
+      text: level || '未知',
+      type: 'info',
+      color: '#909399',
+    }
+  )
 }
 
 /**
@@ -297,10 +309,10 @@ export function formatHealthLevel(level: string): {
  */
 export function truncateText(text: string, maxLength: number = 50): string {
   if (!text || typeof text !== 'string') return '-'
-  
+
   if (text.length <= maxLength) return text
-  
-  return `${text.substring(0, maxLength - 3)  }...`
+
+  return `${text.substring(0, maxLength - 3)}...`
 }
 
 /**
@@ -308,14 +320,14 @@ export function truncateText(text: string, maxLength: number = 50): string {
  */
 export function formatArray(arr: any[], maxItems: number = 3): string {
   if (!Array.isArray(arr) || arr.length === 0) return '-'
-  
+
   const items = arr.slice(0, maxItems)
   const result = items.join(', ')
-  
+
   if (arr.length > maxItems) {
     return `${result} (+${arr.length - maxItems})`
   }
-  
+
   return result
 }
 
@@ -333,6 +345,6 @@ export function formatEmpty(value: any, placeholder: string = '-'): string {
   if (value === null || value === undefined || value === '') {
     return placeholder
   }
-  
+
   return String(value)
 }

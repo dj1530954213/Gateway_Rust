@@ -37,7 +37,7 @@ production-config = { path = "../core/production-config" }
 modbus-static = { path = "../drivers/modbus-static" }
 
 # Connectors  
-mqtt5 = { path = "../connectors/mqtt5" }
+mqtt5 = { path = "../connectors/mqtt5" }  # MQTT5连接器
 
 # Config management
 config = "0.13"

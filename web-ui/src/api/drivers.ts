@@ -159,31 +159,31 @@ export interface DriverConfigVO {
   connection_type: string
   enabled: boolean
   config: any
-  
+
   // 性能设置
   scan_interval: number
   timeout: number
   max_concurrent: number
   batch_size: number
-  
+
   // 重连策略
   max_retries: number
   retry_interval: number
   exponential_backoff: boolean
   max_retry_interval: number
-  
+
   // 日志设置
   log_level: string
   enable_request_log: boolean
   enable_response_log: boolean
   max_log_size: number
-  
+
   // 安全配置
   enable_ssl: boolean
   verify_certificate: boolean
   client_cert_path?: string
   client_key_path?: string
-  
+
   created_at: string
   updated_at: string
 }
@@ -287,8 +287,8 @@ export const driversApi = {
               name: 'Modbus TCP Driver',
               version: '1.0.0',
               protocol: 'Modbus TCP',
-              description: 'Standard Modbus TCP/IP driver'
-            }
+              description: 'Standard Modbus TCP/IP driver',
+            },
           },
           {
             id: 'opcua-001',
@@ -300,9 +300,9 @@ export const driversApi = {
               name: 'OPC UA Client',
               version: '2.1.0',
               protocol: 'OPC UA',
-              description: 'OPC UA client driver'
-            }
-          }
+              description: 'OPC UA client driver',
+            },
+          },
         ]
       })
   },
@@ -310,7 +310,10 @@ export const driversApi = {
   /**
    * 上传驱动文件
    */
-  upload(file: File, onProgress?: (progress: number) => void): Promise<DriverUploadResponse> {
+  upload(
+    file: File,
+    onProgress?: (progress: number) => void
+  ): Promise<DriverUploadResponse> {
     return upload('/api/v1/drivers', file, onProgress)
   },
 
@@ -352,7 +355,12 @@ export const driversApi = {
   /**
    * 重新加载所有驱动
    */
-  reloadAll(): Promise<{ success: boolean; success_count: number; failed_count: number; message?: string }> {
+  reloadAll(): Promise<{
+    success: boolean
+    success_count: number
+    failed_count: number
+    message?: string
+  }> {
     return post('/api/v1/drivers/reload-all')
   },
 
@@ -397,7 +405,10 @@ export const driverConfigsApi = {
   /**
    * 更新驱动配置
    */
-  update(configId: string, update: DriverConfigUpdateReq): Promise<DriverConfigResponse> {
+  update(
+    configId: string,
+    update: DriverConfigUpdateReq
+  ): Promise<DriverConfigResponse> {
     return put(`/api/v1/driver-configs/${configId}`, update)
   },
 

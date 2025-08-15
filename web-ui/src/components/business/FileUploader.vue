@@ -11,7 +11,7 @@
           {{ files.length }} 个文件
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
         <!-- 上传类型选择 -->
         <el-select
@@ -28,7 +28,7 @@
             :value="type.value"
           />
         </el-select>
-        
+
         <!-- 清空文件 -->
         <el-button
           v-if="files.length > 0"
@@ -39,7 +39,7 @@
         >
           清空
         </el-button>
-        
+
         <!-- 上传历史 -->
         <el-button
           v-if="showHistory"
@@ -52,7 +52,7 @@
         </el-button>
       </div>
     </div>
-    
+
     <!-- 上传区域 -->
     <div class="upload-area">
       <el-upload
@@ -86,15 +86,13 @@
               <div class="secondary-text">{{ uploadTip }}</div>
             </div>
           </div>
-          
+
           <!-- 选择文件按钮 -->
           <div v-else-if="files.length === 0" class="select-area">
-            <el-button type="primary" :icon="Plus">
-              选择文件
-            </el-button>
+            <el-button type="primary" :icon="Plus"> 选择文件 </el-button>
             <div class="upload-tip">{{ uploadTip }}</div>
           </div>
-          
+
           <!-- 文件列表预览 -->
           <div v-else class="file-preview">
             <div class="file-summary">
@@ -107,7 +105,7 @@
         </div>
       </el-upload>
     </div>
-    
+
     <!-- 文件列表 -->
     <div v-if="files.length > 0" class="file-list">
       <div
@@ -122,7 +120,7 @@
               <component :is="getFileIcon(file)" />
             </el-icon>
           </div>
-          
+
           <div class="file-details">
             <div class="file-name" :title="file.name">
               {{ file.name }}
@@ -135,7 +133,7 @@
             </div>
           </div>
         </div>
-        
+
         <div class="file-status">
           <!-- 上传进度 -->
           <div v-if="file.status === 'uploading'" class="upload-progress">
@@ -144,9 +142,11 @@
               :stroke-width="4"
               :show-text="false"
             />
-            <span class="progress-text">{{ Math.round(file.percentage || 0) }}%</span>
+            <span class="progress-text"
+              >{{ Math.round(file.percentage || 0) }}%</span
+            >
           </div>
-          
+
           <!-- 状态标签 -->
           <StatusTag
             v-else
@@ -155,7 +155,7 @@
             :mappings="fileStatusMappings"
           />
         </div>
-        
+
         <div class="file-actions">
           <!-- 预览按钮 -->
           <el-button
@@ -165,7 +165,7 @@
             :icon="View"
             @click="handlePreview(file)"
           />
-          
+
           <!-- 重新上传 -->
           <el-button
             v-if="file.status === 'error'"
@@ -174,7 +174,7 @@
             :icon="Refresh"
             @click="handleRetry(file)"
           />
-          
+
           <!-- 删除文件 -->
           <el-button
             type="text"
@@ -185,13 +185,13 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 批量操作栏 -->
     <div v-if="files.length > 0 && showBatchActions" class="batch-actions">
       <div class="batch-info">
         <span>{{ files.length }} 个文件，总大小 {{ totalSize }}</span>
       </div>
-      
+
       <div class="batch-buttons">
         <el-button
           v-if="!autoUpload"
@@ -203,16 +203,11 @@
         >
           {{ uploading ? '上传中...' : '开始上传' }}
         </el-button>
-        
-        <el-button
-          size="small"
-          @click="handleClearAll"
-        >
-          清空列表
-        </el-button>
+
+        <el-button size="small" @click="handleClearAll"> 清空列表 </el-button>
       </div>
     </div>
-    
+
     <!-- 上传配置 -->
     <div v-if="showConfig" class="upload-config">
       <el-collapse v-model="configCollapsed">
@@ -226,7 +221,7 @@
         </el-collapse-item>
       </el-collapse>
     </div>
-    
+
     <!-- 文件预览对话框 -->
     <el-dialog
       v-model="previewVisible"
@@ -240,10 +235,10 @@
           <img
             :src="previewFile.url || getFileURL(previewFile)"
             :alt="previewFile.name"
-            style="max-width: 100%; max-height: 500px;"
+            style="max-width: 100%; max-height: 500px"
           />
         </div>
-        
+
         <!-- 文本文件预览 -->
         <div v-else-if="isTextFile(previewFile)" class="text-preview">
           <el-input
@@ -254,7 +249,7 @@
             placeholder="加载中..."
           />
         </div>
-        
+
         <!-- 其他文件信息 -->
         <div v-else class="file-info-preview">
           <el-descriptions border column="2">
@@ -273,12 +268,12 @@
           </el-descriptions>
         </div>
       </div>
-      
+
       <template #footer>
         <el-button @click="previewVisible = false">关闭</el-button>
       </template>
     </el-dialog>
-    
+
     <!-- 上传历史对话框 -->
     <el-dialog
       v-model="historyVisible"
@@ -291,7 +286,7 @@
         :columns="historyColumns"
         @action="handleHistoryAction"
       />
-      
+
       <template #footer>
         <el-button @click="historyVisible = false">关闭</el-button>
         <el-button type="danger" @click="handleClearHistory">
@@ -303,7 +298,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch } from 'vue'
 import {
   UploadFilled,
   Plus,
@@ -315,10 +309,12 @@ import {
   Picture,
   Files,
   VideoPlay,
-  Download
+  Download,
 } from '@element-plus/icons-vue'
-import { BaseForm, BaseTable, StatusTag } from '../base'
 import { ElMessage } from 'element-plus'
+import { ref, computed, reactive, watch } from 'vue'
+
+import { BaseForm, BaseTable, StatusTag } from '../base'
 
 export type UploadStatus = 'ready' | 'uploading' | 'success' | 'error'
 
@@ -354,7 +350,7 @@ export interface UploadHistoryRecord {
 
 interface Props {
   title?: string
-  
+
   // 上传配置
   uploadUrl?: string
   uploadTypes?: UploadType[]
@@ -363,16 +359,16 @@ interface Props {
   enableDrag?: boolean
   maxFiles?: number
   chunkSize?: number
-  
+
   // 功能控制
   showHeader?: boolean
   showBatchActions?: boolean
   showConfig?: boolean
   showHistory?: boolean
-  
+
   // 外观配置
   size?: 'small' | 'default' | 'large'
-  
+
   // 自定义样式
   customClass?: string
 }
@@ -386,22 +382,22 @@ const props = withDefaults(defineProps<Props>(), {
       label: '配置文件',
       accept: '.json,.xml,.yaml,.yml',
       maxSize: 10 * 1024 * 1024, // 10MB
-      description: '支持 JSON、XML、YAML 格式，最大 10MB'
+      description: '支持 JSON、XML、YAML 格式，最大 10MB',
     },
     {
       value: 'firmware',
       label: '固件文件',
       accept: '.bin,.hex,.elf',
       maxSize: 100 * 1024 * 1024, // 100MB
-      description: '支持 BIN、HEX、ELF 格式，最大 100MB'
+      description: '支持 BIN、HEX、ELF 格式，最大 100MB',
     },
     {
       value: 'data',
       label: '数据文件',
       accept: '.csv,.xlsx,.json',
       maxSize: 50 * 1024 * 1024, // 50MB
-      description: '支持 CSV、Excel、JSON 格式，最大 50MB'
-    }
+      description: '支持 CSV、Excel、JSON 格式，最大 50MB',
+    },
   ],
   multiple: true,
   autoUpload: false,
@@ -443,7 +439,7 @@ const uploadConfig = reactive({
   chunkSize: props.chunkSize,
   timeout: 60000,
   retryCount: 3,
-  autoRetry: true
+  autoRetry: true,
 })
 
 // 上传历史
@@ -454,8 +450,8 @@ const uploadHistory = ref<UploadHistoryRecord[]>([
     fileSize: 2048,
     uploadTime: new Date(Date.now() - 3600000),
     status: 'success',
-    type: 'config'
-  }
+    type: 'config',
+  },
 ])
 
 // 文件状态映射
@@ -463,7 +459,7 @@ const fileStatusMappings = {
   ready: { type: 'info', text: '准备中' },
   uploading: { type: 'warning', text: '上传中' },
   success: { type: 'success', text: '成功' },
-  error: { type: 'danger', text: '失败' }
+  error: { type: 'danger', text: '失败' },
 }
 
 // 配置表单字段
@@ -476,8 +472,8 @@ const configFields = [
       { label: '512KB', value: 512 * 1024 },
       { label: '1MB', value: 1024 * 1024 },
       { label: '2MB', value: 2 * 1024 * 1024 },
-      { label: '5MB', value: 5 * 1024 * 1024 }
-    ]
+      { label: '5MB', value: 5 * 1024 * 1024 },
+    ],
   },
   {
     key: 'timeout',
@@ -485,42 +481,47 @@ const configFields = [
     type: 'number',
     unit: '毫秒',
     min: 10000,
-    max: 300000
+    max: 300000,
   },
   {
     key: 'retryCount',
     label: '重试次数',
     type: 'number',
     min: 0,
-    max: 10
+    max: 10,
   },
   {
     key: 'autoRetry',
     label: '自动重试',
-    type: 'switch'
-  }
+    type: 'switch',
+  },
 ]
 
 // 历史记录表格列
 const historyColumns = [
   { key: 'fileName', label: '文件名', width: 200 },
-  { key: 'fileSize', label: '大小', width: 100, formatter: (row: any) => formatFileSize(row.fileSize) },
+  {
+    key: 'fileSize',
+    label: '大小',
+    width: 100,
+    formatter: (row: any) => formatFileSize(row.fileSize),
+  },
   { key: 'type', label: '类型', width: 100 },
   { key: 'uploadTime', label: '上传时间', type: 'datetime', width: 160 },
   { key: 'status', label: '状态', width: 100, type: 'tag' },
-  { key: 'actions', label: '操作', width: 100, type: 'action' }
+  { key: 'actions', label: '操作', width: 100, type: 'action' },
 ]
 
 // 计算属性
 const containerClass = computed(() => {
   const classes = []
-  
+
   classes.push(`file-uploader--${props.size}`)
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   return classes.join(' ')
 })
 
@@ -539,14 +540,14 @@ const uploadTip = computed(() => {
 const uploadHeaders = computed(() => {
   return {
     'Content-Type': 'multipart/form-data',
-    'X-Upload-Type': selectedUploadType.value
+    'X-Upload-Type': selectedUploadType.value,
   }
 })
 
 const uploadData = computed(() => {
   return {
     type: selectedUploadType.value,
-    chunkSize: uploadConfig.chunkSize
+    chunkSize: uploadConfig.chunkSize,
   }
 })
 
@@ -574,19 +575,19 @@ const formatFileTime = (timestamp?: number) => {
 
 const getFileIcon = (file: FileItem) => {
   const ext = file.name.split('.').pop()?.toLowerCase()
-  
+
   if (['jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp'].includes(ext || '')) {
     return Picture
   }
-  
+
   if (['mp4', 'avi', 'mov', 'wmv', 'flv'].includes(ext || '')) {
     return VideoPlay
   }
-  
+
   if (['zip', 'rar', '7z', 'tar', 'gz'].includes(ext || '')) {
     return Files
   }
-  
+
   return Document
 }
 
@@ -602,13 +603,23 @@ const getFileURL = (file: FileItem) => {
 }
 
 const isImageFile = (file: FileItem) => {
-  const imageTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/bmp', 'image/webp']
+  const imageTypes = [
+    'image/jpeg',
+    'image/png',
+    'image/gif',
+    'image/bmp',
+    'image/webp',
+  ]
   return imageTypes.includes(file.type)
 }
 
 const isTextFile = (file: FileItem) => {
   const textTypes = ['text/plain', 'application/json', 'text/xml', 'text/yaml']
-  return textTypes.includes(file.type) || file.name.endsWith('.txt') || file.name.endsWith('.log')
+  return (
+    textTypes.includes(file.type) ||
+    file.name.endsWith('.txt') ||
+    file.name.endsWith('.log')
+  )
 }
 
 const canPreview = (file: FileItem) => {
@@ -627,23 +638,24 @@ const handleUploadTypeChange = () => {
 const handleBeforeUpload = (file: File) => {
   const currentType = currentUploadType.value
   if (!currentType) return false
-  
+
   // 检查文件大小
   if (file.size > currentType.maxSize) {
     ElMessage.error(`文件大小超出限制：${formatFileSize(currentType.maxSize)}`)
     return false
   }
-  
+
   // 检查文件类型
   const acceptedTypes = currentType.accept.split(',').map(type => type.trim())
-  const fileExt = `.${  file.name.split('.').pop()?.toLowerCase()}`
-  const isValidType = acceptedTypes.includes(fileExt) || acceptedTypes.includes('*')
-  
+  const fileExt = `.${file.name.split('.').pop()?.toLowerCase()}`
+  const isValidType =
+    acceptedTypes.includes(fileExt) || acceptedTypes.includes('*')
+
   if (!isValidType) {
     ElMessage.error(`不支持的文件类型：${fileExt}`)
     return false
   }
-  
+
   // 添加到文件列表
   const fileItem: FileItem = {
     uid: Date.now() + Math.random().toString(),
@@ -653,11 +665,11 @@ const handleBeforeUpload = (file: File) => {
     lastModified: file.lastModified,
     status: 'ready',
     percentage: 0,
-    raw: file
+    raw: file,
   }
-  
+
   files.value.push(fileItem)
-  
+
   return !props.autoUpload // 如果不是自动上传，阻止默认上传行为
 }
 
@@ -673,7 +685,7 @@ const handleSuccess = (response: any, file: FileItem) => {
     fileItem.response = response
     fileItem.url = response.url
   }
-  
+
   // 添加到历史记录
   const historyRecord: UploadHistoryRecord = {
     id: Date.now().toString(),
@@ -681,10 +693,10 @@ const handleSuccess = (response: any, file: FileItem) => {
     fileSize: file.size,
     uploadTime: new Date(),
     status: 'success',
-    type: selectedUploadType.value
+    type: selectedUploadType.value,
   }
   uploadHistory.value.unshift(historyRecord)
-  
+
   emit('success', file, response)
   ElMessage.success(`${file.name} 上传成功`)
 }
@@ -695,7 +707,7 @@ const handleError = (error: any, file: FileItem) => {
     fileItem.status = 'error'
     fileItem.percentage = 0
   }
-  
+
   emit('error', file, error)
   ElMessage.error(`${file.name} 上传失败`)
 }
@@ -706,7 +718,7 @@ const handleProgress = (event: any, file: FileItem) => {
     fileItem.status = 'uploading'
     fileItem.percentage = Math.round(event.percent)
   }
-  
+
   emit('progress', file, event.percent)
 }
 
@@ -714,34 +726,34 @@ const customRequest = (options: any) => {
   // 自定义上传实现
   const file = options.file
   const fileItem = files.value.find(f => f.name === file.name)
-  
+
   if (!fileItem) return
-  
+
   // 模拟分片上传
   const chunkSize = uploadConfig.chunkSize
   const chunks = Math.ceil(file.size / chunkSize)
   let uploadedChunks = 0
-  
+
   const uploadChunk = (chunkIndex: number) => {
     const start = chunkIndex * chunkSize
     const end = Math.min(start + chunkSize, file.size)
     const chunk = file.slice(start, end)
-    
+
     // 模拟上传请求
     setTimeout(() => {
       uploadedChunks++
       const percentage = Math.round((uploadedChunks / chunks) * 100)
-      
+
       fileItem.status = 'uploading'
       fileItem.percentage = percentage
-      
+
       options.onProgress({ percent: percentage })
-      
+
       if (uploadedChunks === chunks) {
         // 上传完成
         const response = {
           url: `/uploads/${file.name}`,
-          message: '上传成功'
+          message: '上传成功',
         }
         options.onSuccess(response)
       } else {
@@ -750,7 +762,7 @@ const customRequest = (options: any) => {
       }
     }, 100) // 模拟网络延迟
   }
-  
+
   uploadChunk(0)
 }
 
@@ -768,23 +780,23 @@ const handleClearAll = () => {
 
 const handleUploadAll = () => {
   if (!hasValidFiles.value) return
-  
+
   uploading.value = true
   const readyFiles = files.value.filter(file => file.status === 'ready')
-  
+
   // 逐个上传文件
   readyFiles.forEach(file => {
     if (file.raw) {
       uploadRef.value?.submit(file.raw)
     }
   })
-  
+
   // 监听所有文件上传完成
   const checkComplete = () => {
-    const allComplete = readyFiles.every(file => 
-      file.status === 'success' || file.status === 'error'
+    const allComplete = readyFiles.every(
+      file => file.status === 'success' || file.status === 'error'
     )
-    
+
     if (allComplete) {
       uploading.value = false
       emit('upload-complete', files.value)
@@ -792,14 +804,14 @@ const handleUploadAll = () => {
       setTimeout(checkComplete, 500)
     }
   }
-  
+
   checkComplete()
 }
 
 const handleRetry = (file: FileItem) => {
   file.status = 'ready'
   file.percentage = 0
-  
+
   if (file.raw) {
     uploadRef.value?.submit(file.raw)
   }
@@ -809,11 +821,11 @@ const handlePreview = (file: FileItem) => {
   previewFile.value = file
   previewContent.value = ''
   previewVisible.value = true
-  
+
   // 如果是文本文件，读取内容
   if (isTextFile(file) && file.raw) {
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       previewContent.value = e.target?.result as string
     }
     reader.readAsText(file.raw)
@@ -850,11 +862,15 @@ const handleConfigChange = () => {
 }
 
 // 监听
-watch(() => props.uploadTypes, (newTypes) => {
-  if (newTypes.length > 0 && !selectedUploadType.value) {
-    selectedUploadType.value = newTypes[0].value
-  }
-}, { immediate: true })
+watch(
+  () => props.uploadTypes,
+  newTypes => {
+    if (newTypes.length > 0 && !selectedUploadType.value) {
+      selectedUploadType.value = newTypes[0].value
+    }
+  },
+  { immediate: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -862,13 +878,13 @@ watch(() => props.uploadTypes, (newTypes) => {
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
-  
+
   &.file-uploader--small {
     .uploader-header {
       padding: 8px 12px;
     }
   }
-  
+
   &.file-uploader--large {
     .uploader-header {
       padding: 16px 20px;
@@ -883,7 +899,7 @@ watch(() => props.uploadTypes, (newTypes) => {
   padding: 12px 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .header-title {
     display: flex;
     align-items: center;
@@ -891,7 +907,7 @@ watch(() => props.uploadTypes, (newTypes) => {
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
-  
+
   .header-actions {
     display: flex;
     align-items: center;
@@ -901,14 +917,14 @@ watch(() => props.uploadTypes, (newTypes) => {
 
 .upload-area {
   padding: 16px;
-  
+
   :deep(.upload-component) {
     width: 100%;
-    
+
     .el-upload {
       width: 100%;
     }
-    
+
     .el-upload-dragger {
       width: 100%;
       height: auto;
@@ -917,7 +933,7 @@ watch(() => props.uploadTypes, (newTypes) => {
       border-radius: 6px;
       background: var(--el-fill-color-lighter);
       transition: all 0.3s;
-      
+
       &:hover,
       &.is-dragover {
         border-color: var(--el-color-primary);
@@ -925,7 +941,7 @@ watch(() => props.uploadTypes, (newTypes) => {
       }
     }
   }
-  
+
   .upload-content {
     display: flex;
     flex-direction: column;
@@ -933,45 +949,45 @@ watch(() => props.uploadTypes, (newTypes) => {
     justify-content: center;
     padding: 20px;
     min-height: 140px;
-    
+
     &.is-dragover {
       .upload-icon {
         color: var(--el-color-primary);
       }
     }
-    
+
     .drag-area,
     .select-area {
       text-align: center;
-      
+
       .upload-icon {
         color: var(--el-text-color-placeholder);
         margin-bottom: 16px;
       }
-      
+
       .upload-text {
         .primary-text {
           font-size: 16px;
           color: var(--el-text-color-primary);
           margin-bottom: 8px;
         }
-        
+
         .secondary-text {
           font-size: 14px;
           color: var(--el-text-color-secondary);
         }
       }
-      
+
       .upload-tip {
         font-size: 12px;
         color: var(--el-text-color-secondary);
         margin-top: 8px;
       }
     }
-    
+
     .file-preview {
       width: 100%;
-      
+
       .file-summary {
         display: flex;
         justify-content: space-between;
@@ -979,7 +995,7 @@ watch(() => props.uploadTypes, (newTypes) => {
         padding: 16px;
         background: var(--el-fill-color-light);
         border-radius: 4px;
-        
+
         span {
           color: var(--el-text-color-primary);
           font-size: 14px;
@@ -993,45 +1009,45 @@ watch(() => props.uploadTypes, (newTypes) => {
   max-height: 400px;
   overflow-y: auto;
   border-top: 1px solid var(--el-border-color-lighter);
-  
+
   .file-item {
     display: flex;
     align-items: center;
     padding: 12px 16px;
     border-bottom: 1px solid var(--el-border-color-lighter);
     transition: background-color 0.3s;
-    
+
     &:hover {
       background-color: var(--el-fill-color-light);
     }
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     &.file-item--error {
       background-color: var(--el-color-danger-light-9);
     }
-    
+
     &.file-item--success {
       background-color: var(--el-color-success-light-9);
     }
-    
+
     .file-info {
       display: flex;
       align-items: center;
       flex: 1;
       min-width: 0;
-      
+
       .file-icon {
         margin-right: 12px;
         color: var(--el-text-color-secondary);
       }
-      
+
       .file-details {
         flex: 1;
         min-width: 0;
-        
+
         .file-name {
           font-size: 14px;
           color: var(--el-text-color-primary);
@@ -1040,11 +1056,11 @@ watch(() => props.uploadTypes, (newTypes) => {
           white-space: nowrap;
           margin-bottom: 4px;
         }
-        
+
         .file-meta {
           font-size: 12px;
           color: var(--el-text-color-secondary);
-          
+
           .file-size,
           .file-time {
             margin-right: 12px;
@@ -1052,20 +1068,20 @@ watch(() => props.uploadTypes, (newTypes) => {
         }
       }
     }
-    
+
     .file-status {
       margin: 0 16px;
       min-width: 100px;
-      
+
       .upload-progress {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .el-progress {
           flex: 1;
         }
-        
+
         .progress-text {
           font-size: 12px;
           color: var(--el-text-color-secondary);
@@ -1073,7 +1089,7 @@ watch(() => props.uploadTypes, (newTypes) => {
         }
       }
     }
-    
+
     .file-actions {
       display: flex;
       gap: 4px;
@@ -1088,12 +1104,12 @@ watch(() => props.uploadTypes, (newTypes) => {
   padding: 12px 16px;
   border-top: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .batch-info {
     font-size: 13px;
     color: var(--el-text-color-secondary);
   }
-  
+
   .batch-buttons {
     display: flex;
     gap: 8px;
@@ -1102,17 +1118,17 @@ watch(() => props.uploadTypes, (newTypes) => {
 
 .upload-config {
   border-top: 1px solid var(--el-border-color-lighter);
-  
+
   :deep(.el-collapse) {
     border: none;
-    
+
     .el-collapse-item__header {
       padding: 0 16px;
     }
-    
+
     .el-collapse-item__wrap {
       border: none;
-      
+
       .el-collapse-item__content {
         padding: 16px;
       }
@@ -1123,13 +1139,13 @@ watch(() => props.uploadTypes, (newTypes) => {
 .file-preview-content {
   .image-preview {
     text-align: center;
-    
+
     img {
       border-radius: 4px;
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
   }
-  
+
   .text-preview {
     :deep(.el-textarea__inner) {
       font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
@@ -1147,27 +1163,27 @@ watch(() => props.uploadTypes, (newTypes) => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .file-item {
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
-      
+
       .file-info {
         width: 100%;
       }
-      
+
       .file-status {
         width: 100%;
         margin: 0;
       }
-      
+
       .file-actions {
         width: 100%;
         justify-content: flex-end;
       }
     }
-    
+
     .batch-actions {
       flex-direction: column;
       align-items: flex-start;

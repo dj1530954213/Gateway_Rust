@@ -3,6 +3,7 @@
  */
 
 import { http } from './http'
+
 import { wsClient } from './index'
 
 export interface RealtimeDataPoint {
@@ -120,16 +121,16 @@ class RealtimeApi {
           value: 25.6,
           quality: 'good',
           timestamp: new Date().toISOString(),
-          unit: '°C'
+          unit: '°C',
         },
         {
           tag_id: 'pressure-001',
-          device_id: 'device-001', 
+          device_id: 'device-001',
           tag_name: '压力传感器1',
           value: 1.25,
           quality: 'good',
           timestamp: new Date().toISOString(),
-          unit: 'bar'
+          unit: 'bar',
         },
         {
           tag_id: 'flow-001',
@@ -138,8 +139,8 @@ class RealtimeApi {
           value: 45.8,
           quality: 'good',
           timestamp: new Date().toISOString(),
-          unit: 'L/min'
-        }
+          unit: 'L/min',
+        },
       ]
     }
   }
@@ -147,7 +148,10 @@ class RealtimeApi {
   /**
    * 获取当前标签值
    */
-  async getCurrentTagValues(deviceId?: string, tagIds?: string[]): Promise<TagValue[]> {
+  async getCurrentTagValues(
+    deviceId?: string,
+    tagIds?: string[]
+  ): Promise<TagValue[]> {
     const params: any = {}
     if (deviceId) params.device_id = deviceId
     if (tagIds && tagIds.length > 0) params.tag_ids = tagIds.join(',')
@@ -174,7 +178,9 @@ class RealtimeApi {
   /**
    * 批量写入标签值
    */
-  async writeTagValues(values: Array<{ tag_id: string; value: any }>): Promise<void> {
+  async writeTagValues(
+    values: Array<{ tag_id: string; value: any }>
+  ): Promise<void> {
     await http.put('/realtime/tags/values', { values })
   }
 
@@ -190,8 +196,8 @@ class RealtimeApi {
    * 确认报警
    */
   async acknowledgeAlert(alertId: string, message?: string): Promise<void> {
-    await http.post(`/realtime/alerts/${alertId}/acknowledge`, { 
-      message 
+    await http.post(`/realtime/alerts/${alertId}/acknowledge`, {
+      message,
     })
   }
 
@@ -206,20 +212,22 @@ class RealtimeApi {
   /**
    * 创建实时数据订阅
    */
-  async subscribe(subscription: Omit<RealtimeSubscription, 'subscription_id'>): Promise<string> {
+  async subscribe(
+    subscription: Omit<RealtimeSubscription, 'subscription_id'>
+  ): Promise<string> {
     const subscriptionId = `sub_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    
+
     const fullSubscription: RealtimeSubscription = {
       subscription_id: subscriptionId,
-      ...subscription
+      ...subscription,
     }
 
     // 发送订阅请求到WebSocket
     wsClient.send('subscribe', fullSubscription)
-    
+
     // 保存订阅信息
     this.subscriptions.set(subscriptionId, fullSubscription)
-    
+
     return subscriptionId
   }
 
@@ -229,7 +237,7 @@ class RealtimeApi {
   async unsubscribe(subscriptionId: string): Promise<void> {
     // 发送取消订阅请求到WebSocket
     wsClient.send('unsubscribe', { subscription_id: subscriptionId })
-    
+
     // 删除本地订阅信息
     this.subscriptions.delete(subscriptionId)
   }

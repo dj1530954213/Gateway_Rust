@@ -28,7 +28,7 @@ pub fn init_control_channel() {
 pub fn get_control_sender() -> Result<broadcast::Sender<ControlMsg>, EndpointError> {
     CONTROL_TX.get()
         .ok_or_else(|| EndpointError::Pool("Control channel not initialized".to_string()))
-        .map(|tx| tx.clone())
+        .cloned()
 }
 
 /// 创建控制通道接收端

@@ -1,18 +1,19 @@
+import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
-import { ElMessage } from 'element-plus'
-import type { User, LoginRequest, LoginResponse } from '@/types/auth'
+
 import { authApi } from '@/api'
+import type { User, LoginRequest, LoginResponse } from '@/types/auth'
 
 export const useAuthStore = defineStore('auth', () => {
   // 测试模式检查
   const isTestMode = import.meta.env.VITE_BYPASS_AUTH === 'true'
-  
+
   // State
   const token = ref<string | null>(localStorage.getItem('token'))
   const user = ref<User | null>(
-    localStorage.getItem('user') 
-      ? JSON.parse(localStorage.getItem('user')!) 
+    localStorage.getItem('user')
+      ? JSON.parse(localStorage.getItem('user')!)
       : null
   )
   const loading = ref(false)
@@ -27,10 +28,10 @@ export const useAuthStore = defineStore('auth', () => {
       role: 'admin',
       permissions: ['*'], // 所有权限
       is_active: true,
-      created_at: new Date().toISOString()
+      created_at: new Date().toISOString(),
     }
     user.value = testUser
-    token.value = `test-token-${  Date.now()}`
+    token.value = `test-token-${Date.now()}`
     localStorage.setItem('user', JSON.stringify(testUser))
     localStorage.setItem('token', token.value)
   }
@@ -51,7 +52,7 @@ export const useAuthStore = defineStore('auth', () => {
       if (isTestMode) {
         // 模拟API延迟
         await new Promise(resolve => setTimeout(resolve, 500))
-        
+
         const testUser = {
           id: 'test-user-001',
           username: credentials.username || 'test-admin',
@@ -60,33 +61,33 @@ export const useAuthStore = defineStore('auth', () => {
           role: 'admin',
           permissions: ['*'], // 所有权限
           is_active: true,
-          created_at: new Date().toISOString()
+          created_at: new Date().toISOString(),
         }
-        
-        const testToken = `test-token-${  Date.now()}`
-        
+
+        const testToken = `test-token-${Date.now()}`
+
         token.value = testToken
         user.value = testUser
-        
+
         localStorage.setItem('token', testToken)
         localStorage.setItem('user', JSON.stringify(testUser))
-        
+
         ElMessage.success('登录成功 (测试模式)')
         return
       }
-      
+
       // 正常模式下调用真实API
       const response = await authApi.login(credentials)
-      
+
       if (response.success && response.data) {
         const loginData = response.data as LoginResponse
         token.value = loginData.token
         user.value = loginData.user
-        
+
         // Store token and user in localStorage
         localStorage.setItem('token', loginData.token)
         localStorage.setItem('user', JSON.stringify(loginData.user))
-        
+
         ElMessage.success('登录成功')
       } else {
         throw new Error(response.message || '登录失败')
@@ -118,7 +119,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   const fetchUserInfo = async (): Promise<void> => {
     if (!token.value) return
-    
+
     try {
       const response = await authApi.getUserInfo()
       if (response.success && response.data) {
@@ -136,14 +137,17 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
-  const updatePassword = async (currentPassword: string, newPassword: string): Promise<void> => {
+  const updatePassword = async (
+    currentPassword: string,
+    newPassword: string
+  ): Promise<void> => {
     loading.value = true
     try {
       const response = await authApi.updatePassword({
         current_password: currentPassword,
         new_password: newPassword,
       })
-      
+
       if (response.success) {
         ElMessage.success('密码修改成功')
       } else {
@@ -161,7 +165,7 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true
     try {
       const response = await authApi.updateProfile(profileData)
-      
+
       if (response.success && response.data) {
         user.value = response.data as User
         ElMessage.success('个人信息更新成功')
@@ -178,10 +182,10 @@ export const useAuthStore = defineStore('auth', () => {
 
   const hasPermission = (permission: string): boolean => {
     if (!user.value) return false
-    
+
     // Admin has all permissions
     if (user.value.role === 'admin') return true
-    
+
     // Define role-based permissions
     const rolePermissions: Record<string, string[]> = {
       admin: ['*'], // All permissions
@@ -213,7 +217,7 @@ export const useAuthStore = defineStore('auth', () => {
         'system:logs:read',
       ],
     }
-    
+
     const userPermissions = rolePermissions[user.value.role] || []
     return userPermissions.includes('*') || userPermissions.includes(permission)
   }
@@ -223,7 +227,7 @@ export const useAuthStore = defineStore('auth', () => {
     if (isTestMode) {
       return role === 'admin' || user.value?.role === role
     }
-    
+
     return user.value?.role === role
   }
 
@@ -233,22 +237,24 @@ export const useAuthStore = defineStore('auth', () => {
 
   const getSessions = async (): Promise<void> => {
     if (!user.value) return
-    
+
     // 测试模式下返回模拟会话数据
     if (isTestMode) {
-      sessions.value = [{
-        id: 'test-session-001',
-        ip_address: '127.0.0.1',
-        user_agent: 'Test Browser',
-        location: '本地测试',
-        is_active: true,
-        created_at: new Date().toISOString(),
-        last_used_at: new Date().toISOString()
-      }]
+      sessions.value = [
+        {
+          id: 'test-session-001',
+          ip_address: '127.0.0.1',
+          user_agent: 'Test Browser',
+          location: '本地测试',
+          is_active: true,
+          created_at: new Date().toISOString(),
+          last_used_at: new Date().toISOString(),
+        },
+      ]
       console.log('🔧 测试模式 - 会话列表: 返回测试数据')
       return
     }
-    
+
     sessionLoading.value = true
     try {
       const response = await authApi.getSessions()
@@ -308,7 +314,7 @@ export const useAuthStore = defineStore('auth', () => {
       console.log('🔧 测试模式 - 活动记录:', activity)
       return
     }
-    
+
     try {
       const response = await authApi.logActivity(activity)
       if (!response.success) {
@@ -326,19 +332,21 @@ export const useAuthStore = defineStore('auth', () => {
   }): Promise<void> => {
     // 测试模式下返回测试活动记录
     if (isTestMode) {
-      activities.value = [{
-        id: 'test-activity-001',
-        activity_type: 'login',
-        action: '用户登录',
-        target: 'test-admin',
-        details: { message: '测试模式登录' },
-        ip_address: '127.0.0.1',
-        created_at: new Date().toISOString()
-      }]
+      activities.value = [
+        {
+          id: 'test-activity-001',
+          activity_type: 'login',
+          action: '用户登录',
+          target: 'test-admin',
+          details: { message: '测试模式登录' },
+          ip_address: '127.0.0.1',
+          created_at: new Date().toISOString(),
+        },
+      ]
       console.log('🔧 测试模式 - 活动记录: 返回测试数据')
       return
     }
-    
+
     activityLoading.value = true
     try {
       const response = await authApi.getActivities(filters)
@@ -358,14 +366,14 @@ export const useAuthStore = defineStore('auth', () => {
 
   const loadUserPermissions = async (): Promise<void> => {
     if (!user.value) return
-    
+
     // 测试模式下直接设置所有权限
     if (isTestMode) {
       permissions.value = ['*']
       console.log('🔧 测试模式 - 权限加载: 已授予所有权限')
       return
     }
-    
+
     try {
       const response = await authApi.getUserPermissions()
       if (response.success && response.data) {
@@ -380,28 +388,35 @@ export const useAuthStore = defineStore('auth', () => {
   const checkPermission = (permission: string): boolean => {
     // 测试模式下始终返回 true
     if (isTestMode) return true
-    
+
     if (!user.value) return false
-    
+
     // Admin has all permissions
     if (user.value.role === 'admin') return true
-    
+
     // Check specific permission
     return permissions.value.includes(permission)
   }
 
-  const checkMultiplePermissions = (requiredPermissions: string[], requireAll = true): boolean => {
+  const checkMultiplePermissions = (
+    requiredPermissions: string[],
+    requireAll = true
+  ): boolean => {
     // 测试模式下始终返回 true
     if (isTestMode) return true
-    
+
     if (!user.value) return false
-    
+
     if (user.value.role === 'admin') return true
-    
+
     if (requireAll) {
-      return requiredPermissions.every(permission => permissions.value.includes(permission))
+      return requiredPermissions.every(permission =>
+        permissions.value.includes(permission)
+      )
     } else {
-      return requiredPermissions.some(permission => permissions.value.includes(permission))
+      return requiredPermissions.some(permission =>
+        permissions.value.includes(permission)
+      )
     }
   }
 
@@ -413,7 +428,7 @@ export const useAuthStore = defineStore('auth', () => {
       await loadUserPermissions() // 仍然需要加载权限以设置测试权限
       return
     }
-    
+
     if (token.value) {
       try {
         await fetchUserInfo()
@@ -441,12 +456,12 @@ export const useAuthStore = defineStore('auth', () => {
     activities: readonly(activities),
     activityLoading: readonly(activityLoading),
     permissions: readonly(permissions),
-    
+
     // Getters
     isAuthenticated,
     userRole,
     userName,
-    
+
     // Actions
     login,
     logout,
@@ -456,16 +471,16 @@ export const useAuthStore = defineStore('auth', () => {
     hasPermission,
     hasRole,
     init,
-    
+
     // Session management
     getSessions,
     terminateSession,
     terminateAllOtherSessions,
-    
+
     // Activity logging
     logActivity,
     getActivities,
-    
+
     // Enhanced permission management
     loadUserPermissions,
     checkPermission,

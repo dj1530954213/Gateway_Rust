@@ -22,7 +22,7 @@
                 </div>
               </div>
             </el-radio>
-            
+
             <el-radio label="excel">
               <div class="format-option">
                 <el-icon><DocumentChecked /></el-icon>
@@ -32,7 +32,7 @@
                 </div>
               </div>
             </el-radio>
-            
+
             <el-radio label="json">
               <div class="format-option">
                 <el-icon><Collection /></el-icon>
@@ -48,8 +48,12 @@
         <div class="config-section">
           <h4 class="section-title">导出范围</h4>
           <el-radio-group v-model="exportConfig.scope">
-            <el-radio label="current">当前页数据 ({{ currentPageCount }} 条)</el-radio>
-            <el-radio label="selected">选中数据 ({{ selectedCount }} 条)</el-radio>
+            <el-radio label="current"
+              >当前页数据 ({{ currentPageCount }} 条)</el-radio
+            >
+            <el-radio label="selected"
+              >选中数据 ({{ selectedCount }} 条)</el-radio
+            >
             <el-radio label="all">全部数据 ({{ totalCount }} 条)</el-radio>
           </el-radio-group>
         </div>
@@ -59,7 +63,10 @@
           <div class="export-options">
             <div class="option-group">
               <h5 class="group-title">数据列选择</h5>
-              <el-checkbox-group v-model="exportConfig.columns" class="column-checkboxes">
+              <el-checkbox-group
+                v-model="exportConfig.columns"
+                class="column-checkboxes"
+              >
                 <el-checkbox
                   v-for="column in availableColumns"
                   :key="column.key"
@@ -73,28 +80,42 @@
             <div class="option-group">
               <h5 class="group-title">数据处理</h5>
               <div class="processing-options">
-                <el-checkbox v-model="exportConfig.includeHeaders">包含列标题</el-checkbox>
-                <el-checkbox v-model="exportConfig.formatNumbers">格式化数值</el-checkbox>
-                <el-checkbox v-model="exportConfig.formatDates">格式化日期</el-checkbox>
-                <el-checkbox v-model="exportConfig.includeMetadata">包含元数据</el-checkbox>
+                <el-checkbox v-model="exportConfig.includeHeaders"
+                  >包含列标题</el-checkbox
+                >
+                <el-checkbox v-model="exportConfig.formatNumbers"
+                  >格式化数值</el-checkbox
+                >
+                <el-checkbox v-model="exportConfig.formatDates"
+                  >格式化日期</el-checkbox
+                >
+                <el-checkbox v-model="exportConfig.includeMetadata"
+                  >包含元数据</el-checkbox
+                >
               </div>
             </div>
 
-            <div class="option-group" v-if="exportConfig.format === 'csv'">
+            <div v-if="exportConfig.format === 'csv'" class="option-group">
               <h5 class="group-title">CSV 设置</h5>
               <div class="csv-options">
                 <div class="option-item">
                   <label class="option-label">分隔符</label>
-                  <el-select v-model="exportConfig.delimiter" style="width: 120px">
+                  <el-select
+                    v-model="exportConfig.delimiter"
+                    style="width: 120px"
+                  >
                     <el-option label="逗号 (,)" value="," />
                     <el-option label="分号 (;)" value=";" />
                     <el-option label="制表符" value="\t" />
                   </el-select>
                 </div>
-                
+
                 <div class="option-item">
                   <label class="option-label">编码</label>
-                  <el-select v-model="exportConfig.encoding" style="width: 120px">
+                  <el-select
+                    v-model="exportConfig.encoding"
+                    style="width: 120px"
+                  >
                     <el-option label="UTF-8" value="utf-8" />
                     <el-option label="GBK" value="gbk" />
                     <el-option label="UTF-8 BOM" value="utf-8-bom" />
@@ -103,12 +124,18 @@
               </div>
             </div>
 
-            <div class="option-group" v-if="exportConfig.format === 'excel'">
+            <div v-if="exportConfig.format === 'excel'" class="option-group">
               <h5 class="group-title">Excel 设置</h5>
               <div class="excel-options">
-                <el-checkbox v-model="exportConfig.createChart">生成图表</el-checkbox>
-                <el-checkbox v-model="exportConfig.applyStyles">应用样式</el-checkbox>
-                <el-checkbox v-model="exportConfig.multipleSheets">分表导出</el-checkbox>
+                <el-checkbox v-model="exportConfig.createChart"
+                  >生成图表</el-checkbox
+                >
+                <el-checkbox v-model="exportConfig.applyStyles"
+                  >应用样式</el-checkbox
+                >
+                <el-checkbox v-model="exportConfig.multipleSheets"
+                  >分表导出</el-checkbox
+                >
               </div>
             </div>
           </div>
@@ -130,7 +157,7 @@
                 </template>
               </el-input>
             </div>
-            
+
             <div class="filename-tips">
               <el-icon><InfoFilled /></el-icon>
               <span>文件名不能包含以下字符: \ / : * ? " < > |</span>
@@ -140,10 +167,16 @@
       </div>
 
       <!-- 导出预览 -->
-      <div class="export-preview" v-if="previewData.length > 0">
+      <div v-if="previewData.length > 0" class="export-preview">
         <h4 class="section-title">数据预览 (前10行)</h4>
         <div class="preview-table">
-          <el-table :data="previewData" size="small" border stripe max-height="200">
+          <el-table
+            :data="previewData"
+            size="small"
+            border
+            stripe
+            max-height="200"
+          >
             <el-table-column
               v-for="column in previewColumns"
               :key="column.key"
@@ -162,13 +195,15 @@
           <el-icon class="is-loading"><Loading /></el-icon>
           <span>正在导出数据...</span>
         </div>
-        <el-progress 
-          :percentage="exportProgress" 
+        <el-progress
+          :percentage="exportProgress"
           :show-text="true"
           :format="formatProgress"
         />
         <div class="progress-stats">
-          <span>已处理: {{ processedCount }} / {{ totalExportCount }} 条记录</span>
+          <span
+            >已处理: {{ processedCount }} / {{ totalExportCount }} 条记录</span
+          >
           <span>预计剩余时间: {{ estimatedTime }}</span>
         </div>
       </div>
@@ -179,15 +214,17 @@
         <div class="footer-info">
           <span class="export-size">预计文件大小: {{ estimatedSize }}</span>
         </div>
-        
+
         <div class="footer-actions">
-          <el-button @click="handleClose" :disabled="exporting">取消</el-button>
-          <el-button @click="generatePreview" :disabled="exporting">预览</el-button>
-          <el-button 
-            type="primary" 
-            @click="startExport"
+          <el-button :disabled="exporting" @click="handleClose">取消</el-button>
+          <el-button :disabled="exporting" @click="generatePreview"
+            >预览</el-button
+          >
+          <el-button
+            type="primary"
             :loading="exporting"
             :disabled="!canExport"
+            @click="startExport"
           >
             {{ exporting ? '导出中...' : '开始导出' }}
           </el-button>
@@ -217,15 +254,15 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Document,
   DocumentChecked,
   Collection,
   InfoFilled,
-  Loading
+  Loading,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 import { formatDateTime, formatFilename } from '@/utils/date'
 import { formatNumber, formatBytes } from '@/utils/format'
@@ -240,7 +277,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'export': [config: any]
+  export: [config: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -264,7 +301,7 @@ const exportConfig = ref({
   encoding: 'utf-8',
   createChart: false,
   applyStyles: true,
-  multipleSheets: false
+  multipleSheets: false,
 })
 
 // 预览数据
@@ -281,7 +318,7 @@ const availableColumns = [
   { key: 'unit', label: '单位', width: 80 },
   { key: 'dataType', label: '数据类型', width: 100 },
   { key: 'quality', label: '数据质量', width: 100 },
-  { key: 'rawValue', label: '原始值', width: 100 }
+  { key: 'rawValue', label: '原始值', width: 100 },
 ]
 
 // ===== 计算属性 =====
@@ -299,27 +336,30 @@ const totalCount = computed(() => {
 })
 
 const canExport = computed(() => {
-  return exportConfig.value.columns.length > 0 && 
-         exportConfig.value.filename.trim() !== '' &&
-         getExportDataCount() > 0
+  return (
+    exportConfig.value.columns.length > 0 &&
+    exportConfig.value.filename.trim() !== '' &&
+    getExportDataCount() > 0
+  )
 })
 
 const estimatedSize = computed(() => {
   const recordCount = getExportDataCount()
   const columnCount = exportConfig.value.columns.length
   const avgDataSize = 50 // 平均每个字段50字节
-  
+
   const sizeBytes = recordCount * columnCount * avgDataSize
   return formatBytes(sizeBytes)
 })
 
 const estimatedTime = computed(() => {
   if (!exporting.value || exportProgress.value === 0) return '--'
-  
+
   const elapsed = Date.now() - exportStartTime.value
-  const remaining = (elapsed / exportProgress.value) * (100 - exportProgress.value)
-  
-  return `${Math.ceil(remaining / 1000)  }秒`
+  const remaining =
+    (elapsed / exportProgress.value) * (100 - exportProgress.value)
+
+  return `${Math.ceil(remaining / 1000)}秒`
 })
 
 // ===== 内部数据 =====
@@ -334,7 +374,7 @@ function getFileExtension(): string {
   const extensions: Record<string, string> = {
     csv: 'csv',
     excel: 'xlsx',
-    json: 'json'
+    json: 'json',
   }
   return extensions[exportConfig.value.format] || 'txt'
 }
@@ -373,10 +413,10 @@ function generatePreview() {
 
   // 获取要导出的数据
   let dataToPreview = getExportData()
-  
+
   // 取前10行作为预览
   dataToPreview = dataToPreview.slice(0, 10)
-  
+
   // 根据选中的列筛选数据
   const filteredData = dataToPreview.map(row => {
     const filteredRow: any = {}
@@ -387,12 +427,12 @@ function generatePreview() {
     })
     return filteredRow
   })
-  
+
   // 设置预览列
-  previewColumns.value = availableColumns.filter(col => 
+  previewColumns.value = availableColumns.filter(col =>
     exportConfig.value.columns.includes(col.key)
   )
-  
+
   previewData.value = filteredData
   ElMessage.success('预览数据已生成')
 }
@@ -419,30 +459,30 @@ function getExportData(): any[] {
  */
 function formatCellValue(value: any, columnKey: string): string {
   if (value === null || value === undefined) return ''
-  
+
   switch (columnKey) {
     case 'timestamp':
-      return exportConfig.value.formatDates ? 
-        formatDateTime(value, 'YYYY-MM-DD HH:mm:ss') : 
-        String(value)
+      return exportConfig.value.formatDates
+        ? formatDateTime(value, 'YYYY-MM-DD HH:mm:ss')
+        : String(value)
     case 'value':
     case 'rawValue':
-      return exportConfig.value.formatNumbers ? 
-        formatNumber(parseFloat(value), 2) : 
-        String(value)
+      return exportConfig.value.formatNumbers
+        ? formatNumber(parseFloat(value), 2)
+        : String(value)
     case 'quality':
       const qualityMap: Record<string, string> = {
-        'good': '良好',
-        'uncertain': '可疑',
-        'bad': '错误'
+        good: '良好',
+        uncertain: '可疑',
+        bad: '错误',
       }
       return qualityMap[value] || value
     case 'dataType':
       const typeMap: Record<string, string> = {
-        'boolean': '布尔',
-        'string': '字符串',
-        'integer': '整数',
-        'float': '浮点'
+        boolean: '布尔',
+        string: '字符串',
+        integer: '整数',
+        float: '浮点',
       }
       return typeMap[value] || value
     default:
@@ -487,7 +527,6 @@ async function startExport() {
     ElMessage.success('数据导出成功！')
     emit('export', { ...exportConfig.value, success: true })
     handleClose()
-
   } catch (error) {
     console.error('数据导出失败:', error)
     ElMessage.error('数据导出失败')
@@ -504,7 +543,7 @@ async function startExport() {
 async function simulateExportProgress() {
   const steps = 20
   const stepSize = totalExportCount.value / steps
-  
+
   for (let i = 0; i < steps; i++) {
     await new Promise(resolve => setTimeout(resolve, 100))
     exportProgress.value = Math.round((i + 1) * 5)
@@ -520,16 +559,16 @@ async function simulateExportProgress() {
  */
 async function exportToCSV(data: any[]) {
   let csvContent = ''
-  
+
   // 添加列标题
   if (exportConfig.value.includeHeaders) {
     const headers = exportConfig.value.columns.map(columnKey => {
       const column = availableColumns.find(col => col.key === columnKey)
       return column ? column.label : columnKey
     })
-    csvContent += `${headers.join(exportConfig.value.delimiter)  }\n`
+    csvContent += `${headers.join(exportConfig.value.delimiter)}\n`
   }
-  
+
   // 添加数据行
   data.forEach(row => {
     const values = exportConfig.value.columns.map(columnKey => {
@@ -537,11 +576,11 @@ async function exportToCSV(data: any[]) {
       // CSV 值包含分隔符时需要加引号
       return value.includes(exportConfig.value.delimiter) ? `"${value}"` : value
     })
-    csvContent += `${values.join(exportConfig.value.delimiter)  }\n`
+    csvContent += `${values.join(exportConfig.value.delimiter)}\n`
   })
-  
+
   // 下载文件
-  downloadFile(csvContent, `${exportConfig.value.filename  }.csv`, 'text/csv')
+  downloadFile(csvContent, `${exportConfig.value.filename}.csv`, 'text/csv')
 }
 
 /**
@@ -563,7 +602,7 @@ async function exportToJSON(data: any[]) {
       exportTime: new Date().toISOString(),
       recordCount: data.length,
       columns: exportConfig.value.columns,
-      query: props.queryForm || {}
+      query: props.queryForm || {},
     },
     data: data.map(row => {
       const filteredRow: any = {}
@@ -573,11 +612,15 @@ async function exportToJSON(data: any[]) {
         }
       })
       return filteredRow
-    })
+    }),
   }
-  
+
   const jsonContent = JSON.stringify(exportData, null, 2)
-  downloadFile(jsonContent, `${exportConfig.value.filename  }.json`, 'application/json')
+  downloadFile(
+    jsonContent,
+    `${exportConfig.value.filename}.json`,
+    'application/json'
+  )
 }
 
 /**
@@ -586,13 +629,13 @@ async function exportToJSON(data: any[]) {
 function downloadFile(content: string, filename: string, mimeType: string) {
   const blob = new Blob([content], { type: mimeType })
   const url = window.URL.createObjectURL(blob)
-  
+
   const link = document.createElement('a')
   link.href = url
   link.download = filename
   document.body.appendChild(link)
   link.click()
-  
+
   document.body.removeChild(link)
   window.URL.revokeObjectURL(url)
 }
@@ -603,30 +646,37 @@ function downloadFile(content: string, filename: string, mimeType: string) {
 function handleClose() {
   if (exporting.value) {
     ElMessageBox.confirm('导出正在进行中，确定要取消吗？', '确认取消', {
-      type: 'warning'
-    }).then(() => {
-      exporting.value = false
-      dialogVisible.value = false
-    }).catch(() => {
-      // 用户取消关闭
+      type: 'warning',
     })
+      .then(() => {
+        exporting.value = false
+        dialogVisible.value = false
+      })
+      .catch(() => {
+        // 用户取消关闭
+      })
   } else {
     dialogVisible.value = false
   }
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-})
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+  }
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
-  
+
   if (visible) {
     // 对话框打开时初始化配置
     exportConfig.value.columns = availableColumns.map(col => col.key)
-    exportConfig.value.filename = formatFilename(`历史数据_${  formatDateTime(new Date(), 'YYYYMMDD')}`)
+    exportConfig.value.filename = formatFilename(
+      `历史数据_${formatDateTime(new Date(), 'YYYYMMDD')}`
+    )
   } else {
     // 对话框关闭时重置状态
     previewData.value = []
@@ -636,11 +686,14 @@ watch(dialogVisible, (visible) => {
   }
 })
 
-watch(() => exportConfig.value.format, () => {
-  // 格式变化时更新文件名扩展名
-  const baseName = exportConfig.value.filename.replace(/\.[^/.]+$/, '')
-  exportConfig.value.filename = baseName
-})
+watch(
+  () => exportConfig.value.format,
+  () => {
+    // 格式变化时更新文件名扩展名
+    const baseName = exportConfig.value.filename.replace(/\.[^/.]+$/, '')
+    exportConfig.value.filename = baseName
+  }
+)
 </script>
 
 <style scoped lang="scss">
@@ -648,11 +701,11 @@ watch(() => exportConfig.value.format, () => {
   .export-config {
     .config-section {
       margin-bottom: 24px;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
-      
+
       .section-title {
         font-size: 16px;
         font-weight: 600;
@@ -660,15 +713,15 @@ watch(() => exportConfig.value.format, () => {
         margin: 0 0 12px 0;
       }
     }
-    
+
     .format-options {
       display: flex;
       flex-direction: column;
       gap: 12px;
-      
+
       .el-radio {
         margin-right: 0;
-        
+
         .format-option {
           display: flex;
           align-items: center;
@@ -676,25 +729,25 @@ watch(() => exportConfig.value.format, () => {
           padding: 8px;
           border-radius: 4px;
           transition: background-color 0.2s;
-          
+
           &:hover {
             background: #f5f7fa;
           }
-          
+
           .el-icon {
             font-size: 20px;
             color: #409eff;
           }
-          
+
           .format-info {
             display: flex;
             flex-direction: column;
-            
+
             .format-name {
               font-weight: 500;
               color: #303133;
             }
-            
+
             .format-desc {
               font-size: 12px;
               color: #909399;
@@ -704,46 +757,46 @@ watch(() => exportConfig.value.format, () => {
         }
       }
     }
-    
+
     .export-options {
       .option-group {
         margin-bottom: 16px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .group-title {
           font-size: 14px;
           font-weight: 500;
           color: #606266;
           margin: 0 0 8px 0;
         }
-        
+
         .column-checkboxes {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
           gap: 8px;
         }
-        
+
         .processing-options {
           display: flex;
           flex-wrap: wrap;
           gap: 16px;
         }
-        
+
         .csv-options,
         .excel-options {
           display: flex;
           gap: 16px;
           align-items: center;
           flex-wrap: wrap;
-          
+
           .option-item {
             display: flex;
             align-items: center;
             gap: 8px;
-            
+
             .option-label {
               font-size: 13px;
               color: #606266;
@@ -753,81 +806,81 @@ watch(() => exportConfig.value.format, () => {
         }
       }
     }
-    
+
     .filename-config {
       .filename-input {
         display: flex;
         align-items: center;
         gap: 12px;
         margin-bottom: 8px;
-        
+
         .option-label {
           font-size: 13px;
           color: #606266;
           white-space: nowrap;
         }
-        
+
         .file-extension {
           color: #909399;
           font-size: 12px;
         }
       }
-      
+
       .filename-tips {
         display: flex;
         align-items: center;
         gap: 4px;
         font-size: 12px;
         color: #e6a23c;
-        
+
         .el-icon {
           font-size: 14px;
         }
       }
     }
   }
-  
+
   .export-preview {
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid #ebeef5;
-    
+
     .section-title {
       font-size: 16px;
       font-weight: 600;
       color: #303133;
       margin: 0 0 12px 0;
     }
-    
+
     .preview-table {
       border-radius: 6px;
       overflow: hidden;
     }
   }
-  
+
   .export-progress {
     margin-top: 24px;
     padding: 20px;
     background: #f8f9fa;
     border-radius: 6px;
-    
+
     .progress-info {
       display: flex;
       align-items: center;
       gap: 8px;
       margin-bottom: 12px;
-      
+
       .el-icon {
         font-size: 16px;
         color: #409eff;
       }
-      
+
       span {
         font-weight: 500;
         color: #303133;
       }
     }
-    
+
     .progress-stats {
       display: flex;
       justify-content: space-between;
@@ -842,14 +895,14 @@ watch(() => exportConfig.value.format, () => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .footer-info {
     .export-size {
       font-size: 13px;
       color: #606266;
     }
   }
-  
+
   .footer-actions {
     display: flex;
     gap: 12px;
@@ -863,24 +916,24 @@ watch(() => exportConfig.value.format, () => {
       .format-options {
         .el-radio .format-option {
           padding: 12px 8px;
-          
+
           .format-info {
             .format-name {
               font-size: 14px;
             }
-            
+
             .format-desc {
               font-size: 11px;
             }
           }
         }
       }
-      
+
       .export-options .option-group {
         .column-checkboxes {
           grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         }
-        
+
         .processing-options,
         .csv-options,
         .excel-options {
@@ -889,24 +942,24 @@ watch(() => exportConfig.value.format, () => {
           gap: 12px;
         }
       }
-      
+
       .filename-config .filename-input {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
-        
+
         :deep(.el-input) {
           width: 100% !important;
         }
       }
     }
   }
-  
+
   .dialog-footer {
     flex-direction: column;
     gap: 12px;
     align-items: stretch;
-    
+
     .footer-info,
     .footer-actions {
       text-align: center;

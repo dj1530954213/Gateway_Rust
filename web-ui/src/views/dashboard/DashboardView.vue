@@ -24,7 +24,7 @@
           </div>
           <div class="stat-icon">
             <el-icon :size="32">
-              <component :is="stat.icon" />
+              <component :is="iconMap[stat.key] || Connection" />
             </el-icon>
           </div>
         </div>
@@ -43,17 +43,16 @@
           >
             <div class="status-header">
               <span class="component-name">{{ component.name }}</span>
-              <el-tag
-                :type="getStatusType(component.status)"
-                size="small"
-              >
+              <el-tag :type="getStatusType(component.status)" size="small">
                 {{ component.status }}
               </el-tag>
             </div>
             <div class="status-metrics">
               <div class="metric-item">
                 <span class="metric-label">运行时间</span>
-                <span class="metric-value">{{ formatUptime(component.uptime) }}</span>
+                <span class="metric-value">{{
+                  formatUptime(component.uptime)
+                }}</span>
               </div>
               <div class="metric-item">
                 <span class="metric-label">错误计数</span>
@@ -67,12 +66,21 @@
       <!-- Real-time Chart -->
       <el-card class="chart-card" header="实时数据趋势">
         <div class="chart-controls">
-          <el-select v-model="selectedTimeRange" size="small" style="width: 120px">
+          <el-select
+            v-model="selectedTimeRange"
+            size="small"
+            style="width: 120px"
+          >
             <el-option label="1小时" value="1h" />
             <el-option label="6小时" value="6h" />
             <el-option label="24小时" value="24h" />
           </el-select>
-          <el-select v-model="selectedDataPoints" multiple size="small" style="width: 200px">
+          <el-select
+            v-model="selectedDataPoints"
+            multiple
+            size="small"
+            style="width: 200px"
+          >
             <el-option
               v-for="point in availableDataPoints"
               :key="point.id"
@@ -81,8 +89,8 @@
             />
           </el-select>
         </div>
-        <div class="chart-container" ref="chartContainer">
-          <v-chart
+        <div ref="chartContainer" class="chart-container">
+          <VChart
             class="chart"
             :option="chartOption"
             autoresize
@@ -98,7 +106,7 @@
             查看全部
           </el-button>
         </template>
-        
+
         <div class="alerts-list">
           <div
             v-for="alert in recentAlerts"
@@ -115,7 +123,9 @@
               </div>
               <div class="alert-meta">
                 <span class="alert-source">{{ alert.source }}</span>
-                <span class="alert-time">{{ formatTime(alert.created_at) }}</span>
+                <span class="alert-time">{{
+                  formatTime(alert.created_at)
+                }}</span>
               </div>
             </div>
             <div class="alert-actions">
@@ -129,7 +139,7 @@
               </el-button>
             </div>
           </div>
-          
+
           <el-empty
             v-if="recentAlerts.length === 0"
             description="暂无告警信息"
@@ -154,9 +164,9 @@
             <div class="device-label">离线设备</div>
           </div>
         </div>
-        
+
         <el-divider />
-        
+
         <div class="device-list">
           <div
             v-for="device in recentDevices"
@@ -195,19 +205,21 @@
               <span class="metric-text">{{ systemMetrics.cpuUsage }}%</span>
             </div>
           </div>
-          
+
           <div class="metric-card">
             <div class="metric-title">内存使用率</div>
             <div class="metric-progress">
               <el-progress
                 :percentage="systemMetrics.memoryUsage"
-                :status="systemMetrics.memoryUsage > 85 ? 'exception' : 'success'"
+                :status="
+                  systemMetrics.memoryUsage > 85 ? 'exception' : 'success'
+                "
                 :show-text="false"
               />
               <span class="metric-text">{{ systemMetrics.memoryUsage }}%</span>
             </div>
           </div>
-          
+
           <div class="metric-card">
             <div class="metric-title">磁盘使用率</div>
             <div class="metric-progress">
@@ -219,17 +231,21 @@
               <span class="metric-text">{{ systemMetrics.diskUsage }}%</span>
             </div>
           </div>
-          
+
           <div class="metric-card">
             <div class="metric-title">网络流量</div>
             <div class="metric-value">
               <div class="metric-item">
                 <span class="metric-label">入站</span>
-                <span class="metric-number">{{ formatNetworkSpeed(systemMetrics.networkIn) }}</span>
+                <span class="metric-number">{{
+                  formatNetworkSpeed(systemMetrics.networkIn)
+                }}</span>
               </div>
               <div class="metric-item">
                 <span class="metric-label">出站</span>
-                <span class="metric-number">{{ formatNetworkSpeed(systemMetrics.networkOut) }}</span>
+                <span class="metric-number">{{
+                  formatNetworkSpeed(systemMetrics.networkOut)
+                }}</span>
               </div>
             </div>
           </div>
@@ -260,11 +276,7 @@
           >
             系统配置
           </el-button>
-          <el-button
-            type="info"
-            :icon="Download"
-            @click="exportData"
-          >
+          <el-button type="info" :icon="Download" @click="exportData">
             导出数据
           </el-button>
         </div>
@@ -274,26 +286,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
-import { ElMessage } from 'element-plus'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
-import { LineChart } from 'echarts/charts'
-import {
-  TitleComponent,
-  TooltipComponent,
-  LegendComponent,
-  GridComponent,
-} from 'echarts/components'
-import VChart from 'vue-echarts'
-
-import { useSystemStore } from '@/stores/system'
-import { useWebSocket } from '@/composables/useWebSocket'
-import { formatTime, formatUptime } from '@/utils/date'
-import { formatNetworkSpeed, formatStatus } from '@/utils/format'
-import { systemApi, alertsApi, driversApi, realtimeApi } from '@/services/api'
-
-// Element Plus图标导入
 import {
   ArrowUp,
   ArrowDown,
@@ -302,7 +294,30 @@ import {
   Connection,
   Setting,
   Download,
+  SetUp,
+  Warning,
+  TrendCharts,
 } from '@element-plus/icons-vue'
+import { LineChart } from 'echarts/charts'
+import {
+  TitleComponent,
+  TooltipComponent,
+  LegendComponent,
+  GridComponent,
+} from 'echarts/components'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { ElMessage } from 'element-plus'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import VChart from 'vue-echarts'
+
+import { useWebSocket } from '@/composables/useWebSocket'
+import { systemApi, alertsApi, driversApi, realtimeApi } from '@/services/api'
+import { useSystemStore } from '@/stores/system'
+import { formatTime, formatUptime } from '@/utils/date'
+import { formatNetworkSpeed, formatStatus } from '@/utils/format'
+
+// Element Plus图标导入
 
 // Register ECharts components
 use([
@@ -318,7 +333,9 @@ const systemStore = useSystemStore()
 
 // WebSocket connection for real-time updates (disabled in development)
 const wsUrl = import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'
-const { lastMessage } = useWebSocket(`${wsUrl}/ws/dashboard`, { autoConnect: false })
+const { lastMessage } = useWebSocket(`${wsUrl}/ws/telemetry`, {
+  autoConnect: true,
+})
 
 // Refs
 const chartContainer = ref()
@@ -327,6 +344,14 @@ const chartContainer = ref()
 const loading = ref(false)
 const selectedTimeRange = ref('1h')
 const selectedDataPoints = ref<string[]>([])
+
+// 图标映射 - 非reactive
+const iconMap = {
+  devices: Connection,
+  dataPoints: SetUp,
+  alerts: Warning,
+  throughput: TrendCharts,
+}
 
 // Stats data - 从API动态获取
 const statsCards = ref([
@@ -337,7 +362,6 @@ const statsCards = ref([
     change: '0',
     changeType: 'stable',
     type: 'primary',
-    icon: 'Connection',
   },
   {
     key: 'dataPoints',
@@ -346,7 +370,6 @@ const statsCards = ref([
     change: '0%',
     changeType: 'stable',
     type: 'success',
-    icon: 'SetUp',
   },
   {
     key: 'alerts',
@@ -355,7 +378,6 @@ const statsCards = ref([
     change: '0',
     changeType: 'stable',
     type: 'warning',
-    icon: 'Warning',
   },
   {
     key: 'throughput',
@@ -364,7 +386,6 @@ const statsCards = ref([
     change: '0%',
     changeType: 'stable',
     type: 'info',
-    icon: 'TrendCharts',
   },
 ])
 
@@ -414,8 +435,8 @@ const chartOption = computed(() => ({
   },
   legend: {
     top: '30',
-    data: selectedDataPoints.value.map(id => 
-      availableDataPoints.value.find(p => p.id === id)?.name || id
+    data: selectedDataPoints.value.map(
+      id => availableDataPoints.value.find(p => p.id === id)?.name || id
     ),
   },
   grid: {
@@ -434,7 +455,8 @@ const chartOption = computed(() => ({
     type: 'value',
   },
   series: selectedDataPoints.value.map((pointId, index) => ({
-    name: availableDataPoints.value.find(p => p.id === pointId)?.name || pointId,
+    name:
+      availableDataPoints.value.find(p => p.id === pointId)?.name || pointId,
     type: 'line',
     smooth: true,
     data: [], // 🚫 生产级系统 - 数据从真实 API 获取，初始为空数组
@@ -473,17 +495,23 @@ const getChartColor = (index: number) => {
 const generateTimeLabels = () => {
   const labels = []
   const now = new Date()
-  const interval = selectedTimeRange.value === '1h' ? 5 : 
-                   selectedTimeRange.value === '6h' ? 30 : 60
-  
+  const interval =
+    selectedTimeRange.value === '1h'
+      ? 5
+      : selectedTimeRange.value === '6h'
+        ? 30
+        : 60
+
   for (let i = 60; i >= 0; i -= 5) {
     const time = new Date(now.getTime() - i * interval * 60000)
-    labels.push(time.toLocaleTimeString('zh-CN', { 
-      hour: '2-digit', 
-      minute: '2-digit' 
-    }))
+    labels.push(
+      time.toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      })
+    )
   }
-  
+
   return labels
 }
 
@@ -522,7 +550,7 @@ const updateRealTimeData = () => {
 const loadDashboardData = async () => {
   try {
     loading.value = true
-    
+
     // Load system metrics
     const metricsResponse = await systemApi.getSystemMetrics()
     if (metricsResponse.success && metricsResponse.data) {
@@ -538,32 +566,35 @@ const loadDashboardData = async () => {
     if (componentsResponse.success && componentsResponse.data) {
       systemComponents.value = componentsResponse.data
     }
-    
+
     // Load drivers and update stats
     const driversResponse = await driversApi.getDrivers()
     if (driversResponse.success && driversResponse.data) {
       const drivers = driversResponse.data
       const onlineDrivers = drivers.filter(d => d.status === 'running').length
-      const totalDataPoints = drivers.reduce((sum, d) => sum + (d.dataPoints || 0), 0)
-      
+      const totalDataPoints = drivers.reduce(
+        (sum, d) => sum + (d.dataPoints || 0),
+        0
+      )
+
       statsCards.value[0].value = onlineDrivers.toString()
       statsCards.value[1].value = totalDataPoints.toLocaleString()
-      
+
       // Update device stats
       deviceStats.total = drivers.length
       deviceStats.online = onlineDrivers
       deviceStats.offline = drivers.length - onlineDrivers
-      
+
       // Update recent devices
       recentDevices.value = drivers.slice(0, 5).map(driver => ({
         id: driver.id,
         name: driver.name,
         type: driver.type,
         status: driver.status,
-        lastUpdate: driver.lastUpdate
+        lastUpdate: driver.lastUpdate,
       }))
     }
-    
+
     // Load alerts
     const alertsResponse = await alertsApi.getAlerts()
     if (alertsResponse.success && alertsResponse.data) {
@@ -578,7 +609,6 @@ const loadDashboardData = async () => {
     if (dataPointsResponse.success && dataPointsResponse.data) {
       availableDataPoints.value = dataPointsResponse.data
     }
-    
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   } finally {
@@ -593,18 +623,20 @@ let dataUpdateTimer: NodeJS.Timeout | null = null
 onMounted(async () => {
   // Load initial data from API
   await loadDashboardData()
-  
+
   // Select first 2 data points after loading
   if (availableDataPoints.value.length >= 2) {
-    selectedDataPoints.value = availableDataPoints.value.slice(0, 2).map(p => p.id)
+    selectedDataPoints.value = availableDataPoints.value
+      .slice(0, 2)
+      .map(p => p.id)
   }
-  
+
   // Start real-time updates
   dataUpdateTimer = setInterval(() => {
     updateRealTimeData()
     loadDashboardData() // Refresh dashboard data
   }, 10000) // Update every 10 seconds
-  
+
   // Initialize system store
   await systemStore.init()
 })
@@ -618,7 +650,7 @@ onUnmounted(() => {
 })
 
 // Watch for WebSocket messages
-watch(lastMessage, (message) => {
+watch(lastMessage, message => {
   if (message) {
     try {
       const data = JSON.parse(message)
@@ -640,21 +672,21 @@ watch(lastMessage, (message) => {
 <style scoped lang="scss">
 .dashboard-container {
   padding: 0;
-  
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 20px;
     margin-bottom: 20px;
-    
+
     .stat-card {
       border: none;
-      
+
       .stat-content {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        
+
         .stat-info {
           .stat-value {
             font-size: 28px;
@@ -662,87 +694,95 @@ watch(lastMessage, (message) => {
             color: var(--el-text-color-primary);
             margin-bottom: 4px;
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: var(--el-text-color-secondary);
             margin-bottom: 8px;
           }
-          
+
           .stat-change {
             display: flex;
             align-items: center;
             gap: 4px;
             font-size: 12px;
-            
+
             &.increase {
               color: var(--el-color-success);
             }
-            
+
             &.decrease {
               color: var(--el-color-danger);
             }
-            
+
             &.stable {
               color: var(--el-text-color-secondary);
             }
           }
         }
-        
+
         .stat-icon {
           opacity: 0.7;
           color: var(--el-color-primary);
         }
       }
-      
-      &.stat-primary .stat-icon { color: var(--el-color-primary); }
-      &.stat-success .stat-icon { color: var(--el-color-success); }
-      &.stat-warning .stat-icon { color: var(--el-color-warning); }
-      &.stat-info .stat-icon { color: var(--el-color-info); }
+
+      &.stat-primary .stat-icon {
+        color: var(--el-color-primary);
+      }
+      &.stat-success .stat-icon {
+        color: var(--el-color-success);
+      }
+      &.stat-warning .stat-icon {
+        color: var(--el-color-warning);
+      }
+      &.stat-info .stat-icon {
+        color: var(--el-color-info);
+      }
     }
   }
-  
+
   .content-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
     gap: 20px;
-    
+
     .status-card {
       grid-column: span 2;
-      
+
       .status-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
         gap: 16px;
-        
+
         .status-item {
           padding: 16px;
           border: 1px solid var(--el-border-color);
           border-radius: 8px;
           background: var(--el-bg-color-light);
-          
+
           .status-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
-            
+
             .component-name {
               font-weight: 600;
             }
           }
-          
+
           .status-metrics {
             .metric-item {
               display: flex;
               justify-content: space-between;
               margin-bottom: 8px;
-              
+
               .metric-label {
                 font-size: 13px;
                 color: var(--el-text-color-secondary);
               }
-              
+
               .metric-value {
                 font-size: 13px;
                 font-weight: 500;
@@ -752,31 +792,31 @@ watch(lastMessage, (message) => {
         }
       }
     }
-    
+
     .chart-card {
       grid-column: span 2;
-      
+
       .chart-controls {
         display: flex;
         gap: 12px;
         margin-bottom: 16px;
       }
-      
+
       .chart-container {
         height: 300px;
-        
+
         .chart {
           height: 100%;
           width: 100%;
         }
       }
     }
-    
+
     .alerts-card {
       .alerts-list {
         max-height: 300px;
         overflow-y: auto;
-        
+
         .alert-item {
           display: flex;
           justify-content: space-between;
@@ -786,34 +826,34 @@ watch(lastMessage, (message) => {
           margin-bottom: 8px;
           background: var(--el-bg-color-light);
           border-radius: 4px;
-          
+
           &.alert-error {
             border-left-color: var(--el-color-danger);
           }
-          
+
           &.alert-warning {
             border-left-color: var(--el-color-warning);
           }
-          
+
           &.alert-info {
             border-left-color: var(--el-color-info);
           }
-          
+
           .alert-content {
             flex: 1;
-            
+
             .alert-header {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 8px;
-              
+
               .alert-message {
                 font-weight: 500;
                 color: var(--el-text-color-primary);
               }
             }
-            
+
             .alert-meta {
               display: flex;
               justify-content: space-between;
@@ -821,45 +861,45 @@ watch(lastMessage, (message) => {
               color: var(--el-text-color-secondary);
             }
           }
-          
+
           .alert-actions {
             margin-left: 12px;
           }
         }
       }
     }
-    
+
     .devices-card {
       .devices-summary {
         display: flex;
         justify-content: space-around;
         margin-bottom: 16px;
-        
+
         .device-stat {
           text-align: center;
-          
+
           .device-count {
             font-size: 24px;
             font-weight: 600;
             color: var(--el-text-color-primary);
           }
-          
+
           .device-label {
             font-size: 12px;
             color: var(--el-text-color-secondary);
             margin-top: 4px;
           }
-          
+
           &.online .device-count {
             color: var(--el-color-success);
           }
-          
+
           &.offline .device-count {
             color: var(--el-color-danger);
           }
         }
       }
-      
+
       .device-list {
         .device-item {
           display: flex;
@@ -869,17 +909,17 @@ watch(lastMessage, (message) => {
           border-radius: 4px;
           cursor: pointer;
           transition: background-color 0.3s;
-          
+
           &:hover {
             background: var(--el-bg-color-light);
           }
-          
+
           .device-info {
             .device-name {
               font-weight: 500;
               margin-bottom: 4px;
             }
-            
+
             .device-type {
               font-size: 12px;
               color: var(--el-text-color-secondary);
@@ -888,40 +928,40 @@ watch(lastMessage, (message) => {
         }
       }
     }
-    
+
     .performance-card {
       .performance-metrics {
         .metric-card {
           margin-bottom: 20px;
-          
+
           .metric-title {
             font-size: 14px;
             color: var(--el-text-color-primary);
             margin-bottom: 8px;
           }
-          
+
           .metric-progress {
             display: flex;
             align-items: center;
             gap: 12px;
-            
+
             .metric-text {
               font-weight: 600;
               min-width: 40px;
             }
           }
-          
+
           .metric-value {
             .metric-item {
               display: flex;
               justify-content: space-between;
               margin-bottom: 4px;
-              
+
               .metric-label {
                 font-size: 12px;
                 color: var(--el-text-color-secondary);
               }
-              
+
               .metric-number {
                 font-size: 12px;
                 font-weight: 500;
@@ -931,13 +971,13 @@ watch(lastMessage, (message) => {
         }
       }
     }
-    
+
     .actions-card {
       .action-buttons {
         display: flex;
         flex-direction: column;
         gap: 12px;
-        
+
         .el-button {
           justify-content: flex-start;
         }
@@ -950,7 +990,7 @@ watch(lastMessage, (message) => {
 @media (max-width: 1200px) {
   .content-grid {
     grid-template-columns: 1fr;
-    
+
     .status-card,
     .chart-card {
       grid-column: span 1;
@@ -964,15 +1004,15 @@ watch(lastMessage, (message) => {
       grid-template-columns: repeat(2, 1fr);
       gap: 12px;
     }
-    
+
     .content-grid {
       gap: 12px;
       grid-template-columns: 1fr;
-      
+
       .status-card .status-grid {
         grid-template-columns: 1fr;
       }
-      
+
       .chart-card .chart-controls {
         flex-direction: column;
         gap: 8px;

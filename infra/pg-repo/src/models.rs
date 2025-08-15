@@ -98,6 +98,8 @@ pub struct Tag {
     pub address: String,
     pub data_type: DbTagDataType,
     pub scaling: Option<f64>,
+    #[sqlx(rename = "tag_offset")]
+    #[serde(rename = "offset")]
     pub offset: Option<f64>,
     pub unit: Option<String>,
     pub description: Option<String>,

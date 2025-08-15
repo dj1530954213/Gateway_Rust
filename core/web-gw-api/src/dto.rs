@@ -502,7 +502,59 @@ pub struct AlertNotification {
     pub threshold: f64,
 }
 
-// ========== 通用响应 ==========
+// ========== 统一API响应格式 ==========
+
+/// 统一API响应格式
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApiResponse<T> {
+    pub success: bool,
+    pub data: Option<T>,
+    pub error: Option<ApiError>,
+    pub meta: Option<ResponseMeta>,
+    pub timestamp: DateTime<Utc>,
+    pub request_id: Option<String>,
+}
+
+/// 响应元数据
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct ResponseMeta {
+    /// 分页信息（可选）
+    pub pagination: Option<PaginationMeta>,
+    /// 性能指标
+    pub performance: Option<PerformanceMeta>,
+    /// 版本信息
+    pub version: String,
+    /// 额外信息
+    pub extra: Option<serde_json::Value>,
+}
+
+/// 分页元数据
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct PaginationMeta {
+    pub page: u64,
+    pub size: u64,
+    pub total: u64,
+    pub pages: u64,
+    pub has_next: bool,
+    pub has_prev: bool,
+}
+
+/// 性能指标
+#[derive(Debug, Clone, Serialize, ToSchema)]
+pub struct PerformanceMeta {
+    pub query_time_ms: f64,
+    pub processing_time_ms: f64,
+    pub total_time_ms: f64,
+}
+
+/// 标准化API错误
+#[derive(Debug, Serialize, ToSchema)]
+pub struct ApiError {
+    pub code: String,
+    pub message: String,
+    pub details: Option<serde_json::Value>,
+    pub trace_id: Option<String>,
+}
 
 #[derive(Debug, Serialize, ToSchema)]
 pub struct PagedResponse<T> {
@@ -511,6 +563,85 @@ pub struct PagedResponse<T> {
     pub page: u64,
     pub size: u64,
     pub pages: u64,
+}
+
+/// API响应构建器
+impl<T> ApiResponse<T> {
+    /// 成功响应
+    pub fn success(data: T) -> Self {
+        Self {
+            success: true,
+            data: Some(data),
+            error: None,
+            meta: None,
+            timestamp: Utc::now(),
+            request_id: None,
+        }
+    }
+
+    /// 成功响应（带元数据）
+    pub fn success_with_meta(data: T, meta: ResponseMeta) -> Self {
+        Self {
+            success: true,
+            data: Some(data),
+            error: None,
+            meta: Some(meta),
+            timestamp: Utc::now(),
+            request_id: None,
+        }
+    }
+
+    /// 分页响应
+    pub fn paginated(data: Vec<T>, pagination: PaginationMeta) -> Self where T: Clone {
+        let meta = ResponseMeta {
+            pagination: Some(pagination),
+            performance: None,
+            version: env!("CARGO_PKG_VERSION").to_string(),
+            extra: None,
+        };
+        
+        Self {
+            success: true,
+            data: Some(data),
+            error: None,
+            meta: Some(meta),
+            timestamp: Utc::now(),
+            request_id: None,
+        }
+    }
+
+    /// 错误响应
+    pub fn error(error: ApiError) -> Self {
+        Self {
+            success: false,
+            data: None,
+            error: Some(error),
+            meta: None,
+            timestamp: Utc::now(),
+            request_id: None,
+        }
+    }
+
+    /// 设置请求ID
+    pub fn with_request_id(mut self, request_id: String) -> Self {
+        self.request_id = Some(request_id);
+        self
+    }
+
+    /// 设置性能指标
+    pub fn with_performance(mut self, performance: PerformanceMeta) -> Self {
+        if let Some(ref mut meta) = self.meta {
+            meta.performance = Some(performance);
+        } else {
+            self.meta = Some(ResponseMeta {
+                pagination: None,
+                performance: Some(performance),
+                version: env!("CARGO_PKG_VERSION").to_string(),
+                extra: None,
+            });
+        }
+        self
+    }
 }
 
 #[derive(Debug, Serialize, ToSchema)]
@@ -741,4 +872,36 @@ impl std::str::FromStr for StatsKind {
             _ => Err(format!("Unknown stats kind: {}", s)),
         }
     }
+}
+
+// ========== 驱动生命周期管理相关 DTO ==========
+
+/// 驱动配置生命周期操作响应
+#[derive(Debug, Serialize, ToSchema)]
+pub struct DriverLifecycleResponse {
+    pub config_id: Uuid,
+    pub config_name: String,
+    pub operation: String, // "start", "stop", "restart"
+    pub success: bool,
+    pub message: String,
+    pub current_status: Option<DriverConfigStatusVO>,
+}
+
+/// 驱动配置状态响应
+#[derive(Debug, Serialize, ToSchema)]
+pub struct DriverConfigStatusResponse {
+    pub config_id: Uuid,
+    pub config_name: String,
+    pub status: DriverConfigStatusVO,
+}
+
+/// 驱动配置状态值对象
+#[derive(Debug, Serialize, ToSchema)]
+pub struct DriverConfigStatusVO {
+    pub running: bool,
+    pub enabled: bool,
+    pub managed_driver_id: Option<String>,
+    pub driver_state: Option<String>, // Debug格式的DriverState
+    pub status_message: String,
+    pub last_checked: DateTime<Utc>,
 }

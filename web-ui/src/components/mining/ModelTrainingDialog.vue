@@ -15,18 +15,21 @@
         <el-step title="参数调优" />
         <el-step title="训练验证" />
       </el-steps>
-      
+
       <!-- 步骤内容 -->
       <div class="step-content">
         <!-- 步骤1: 数据配置 -->
         <div v-if="currentStep === 0" class="step-panel">
           <h3>数据配置</h3>
-          
+
           <el-form :model="dataConfig" label-width="120px">
             <el-row :gutter="24">
               <el-col :span="12">
                 <el-form-item label="数据源">
-                  <el-select v-model="dataConfig.dataSource" @change="onDataSourceChange">
+                  <el-select
+                    v-model="dataConfig.dataSource"
+                    @change="onDataSourceChange"
+                  >
                     <el-option
                       v-for="source in dataSources"
                       :key="source.value"
@@ -35,7 +38,7 @@
                     />
                   </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="时间范围">
                   <el-date-picker
                     v-model="dataConfig.dateRange"
@@ -47,11 +50,14 @@
                     value-format="YYYY-MM-DD HH:mm:ss"
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="采样间隔">
                   <el-row :gutter="8">
                     <el-col :span="16">
-                      <el-input-number v-model="dataConfig.sampleInterval" :min="1" />
+                      <el-input-number
+                        v-model="dataConfig.sampleInterval"
+                        :min="1"
+                      />
                     </el-col>
                     <el-col :span="8">
                       <el-select v-model="dataConfig.sampleUnit">
@@ -62,7 +68,7 @@
                     </el-col>
                   </el-row>
                 </el-form-item>
-                
+
                 <el-form-item label="数据清洗">
                   <el-checkbox-group v-model="dataConfig.cleaning">
                     <el-checkbox label="outliers">异常值处理</el-checkbox>
@@ -72,7 +78,7 @@
                   </el-checkbox-group>
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="12">
                 <div class="data-preview">
                   <h4>数据预览</h4>
@@ -84,18 +90,24 @@
                     <div class="preview-stats">
                       <div class="stat-item">
                         <span class="stat-label">总样本数:</span>
-                        <span class="stat-value">{{ dataPreview.data.totalSamples }}</span>
+                        <span class="stat-value">{{
+                          dataPreview.data.totalSamples
+                        }}</span>
                       </div>
                       <div class="stat-item">
                         <span class="stat-label">特征数量:</span>
-                        <span class="stat-value">{{ dataPreview.data.featureCount }}</span>
+                        <span class="stat-value">{{
+                          dataPreview.data.featureCount
+                        }}</span>
                       </div>
                       <div class="stat-item">
                         <span class="stat-label">缺失率:</span>
-                        <span class="stat-value">{{ dataPreview.data.missingRate }}%</span>
+                        <span class="stat-value"
+                          >{{ dataPreview.data.missingRate }}%</span
+                        >
                       </div>
                     </div>
-                    
+
                     <el-table
                       :data="dataPreview.data.samples"
                       size="small"
@@ -120,13 +132,16 @@
             </el-row>
           </el-form>
         </div>
-        
+
         <!-- 步骤2: 模型选择 -->
         <div v-if="currentStep === 1" class="step-panel">
           <h3>模型选择</h3>
-          
+
           <div class="model-categories">
-            <el-radio-group v-model="modelConfig.category" @change="onModelCategoryChange">
+            <el-radio-group
+              v-model="modelConfig.category"
+              @change="onModelCategoryChange"
+            >
               <el-radio-button
                 v-for="category in modelCategories"
                 :key="category.value"
@@ -136,12 +151,15 @@
               </el-radio-button>
             </el-radio-group>
           </div>
-          
+
           <div class="model-grid">
             <div
               v-for="model in availableModels"
               :key="model.value"
-              :class="['model-card', { active: modelConfig.algorithm === model.value }]"
+              :class="[
+                'model-card',
+                { active: modelConfig.algorithm === model.value },
+              ]"
               @click="selectModel(model)"
             >
               <div class="model-icon">
@@ -186,11 +204,11 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 步骤3: 参数调优 -->
         <div v-if="currentStep === 2" class="step-panel">
           <h3>参数调优</h3>
-          
+
           <el-form :model="trainingConfig" label-width="150px">
             <el-row :gutter="24">
               <el-col :span="12">
@@ -198,7 +216,7 @@
                   <template #header>
                     <h4>基础参数</h4>
                   </template>
-                  
+
                   <el-form-item label="训练/验证比例">
                     <el-slider
                       v-model="trainingConfig.trainTestSplit"
@@ -207,10 +225,10 @@
                       :step="5"
                       show-stops
                       show-input
-                      :format-tooltip="(val) => `${val}% / ${100-val}%`"
+                      :format-tooltip="val => `${val}% / ${100 - val}%`"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="学习率">
                     <el-input-number
                       v-model="trainingConfig.learningRate"
@@ -220,7 +238,7 @@
                       :precision="4"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="批次大小">
                     <el-select v-model="trainingConfig.batchSize">
                       <el-option :value="16" label="16" />
@@ -230,7 +248,7 @@
                       <el-option :value="256" label="256" />
                     </el-select>
                   </el-form-item>
-                  
+
                   <el-form-item label="训练轮数">
                     <el-input-number
                       v-model="trainingConfig.epochs"
@@ -239,7 +257,7 @@
                       :step="10"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="早停策略">
                     <el-switch v-model="trainingConfig.earlyStopping" />
                     <el-input-number
@@ -253,22 +271,28 @@
                   </el-form-item>
                 </el-card>
               </el-col>
-              
+
               <el-col :span="12">
                 <el-card shadow="never" class="params-card">
                   <template #header>
                     <h4>高级参数</h4>
                   </template>
-                  
-                  <el-form-item v-if="modelConfig.category === 'neural'" label="隐藏层数">
+
+                  <el-form-item
+                    v-if="modelConfig.category === 'neural'"
+                    label="隐藏层数"
+                  >
                     <el-input-number
                       v-model="trainingConfig.hiddenLayers"
                       :min="1"
                       :max="10"
                     />
                   </el-form-item>
-                  
-                  <el-form-item v-if="modelConfig.category === 'neural'" label="神经元数">
+
+                  <el-form-item
+                    v-if="modelConfig.category === 'neural'"
+                    label="神经元数"
+                  >
                     <el-input-number
                       v-model="trainingConfig.hiddenUnits"
                       :min="16"
@@ -276,23 +300,29 @@
                       :step="16"
                     />
                   </el-form-item>
-                  
-                  <el-form-item v-if="modelConfig.category === 'tree'" label="最大深度">
+
+                  <el-form-item
+                    v-if="modelConfig.category === 'tree'"
+                    label="最大深度"
+                  >
                     <el-input-number
                       v-model="trainingConfig.maxDepth"
                       :min="3"
                       :max="20"
                     />
                   </el-form-item>
-                  
-                  <el-form-item v-if="modelConfig.category === 'tree'" label="最小样本分割">
+
+                  <el-form-item
+                    v-if="modelConfig.category === 'tree'"
+                    label="最小样本分割"
+                  >
                     <el-input-number
                       v-model="trainingConfig.minSamplesSplit"
                       :min="2"
                       :max="20"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="正则化系数">
                     <el-input-number
                       v-model="trainingConfig.regularization"
@@ -302,7 +332,7 @@
                       :precision="3"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="Dropout率">
                     <el-input-number
                       v-model="trainingConfig.dropout"
@@ -312,7 +342,7 @@
                       :precision="1"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="优化器">
                     <el-select v-model="trainingConfig.optimizer">
                       <el-option value="adam" label="Adam" />
@@ -324,7 +354,7 @@
                 </el-card>
               </el-col>
             </el-row>
-            
+
             <!-- 自动调参 -->
             <el-card shadow="never" class="auto-tuning-card">
               <template #header>
@@ -333,7 +363,7 @@
                   <el-switch v-model="trainingConfig.autoTuning" />
                 </div>
               </template>
-              
+
               <div v-if="trainingConfig.autoTuning" class="auto-tuning-config">
                 <el-row :gutter="24">
                   <el-col :span="8">
@@ -369,17 +399,17 @@
             </el-card>
           </el-form>
         </div>
-        
+
         <!-- 步骤4: 训练验证 -->
         <div v-if="currentStep === 3" class="step-panel">
           <h3>训练验证</h3>
-          
+
           <div class="training-summary">
             <el-card shadow="never">
               <template #header>
                 <h4>训练配置摘要</h4>
               </template>
-              
+
               <el-descriptions :column="2" border>
                 <el-descriptions-item label="数据源">
                   {{ getDataSourceName(dataConfig.dataSource) }}
@@ -391,7 +421,8 @@
                   {{ getModelName(modelConfig.algorithm) }}
                 </el-descriptions-item>
                 <el-descriptions-item label="训练比例">
-                  {{ trainingConfig.trainTestSplit }}% / {{ 100 - trainingConfig.trainTestSplit }}%
+                  {{ trainingConfig.trainTestSplit }}% /
+                  {{ 100 - trainingConfig.trainTestSplit }}%
                 </el-descriptions-item>
                 <el-descriptions-item label="学习率">
                   {{ trainingConfig.learningRate }}
@@ -408,13 +439,13 @@
               </el-descriptions>
             </el-card>
           </div>
-          
+
           <div class="training-validation">
             <el-card shadow="never">
               <template #header>
                 <h4>验证设置</h4>
               </template>
-              
+
               <el-form :model="validationConfig" label-width="120px">
                 <el-row :gutter="24">
                   <el-col :span="12">
@@ -429,7 +460,7 @@
                         placeholder="折数"
                       />
                     </el-form-item>
-                    
+
                     <el-form-item label="保留验证集">
                       <el-switch v-model="validationConfig.holdoutValidation" />
                       <el-input-number
@@ -444,7 +475,7 @@
                       />
                     </el-form-item>
                   </el-col>
-                  
+
                   <el-col :span="12">
                     <el-form-item label="评估指标">
                       <el-checkbox-group v-model="validationConfig.metrics">
@@ -455,7 +486,7 @@
                         <el-checkbox label="auc">AUC</el-checkbox>
                       </el-checkbox-group>
                     </el-form-item>
-                    
+
                     <el-form-item label="保存策略">
                       <el-radio-group v-model="validationConfig.saveStrategy">
                         <el-radio label="best">最佳模型</el-radio>
@@ -470,7 +501,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 操作按钮 -->
       <template #footer>
         <div class="dialog-footer">
@@ -479,16 +510,16 @@
           <el-button
             v-if="currentStep < 3"
             type="primary"
-            @click="nextStep"
             :disabled="!canProceedToNext"
+            @click="nextStep"
           >
             下一步
           </el-button>
           <el-button
             v-if="currentStep === 3"
             type="primary"
-            @click="startTraining"
             :loading="isStartingTraining"
+            @click="startTraining"
           >
             开始训练
           </el-button>
@@ -515,16 +546,16 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
 import {
   Loading,
   DataAnalysis,
   TrendCharts,
   BranchesOutlined,
   Cpu,
-  SetUp
+  SetUp,
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -539,7 +570,7 @@ const emit = defineEmits<{
 // ===== 响应式数据 =====
 const dialogVisible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const currentStep = ref(0)
@@ -551,13 +582,13 @@ const dataConfig = ref({
   dateRange: [],
   sampleInterval: 1,
   sampleUnit: 'minutes',
-  cleaning: ['missing', 'normalize']
+  cleaning: ['missing', 'normalize'],
 })
 
 // 模型配置
 const modelConfig = ref({
   category: 'neural',
-  algorithm: ''
+  algorithm: '',
 })
 
 // 训练配置
@@ -578,7 +609,7 @@ const trainingConfig = ref({
   autoTuning: false,
   tuningMethod: 'grid',
   searchIterations: 20,
-  evaluationMetric: 'accuracy'
+  evaluationMetric: 'accuracy',
 })
 
 // 验证配置
@@ -588,13 +619,13 @@ const validationConfig = ref({
   holdoutValidation: false,
   holdoutRatio: 0.2,
   metrics: ['accuracy', 'f1'],
-  saveStrategy: 'best'
+  saveStrategy: 'best',
 })
 
 // 数据预览
 const dataPreview = ref({
   loading: false,
-  data: null as any
+  data: null as any,
 })
 
 // 数据源选项
@@ -602,7 +633,7 @@ const dataSources = ref([
   { value: 'realtime', label: '实时数据' },
   { value: 'historical', label: '历史数据' },
   { value: 'simulation', label: '仿真数据' },
-  { value: 'upload', label: '上传文件' }
+  { value: 'upload', label: '上传文件' },
 ])
 
 // 模型分类
@@ -610,7 +641,7 @@ const modelCategories = ref([
   { value: 'neural', label: '神经网络' },
   { value: 'tree', label: '树模型' },
   { value: 'linear', label: '线性模型' },
-  { value: 'ensemble', label: '集成模型' }
+  { value: 'ensemble', label: '集成模型' },
 ])
 
 // 可用模型
@@ -624,7 +655,7 @@ const availableModels = computed(() => {
         icon: 'TrendCharts',
         tags: ['时序', '深度学习'],
         accuracy: 4,
-        speed: 3
+        speed: 3,
       },
       {
         value: 'gru',
@@ -633,7 +664,7 @@ const availableModels = computed(() => {
         icon: 'TrendCharts',
         tags: ['时序', '轻量'],
         accuracy: 4,
-        speed: 4
+        speed: 4,
       },
       {
         value: 'mlp',
@@ -642,8 +673,8 @@ const availableModels = computed(() => {
         icon: 'DataAnalysis',
         tags: ['通用', '简单'],
         accuracy: 3,
-        speed: 5
-      }
+        speed: 5,
+      },
     ],
     tree: [
       {
@@ -653,7 +684,7 @@ const availableModels = computed(() => {
         icon: 'BranchesOutlined',
         tags: ['集成', '稳定'],
         accuracy: 4,
-        speed: 4
+        speed: 4,
       },
       {
         value: 'xgboost',
@@ -662,7 +693,7 @@ const availableModels = computed(() => {
         icon: 'BranchesOutlined',
         tags: ['集成', '高性能'],
         accuracy: 5,
-        speed: 3
+        speed: 3,
       },
       {
         value: 'lightgbm',
@@ -671,8 +702,8 @@ const availableModels = computed(() => {
         icon: 'BranchesOutlined',
         tags: ['快速', '轻量'],
         accuracy: 4,
-        speed: 5
-      }
+        speed: 5,
+      },
     ],
     linear: [
       {
@@ -682,7 +713,7 @@ const availableModels = computed(() => {
         icon: 'DataAnalysis',
         tags: ['简单', '可解释'],
         accuracy: 2,
-        speed: 5
+        speed: 5,
       },
       {
         value: 'ridge',
@@ -691,7 +722,7 @@ const availableModels = computed(() => {
         icon: 'DataAnalysis',
         tags: ['正则化', '稳定'],
         accuracy: 3,
-        speed: 5
+        speed: 5,
       },
       {
         value: 'lasso',
@@ -700,8 +731,8 @@ const availableModels = computed(() => {
         icon: 'DataAnalysis',
         tags: ['特征选择', '稀疏'],
         accuracy: 3,
-        speed: 4
-      }
+        speed: 4,
+      },
     ],
     ensemble: [
       {
@@ -711,7 +742,7 @@ const availableModels = computed(() => {
         icon: 'SetUp',
         tags: ['集成', '投票'],
         accuracy: 4,
-        speed: 2
+        speed: 2,
       },
       {
         value: 'stacking',
@@ -720,11 +751,11 @@ const availableModels = computed(() => {
         icon: 'SetUp',
         tags: ['集成', '分层'],
         accuracy: 5,
-        speed: 2
-      }
-    ]
+        speed: 2,
+      },
+    ],
   }
-  
+
   return modelMap[modelConfig.value.category] || []
 })
 
@@ -732,7 +763,9 @@ const availableModels = computed(() => {
 const canProceedToNext = computed(() => {
   switch (currentStep.value) {
     case 0:
-      return dataConfig.value.dataSource && dataConfig.value.dateRange.length === 2
+      return (
+        dataConfig.value.dataSource && dataConfig.value.dateRange.length === 2
+      )
     case 1:
       return modelConfig.value.algorithm
     case 2:
@@ -752,7 +785,7 @@ const canProceedToNext = computed(() => {
 function nextStep() {
   if (canProceedToNext.value) {
     currentStep.value++
-    
+
     // 特殊处理
     if (currentStep.value === 1 && !modelConfig.value.algorithm) {
       // 自动选择第一个模型
@@ -788,18 +821,21 @@ async function loadDataPreview() {
     dataPreview.value.data = null
     return
   }
-  
+
   dataPreview.value.loading = true
-  
+
   try {
     // 从真实API加载数据预览
-    const response = await fetch(`/api/v1/data-mining/preview?source=${dataConfig.value.dataSource}`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `/api/v1/data-mining/preview?source=${dataConfig.value.dataSource}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    })
-    
+    )
+
     if (response.ok) {
       dataPreview.value.data = await response.json()
     } else {
@@ -833,25 +869,25 @@ function selectModel(model: any) {
  */
 async function startTraining() {
   isStartingTraining.value = true
-  
+
   try {
     // 构造训练配置
     const config = {
       data: dataConfig.value,
       model: modelConfig.value,
       training: trainingConfig.value,
-      validation: validationConfig.value
+      validation: validationConfig.value,
     }
-    
+
     // 发射训练开始事件
     emit('training-started', config)
-    
+
     // 关闭对话框
     handleClose()
-    
+
     ElMessage.success('模型训练已开始')
   } catch (error) {
-    ElMessage.error(`启动训练失败: ${  error}`)
+    ElMessage.error(`启动训练失败: ${error}`)
   } finally {
     isStartingTraining.value = false
   }
@@ -863,7 +899,7 @@ async function startTraining() {
 function handleClose() {
   // 重置步骤
   currentStep.value = 0
-  
+
   // 关闭对话框
   dialogVisible.value = false
 }
@@ -888,32 +924,35 @@ const modelMap: { [key: string]: any[] } = {
   neural: [
     { value: 'lstm', label: 'LSTM' },
     { value: 'gru', label: 'GRU' },
-    { value: 'mlp', label: '多层感知机' }
+    { value: 'mlp', label: '多层感知机' },
   ],
   tree: [
     { value: 'randomforest', label: '随机森林' },
     { value: 'xgboost', label: 'XGBoost' },
-    { value: 'lightgbm', label: 'LightGBM' }
+    { value: 'lightgbm', label: 'LightGBM' },
   ],
   linear: [
     { value: 'linear', label: '线性回归' },
     { value: 'ridge', label: '岭回归' },
-    { value: 'lasso', label: 'Lasso回归' }
+    { value: 'lasso', label: 'Lasso回归' },
   ],
   ensemble: [
     { value: 'voting', label: '投票集成' },
-    { value: 'stacking', label: '堆叠集成' }
-  ]
+    { value: 'stacking', label: '堆叠集成' },
+  ],
 }
 
 // ===== 监听器 =====
-watch(() => props.modelValue, (newVal) => {
-  if (newVal) {
-    // 重置配置
-    currentStep.value = 0
-    dataPreview.value.data = null
+watch(
+  () => props.modelValue,
+  newVal => {
+    if (newVal) {
+      // 重置配置
+      currentStep.value = 0
+      dataPreview.value.data = null
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
@@ -921,7 +960,7 @@ watch(() => props.modelValue, (newVal) => {
   .step-content {
     margin: 30px 0;
     min-height: 400px;
-    
+
     .step-panel {
       h3 {
         margin: 0 0 20px 0;
@@ -931,7 +970,7 @@ watch(() => props.modelValue, (newVal) => {
       }
     }
   }
-  
+
   // 数据配置步骤
   .data-preview {
     .loading-state {
@@ -941,26 +980,26 @@ watch(() => props.modelValue, (newVal) => {
       justify-content: center;
       height: 200px;
       color: #909399;
-      
+
       .el-icon {
         font-size: 32px;
         margin-bottom: 12px;
       }
     }
-    
+
     .preview-content {
       h4 {
         margin: 0 0 12px 0;
         font-size: 14px;
         color: #303133;
       }
-      
+
       .preview-stats {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 8px;
         margin-bottom: 12px;
-        
+
         .stat-item {
           display: flex;
           justify-content: space-between;
@@ -968,11 +1007,11 @@ watch(() => props.modelValue, (newVal) => {
           background: #f5f7fa;
           border-radius: 4px;
           font-size: 12px;
-          
+
           .stat-label {
             color: #606266;
           }
-          
+
           .stat-value {
             color: #303133;
             font-weight: 500;
@@ -980,7 +1019,7 @@ watch(() => props.modelValue, (newVal) => {
         }
       }
     }
-    
+
     .empty-state {
       height: 200px;
       display: flex;
@@ -988,46 +1027,46 @@ watch(() => props.modelValue, (newVal) => {
       justify-content: center;
     }
   }
-  
+
   // 模型选择步骤
   .model-categories {
     margin-bottom: 20px;
     text-align: center;
   }
-  
+
   .model-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 16px;
-    
+
     .model-card {
       padding: 16px;
       border: 2px solid #ebeef5;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.3s;
-      
+
       &:hover {
         border-color: #c6e2ff;
         background: #f0f9ff;
       }
-      
+
       &.active {
         border-color: #409eff;
         background: #f0f9ff;
-        
+
         .model-icon {
           color: #409eff;
         }
       }
-      
+
       .model-icon {
         font-size: 32px;
         color: #909399;
         text-align: center;
         margin-bottom: 12px;
       }
-      
+
       .model-info {
         .model-name {
           font-size: 16px;
@@ -1035,28 +1074,28 @@ watch(() => props.modelValue, (newVal) => {
           color: #303133;
           margin-bottom: 6px;
         }
-        
+
         .model-description {
           font-size: 13px;
           color: #606266;
           line-height: 1.4;
           margin-bottom: 8px;
         }
-        
+
         .model-tags {
           display: flex;
           flex-wrap: wrap;
           gap: 4px;
           margin-bottom: 12px;
         }
-        
+
         .model-metrics {
           .metric {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 4px;
-            
+
             .metric-label {
               font-size: 12px;
               color: #909399;
@@ -1066,49 +1105,49 @@ watch(() => props.modelValue, (newVal) => {
       }
     }
   }
-  
+
   // 参数调优步骤
   .params-card {
     margin-bottom: 16px;
-    
+
     :deep(.el-card__header) {
       padding: 16px 20px;
-      
+
       h4 {
         margin: 0;
         font-size: 14px;
         color: #303133;
       }
     }
-    
+
     :deep(.el-card__body) {
       padding: 16px 20px;
     }
   }
-  
+
   .auto-tuning-card {
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       h4 {
         margin: 0;
         font-size: 14px;
         color: #303133;
       }
     }
-    
+
     .auto-tuning-config {
       margin-top: 16px;
     }
   }
-  
+
   // 训练验证步骤
   .training-summary {
     margin-bottom: 20px;
   }
-  
+
   .training-validation {
     h4 {
       margin: 0;
@@ -1116,7 +1155,7 @@ watch(() => props.modelValue, (newVal) => {
       color: #303133;
     }
   }
-  
+
   // 对话框底部
   .dialog-footer {
     display: flex;
@@ -1131,14 +1170,14 @@ watch(() => props.modelValue, (newVal) => {
     .model-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .preview-stats {
       grid-template-columns: 1fr !important;
     }
-    
+
     .dialog-footer {
       flex-direction: column;
-      
+
       .el-button {
         width: 100%;
       }

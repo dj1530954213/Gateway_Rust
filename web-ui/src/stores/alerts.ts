@@ -1,15 +1,16 @@
 /**
  * 报警管理 Pinia Store
- * 
+ *
  * 管理报警规则、报警历史、实时通知等状态
  */
 
+import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
-import { ElMessage, ElMessageBox, ElNotification } from 'element-plus'
+
 import { alertsApi } from '@/api'
-import type { 
-  AlertRuleVO, 
+import type {
+  AlertRuleVO,
   AlertRuleCreateReq,
   AlertRulePatchReq,
   AlertRuleQuery,
@@ -18,7 +19,7 @@ import type {
   AlertSeverity,
   AlertStatus,
   NotificationChannelType,
-  PaginatedResponse 
+  PaginatedResponse,
 } from '@/api/alerts'
 
 export interface AlertState {
@@ -27,33 +28,33 @@ export interface AlertState {
   rulesTotal: number
   rulesCurrentPage: number
   rulesPageSize: number
-  
+
   // 报警历史
   events: AlertEventVO[]
   eventsTotal: number
   eventsCurrentPage: number
   eventsPageSize: number
-  
+
   // 查询条件
   rulesQuery: AlertRuleQuery
   eventsQuery: AlertEventQuery
-  
+
   // 选中项
   selectedRules: AlertRuleVO[]
   selectedEvents: AlertEventVO[]
-  
+
   // 当前编辑项
   currentRule: AlertRuleVO | null
   currentEvent: AlertEventVO | null
-  
+
   // 加载状态
   rulesLoading: boolean
   eventsLoading: boolean
-  
+
   // 实时通知
   realtimeAlerts: AlertEventVO[]
   notificationsEnabled: boolean
-  
+
   // 统计数据
   statistics: {
     totalRules: number
@@ -63,7 +64,7 @@ export interface AlertState {
     warningCount: number
     infoCount: number
   }
-  
+
   // WebSocket连接状态
   wsConnected: boolean
 }
@@ -75,12 +76,12 @@ export const useAlertsStore = defineStore('alerts', () => {
     rulesTotal: 0,
     rulesCurrentPage: 1,
     rulesPageSize: 20,
-    
+
     events: [],
     eventsTotal: 0,
     eventsCurrentPage: 1,
     eventsPageSize: 50,
-    
+
     rulesQuery: {
       page: 1,
       size: 20,
@@ -91,19 +92,19 @@ export const useAlertsStore = defineStore('alerts', () => {
       start_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(), // 默认最近7天
       end_time: new Date().toISOString(),
     },
-    
+
     selectedRules: [],
     selectedEvents: [],
-    
+
     currentRule: null,
     currentEvent: null,
-    
+
     rulesLoading: false,
     eventsLoading: false,
-    
+
     realtimeAlerts: [],
     notificationsEnabled: true,
-    
+
     statistics: {
       totalRules: 0,
       activeRules: 0,
@@ -112,7 +113,7 @@ export const useAlertsStore = defineStore('alerts', () => {
       warningCount: 0,
       infoCount: 0,
     },
-    
+
     wsConnected: false,
   })
 
@@ -169,7 +170,8 @@ export const useAlertsStore = defineStore('alerts', () => {
   })
 
   const unreadAlertsCount = computed(() => {
-    return state.value.realtimeAlerts.filter(alert => !alert.acknowledged).length
+    return state.value.realtimeAlerts.filter(alert => !alert.acknowledged)
+      .length
   })
 
   // 为兼容DashboardPage中的使用，添加state.unreadCount
@@ -177,7 +179,7 @@ export const useAlertsStore = defineStore('alerts', () => {
     ...state.value,
     unreadCount: unreadAlertsCount.value,
     alerts: state.value.events, // 别名
-    total: state.value.eventsTotal // 别名
+    total: state.value.eventsTotal, // 别名
   }))
 
   // ===== 报警规则方法 =====
@@ -188,25 +190,25 @@ export const useAlertsStore = defineStore('alerts', () => {
   async function fetchRules(params?: Partial<AlertRuleQuery>) {
     try {
       state.value.rulesLoading = true
-      
+
       const query = {
         ...state.value.rulesQuery,
         ...params,
       }
 
-      const response: PaginatedResponse<AlertRuleVO> = await alertsApi.listRules(query)
-      
+      const response: PaginatedResponse<AlertRuleVO> =
+        await alertsApi.listRules(query)
+
       state.value.rules = response.items
       state.value.rulesTotal = response.total
       state.value.rulesCurrentPage = response.page
       state.value.rulesPageSize = response.size
-      
+
       // 更新查询条件
       state.value.rulesQuery = { ...query }
-      
+
       // 更新统计数据
       updateRulesStatistics()
-      
     } catch (error) {
       console.error('获取报警规则失败:', error)
       ElMessage.error('获取报警规则失败')
@@ -233,22 +235,23 @@ export const useAlertsStore = defineStore('alerts', () => {
   /**
    * 创建报警规则
    */
-  async function createRule(data: AlertRuleCreateReq): Promise<AlertRuleVO | null> {
+  async function createRule(
+    data: AlertRuleCreateReq
+  ): Promise<AlertRuleVO | null> {
     try {
       state.value.rulesLoading = true
-      
+
       const rule = await alertsApi.createRule(data)
-      
+
       // 添加到列表开头
       state.value.rules.unshift(rule)
       state.value.rulesTotal += 1
-      
+
       // 更新统计数据
       updateRulesStatistics()
-      
+
       ElMessage.success('报警规则创建成功')
       return rule
-      
     } catch (error) {
       console.error('创建报警规则失败:', error)
       ElMessage.error('创建报警规则失败')
@@ -261,29 +264,31 @@ export const useAlertsStore = defineStore('alerts', () => {
   /**
    * 更新报警规则
    */
-  async function updateRule(id: string, data: AlertRulePatchReq): Promise<AlertRuleVO | null> {
+  async function updateRule(
+    id: string,
+    data: AlertRulePatchReq
+  ): Promise<AlertRuleVO | null> {
     try {
       state.value.rulesLoading = true
-      
+
       const updatedRule = await alertsApi.updateRule(id, data)
-      
+
       // 更新列表中的规则
       const index = state.value.rules.findIndex(r => r.id === id)
       if (index !== -1) {
         state.value.rules[index] = updatedRule
       }
-      
+
       // 更新当前规则
       if (state.value.currentRule?.id === id) {
         state.value.currentRule = updatedRule
       }
-      
+
       // 更新统计数据
       updateRulesStatistics()
-      
+
       ElMessage.success('报警规则更新成功')
       return updatedRule
-      
     } catch (error) {
       console.error('更新报警规则失败:', error)
       ElMessage.error('更新报警规则失败')
@@ -313,27 +318,28 @@ export const useAlertsStore = defineStore('alerts', () => {
       )
 
       state.value.rulesLoading = true
-      
+
       await alertsApi.deleteRule(id)
-      
+
       // 从列表中移除
       state.value.rules = state.value.rules.filter(r => r.id !== id)
       state.value.rulesTotal -= 1
-      
+
       // 清除当前规则
       if (state.value.currentRule?.id === id) {
         state.value.currentRule = null
       }
-      
+
       // 从选中列表中移除
-      state.value.selectedRules = state.value.selectedRules.filter(r => r.id !== id)
-      
+      state.value.selectedRules = state.value.selectedRules.filter(
+        r => r.id !== id
+      )
+
       // 更新统计数据
       updateRulesStatistics()
-      
+
       ElMessage.success('报警规则删除成功')
       return true
-      
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除报警规则失败:', error)
@@ -351,19 +357,18 @@ export const useAlertsStore = defineStore('alerts', () => {
   async function toggleRule(id: string, enabled: boolean): Promise<boolean> {
     try {
       const rule = await alertsApi.updateRule(id, { enabled })
-      
+
       // 更新列表中的规则
       const index = state.value.rules.findIndex(r => r.id === id)
       if (index !== -1) {
         state.value.rules[index] = rule
       }
-      
+
       // 更新统计数据
       updateRulesStatistics()
-      
+
       ElMessage.success(enabled ? '报警规则已启用' : '报警规则已禁用')
       return true
-      
     } catch (error) {
       console.error('切换报警规则状态失败:', error)
       ElMessage.error('操作失败')
@@ -379,25 +384,25 @@ export const useAlertsStore = defineStore('alerts', () => {
   async function fetchEvents(params?: Partial<AlertEventQuery>) {
     try {
       state.value.eventsLoading = true
-      
+
       const query = {
         ...state.value.eventsQuery,
         ...params,
       }
 
-      const response: PaginatedResponse<AlertEventVO> = await alertsApi.listEvents(query)
-      
+      const response: PaginatedResponse<AlertEventVO> =
+        await alertsApi.listEvents(query)
+
       state.value.events = response.items
       state.value.eventsTotal = response.total
       state.value.eventsCurrentPage = response.page
       state.value.eventsPageSize = response.size
-      
+
       // 更新查询条件
       state.value.eventsQuery = { ...query }
-      
+
       // 更新统计数据
       updateEventsStatistics()
-      
     } catch (error) {
       console.error('获取报警历史失败:', error)
       ElMessage.error('获取报警历史失败')
@@ -409,10 +414,13 @@ export const useAlertsStore = defineStore('alerts', () => {
   /**
    * 确认报警事件
    */
-  async function acknowledgeEvent(id: string, comment?: string): Promise<boolean> {
+  async function acknowledgeEvent(
+    id: string,
+    comment?: string
+  ): Promise<boolean> {
     try {
       await alertsApi.acknowledgeEvent(id, comment)
-      
+
       // 更新列表中的事件
       const index = state.value.events.findIndex(e => e.id === id)
       if (index !== -1) {
@@ -422,16 +430,17 @@ export const useAlertsStore = defineStore('alerts', () => {
           state.value.events[index].ack_comment = comment
         }
       }
-      
+
       // 更新实时报警列表
-      const realtimeIndex = state.value.realtimeAlerts.findIndex(e => e.id === id)
+      const realtimeIndex = state.value.realtimeAlerts.findIndex(
+        e => e.id === id
+      )
       if (realtimeIndex !== -1) {
         state.value.realtimeAlerts[realtimeIndex].acknowledged = true
       }
-      
+
       ElMessage.success('报警事件已确认')
       return true
-      
     } catch (error) {
       console.error('确认报警事件失败:', error)
       ElMessage.error('确认报警事件失败')
@@ -442,17 +451,20 @@ export const useAlertsStore = defineStore('alerts', () => {
   /**
    * 批量确认报警事件
    */
-  async function batchAcknowledgeEvents(ids: string[], comment?: string): Promise<boolean> {
+  async function batchAcknowledgeEvents(
+    ids: string[],
+    comment?: string
+  ): Promise<boolean> {
     try {
       state.value.eventsLoading = true
-      
+
       const results = await Promise.allSettled(
         ids.map(id => alertsApi.acknowledgeEvent(id, comment))
       )
-      
+
       const successCount = results.filter(r => r.status === 'fulfilled').length
       const failedCount = results.filter(r => r.status === 'rejected').length
-      
+
       // 更新列表中的事件
       const successIds = ids.slice(0, successCount)
       state.value.events.forEach(event => {
@@ -464,25 +476,26 @@ export const useAlertsStore = defineStore('alerts', () => {
           }
         }
       })
-      
+
       // 更新实时报警列表
       state.value.realtimeAlerts.forEach(alert => {
         if (successIds.includes(alert.id)) {
           alert.acknowledged = true
         }
       })
-      
+
       // 清空选中列表
       state.value.selectedEvents = []
-      
+
       if (failedCount === 0) {
         ElMessage.success(`成功确认 ${successCount} 个报警事件`)
       } else {
-        ElMessage.warning(`确认完成：成功 ${successCount} 个，失败 ${failedCount} 个`)
+        ElMessage.warning(
+          `确认完成：成功 ${successCount} 个，失败 ${failedCount} 个`
+        )
       }
-      
+
       return failedCount === 0
-      
     } catch (error) {
       console.error('批量确认报警事件失败:', error)
       ElMessage.error('批量确认报警事件失败')
@@ -503,15 +516,15 @@ export const useAlertsStore = defineStore('alerts', () => {
     }
 
     const wsUrl = `${window.location.protocol === 'https:' ? 'wss:' : 'ws:'}//${window.location.host}/ws/alerts`
-    
+
     alertWebSocket = new WebSocket(wsUrl)
-    
+
     alertWebSocket.onopen = () => {
       state.value.wsConnected = true
       console.log('Alert WebSocket connected')
     }
-    
-    alertWebSocket.onmessage = (event) => {
+
+    alertWebSocket.onmessage = event => {
       try {
         const alertEvent: AlertEventVO = JSON.parse(event.data)
         handleRealtimeAlert(alertEvent)
@@ -519,11 +532,11 @@ export const useAlertsStore = defineStore('alerts', () => {
         console.error('解析WebSocket消息失败:', error)
       }
     }
-    
+
     alertWebSocket.onclose = () => {
       state.value.wsConnected = false
       console.log('Alert WebSocket disconnected')
-      
+
       // 尝试重连
       setTimeout(() => {
         if (state.value.notificationsEnabled) {
@@ -531,8 +544,8 @@ export const useAlertsStore = defineStore('alerts', () => {
         }
       }, 5000)
     }
-    
-    alertWebSocket.onerror = (error) => {
+
+    alertWebSocket.onerror = error => {
       console.error('Alert WebSocket error:', error)
     }
   }
@@ -554,25 +567,28 @@ export const useAlertsStore = defineStore('alerts', () => {
   function handleRealtimeAlert(alertEvent: AlertEventVO) {
     // 添加到实时报警列表
     state.value.realtimeAlerts.unshift(alertEvent)
-    
+
     // 限制实时报警列表长度
     if (state.value.realtimeAlerts.length > 100) {
       state.value.realtimeAlerts = state.value.realtimeAlerts.slice(0, 100)
     }
-    
+
     // 显示通知
     if (state.value.notificationsEnabled) {
       showAlertNotification(alertEvent)
     }
-    
+
     // 更新报警历史列表（如果在第一页）
     if (state.value.eventsCurrentPage === 1) {
       state.value.events.unshift(alertEvent)
       state.value.eventsTotal += 1
-      
+
       // 限制列表长度
       if (state.value.events.length > state.value.eventsPageSize) {
-        state.value.events = state.value.events.slice(0, state.value.eventsPageSize)
+        state.value.events = state.value.events.slice(
+          0,
+          state.value.eventsPageSize
+        )
       }
     }
   }
@@ -583,18 +599,22 @@ export const useAlertsStore = defineStore('alerts', () => {
   function showAlertNotification(alertEvent: AlertEventVO) {
     const title = `${alertEvent.severity} 报警`
     const message = `${alertEvent.rule_name}: ${alertEvent.message}`
-    
+
     ElNotification({
       title,
       message,
-      type: alertEvent.severity === 'Critical' ? 'error' : 
-            alertEvent.severity === 'Warning' ? 'warning' : 'info',
+      type:
+        alertEvent.severity === 'Critical'
+          ? 'error'
+          : alertEvent.severity === 'Warning'
+            ? 'warning'
+            : 'info',
       duration: alertEvent.severity === 'Critical' ? 0 : 5000, // Critical报警不自动关闭
       showClose: true,
       onClick: () => {
         // 跳转到报警详情
         state.value.currentEvent = alertEvent
-      }
+      },
     })
   }
 
@@ -603,7 +623,7 @@ export const useAlertsStore = defineStore('alerts', () => {
    */
   function toggleNotifications(enabled: boolean) {
     state.value.notificationsEnabled = enabled
-    
+
     if (enabled) {
       connectAlertWebSocket()
     } else {
@@ -654,7 +674,9 @@ export const useAlertsStore = defineStore('alerts', () => {
    */
   function updateRulesStatistics() {
     state.value.statistics.totalRules = state.value.rules.length
-    state.value.statistics.activeRules = state.value.rules.filter(r => r.enabled).length
+    state.value.statistics.activeRules = state.value.rules.filter(
+      r => r.enabled
+    ).length
   }
 
   /**
@@ -662,14 +684,20 @@ export const useAlertsStore = defineStore('alerts', () => {
    */
   function updateEventsStatistics() {
     const today = new Date().toDateString()
-    
-    state.value.statistics.triggeredToday = state.value.events.filter(e => 
-      new Date(e.triggered_at).toDateString() === today
+
+    state.value.statistics.triggeredToday = state.value.events.filter(
+      e => new Date(e.triggered_at).toDateString() === today
     ).length
-    
-    state.value.statistics.criticalCount = state.value.events.filter(e => e.severity === 'Critical').length
-    state.value.statistics.warningCount = state.value.events.filter(e => e.severity === 'Warning').length
-    state.value.statistics.infoCount = state.value.events.filter(e => e.severity === 'Info').length
+
+    state.value.statistics.criticalCount = state.value.events.filter(
+      e => e.severity === 'Critical'
+    ).length
+    state.value.statistics.warningCount = state.value.events.filter(
+      e => e.severity === 'Warning'
+    ).length
+    state.value.statistics.infoCount = state.value.events.filter(
+      e => e.severity === 'Info'
+    ).length
   }
 
   // ===== 工具方法 =====
@@ -735,37 +763,37 @@ export const useAlertsStore = defineStore('alerts', () => {
   function reset() {
     // 断开WebSocket连接
     disconnectAlertWebSocket()
-    
+
     // 重置状态
     state.value.rules = []
     state.value.rulesTotal = 0
     state.value.rulesCurrentPage = 1
     state.value.rulesPageSize = 20
-    
+
     state.value.events = []
     state.value.eventsTotal = 0
     state.value.eventsCurrentPage = 1
     state.value.eventsPageSize = 50
-    
+
     state.value.rulesQuery = { page: 1, size: 20 }
-    state.value.eventsQuery = { 
-      page: 1, 
+    state.value.eventsQuery = {
+      page: 1,
       size: 50,
       start_time: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
       end_time: new Date().toISOString(),
     }
-    
+
     state.value.selectedRules = []
     state.value.selectedEvents = []
     state.value.currentRule = null
     state.value.currentEvent = null
-    
+
     state.value.rulesLoading = false
     state.value.eventsLoading = false
-    
+
     state.value.realtimeAlerts = []
     state.value.notificationsEnabled = true
-    
+
     state.value.statistics = {
       totalRules: 0,
       activeRules: 0,
@@ -774,7 +802,7 @@ export const useAlertsStore = defineStore('alerts', () => {
       warningCount: 0,
       infoCount: 0,
     }
-    
+
     state.value.wsConnected = false
   }
 
@@ -782,7 +810,7 @@ export const useAlertsStore = defineStore('alerts', () => {
   return {
     // 状态
     state: readonly(stateWithUnreadCount),
-    
+
     // 计算属性
     hasRules,
     hasEvents,
@@ -793,7 +821,7 @@ export const useAlertsStore = defineStore('alerts', () => {
     rulesBySeverity,
     eventsBySeverity,
     unreadAlertsCount,
-    
+
     // 报警规则方法
     fetchRules,
     fetchRule,
@@ -801,7 +829,7 @@ export const useAlertsStore = defineStore('alerts', () => {
     updateRule,
     deleteRule,
     toggleRule,
-    
+
     // 报警历史方法
     fetchEvents,
     fetchAlerts, // 别名方法
@@ -810,13 +838,13 @@ export const useAlertsStore = defineStore('alerts', () => {
     dismissAlert,
     addAlert,
     batchAcknowledgeEvents,
-    
+
     // 实时通知方法
     connectAlertWebSocket,
     disconnectAlertWebSocket,
     toggleNotifications,
     clearRealtimeAlerts,
-    
+
     // 工具方法
     searchRules,
     filterRulesBySeverity,

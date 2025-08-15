@@ -10,6 +10,7 @@
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct ApiConfig {
@@ -27,6 +28,9 @@ pub struct ApiConfig {
     
     /// PostgreSQL DSN（元数据：设备、点位）
     pub pg_dsn: String,
+    
+    /// 数据库连接池配置
+    pub database_pool: DatabasePoolConfig,
     
     /// InfluxDB base url
     pub influx_url: String,
@@ -71,11 +75,18 @@ pub struct ApiConfig {
 impl Default for ApiConfig {
     fn default() -> Self {
         Self {
-            http_addr: "0.0.0.0:8080".parse().unwrap(),
-            metrics_addr: "0.0.0.0:8081".parse().unwrap(),
+            http_addr: "0.0.0.0:50013".parse().unwrap(),
+            metrics_addr: "0.0.0.0:50015".parse().unwrap(),
             ws_path: "/ws".to_string(),
-            cors_allowed: vec!["http://localhost:5173".to_string()],
+            cors_allowed: vec![
+                "http://localhost:5173".to_string(), 
+                "http://localhost:50020".to_string(),
+                "http://localhost:50027".to_string(), // 添加当前前端端口
+                "http://127.0.0.1:50027".to_string(),
+                "*".to_string(), // 临时允许所有来源用于调试
+            ],
             pg_dsn: "postgres://postgres:postgres@localhost:5432/iot".to_string(),
+            database_pool: DatabasePoolConfig::default(),
             influx_url: "http://localhost:8086".to_string(),
             influx_token: "dev-token".to_string(),
             influx_org: "iot".to_string(),
@@ -102,6 +113,7 @@ impl ApiConfig {
             ws_path: self.ws_path.clone(),
             cors_allowed: self.cors_allowed.clone(),
             pg_dsn: redact_dsn(&self.pg_dsn),
+            database_pool: self.database_pool.clone(),
             influx_url: self.influx_url.clone(),
             influx_token: "***".to_string(),
             influx_org: self.influx_org.clone(),
@@ -127,6 +139,7 @@ pub struct ApiConfigRedacted {
     pub ws_path: String,
     pub cors_allowed: Vec<String>,
     pub pg_dsn: String,
+    pub database_pool: DatabasePoolConfig,
     pub influx_url: String,
     pub influx_token: String,
     pub influx_org: String,
@@ -143,6 +156,75 @@ pub struct ApiConfigRedacted {
 }
 
 /// 屏蔽DSN中的密码信息
+/// 数据库连接池配置
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct DatabasePoolConfig {
+    /// 最大连接数
+    pub max_connections: u32,
+    /// 最小连接数（连接池保持的最少连接）
+    pub min_connections: u32,
+    /// 获取连接超时时间（秒）
+    pub acquire_timeout_secs: u64,
+    /// 连接空闲超时时间（秒）
+    pub idle_timeout_secs: u64,
+    /// 连接最大生存时间（秒）
+    pub max_lifetime_secs: u64,
+    /// 连接测试查询间隔（秒）
+    pub test_before_acquire: bool,
+    /// 连接池健康检查间隔（秒）
+    pub health_check_interval_secs: u64,
+    /// 启用连接池监控指标
+    pub enable_metrics: bool,
+    /// 慢查询阈值（毫秒）
+    pub slow_query_threshold_ms: u64,
+    /// 连接重试配置
+    pub retry_config: ConnectionRetryConfig,
+}
+
+/// 连接重试配置
+#[derive(Debug, Clone, Deserialize, Serialize)]
+pub struct ConnectionRetryConfig {
+    /// 最大重试次数
+    pub max_retries: u32,
+    /// 初始重试间隔（毫秒）
+    pub initial_retry_delay_ms: u64,
+    /// 重试间隔递增因子
+    pub backoff_multiplier: f32,
+    /// 最大重试间隔（毫秒）
+    pub max_retry_delay_ms: u64,
+    /// 启用抖动
+    pub enable_jitter: bool,
+}
+
+impl Default for DatabasePoolConfig {
+    fn default() -> Self {
+        Self {
+            max_connections: 50,  // 生产环境推荐值
+            min_connections: 5,   // 保持最少连接数
+            acquire_timeout_secs: 10,
+            idle_timeout_secs: 600,  // 10分钟
+            max_lifetime_secs: 3600, // 1小时
+            test_before_acquire: true,
+            health_check_interval_secs: 30,
+            enable_metrics: true,
+            slow_query_threshold_ms: 1000,  // 1秒
+            retry_config: ConnectionRetryConfig::default(),
+        }
+    }
+}
+
+impl Default for ConnectionRetryConfig {
+    fn default() -> Self {
+        Self {
+            max_retries: 3,
+            initial_retry_delay_ms: 100,
+            backoff_multiplier: 2.0,
+            max_retry_delay_ms: 5000,
+            enable_jitter: true,
+        }
+    }
+}
+
 fn redact_dsn(dsn: &str) -> String {
     if let Ok(url) = url::Url::parse(dsn) {
         let mut redacted = url.clone();

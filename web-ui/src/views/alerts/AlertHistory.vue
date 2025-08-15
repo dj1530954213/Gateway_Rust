@@ -145,7 +145,7 @@
               />
             </el-col>
           </el-row>
-          <el-row :gutter="20" style="margin-top: 15px;">
+          <el-row :gutter="20" style="margin-top: 15px">
             <el-col :span="6">
               <el-select
                 v-model="filters.source"
@@ -260,11 +260,7 @@
                 <AlertSeverity :severity="row.severity" />
               </template>
             </el-table-column>
-            <el-table-column
-              prop="type"
-              label="类型"
-              width="100"
-            >
+            <el-table-column prop="type" label="类型" width="100">
               <template #default="{ row }">
                 <el-tag :type="getTypeTagType(row.type)" size="small">
                   {{ getTypeText(row.type) }}
@@ -283,25 +279,14 @@
               width="150"
               show-overflow-tooltip
             />
-            <el-table-column
-              prop="status"
-              label="状态"
-              width="100"
-            >
+            <el-table-column prop="status" label="状态" width="100">
               <template #default="{ row }">
                 <AlertStatus :status="row.status" />
               </template>
             </el-table-column>
-            <el-table-column
-              prop="priority"
-              label="优先级"
-              width="100"
-            >
+            <el-table-column prop="priority" label="优先级" width="100">
               <template #default="{ row }">
-                <el-tag
-                  :type="getPriorityTagType(row.priority)"
-                  size="small"
-                >
+                <el-tag :type="getPriorityTagType(row.priority)" size="small">
                   {{ getPriorityText(row.priority) }}
                 </el-tag>
               </template>
@@ -335,20 +320,12 @@
                 </el-icon>
               </template>
             </el-table-column>
-            <el-table-column
-              prop="duration"
-              label="持续时间"
-              width="120"
-            >
+            <el-table-column prop="duration" label="持续时间" width="120">
               <template #default="{ row }">
                 {{ formatDuration(row.duration) }}
               </template>
             </el-table-column>
-            <el-table-column
-              label="操作"
-              width="150"
-              fixed="right"
-            >
+            <el-table-column label="操作" width="150" fixed="right">
               <template #default="{ row }">
                 <el-button
                   type="primary"
@@ -381,11 +358,18 @@
               :size="alert.severity === 'critical' ? 'large' : 'normal'"
               placement="top"
             >
-              <el-card class="timeline-card" :class="getSeverityClass(alert.severity)">
+              <el-card
+                class="timeline-card"
+                :class="getSeverityClass(alert.severity)"
+              >
                 <div class="timeline-header">
                   <div class="alert-info">
                     <AlertSeverity :severity="alert.severity" />
-                    <el-tag :type="getTypeTagType(alert.type)" size="small" style="margin-left: 8px;">
+                    <el-tag
+                      :type="getTypeTagType(alert.type)"
+                      size="small"
+                      style="margin-left: 8px"
+                    >
                       {{ getTypeText(alert.type) }}
                     </el-tag>
                     <span class="alert-id">#{{ alert.id }}</span>
@@ -398,7 +382,9 @@
                   <div class="alert-meta">
                     <span>源: {{ alert.source }}</span>
                     <span>持续: {{ formatDuration(alert.duration) }}</span>
-                    <span v-if="alert.operator">处理人: {{ alert.operator }}</span>
+                    <span v-if="alert.operator"
+                      >处理人: {{ alert.operator }}</span
+                    >
                   </div>
                   <div class="alert-actions">
                     <el-button size="small" @click="showAlertDetail(alert)">
@@ -434,7 +420,7 @@
           <div class="actions">
             <el-button @click="batchAcknowledge">批量确认</el-button>
             <el-button @click="batchExport">批量导出</el-button>
-            <el-button @click="batchDelete" type="danger">批量删除</el-button>
+            <el-button type="danger" @click="batchDelete">批量删除</el-button>
           </div>
         </div>
       </el-card>
@@ -464,11 +450,7 @@
     </el-dialog>
 
     <!-- 显示设置对话框 -->
-    <el-dialog
-      v-model="showSettings"
-      title="显示设置"
-      width="600px"
-    >
+    <el-dialog v-model="showSettings" title="显示设置" width="600px">
       <div class="settings-form">
         <el-form :model="displaySettings" label-width="120px">
           <el-form-item label="刷新间隔">
@@ -523,12 +505,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Clock, Refresh, Download, Setting, Search, Warning, Bell, Timer,
-  Check, List, User
+  Clock,
+  Refresh,
+  Download,
+  Setting,
+  Search,
+  Warning,
+  Bell,
+  Timer,
+  Check,
+  List,
+  User,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted, onUnmounted, computed } from 'vue'
+
 import { alertsApi, wsClient } from '../../api'
 // import StatCard from '../../components/common/StatCard.vue' // 暂时注释掉不存在的组件
 // import AlertSeverity from '../../components/business/AlertSeverity.vue' // 暂时注释掉不存在的组件
@@ -553,7 +545,7 @@ const stats = ref({
   avgResponseTime: 0,
   responseTrend: 0,
   handleRate: 0,
-  handleTrend: 0
+  handleTrend: 0,
 })
 
 // 筛选条件
@@ -566,20 +558,20 @@ const filters = ref({
   source: '',
   acknowledged: '',
   priority: '',
-  operator: ''
+  operator: '',
 })
 
 // 分页信息
 const pagination = ref({
   page: 1,
   size: 20,
-  total: 0
+  total: 0,
 })
 
 // 排序信息
 const sortInfo = ref({
   prop: 'triggered_at',
-  order: 'descending'
+  order: 'descending',
 })
 
 // 显示设置
@@ -587,7 +579,18 @@ const displaySettings = ref({
   refreshInterval: 60000,
   pageSize: 20,
   defaultSort: 'triggered_at_desc',
-  visibleColumns: ['id', 'severity', 'type', 'title', 'source', 'status', 'priority', 'triggered_at', 'acknowledged', 'duration']
+  visibleColumns: [
+    'id',
+    'severity',
+    'type',
+    'title',
+    'source',
+    'status',
+    'priority',
+    'triggered_at',
+    'acknowledged',
+    'duration',
+  ],
 })
 
 // 告警源列表
@@ -603,10 +606,11 @@ const filteredHistory = computed(() => {
   // 应用筛选条件
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase()
-    result = result.filter(alert =>
-      alert.title.toLowerCase().includes(search) ||
-      alert.description.toLowerCase().includes(search) ||
-      alert.source.toLowerCase().includes(search)
+    result = result.filter(
+      alert =>
+        alert.title.toLowerCase().includes(search) ||
+        alert.description.toLowerCase().includes(search) ||
+        alert.source.toLowerCase().includes(search)
     )
   }
 
@@ -686,7 +690,7 @@ const refreshData = async () => {
     await Promise.all([
       loadAlertHistory(),
       loadAlertStats(),
-      loadAlertSources()
+      loadAlertSources(),
     ])
     ElMessage.success('数据刷新成功')
   } catch (error) {
@@ -705,7 +709,7 @@ const loadAlertHistory = async () => {
       size: pagination.value.size,
       ...filters.value,
       sort_by: sortInfo.value.prop,
-      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc'
+      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc',
     }
     const response = await alertsApi.getHistory(params)
     alertHistory.value = response.data.items || []
@@ -729,7 +733,7 @@ const loadAlertStats = async () => {
       avgResponseTime: 0,
       responseTrend: 0,
       handleRate: 0,
-      handleTrend: 0
+      handleTrend: 0,
     }
   } catch (error) {
     console.error('加载告警统计失败:', error)
@@ -766,7 +770,7 @@ const resetFilters = () => {
     source: '',
     acknowledged: '',
     priority: '',
-    operator: ''
+    operator: '',
   }
   pagination.value.page = 1
 }
@@ -799,15 +803,18 @@ const showAlertDetail = (alert: any) => {
 const acknowledgeAlert = async (alertId: string) => {
   try {
     await alertsApi.acknowledge(alertId)
-    
+
     // 更新本地数据
     const alert = alertHistory.value.find(a => a.id === alertId)
     if (alert) {
       alert.acknowledged = true
       alert.acknowledged_by = 'current_user'
-      alert.acknowledged_at = new Date().toISOString().slice(0, 19).replace('T', ' ')
+      alert.acknowledged_at = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
     }
-    
+
     ElMessage.success('告警已确认')
     if (detailDialogVisible.value) {
       detailDialogVisible.value = false
@@ -830,23 +837,26 @@ const batchAcknowledge = async () => {
       {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
     const alertIds = selectedAlerts.value.map(alert => alert.id)
     await alertsApi.batchAcknowledge(alertIds)
-    
+
     // 更新本地数据
     selectedAlerts.value.forEach(alert => {
       const originalAlert = alertHistory.value.find(a => a.id === alert.id)
       if (originalAlert) {
         originalAlert.acknowledged = true
         originalAlert.acknowledged_by = 'current_user'
-        originalAlert.acknowledged_at = new Date().toISOString().slice(0, 19).replace('T', ' ')
+        originalAlert.acknowledged_at = new Date()
+          .toISOString()
+          .slice(0, 19)
+          .replace('T', ' ')
       }
     })
-    
+
     selectedAlerts.value = []
     ElMessage.success('批量确认成功')
   } catch (error) {
@@ -861,9 +871,11 @@ const batchExport = async () => {
   try {
     const alertIds = selectedAlerts.value.map(alert => alert.id)
     const response = await alertsApi.exportHistory(alertIds)
-    
+
     // 创建下载链接
-    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -872,7 +884,7 @@ const batchExport = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-    
+
     ElMessage.success('导出成功')
   } catch (error) {
     console.error('导出失败:', error)
@@ -888,16 +900,18 @@ const batchDelete = async () => {
       {
         confirmButtonText: '确定删除',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
 
     const alertIds = selectedAlerts.value.map(alert => alert.id)
     await alertsApi.batchDelete(alertIds)
-    
+
     // 从本地数据中移除
-    alertHistory.value = alertHistory.value.filter(alert => !alertIds.includes(alert.id))
-    
+    alertHistory.value = alertHistory.value.filter(
+      alert => !alertIds.includes(alert.id)
+    )
+
     selectedAlerts.value = []
     ElMessage.success('批量删除成功')
   } catch (error) {
@@ -913,12 +927,14 @@ const exportHistory = async () => {
     const params = {
       ...filters.value,
       sort_by: sortInfo.value.prop,
-      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc'
+      sort_order: sortInfo.value.order === 'ascending' ? 'asc' : 'desc',
     }
     const response = await alertsApi.exportHistory([], params)
-    
+
     // 创建下载链接
-    const blob = new Blob([response.data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' })
+    const blob = new Blob([response.data], {
+      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+    })
     const url = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = url
@@ -927,7 +943,7 @@ const exportHistory = async () => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-    
+
     ElMessage.success('告警历史已导出到本地文件')
   } catch (error) {
     console.error('导出失败:', error)
@@ -938,19 +954,19 @@ const exportHistory = async () => {
 const saveSettings = () => {
   // 应用设置
   pagination.value.size = displaySettings.value.pageSize
-  
+
   // 设置自动刷新
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
     refreshTimer.value = null
   }
-  
+
   if (displaySettings.value.refreshInterval > 0) {
     refreshTimer.value = setInterval(() => {
       refreshData()
     }, displaySettings.value.refreshInterval)
   }
-  
+
   showSettings.value = false
   ElMessage.success('设置已保存')
 }
@@ -964,11 +980,11 @@ const getTimeAgo = (dateStr: string) => {
   const now = new Date()
   const alertTime = new Date(dateStr)
   const diff = now.getTime() - alertTime.getTime()
-  
+
   const minutes = Math.floor(diff / (1000 * 60))
   const hours = Math.floor(diff / (1000 * 60 * 60))
   const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  
+
   if (minutes < 60) {
     return `${minutes}分钟前`
   } else if (hours < 24) {
@@ -982,7 +998,7 @@ const formatDuration = (seconds: number) => {
   const hours = Math.floor(seconds / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const secs = seconds % 60
-  
+
   if (hours > 0) {
     return `${hours}小时${minutes}分钟`
   } else if (minutes > 0) {
@@ -997,7 +1013,7 @@ const getTypeText = (type: string) => {
     datapoint: '数据点',
     driver: '驱动',
     connection: '连接',
-    system: '系统'
+    system: '系统',
   }
   return typeMap[type] || type
 }
@@ -1007,7 +1023,7 @@ const getTypeTagType = (type: string) => {
     datapoint: 'primary',
     driver: 'success',
     connection: 'warning',
-    system: 'info'
+    system: 'info',
   }
   return tagTypeMap[type] || ''
 }
@@ -1016,7 +1032,7 @@ const getPriorityText = (priority: string) => {
   const priorityMap: { [key: string]: string } = {
     high: '高',
     medium: '中',
-    low: '低'
+    low: '低',
   }
   return priorityMap[priority] || priority
 }
@@ -1025,7 +1041,7 @@ const getPriorityTagType = (priority: string) => {
   const tagTypeMap: { [key: string]: string } = {
     high: 'danger',
     medium: 'warning',
-    low: 'info'
+    low: 'info',
   }
   return tagTypeMap[priority] || ''
 }
@@ -1035,7 +1051,7 @@ const getTimelineType = (severity: string) => {
     critical: 'danger',
     major: 'warning',
     warning: 'primary',
-    info: 'info'
+    info: 'info',
   }
   return typeMap[severity] || 'primary'
 }
@@ -1047,20 +1063,20 @@ const getSeverityClass = (severity: string) => {
 // 生命周期
 onMounted(async () => {
   await refreshData()
-  
+
   // 连接WebSocket监听实时告警更新
   try {
     if (!wsClient.isConnected) {
       await wsClient.connect()
     }
-    
+
     // 监听告警事件
     wsClient.on('alert_triggered', (data: any) => {
       alertHistory.value.unshift(data)
       pagination.value.total += 1
       ElMessage.warning(`新告警: ${data.title}`)
     })
-    
+
     wsClient.on('alert_acknowledged', (data: any) => {
       const alert = alertHistory.value.find(a => a.id === data.alert_id)
       if (alert) {
@@ -1069,7 +1085,7 @@ onMounted(async () => {
         alert.acknowledged_at = data.acknowledged_at
       }
     })
-    
+
     wsClient.on('alert_resolved', (data: any) => {
       const alert = alertHistory.value.find(a => a.id === data.alert_id)
       if (alert) {
@@ -1087,7 +1103,7 @@ onUnmounted(() => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
-  
+
   // 清理WebSocket监听器
   wsClient.off('alert_triggered')
   wsClient.off('alert_acknowledged')

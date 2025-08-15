@@ -20,7 +20,7 @@
         </div>
       </div>
     </div>
-    
+
     <div class="page-content">
       <!-- 快速操作卡片 -->
       <div class="quick-actions">
@@ -34,7 +34,7 @@
               <div class="action-desc">使用模板快速生成报表</div>
             </div>
           </div>
-          
+
           <div class="action-card" @click="showTemplateManager = true">
             <div class="action-icon">
               <el-icon><Grid /></el-icon>
@@ -44,7 +44,7 @@
               <div class="action-desc">创建和管理报表模板</div>
             </div>
           </div>
-          
+
           <div class="action-card" @click="showScheduleManager = true">
             <div class="action-icon">
               <el-icon><Timer /></el-icon>
@@ -54,7 +54,7 @@
               <div class="action-desc">设置和管理定时生成</div>
             </div>
           </div>
-          
+
           <div class="action-card" @click="showAnalytics = true">
             <div class="action-icon">
               <el-icon><TrendCharts /></el-icon>
@@ -66,30 +66,24 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 报表列表 -->
       <div class="main-content">
         <ReportListCard ref="reportListRef" />
       </div>
     </div>
-    
+
     <!-- 对话框组件 -->
     <ReportGeneratorDialog
       v-model="showReportGenerator"
       @report-generated="handleReportGenerated"
     />
-    
-    <TemplateManagerDialog
-      v-model="showTemplateManager"
-    />
-    
-    <ScheduleManagerDialog
-      v-model="showScheduleManager"
-    />
-    
-    <AnalyticsDialog
-      v-model="showAnalytics"
-    />
+
+    <TemplateManagerDialog v-model="showTemplateManager" />
+
+    <ScheduleManagerDialog v-model="showScheduleManager" />
+
+    <AnalyticsDialog v-model="showAnalytics" />
   </div>
 </template>
 
@@ -112,19 +106,15 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted } from 'vue'
+import { DocumentAdd, Grid, Timer, TrendCharts } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import {
-  DocumentAdd,
-  Grid,
-  Timer,
-  TrendCharts
-} from '@element-plus/icons-vue'
-import ReportListCard from '../components/reports/ReportListCard.vue'
-import ReportGeneratorDialog from '../components/reports/ReportGeneratorDialog.vue'
-import TemplateManagerDialog from '../components/reports/TemplateManagerDialog.vue'
-import ScheduleManagerDialog from '../components/reports/ScheduleManagerDialog.vue'
+import { ref, computed, onMounted } from 'vue'
+
 import AnalyticsDialog from '../components/reports/AnalyticsDialog.vue'
+import ReportGeneratorDialog from '../components/reports/ReportGeneratorDialog.vue'
+import ReportListCard from '../components/reports/ReportListCard.vue'
+import ScheduleManagerDialog from '../components/reports/ScheduleManagerDialog.vue'
+import TemplateManagerDialog from '../components/reports/TemplateManagerDialog.vue'
 
 // ===== 响应式数据 =====
 const showReportGenerator = ref(false)
@@ -138,7 +128,7 @@ const reportListRef = ref()
 const stats = ref({
   total: 156,
   scheduled: 12,
-  monthly: 23
+  monthly: 23,
 })
 
 // ===== 计算属性 =====
@@ -153,12 +143,12 @@ const monthlyReports = computed(() => stats.value.monthly)
  */
 function handleReportGenerated(report: any) {
   ElMessage.success('报表生成任务已创建')
-  
+
   // 刷新报表列表
   if (reportListRef.value) {
     reportListRef.value.refreshReports()
   }
-  
+
   // 更新统计数据
   stats.value.total++
   stats.value.monthly++
@@ -171,12 +161,12 @@ async function loadStats() {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     // 更新统计数据
     stats.value = {
       total: 156 + Math.floor(Math.random() * 20),
       scheduled: 12 + Math.floor(Math.random() * 5),
-      monthly: 23 + Math.floor(Math.random() * 10)
+      monthly: 23 + Math.floor(Math.random() * 10),
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
@@ -196,35 +186,35 @@ onMounted(() => {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 24px;
-    
+
     .header-content {
       h1 {
         margin: 0 0 8px 0;
         font-size: 24px;
         color: #303133;
       }
-      
+
       p {
         margin: 0;
         color: #606266;
         font-size: 14px;
       }
     }
-    
+
     .header-stats {
       display: flex;
       gap: 24px;
-      
+
       .stat-item {
         text-align: center;
-        
+
         .stat-value {
           font-size: 28px;
           font-weight: 700;
           color: #409eff;
           margin-bottom: 4px;
         }
-        
+
         .stat-label {
           font-size: 12px;
           color: #909399;
@@ -232,16 +222,16 @@ onMounted(() => {
       }
     }
   }
-  
+
   .page-content {
     .quick-actions {
       margin-bottom: 24px;
-      
+
       .action-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 16px;
-        
+
         .action-card {
           display: flex;
           align-items: center;
@@ -252,30 +242,30 @@ onMounted(() => {
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #c6e2ff;
             background: #f0f9ff;
             transform: translateY(-2px);
             box-shadow: 0 4px 12px rgba(64, 158, 255, 0.15);
           }
-          
+
           .action-icon {
             font-size: 32px;
             color: #409eff;
             flex-shrink: 0;
           }
-          
+
           .action-info {
             flex: 1;
-            
+
             .action-title {
               font-size: 16px;
               font-weight: 600;
               color: #303133;
               margin-bottom: 4px;
             }
-            
+
             .action-desc {
               font-size: 12px;
               color: #606266;
@@ -285,7 +275,7 @@ onMounted(() => {
         }
       }
     }
-    
+
     .main-content {
       background: white;
       border-radius: 8px;
@@ -310,29 +300,29 @@ onMounted(() => {
       flex-direction: column;
       gap: 16px;
       align-items: stretch;
-      
+
       .header-stats {
         justify-content: space-around;
       }
     }
-    
+
     .quick-actions .action-grid {
       grid-template-columns: 1fr;
       gap: 12px;
-      
+
       .action-card {
         padding: 16px;
-        
+
         .action-icon {
           font-size: 24px;
         }
-        
+
         .action-info .action-title {
           font-size: 14px;
         }
       }
     }
-    
+
     .main-content {
       padding: 16px;
     }

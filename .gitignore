@@ -171,6 +171,10 @@ nul
 *local.json
 *.local.toml
 
+# Claude MCP配置（可能包含敏感信息）
+.mcp.json
+.claude/
+
 # ================= Docker相关 ====================
 # Docker构建缓存
 .dockerignore.bak
@@ -223,3 +227,145 @@ mock_data/
 # 临时构建脚本
 build_temp.*
 deploy_temp.*
+
+# =============== 测试和模拟文件 ===================
+# 测试脚本和模拟服务器
+simple_health_api.js
+simple_modbus_server.py
+simple_modbus_tcp_server.js
+mock_modbus_server.py
+modbus_server_v3.py
+modbus_real_bridge.js
+start_modbus_simulator.py
+
+# 测试相关脚本
+end_to_end_test.js
+test_*.js
+test_*.py
+execute_*.js
+verify-*.js
+configure-*.js
+
+# 批处理和Shell脚本（测试用）
+run_*.bat
+run_*.sh
+start_*.bat
+start_*.py
+test_*.sh
+docker-*.sh
+
+# =============== 临时报告和文档 ===================
+# 测试报告
+*_TEST_*.md
+*_REPORT*.md
+*_EXECUTION*.md
+*_SUMMARY*.md
+*_GUIDE*.md
+*QUALITY*.md
+*STATUS*.md
+*SUCCESS*.md
+*ISSUES*.md
+*THINK*.md
+EXPECTED_*.md
+COMPREHENSIVE_*.md
+FINAL_*.md
+FIX_*.md
+FRONTEND_*.md
+BACKEND_*.md
+API_*.md
+FRAME_*.md
+UNIFIED_*.md
+REAL_*.md
+ULTRA_*.md
+GATEWAY_*.md
+PLAYWRIGHT_*.md
+QUICK_*.md
+UI_*.md
+E2E_*.md
+MODBUS_*.md
+
+# Claude临时文件
+CLAUDE_temp.md
+
+# ================ Python虚拟环境 ==================
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# ================ Serena缓存 =====================
+.serena/cache/
+
+# =============== Playwright测试 ===================
+playwright-report/
+test-results/
+screenshots/
+
+# =============== 数据库相关 =======================
+.sqlx/
+schema/test_*.sql
+
+# ================ 临时配置文件 ====================
+test_config.json
+minimal-docker-compose.yml
+docker-daemon-proxy.json
+docker-proxy.conf
+
+# ================ 生成的HTML文件 ==================
+*.html
+!web-ui/**/*.html
+!examples/*.html
+
+# ================ 临时目录 ========================
+temp/
+tmp/
+benches-pkg/
+tests/scripts/
+tests/integration/
+scripts/database/
+scripts/deployment/
+scripts/development/
+scripts/mocks/
+scripts/testing/
+
+# =============== 示例和文档项目 ===================
+examples/Cargo.toml
+examples/*.rs
+!examples/websocket_client.html
+
+# ================ 其他测试输出 ====================
+tarpaulin.toml
+core/common-errors/
+infra/pg-repo/src/error_new.rs
+core/driver-manager/src/error.rs
+core/frame-bus/src/error.rs
+core/web-gw-api/src/error_new.rs
+core/web-gw-api/src/database_pool.rs
+core/web-gw-api/src/middleware.rs
+core/web-gw-api/src/response.rs
+core/web-gw-api/src/routes/database.rs
+core/web-gw-api/src/services/driver_config_monitor.rs
+core/web-gw-api/src/services/protocol_mapper.rs
+
+# ================ 前端测试组件 ====================
+web-ui/src/views/test/
+web-ui/src/test/
+web-ui/src/pages/TestMode.vue
+
+# ================ 开发环境特定 ====================
+# 日志文件（新增）
+modbus_bridge.log
+*.log
+!web-ui/**/*.log
+
+# 环境变量文件（确保安全）
+.env.database.example
+.env.prod
+.env.test
+.env.staging

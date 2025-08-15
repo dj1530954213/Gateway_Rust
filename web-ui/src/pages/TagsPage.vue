@@ -4,7 +4,9 @@
     <div class="page-header">
       <div class="page-title">
         <h1>点位管理</h1>
-        <p class="page-description">管理数据点位配置，包括创建、编辑、删除数据点位以及批量导入导出</p>
+        <p class="page-description">
+          管理数据点位配置，包括创建、编辑、删除数据点位以及批量导入导出
+        </p>
       </div>
     </div>
 
@@ -25,7 +27,7 @@
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
-          
+
           <!-- 设备筛选 -->
           <el-select
             v-model="selectedDevice"
@@ -42,7 +44,7 @@
               :value="device.id"
             />
           </el-select>
-          
+
           <!-- 数据类型筛选 -->
           <el-select
             v-model="selectedDataType"
@@ -57,7 +59,7 @@
             <el-option label="浮点型" value="Float32" />
             <el-option label="字符串" value="String" />
           </el-select>
-          
+
           <!-- 访问模式筛选 -->
           <el-select
             v-model="selectedAccessMode"
@@ -72,7 +74,7 @@
             <el-option label="读写" value="ReadWrite" />
           </el-select>
         </div>
-        
+
         <div class="search-right">
           <el-button @click="handleResetFilters">
             <el-icon><Refresh /></el-icon>
@@ -98,7 +100,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card class="stats-card" shadow="never">
             <div class="stats-item">
@@ -106,13 +108,15 @@
                 <el-icon><View /></el-icon>
               </div>
               <div class="stats-content">
-                <div class="stats-value">{{ tagsStore.readOnlyTags.length }}</div>
+                <div class="stats-value">
+                  {{ tagsStore.readOnlyTags.length }}
+                </div>
                 <div class="stats-label">只读点位</div>
               </div>
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card class="stats-card" shadow="never">
             <div class="stats-item">
@@ -120,13 +124,15 @@
                 <el-icon><Edit /></el-icon>
               </div>
               <div class="stats-content">
-                <div class="stats-value">{{ tagsStore.writeOnlyTags.length }}</div>
+                <div class="stats-value">
+                  {{ tagsStore.writeOnlyTags.length }}
+                </div>
                 <div class="stats-label">只写点位</div>
               </div>
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card class="stats-card" shadow="never">
             <div class="stats-item">
@@ -134,7 +140,9 @@
                 <el-icon><EditPen /></el-icon>
               </div>
               <div class="stats-content">
-                <div class="stats-value">{{ tagsStore.readWriteTags.length }}</div>
+                <div class="stats-value">
+                  {{ tagsStore.readWriteTags.length }}
+                </div>
                 <div class="stats-label">读写点位</div>
               </div>
             </div>
@@ -151,7 +159,7 @@
             <el-icon><Plus /></el-icon>
             新增点位
           </el-button>
-          
+
           <el-button
             type="danger"
             :disabled="!hasSelectedTags"
@@ -160,7 +168,7 @@
             <el-icon><Delete /></el-icon>
             批量删除
           </el-button>
-          
+
           <el-upload
             ref="uploadRef"
             :show-file-list="false"
@@ -173,18 +181,18 @@
               导入点位
             </el-button>
           </el-upload>
-          
+
           <el-button @click="handleExport">
             <el-icon><Download /></el-icon>
             导出点位
           </el-button>
         </div>
-        
+
         <div class="action-right">
           <span v-if="hasSelectedTags" class="selection-info">
             已选择 {{ selectedTagsCount }} 个点位
           </span>
-          
+
           <el-button
             type="info"
             :loading="tagsStore.isLoading"
@@ -210,7 +218,7 @@
         @test-read="handleTestRead"
         @test-write="handleTestWrite"
       />
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
@@ -249,7 +257,7 @@
         />
         <p class="import-text">{{ importText }}</p>
       </div>
-      
+
       <template #footer>
         <el-button
           v-if="importStatus !== 'success'"
@@ -257,11 +265,7 @@
         >
           取消
         </el-button>
-        <el-button
-          v-else
-          type="primary"
-          @click="importDialogVisible = false"
-        >
+        <el-button v-else type="primary" @click="importDialogVisible = false">
           完成
         </el-button>
       </template>
@@ -288,8 +292,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search,
   Refresh,
@@ -302,14 +304,15 @@ import {
   Upload,
   Download,
 } from '@element-plus/icons-vue'
-
-import { useTagsStore } from '@/stores'
-import { useDevicesStore } from '@/stores'
-import TagsTable from '@/components/tags/TagsTable.vue'
-import TagFormDialog from '@/components/tags/TagFormDialog.vue'
-import type { TagVO, TagCreateReq } from '@/api/tags'
-import type { DeviceVO } from '@/api/devices'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import type { UploadFile } from 'element-plus'
+import { ref, computed, onMounted, watch } from 'vue'
+
+import type { DeviceVO } from '@/api/devices'
+import type { TagVO, TagCreateReq } from '@/api/tags'
+import TagFormDialog from '@/components/tags/TagFormDialog.vue'
+import TagsTable from '@/components/tags/TagsTable.vue'
+import { useTagsStore, useDevicesStore } from '@/stores'
 
 // ===== Store =====
 const tagsStore = useTagsStore()
@@ -385,7 +388,7 @@ async function handleDeviceFilter() {
  * 处理数据类型筛选
  */
 async function handleDataTypeFilter() {
-  await tagsStore.filterByDataType(selectedDataType.value as any || undefined)
+  await tagsStore.filterByDataType((selectedDataType.value as any) || undefined)
   currentPage.value = 1
 }
 
@@ -393,7 +396,9 @@ async function handleDataTypeFilter() {
  * 处理访问模式筛选
  */
 async function handleAccessModeFilter() {
-  await tagsStore.filterByAccessMode(selectedAccessMode.value as any || undefined)
+  await tagsStore.filterByAccessMode(
+    (selectedAccessMode.value as any) || undefined
+  )
   currentPage.value = 1
 }
 
@@ -482,19 +487,19 @@ async function handleBatchDelete() {
  */
 async function handleImportFile(file: UploadFile) {
   if (!file.raw) return
-  
+
   // 验证文件类型
   const allowedTypes = [
     'text/csv',
     'application/vnd.ms-excel',
-    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   ]
-  
+
   if (!allowedTypes.includes(file.raw.type)) {
     ElMessage.error('只支持 CSV 和 Excel 文件')
     return
   }
-  
+
   // 确认导入
   try {
     await ElMessageBox.confirm(
@@ -506,16 +511,15 @@ async function handleImportFile(file: UploadFile) {
         cancelButtonText: '取消',
       }
     )
-    
+
     importDialogVisible.value = true
     await tagsStore.importTags(file.raw)
-    
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('导入失败')
     }
   }
-  
+
   // 清除文件选择
   uploadRef.value?.clearFiles()
 }
@@ -534,7 +538,7 @@ async function handleExport() {
         cancelButtonText: '取消',
       }
     )
-    
+
     await tagsStore.exportTags('csv')
   } catch (error) {
     if (error !== 'cancel') {
@@ -581,13 +585,19 @@ async function handlePageSizeChange(size: number) {
 }
 
 // ===== 监听器 =====
-watch(() => tagsStore.state.currentPage, (newPage) => {
-  currentPage.value = newPage
-})
+watch(
+  () => tagsStore.state.currentPage,
+  newPage => {
+    currentPage.value = newPage
+  }
+)
 
-watch(() => tagsStore.state.pageSize, (newSize) => {
-  pageSize.value = newSize
-})
+watch(
+  () => tagsStore.state.pageSize,
+  newSize => {
+    pageSize.value = newSize
+  }
+)
 
 // ===== 生命周期 =====
 onMounted(async () => {
@@ -595,7 +605,7 @@ onMounted(async () => {
   if (devicesStore.state.devices.length === 0) {
     await devicesStore.fetchDevices()
   }
-  
+
   // 加载点位列表
   await tagsStore.fetchTags()
 })
@@ -604,10 +614,10 @@ onMounted(async () => {
 <style scoped lang="scss">
 .tags-page {
   padding: 24px;
-  
+
   .page-header {
     margin-bottom: 24px;
-    
+
     .page-title {
       h1 {
         margin: 0 0 8px 0;
@@ -615,7 +625,7 @@ onMounted(async () => {
         font-weight: 600;
         color: #303133;
       }
-      
+
       .page-description {
         margin: 0;
         color: #606266;
@@ -624,31 +634,31 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .search-card {
     margin-bottom: 20px;
-    
+
     .search-area {
       display: flex;
       justify-content: space-between;
       align-items: center;
       gap: 16px;
-      
+
       .search-left {
         display: flex;
         align-items: center;
         gap: 12px;
         flex: 1;
-        
+
         .search-input {
           width: 300px;
         }
-        
+
         .filter-select {
           width: 140px;
         }
       }
-      
+
       .search-right {
         display: flex;
         align-items: center;
@@ -656,16 +666,16 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .stats-cards {
     margin-bottom: 20px;
-    
+
     .stats-card {
       .stats-item {
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .stats-icon {
           width: 48px;
           height: 48px;
@@ -674,28 +684,28 @@ onMounted(async () => {
           align-items: center;
           justify-content: center;
           font-size: 20px;
-          
+
           &.total {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
           }
-          
+
           &.read-only {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
           }
-          
+
           &.write-only {
             background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
             color: white;
           }
-          
+
           &.read-write {
             background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
             color: white;
           }
         }
-        
+
         .stats-content {
           .stats-value {
             font-size: 24px;
@@ -704,7 +714,7 @@ onMounted(async () => {
             line-height: 1;
             margin-bottom: 4px;
           }
-          
+
           .stats-label {
             font-size: 14px;
             color: #909399;
@@ -714,26 +724,26 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .action-card {
     margin-bottom: 20px;
-    
+
     .action-bar {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .action-left {
         display: flex;
         align-items: center;
         gap: 12px;
       }
-      
+
       .action-right {
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .selection-info {
           font-size: 14px;
           color: #606266;
@@ -741,7 +751,7 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .table-card {
     .pagination-wrapper {
       margin-top: 20px;
@@ -755,7 +765,7 @@ onMounted(async () => {
 .import-progress {
   text-align: center;
   padding: 20px 0;
-  
+
   .import-text {
     margin-top: 12px;
     color: #606266;
@@ -769,36 +779,36 @@ onMounted(async () => {
     .search-area {
       flex-direction: column;
       align-items: stretch;
-      
+
       .search-left {
         flex-wrap: wrap;
-        
+
         .search-input {
           width: 100%;
         }
-        
+
         .filter-select {
           flex: 1;
           min-width: 120px;
         }
       }
     }
-    
+
     .stats-cards {
       .el-col {
         margin-bottom: 16px;
       }
     }
-    
+
     .action-bar {
       flex-direction: column;
       align-items: stretch;
       gap: 16px;
-      
+
       .action-left {
         flex-wrap: wrap;
       }
-      
+
       .action-right {
         justify-content: center;
       }
@@ -809,13 +819,13 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .tags-page {
     padding: 16px;
-    
+
     .stats-cards {
       .el-col {
         // CSS for responsive grid columns
       }
     }
-    
+
     .action-left {
       .el-button {
         flex: 1;

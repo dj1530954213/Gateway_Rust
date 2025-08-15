@@ -1,47 +1,48 @@
 /**
  * 驱动管理 Pinia Store
- * 
+ *
  * 管理驱动列表、上传、热重载、注册状态等操作
  */
 
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+
 import { driversApi } from '@/api'
-import type { 
-  DriverVO, 
-  DriverQuery, 
+import type {
+  DriverVO,
+  DriverQuery,
   DriverUploadResponse,
   DriverStatusVO,
-  PaginatedResponse 
+  PaginatedResponse,
 } from '@/api/drivers'
 
 export interface DriverState {
   // 驱动列表数据
   drivers: DriverVO[]
   total: number
-  
+
   // 分页信息
   currentPage: number
   pageSize: number
-  
+
   // 加载状态
   loading: boolean
   uploading: boolean
   reloading: boolean
-  
+
   // 查询条件
   query: DriverQuery
-  
+
   // 选中的驱动
   selectedDrivers: DriverVO[]
-  
+
   // 当前查看的驱动
   currentDriver: DriverVO | null
-  
+
   // 上传进度
   uploadProgress: number
-  
+
   // 状态统计
   statusStats: {
     loaded: number
@@ -120,7 +121,9 @@ export const useDriversStore = defineStore('drivers', () => {
   })
 
   const canReload = computed(() => {
-    return state.value.drivers.some(driver => driver.status === 'Failed' || driver.status === 'Unloaded')
+    return state.value.drivers.some(
+      driver => driver.status === 'Failed' || driver.status === 'Unloaded'
+    )
   })
 
   // ===== 操作方法 =====
@@ -131,26 +134,25 @@ export const useDriversStore = defineStore('drivers', () => {
   async function fetchDrivers(params?: Partial<DriverQuery>) {
     try {
       state.value.loading = true
-      
+
       const query = {
         ...state.value.query,
         ...params,
       }
 
       const response: any = await driversApi.list(query)
-      
+
       // 处理后端返回的数据格式 {drivers: [], total: 0, page: 1, page_size: 20}
       state.value.drivers = response.drivers || response.items || []
       state.value.total = response.total || 0
       state.value.currentPage = response.page || 1
       state.value.pageSize = response.page_size || response.size || 20
-      
+
       // 更新查询条件
       state.value.query = { ...query }
-      
+
       // 更新状态统计
       updateStatusStats()
-      
     } catch (error) {
       console.error('获取驱动列表失败:', error)
       ElMessage.error('获取驱动列表失败')
@@ -177,15 +179,17 @@ export const useDriversStore = defineStore('drivers', () => {
   /**
    * 上传驱动文件
    */
-  async function uploadDriver(file: File): Promise<DriverUploadResponse | null> {
+  async function uploadDriver(
+    file: File
+  ): Promise<DriverUploadResponse | null> {
     try {
       state.value.uploading = true
       state.value.uploadProgress = 0
-      
-      const response = await driversApi.upload(file, (progress) => {
+
+      const response = await driversApi.upload(file, progress => {
         state.value.uploadProgress = progress
       })
-      
+
       if (response.success) {
         ElMessage.success('驱动上传成功')
         // 刷新驱动列表
@@ -195,7 +199,6 @@ export const useDriversStore = defineStore('drivers', () => {
         ElMessage.error(response.message || '驱动上传失败')
         return null
       }
-      
     } catch (error) {
       console.error('上传驱动失败:', error)
       ElMessage.error('上传驱动失败')
@@ -226,27 +229,28 @@ export const useDriversStore = defineStore('drivers', () => {
       )
 
       state.value.loading = true
-      
+
       await driversApi.delete(id)
-      
+
       // 从列表中移除
       state.value.drivers = state.value.drivers.filter(d => d.id !== id)
       state.value.total -= 1
-      
+
       // 清除当前驱动
       if (state.value.currentDriver?.id === id) {
         state.value.currentDriver = null
       }
-      
+
       // 从选中列表中移除
-      state.value.selectedDrivers = state.value.selectedDrivers.filter(d => d.id !== id)
-      
+      state.value.selectedDrivers = state.value.selectedDrivers.filter(
+        d => d.id !== id
+      )
+
       // 更新状态统计
       updateStatusStats()
-      
+
       ElMessage.success('驱动删除成功')
       return true
-      
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除驱动失败:', error)
@@ -264,31 +268,30 @@ export const useDriversStore = defineStore('drivers', () => {
   async function reloadDriver(id: string): Promise<boolean> {
     try {
       state.value.loading = true
-      
+
       const result = await driversApi.reload(id)
-      
+
       if (result.success) {
         // 更新驱动状态
         const index = state.value.drivers.findIndex(d => d.id === id)
         if (index !== -1) {
           state.value.drivers[index] = result.driver
         }
-        
+
         // 更新当前驱动
         if (state.value.currentDriver?.id === id) {
           state.value.currentDriver = result.driver
         }
-        
+
         // 更新状态统计
         updateStatusStats()
-        
+
         ElMessage.success('驱动重载成功')
         return true
       } else {
         ElMessage.error(result.message || '驱动重载失败')
         return false
       }
-      
     } catch (error) {
       console.error('重载驱动失败:', error)
       ElMessage.error('重载驱动失败')
@@ -314,11 +317,13 @@ export const useDriversStore = defineStore('drivers', () => {
       )
 
       state.value.reloading = true
-      
+
       const result = await driversApi.reloadAll()
-      
+
       if (result.success) {
-        ElMessage.success(`重载完成：成功 ${result.success_count} 个，失败 ${result.failed_count} 个`)
+        ElMessage.success(
+          `重载完成：成功 ${result.success_count} 个，失败 ${result.failed_count} 个`
+        )
         // 刷新驱动列表
         await fetchDrivers(state.value.query)
         return true
@@ -326,7 +331,6 @@ export const useDriversStore = defineStore('drivers', () => {
         ElMessage.error(result.message || '驱动重载失败')
         return false
       }
-      
     } catch (error) {
       if (error !== 'cancel') {
         console.error('重载所有驱动失败:', error)
@@ -344,14 +348,14 @@ export const useDriversStore = defineStore('drivers', () => {
   async function fetchDriverStatus(): Promise<DriverStatusVO | null> {
     try {
       const status = await driversApi.getStatus()
-      
+
       // 更新状态统计
       state.value.statusStats = {
         loaded: status.loaded_count,
         failed: status.failed_count,
         unloaded: status.unloaded_count,
       }
-      
+
       return status
     } catch (error) {
       console.error('获取驱动状态失败:', error)
@@ -373,7 +377,9 @@ export const useDriversStore = defineStore('drivers', () => {
   /**
    * 按状态筛选
    */
-  async function filterByStatus(status: 'Loaded' | 'Failed' | 'Unloaded' | undefined) {
+  async function filterByStatus(
+    status: 'Loaded' | 'Failed' | 'Unloaded' | undefined
+  ) {
     await fetchDrivers({
       ...state.value.query,
       status,
@@ -513,7 +519,7 @@ export const useDriversStore = defineStore('drivers', () => {
   return {
     // 状态
     state: readonly(state),
-    
+
     // 计算属性
     totalPages,
     hasDrivers,
@@ -525,7 +531,7 @@ export const useDriversStore = defineStore('drivers', () => {
     unloadedDrivers,
     driversByProtocol,
     canReload,
-    
+
     // 方法
     fetchDrivers,
     fetchDriver,

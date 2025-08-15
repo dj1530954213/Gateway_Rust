@@ -99,7 +99,7 @@
           </div>
 
           <div class="filter-actions">
-            <el-button type="primary" @click="searchAlerts" :loading="loading">
+            <el-button type="primary" :loading="loading" @click="searchAlerts">
               <el-icon><Search /></el-icon>
               查询
             </el-button>
@@ -107,7 +107,7 @@
               <el-icon><RefreshLeft /></el-icon>
               重置
             </el-button>
-            <el-button @click="exportAlerts" :loading="exporting">
+            <el-button :loading="exporting" @click="exportAlerts">
               <el-icon><Download /></el-icon>
               导出
             </el-button>
@@ -124,21 +124,21 @@
           <div class="stat-label">总报警数</div>
         </div>
       </el-card>
-      
+
       <el-card shadow="never" class="stat-card firing">
         <div class="stat-content">
           <div class="stat-number">{{ stats.firing }}</div>
           <div class="stat-label">触发中</div>
         </div>
       </el-card>
-      
+
       <el-card shadow="never" class="stat-card resolved">
         <div class="stat-content">
           <div class="stat-number">{{ stats.resolved }}</div>
           <div class="stat-label">已恢复</div>
         </div>
       </el-card>
-      
+
       <el-card shadow="never" class="stat-card acknowledged">
         <div class="stat-content">
           <div class="stat-number">{{ stats.acknowledged }}</div>
@@ -177,10 +177,18 @@
               </el-button>
               <template #dropdown>
                 <el-dropdown-menu>
-                  <el-dropdown-item command="acknowledge">确认报警</el-dropdown-item>
-                  <el-dropdown-item command="resolve">标记已解决</el-dropdown-item>
-                  <el-dropdown-item command="suppress">抑制报警</el-dropdown-item>
-                  <el-dropdown-item command="delete" divided>删除记录</el-dropdown-item>
+                  <el-dropdown-item command="acknowledge"
+                    >确认报警</el-dropdown-item
+                  >
+                  <el-dropdown-item command="resolve"
+                    >标记已解决</el-dropdown-item
+                  >
+                  <el-dropdown-item command="suppress"
+                    >抑制报警</el-dropdown-item
+                  >
+                  <el-dropdown-item command="delete" divided
+                    >删除记录</el-dropdown-item
+                  >
                 </el-dropdown-menu>
               </template>
             </el-dropdown>
@@ -198,7 +206,7 @@
           @sort-change="handleSortChange"
         >
           <el-table-column type="selection" width="55" />
-          
+
           <el-table-column label="报警级别" width="100" align="center">
             <template #default="{ row }">
               <el-tag :type="getSeverityType(row.severity)" size="small">
@@ -223,17 +231,26 @@
                 <div class="message-meta">
                   <span class="meta-item">规则：{{ row.ruleName }}</span>
                   <span class="meta-item">设备：{{ row.deviceName }}</span>
-                  <span v-if="row.tagName" class="meta-item">标签：{{ row.tagName }}</span>
+                  <span v-if="row.tagName" class="meta-item"
+                    >标签：{{ row.tagName }}</span
+                  >
                 </div>
               </div>
             </template>
           </el-table-column>
 
-          <el-table-column label="触发时间" width="180" sortable="custom" prop="triggerTime">
+          <el-table-column
+            label="触发时间"
+            width="180"
+            sortable="custom"
+            prop="triggerTime"
+          >
             <template #default="{ row }">
               <div class="time-info">
-                <div class="time-primary">{{ formatDateTime(row.triggerTime) }}</div>
-                <div class="time-duration" v-if="row.status === 'firing'">
+                <div class="time-primary">
+                  {{ formatDateTime(row.triggerTime) }}
+                </div>
+                <div v-if="row.status === 'firing'" class="time-duration">
                   持续 {{ formatDuration(row.triggerTime) }}
                 </div>
               </div>
@@ -243,7 +260,9 @@
           <el-table-column label="恢复时间" width="180">
             <template #default="{ row }">
               <div v-if="row.resolveTime" class="time-info">
-                <div class="time-primary">{{ formatDateTime(row.resolveTime) }}</div>
+                <div class="time-primary">
+                  {{ formatDateTime(row.resolveTime) }}
+                </div>
                 <div class="time-duration">
                   历时 {{ formatDuration(row.triggerTime, row.resolveTime) }}
                 </div>
@@ -254,27 +273,33 @@
 
           <el-table-column label="操作" width="120" fixed="right">
             <template #default="{ row }">
-              <el-dropdown @command="(cmd) => handleRowAction(cmd, row)">
+              <el-dropdown @command="cmd => handleRowAction(cmd, row)">
                 <el-button type="text">
                   操作 <el-icon><ArrowDown /></el-icon>
                 </el-button>
                 <template #dropdown>
                   <el-dropdown-menu>
-                    <el-dropdown-item command="detail">查看详情</el-dropdown-item>
-                    <el-dropdown-item 
-                      v-if="row.status === 'firing'" 
+                    <el-dropdown-item command="detail"
+                      >查看详情</el-dropdown-item
+                    >
+                    <el-dropdown-item
+                      v-if="row.status === 'firing'"
                       command="acknowledge"
                     >
                       确认报警
                     </el-dropdown-item>
-                    <el-dropdown-item 
-                      v-if="row.status === 'firing'" 
+                    <el-dropdown-item
+                      v-if="row.status === 'firing'"
                       command="resolve"
                     >
                       标记已解决
                     </el-dropdown-item>
-                    <el-dropdown-item command="suppress">抑制报警</el-dropdown-item>
-                    <el-dropdown-item command="history" divided>查看历史</el-dropdown-item>
+                    <el-dropdown-item command="suppress"
+                      >抑制报警</el-dropdown-item
+                    >
+                    <el-dropdown-item command="history" divided
+                      >查看历史</el-dropdown-item
+                    >
                   </el-dropdown-menu>
                 </template>
               </el-dropdown>
@@ -304,7 +329,7 @@
                   </el-tag>
                 </div>
               </div>
-              
+
               <div class="timeline-content">
                 <p class="alert-description">{{ alert.description }}</p>
                 <div class="alert-details">
@@ -318,11 +343,12 @@
                     <strong>规则：</strong>{{ alert.ruleName }}
                   </div>
                   <div v-if="alert.resolveTime" class="detail-item">
-                    <strong>恢复时间：</strong>{{ formatDateTime(alert.resolveTime) }}
+                    <strong>恢复时间：</strong
+                    >{{ formatDateTime(alert.resolveTime) }}
                   </div>
                 </div>
               </div>
-              
+
               <div class="timeline-actions">
                 <el-button type="text" @click="showAlertDetail(alert)">
                   查看详情
@@ -384,7 +410,12 @@
             </div>
             <div class="detail-item">
               <label>持续时间：</label>
-              <span>{{ formatDuration(selectedAlert.triggerTime, selectedAlert.resolveTime) }}</span>
+              <span>{{
+                formatDuration(
+                  selectedAlert.triggerTime,
+                  selectedAlert.resolveTime
+                )
+              }}</span>
             </div>
           </div>
         </div>
@@ -424,14 +455,22 @@
           </div>
         </div>
 
-        <div v-if="selectedAlert.triggerValue !== undefined" class="detail-section">
+        <div
+          v-if="selectedAlert.triggerValue !== undefined"
+          class="detail-section"
+        >
           <h4 class="detail-title">触发数据</h4>
           <div class="detail-grid">
             <div class="detail-item">
               <label>触发值：</label>
-              <span class="trigger-value">{{ selectedAlert.triggerValue }}</span>
+              <span class="trigger-value">{{
+                selectedAlert.triggerValue
+              }}</span>
             </div>
-            <div v-if="selectedAlert.threshold !== undefined" class="detail-item">
+            <div
+              v-if="selectedAlert.threshold !== undefined"
+              class="detail-item"
+            >
               <label>阈值：</label>
               <span>{{ selectedAlert.threshold }}</span>
             </div>
@@ -442,11 +481,16 @@
           </div>
         </div>
 
-        <div v-if="selectedAlert.labels && Object.keys(selectedAlert.labels).length > 0" class="detail-section">
+        <div
+          v-if="
+            selectedAlert.labels && Object.keys(selectedAlert.labels).length > 0
+          "
+          class="detail-section"
+        >
           <h4 class="detail-title">标签信息</h4>
           <div class="labels-grid">
-            <div 
-              v-for="(value, key) in selectedAlert.labels" 
+            <div
+              v-for="(value, key) in selectedAlert.labels"
               :key="key"
               class="label-item"
             >
@@ -455,11 +499,17 @@
           </div>
         </div>
 
-        <div v-if="selectedAlert.annotations && Object.keys(selectedAlert.annotations).length > 0" class="detail-section">
+        <div
+          v-if="
+            selectedAlert.annotations &&
+            Object.keys(selectedAlert.annotations).length > 0
+          "
+          class="detail-section"
+        >
           <h4 class="detail-title">注释信息</h4>
           <div class="annotations">
-            <div 
-              v-for="(value, key) in selectedAlert.annotations" 
+            <div
+              v-for="(value, key) in selectedAlert.annotations"
               :key="key"
               class="annotation-item"
             >
@@ -472,16 +522,16 @@
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="showDetailDialog = false">关闭</el-button>
-          <el-button 
-            v-if="selectedAlert?.status === 'firing'" 
-            type="warning" 
+          <el-button
+            v-if="selectedAlert?.status === 'firing'"
+            type="warning"
             @click="acknowledgeAlert(selectedAlert)"
           >
             确认报警
           </el-button>
-          <el-button 
-            v-if="selectedAlert?.status === 'firing'" 
-            type="success" 
+          <el-button
+            v-if="selectedAlert?.status === 'firing'"
+            type="success"
             @click="resolveAlert(selectedAlert)"
           >
             标记已解决
@@ -511,16 +561,17 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search,
   RefreshLeft,
   Download,
   List,
   Timer,
-  ArrowDown
+  ArrowDown,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+
 import { alertsApi, devicesApi } from '@/api'
 
 // ===== Props =====
@@ -545,14 +596,14 @@ const filterForm = ref({
   status: '',
   deviceId: props.deviceId || '',
   ruleId: props.ruleId || '',
-  keyword: ''
+  keyword: '',
 })
 
 // 分页
 const pagination = ref({
   page: 1,
   size: 20,
-  total: 0
+  total: 0,
 })
 
 // 排序
@@ -569,7 +620,7 @@ const stats = ref({
   total: 0,
   firing: 0,
   resolved: 0,
-  acknowledged: 0
+  acknowledged: 0,
 })
 
 // ===== 计算属性 =====
@@ -587,18 +638,17 @@ async function initializeData() {
     // 从API加载设备和规则数据
     await loadAvailableDevices()
     await loadAvailableRules()
-    
+
     // 设置默认时间范围（最近7天）
     const now = new Date()
     const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
     filterForm.value.dateRange = [
       weekAgo.toISOString().slice(0, 19),
-      now.toISOString().slice(0, 19)
+      now.toISOString().slice(0, 19),
     ]
 
     // 加载报警数据
     await searchAlerts()
-
   } catch (error) {
     console.error('初始化报警历史失败:', error)
     ElMessage.error('初始化失败')
@@ -650,12 +700,12 @@ async function searchAlerts() {
       start_time: filterForm.value.dateRange?.[0] || undefined,
       end_time: filterForm.value.dateRange?.[1] || undefined,
       sort_field: sortField.value,
-      sort_order: sortOrder.value
+      sort_order: sortOrder.value,
     }
 
     // 调用后端API
     const response = await alertsApi.getAlertHistory(queryParams)
-    
+
     alertList.value = response.items
     pagination.value.total = response.total
 
@@ -665,7 +715,6 @@ async function searchAlerts() {
     if (response.items.length === 0) {
       ElMessage.info('未找到符合条件的报警记录')
     }
-
   } catch (error) {
     console.error('查询报警记录失败:', error)
     ElMessage.error('查询失败')
@@ -682,7 +731,7 @@ function updateStats(alerts: any[]) {
     total: alerts.length,
     firing: alerts.filter(a => a.status === 'firing').length,
     resolved: alerts.filter(a => a.status === 'resolved').length,
-    acknowledged: alerts.filter(a => a.status === 'acknowledged').length
+    acknowledged: alerts.filter(a => a.status === 'acknowledged').length,
   }
 }
 
@@ -692,17 +741,17 @@ function updateStats(alerts: any[]) {
 function resetFilters() {
   const now = new Date()
   const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  
+
   filterForm.value = {
     dateRange: [
       weekAgo.toISOString().slice(0, 19),
-      now.toISOString().slice(0, 19)
+      now.toISOString().slice(0, 19),
     ],
     severity: '',
     status: '',
     deviceId: props.deviceId || '',
     ruleId: props.ruleId || '',
-    keyword: ''
+    keyword: '',
   }
 
   pagination.value.page = 1
@@ -715,7 +764,7 @@ function resetFilters() {
 async function exportAlerts() {
   try {
     exporting.value = true
-    
+
     // 构建查询参数
     const queryParams = {
       severity: filterForm.value.severity || undefined,
@@ -725,14 +774,13 @@ async function exportAlerts() {
       keyword: filterForm.value.keyword || undefined,
       start_time: filterForm.value.dateRange?.[0] || undefined,
       end_time: filterForm.value.dateRange?.[1] || undefined,
-      format: 'xlsx'
+      format: 'xlsx',
     }
-    
+
     // 调用导出API
     await alertsApi.exportAlertHistory(queryParams)
-    
+
     ElMessage.success('报警数据导出成功')
-    
   } catch (error) {
     console.error('导出失败:', error)
     ElMessage.error('导出失败')
@@ -759,7 +807,13 @@ function handleSelectionChange(selection: any[]) {
 /**
  * 处理排序变化
  */
-function handleSortChange({ prop, order }: { prop: string, order: string | null }) {
+function handleSortChange({
+  prop,
+  order,
+}: {
+  prop: string
+  order: string | null
+}) {
   if (prop && order) {
     sortField.value = prop
     sortOrder.value = order === 'ascending' ? 'asc' : 'desc'
@@ -798,28 +852,27 @@ async function handleBatchAction(command: string) {
     acknowledge: '确认',
     resolve: '标记已解决',
     suppress: '抑制',
-    delete: '删除'
+    delete: '删除',
   }
 
   const actionName = actionMap[command as keyof typeof actionMap]
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要${actionName}选中的 ${selectedRows.value.length} 条报警记录吗？`,
       '批量操作确认',
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
     // 调用批量操作API
     const alertIds = selectedRows.value.map(row => row.id)
     await alertsApi.batchUpdateAlerts(alertIds, { action: command })
-    
+
     ElMessage.success(`已${actionName} ${selectedRows.value.length} 条报警记录`)
     selectedRows.value = []
     await searchAlerts()
-
   } catch (error) {
     // 用户取消操作
   }
@@ -912,7 +965,7 @@ function getSeverityType(severity: string): string {
   const typeMap: { [key: string]: string } = {
     critical: 'danger',
     warning: 'warning',
-    info: 'info'
+    info: 'info',
   }
   return typeMap[severity] || 'info'
 }
@@ -924,7 +977,7 @@ function getSeverityLabel(severity: string): string {
   const labelMap: { [key: string]: string } = {
     critical: '严重',
     warning: '警告',
-    info: '信息'
+    info: '信息',
   }
   return labelMap[severity] || severity
 }
@@ -937,7 +990,7 @@ function getStatusType(status: string): string {
     firing: 'danger',
     resolved: 'success',
     acknowledged: 'warning',
-    suppressed: 'info'
+    suppressed: 'info',
   }
   return typeMap[status] || 'info'
 }
@@ -950,7 +1003,7 @@ function getStatusLabel(status: string): string {
     firing: '触发中',
     resolved: '已恢复',
     acknowledged: '已确认',
-    suppressed: '已抑制'
+    suppressed: '已抑制',
   }
   return labelMap[status] || status
 }
@@ -969,15 +1022,15 @@ function formatDateTime(dateStr: string): string {
  */
 function formatDuration(startTime: string, endTime?: string | null): string {
   if (!startTime) return '-'
-  
+
   const start = new Date(startTime)
   const end = endTime ? new Date(endTime) : new Date()
   const diffMs = end.getTime() - start.getTime()
-  
+
   const minutes = Math.floor(diffMs / (1000 * 60))
   const hours = Math.floor(minutes / 60)
   const days = Math.floor(hours / 24)
-  
+
   if (days > 0) {
     return `${days}天${hours % 24}小时`
   } else if (hours > 0) {
@@ -993,15 +1046,21 @@ onMounted(async () => {
 })
 
 // ===== 监听器 =====
-watch(() => [filterForm.value.severity, filterForm.value.status], () => {
-  pagination.value.page = 1
-  searchAlerts()
-})
+watch(
+  () => [filterForm.value.severity, filterForm.value.status],
+  () => {
+    pagination.value.page = 1
+    searchAlerts()
+  }
+)
 
-watch(() => [filterForm.value.deviceId, filterForm.value.ruleId], () => {
-  pagination.value.page = 1
-  searchAlerts()
-})
+watch(
+  () => [filterForm.value.deviceId, filterForm.value.ruleId],
+  () => {
+    pagination.value.page = 1
+    searchAlerts()
+  }
+)
 
 // 自动刷新
 let refreshTimer: NodeJS.Timeout | null = null
@@ -1023,7 +1082,7 @@ onUnmounted(() => {
 .alert-history-records {
   .filter-panel {
     margin-bottom: 16px;
-    
+
     .filter-form {
       .filter-row {
         display: flex;
@@ -1031,15 +1090,15 @@ onUnmounted(() => {
         gap: 20px;
         margin-bottom: 16px;
         flex-wrap: wrap;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .filter-item {
           display: flex;
           flex-direction: column;
-          
+
           .filter-label {
             font-size: 13px;
             color: #606266;
@@ -1047,7 +1106,7 @@ onUnmounted(() => {
             font-weight: 500;
           }
         }
-        
+
         .filter-actions {
           display: flex;
           gap: 12px;
@@ -1056,38 +1115,38 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .stats-cards {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 16px;
     margin-bottom: 16px;
-    
+
     .stat-card {
       border: none;
-      
+
       &.firing {
         border-left: 4px solid #f56c6c;
       }
-      
+
       &.resolved {
         border-left: 4px solid #67c23a;
       }
-      
+
       &.acknowledged {
         border-left: 4px solid #e6a23c;
       }
-      
+
       .stat-content {
         text-align: center;
-        
+
         .stat-number {
           font-size: 28px;
           font-weight: 600;
           color: #303133;
           margin-bottom: 8px;
         }
-        
+
         .stat-label {
           font-size: 14px;
           color: #606266;
@@ -1095,44 +1154,44 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .alerts-table {
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .table-title {
         font-size: 16px;
         font-weight: 600;
         color: #303133;
       }
-      
+
       .table-actions {
         display: flex;
         gap: 12px;
       }
     }
-    
+
     .alert-message {
       .message-title {
         font-weight: 500;
         color: #303133;
         margin-bottom: 4px;
       }
-      
+
       .message-desc {
         font-size: 13px;
         color: #606266;
         margin-bottom: 6px;
         line-height: 1.4;
       }
-      
+
       .message-meta {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
-        
+
         .meta-item {
           font-size: 12px;
           color: #909399;
@@ -1142,40 +1201,40 @@ onUnmounted(() => {
         }
       }
     }
-    
+
     .time-info {
       .time-primary {
         color: #303133;
         margin-bottom: 2px;
       }
-      
+
       .time-duration {
         font-size: 12px;
         color: #909399;
       }
     }
-    
+
     .text-muted {
       color: #c0c4cc;
     }
-    
+
     .timeline-view {
       padding: 20px 0;
-      
+
       .timeline-card {
         background: #fff;
         border: 1px solid #e4e7ed;
         border-radius: 8px;
         padding: 16px;
         margin-bottom: 16px;
-        
+
         .timeline-header {
           .timeline-title {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 12px;
-            
+
             .alert-title {
               font-weight: 500;
               color: #303133;
@@ -1183,37 +1242,37 @@ onUnmounted(() => {
             }
           }
         }
-        
+
         .timeline-content {
           .alert-description {
             color: #606266;
             margin-bottom: 12px;
             line-height: 1.5;
           }
-          
+
           .alert-details {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 8px;
-            
+
             .detail-item {
               font-size: 13px;
               color: #606266;
-              
+
               strong {
                 color: #303133;
               }
             }
           }
         }
-        
+
         .timeline-actions {
           margin-top: 12px;
           text-align: right;
         }
       }
     }
-    
+
     .pagination-wrapper {
       margin-top: 20px;
       text-align: center;
@@ -1225,11 +1284,11 @@ onUnmounted(() => {
 .alert-detail {
   .detail-section {
     margin-bottom: 24px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .detail-title {
       font-size: 16px;
       font-weight: 600;
@@ -1238,61 +1297,61 @@ onUnmounted(() => {
       padding-bottom: 8px;
       border-bottom: 1px solid #e4e7ed;
     }
-    
+
     .detail-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 12px;
-      
+
       .detail-item {
         display: flex;
         align-items: center;
-        
+
         label {
           font-weight: 500;
           color: #606266;
           width: 100px;
           flex-shrink: 0;
         }
-        
+
         span {
           color: #303133;
         }
-        
+
         .trigger-value {
           font-weight: 600;
           color: #f56c6c;
         }
       }
     }
-    
+
     .alert-description {
       color: #606266;
       line-height: 1.6;
       margin: 0;
     }
-    
+
     .labels-grid {
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
-      
+
       .label-item {
         .el-tag {
           font-family: monospace;
         }
       }
     }
-    
+
     .annotations {
       .annotation-item {
         margin-bottom: 8px;
         color: #606266;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         strong {
           color: #303133;
         }
@@ -1308,23 +1367,23 @@ onUnmounted(() => {
       flex-direction: column;
       align-items: stretch;
       gap: 16px;
-      
+
       .filter-item {
         width: 100%;
-        
+
         :deep(.el-select),
         :deep(.el-input),
         :deep(.el-date-editor) {
           width: 100% !important;
         }
       }
-      
+
       .filter-actions {
         margin-left: 0;
         justify-content: center;
       }
     }
-    
+
     .stats-cards {
       grid-template-columns: repeat(2, 1fr);
     }
@@ -1336,18 +1395,18 @@ onUnmounted(() => {
     .stats-cards {
       grid-template-columns: 1fr;
     }
-    
+
     .alerts-table .table-header {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
     }
-    
+
     .timeline-view .timeline-card .alert-details {
       grid-template-columns: 1fr;
     }
   }
-  
+
   .alert-detail .detail-section .detail-grid {
     grid-template-columns: 1fr;
   }

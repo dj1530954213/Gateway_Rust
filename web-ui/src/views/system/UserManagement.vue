@@ -118,11 +118,11 @@
         <!-- 表格视图 -->
         <div v-if="viewMode === 'table'" class="table-view">
           <el-table
-            :data="filteredUsers"
             v-loading="loading"
-            @selection-change="handleSelectionChange"
+            :data="filteredUsers"
             stripe
             style="width: 100%"
+            @selection-change="handleSelectionChange"
           >
             <el-table-column type="selection" width="55" />
             <el-table-column prop="avatar" label="头像" width="80">
@@ -151,7 +151,9 @@
             </el-table-column>
             <el-table-column prop="lastLogin" label="最后登录" width="150">
               <template #default="{ row }">
-                <span v-if="row.lastLogin">{{ formatDate(row.lastLogin) }}</span>
+                <span v-if="row.lastLogin">{{
+                  formatDate(row.lastLogin)
+                }}</span>
                 <span v-else class="text-muted">从未登录</span>
               </template>
             </el-table-column>
@@ -193,16 +195,26 @@
                 >
                   {{ row.status === 'active' ? '禁用' : '启用' }}
                 </el-button>
-                <el-dropdown @command="(cmd: string) => handleUserAction(cmd, row)">
+                <el-dropdown
+                  @command="(cmd: string) => handleUserAction(cmd, row)"
+                >
                   <el-button type="primary" text size="small">
                     更多<el-icon class="el-icon--right"><ArrowDown /></el-icon>
                   </el-button>
                   <template #dropdown>
                     <el-dropdown-menu>
-                      <el-dropdown-item command="resetPassword">重置密码</el-dropdown-item>
-                      <el-dropdown-item command="permissions">权限设置</el-dropdown-item>
-                      <el-dropdown-item command="sessions">会话管理</el-dropdown-item>
-                      <el-dropdown-item divided command="delete">删除用户</el-dropdown-item>
+                      <el-dropdown-item command="resetPassword"
+                        >重置密码</el-dropdown-item
+                      >
+                      <el-dropdown-item command="permissions"
+                        >权限设置</el-dropdown-item
+                      >
+                      <el-dropdown-item command="sessions"
+                        >会话管理</el-dropdown-item
+                      >
+                      <el-dropdown-item divided command="delete"
+                        >删除用户</el-dropdown-item
+                      >
                     </el-dropdown-menu>
                   </template>
                 </el-dropdown>
@@ -214,8 +226,8 @@
         <!-- 卡片视图 -->
         <div v-if="viewMode === 'card'" class="card-view">
           <div class="user-cards">
-            <div 
-              v-for="user in filteredUsers" 
+            <div
+              v-for="user in filteredUsers"
               :key="user.id"
               class="user-card"
               @click="viewUser(user)"
@@ -229,7 +241,10 @@
                   <div class="email">{{ user.email }}</div>
                 </div>
                 <div class="user-status">
-                  <el-tag :type="user.isOnline ? 'success' : 'info'" size="small">
+                  <el-tag
+                    :type="user.isOnline ? 'success' : 'info'"
+                    size="small"
+                  >
                     {{ user.isOnline ? '在线' : '离线' }}
                   </el-tag>
                 </div>
@@ -253,12 +268,16 @@
                 </div>
                 <div class="info-item">
                   <label>最后登录:</label>
-                  <span v-if="user.lastLogin">{{ formatDate(user.lastLogin) }}</span>
+                  <span v-if="user.lastLogin">{{
+                    formatDate(user.lastLogin)
+                  }}</span>
                   <span v-else class="text-muted">从未登录</span>
                 </div>
               </div>
               <div class="card-actions">
-                <el-button size="small" @click.stop="editUser(user)">编辑</el-button>
+                <el-button size="small" @click.stop="editUser(user)"
+                  >编辑</el-button
+                >
                 <el-button
                   size="small"
                   :type="user.status === 'active' ? 'warning' : 'success'"
@@ -300,7 +319,10 @@
         <div class="form-grid">
           <div class="form-left">
             <el-form-item label="用户名" prop="username">
-              <el-input v-model="userForm.username" placeholder="请输入用户名" />
+              <el-input
+                v-model="userForm.username"
+                placeholder="请输入用户名"
+              />
             </el-form-item>
             <el-form-item label="邮箱" prop="email">
               <el-input v-model="userForm.email" placeholder="请输入邮箱" />
@@ -314,7 +336,10 @@
               />
             </el-form-item>
             <el-form-item label="真实姓名" prop="realName">
-              <el-input v-model="userForm.realName" placeholder="请输入真实姓名" />
+              <el-input
+                v-model="userForm.realName"
+                placeholder="请输入真实姓名"
+              />
             </el-form-item>
             <el-form-item label="手机号码" prop="phone">
               <el-input v-model="userForm.phone" placeholder="请输入手机号码" />
@@ -330,7 +355,10 @@
               </el-select>
             </el-form-item>
             <el-form-item label="所属部门" prop="department">
-              <el-input v-model="userForm.department" placeholder="请输入所属部门" />
+              <el-input
+                v-model="userForm.department"
+                placeholder="请输入所属部门"
+              />
             </el-form-item>
             <el-form-item label="用户状态" prop="status">
               <el-radio-group v-model="userForm.status">
@@ -352,18 +380,14 @@
 
       <template #footer>
         <el-button @click="closeUserDialog">取消</el-button>
-        <el-button type="primary" @click="saveUser" :loading="submitting">
+        <el-button type="primary" :loading="submitting" @click="saveUser">
           {{ isEditMode ? '保存' : '创建' }}
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 用户详情对话框 -->
-    <el-dialog
-      v-model="userDetailVisible"
-      title="用户详情"
-      width="800px"
-    >
+    <el-dialog v-model="userDetailVisible" title="用户详情" width="800px">
       <div v-if="selectedUser" class="user-detail">
         <!-- 用户基本信息 -->
         <div class="detail-section">
@@ -417,7 +441,9 @@
             </div>
             <div class="info-item">
               <label>最后登录:</label>
-              <span v-if="selectedUser.lastLogin">{{ formatDate(selectedUser.lastLogin) }}</span>
+              <span v-if="selectedUser.lastLogin">{{
+                formatDate(selectedUser.lastLogin)
+              }}</span>
               <span v-else class="text-muted">从未登录</span>
             </div>
             <div class="info-item">
@@ -435,7 +461,7 @@
         <div class="detail-section">
           <h3>权限信息</h3>
           <div class="permissions-list">
-            <el-tag 
+            <el-tag
               v-for="permission in selectedUser.permissions"
               :key="permission"
               type="info"
@@ -451,7 +477,7 @@
         <div class="detail-section">
           <h3>最近活动</h3>
           <div class="activity-list">
-            <div 
+            <div
               v-for="activity in selectedUser.recentActivities"
               :key="activity.id"
               class="activity-item"
@@ -461,10 +487,12 @@
               </div>
               <div class="activity-content">
                 <div class="activity-title">{{ activity.action }}</div>
-                <div class="activity-time">{{ formatDate(activity.timestamp) }}</div>
+                <div class="activity-time">
+                  {{ formatDate(activity.timestamp) }}
+                </div>
               </div>
               <div class="activity-result">
-                <el-tag 
+                <el-tag
                   :type="activity.result === 'success' ? 'success' : 'danger'"
                   size="small"
                 >
@@ -478,16 +506,14 @@
 
       <template #footer>
         <el-button @click="userDetailVisible = false">关闭</el-button>
-        <el-button type="primary" @click="editUser(selectedUser)">编辑用户</el-button>
+        <el-button type="primary" @click="editUser(selectedUser)"
+          >编辑用户</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 批量操作对话框 -->
-    <el-dialog
-      v-model="batchOperationVisible"
-      title="批量操作"
-      width="500px"
-    >
+    <el-dialog v-model="batchOperationVisible" title="批量操作" width="500px">
       <div class="batch-operation">
         <div class="selected-users">
           <p>已选择 {{ selectedUsers.length }} 个用户</p>
@@ -512,7 +538,7 @@
               <el-radio label="changeRole">批量修改角色</el-radio>
             </el-radio-group>
           </el-form-item>
-          
+
           <el-form-item v-if="batchOperation === 'changeRole'" label="新角色">
             <el-select v-model="newRole" placeholder="选择新角色">
               <el-option label="管理员" value="admin" />
@@ -526,10 +552,10 @@
 
       <template #footer>
         <el-button @click="batchOperationVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="executeBatchOperation"
+        <el-button
+          type="primary"
           :loading="batchProcessing"
+          @click="executeBatchOperation"
         >
           执行操作
         </el-button>
@@ -539,13 +565,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+import {
+  Plus,
+  Operation,
+  Search,
+  RefreshRight,
+  User,
+  UserFilled,
+  Connection,
+  ArrowDown,
+} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import {
-  Plus, Operation, Search, RefreshRight, User, UserFilled,
-  Connection, ArrowDown
-} from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted, onUnmounted, watch } from 'vue'
+
 import { usersApi, wsClient, type User as UserItem } from '../../api'
 
 // UserItem 类型已从 API 模块导入
@@ -583,7 +616,7 @@ const userForm = reactive({
   status: 'active',
   realName: '',
   phone: '',
-  note: ''
+  note: '',
 })
 
 // 用户数据
@@ -598,26 +631,24 @@ const userStats = ref<UserStats>({
   totalUsers: 0,
   activeUsers: 0,
   onlineUsers: 0,
-  adminUsers: 0
+  adminUsers: 0,
 })
 
 // 表单验证规则
 const userFormRules: FormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' }
+    { min: 3, max: 20, message: '用户名长度为3-20个字符', trigger: 'blur' },
   ],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' }
+    { type: 'email', message: '请输入正确的邮箱格式', trigger: 'blur' },
   ],
   password: [
     { required: true, message: '请输入密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
   ],
-  role: [
-    { required: true, message: '请选择用户角色', trigger: 'change' }
-  ]
+  role: [{ required: true, message: '请选择用户角色', trigger: 'change' }],
 }
 
 // 计算属性
@@ -626,10 +657,11 @@ const filteredUsers = computed(() => {
 
   if (searchQuery.value) {
     const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(user => 
-      user.username.toLowerCase().includes(query) ||
-      user.email.toLowerCase().includes(query) ||
-      user.realName?.toLowerCase().includes(query)
+    filtered = filtered.filter(
+      user =>
+        user.username.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.realName?.toLowerCase().includes(query)
     )
   }
 
@@ -651,38 +683,38 @@ const formatDate = (dateString: string): string => {
 
 const getRoleType = (role: string) => {
   const types = {
-    'admin': 'danger',
-    'operator': 'warning',
-    'viewer': 'success',
-    'guest': 'info'
+    admin: 'danger',
+    operator: 'warning',
+    viewer: 'success',
+    guest: 'info',
   }
   return types[role as keyof typeof types] || 'info'
 }
 
 const getRoleLabel = (role: string): string => {
   const labels = {
-    'admin': '管理员',
-    'operator': '操作员',
-    'viewer': '观察者',
-    'guest': '访客'
+    admin: '管理员',
+    operator: '操作员',
+    viewer: '观察者',
+    guest: '访客',
   }
   return labels[role as keyof typeof labels] || role
 }
 
 const getStatusType = (status: string) => {
   const types = {
-    'active': 'success',
-    'disabled': 'warning',
-    'locked': 'danger'
+    active: 'success',
+    disabled: 'warning',
+    locked: 'danger',
   }
   return types[status as keyof typeof types] || 'info'
 }
 
 const getStatusLabel = (status: string): string => {
   const labels = {
-    'active': '活跃',
-    'disabled': '禁用',
-    'locked': '锁定'
+    active: '活跃',
+    disabled: '禁用',
+    locked: '锁定',
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -696,7 +728,7 @@ const getPermissionLabel = (permission: string): string => {
     'driver.view': '查看驱动',
     'driver.manage': '管理驱动',
     'system.config': '系统配置',
-    'system.monitor': '系统监控'
+    'system.monitor': '系统监控',
   }
   return labels[permission as keyof typeof labels] || permission
 }
@@ -719,7 +751,7 @@ const editUser = (user: UserItem) => {
     status: user.status,
     realName: user.realName || '',
     phone: user.phone || '',
-    note: user.note || ''
+    note: user.note || '',
   })
   selectedUser.value = user
   userDialogVisible.value = true
@@ -746,7 +778,7 @@ const resetUserForm = () => {
     status: 'active',
     realName: '',
     phone: '',
-    note: ''
+    note: '',
   })
   userFormRef.value?.resetFields()
 }
@@ -768,17 +800,17 @@ const saveUser = async () => {
         status: userForm.status,
         realName: userForm.realName,
         phone: userForm.phone,
-        note: userForm.note
+        note: userForm.note,
       }
-      
+
       await usersApi.update(selectedUser.value.id, updateData)
-      
+
       // 更新本地数据
       const index = users.value.findIndex(u => u.id === selectedUser.value!.id)
       if (index > -1) {
         Object.assign(users.value[index], updateData)
       }
-      
+
       ElMessage.success('用户更新成功')
     } else {
       // 创建新用户
@@ -791,12 +823,12 @@ const saveUser = async () => {
         status: userForm.status,
         realName: userForm.realName,
         phone: userForm.phone,
-        note: userForm.note
+        note: userForm.note,
       }
-      
+
       const response = await usersApi.create(createData)
       users.value.unshift(response.data)
-      
+
       ElMessage.success('用户创建成功')
     }
 
@@ -814,12 +846,12 @@ const toggleUserStatus = async (user: UserItem) => {
   try {
     const newStatus = user.status === 'active' ? 'disabled' : 'active'
     const action = newStatus === 'active' ? '启用' : '禁用'
-    
+
     await ElMessageBox.confirm(
       `确定要${action}用户 "${user.username}" 吗？`,
       `${action}用户`,
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
@@ -857,7 +889,9 @@ const manageUserPermissions = async (user: UserItem) => {
   try {
     const response = await usersApi.getPermissions(user.id)
     // 这里可以打开权限管理对话框
-    ElMessage.info(`用户 ${user.username} 当前拥有 ${response.data.permissions.length} 个权限`)
+    ElMessage.info(
+      `用户 ${user.username} 当前拥有 ${response.data.permissions.length} 个权限`
+    )
   } catch (error) {
     console.error('获取用户权限失败:', error)
     ElMessage.error('获取用户权限失败')
@@ -869,7 +903,9 @@ const manageUserSessions = async (user: UserItem) => {
   try {
     const response = await usersApi.getSessions(user.id)
     // 这里可以打开会话管理对话框
-    ElMessage.info(`用户 ${user.username} 当前有 ${response.data.sessions.length} 个活跃会话`)
+    ElMessage.info(
+      `用户 ${user.username} 当前有 ${response.data.sessions.length} 个活跃会话`
+    )
   } catch (error) {
     console.error('获取用户会话失败:', error)
     ElMessage.error('获取用户会话失败')
@@ -882,7 +918,7 @@ const resetPassword = async (user: UserItem) => {
       `确定要重置用户 "${user.username}" 的密码吗？新密码将通过邮件发送给用户。`,
       '重置密码',
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
@@ -904,12 +940,12 @@ const deleteUser = async (user: UserItem) => {
       {
         type: 'warning',
         confirmButtonText: '删除',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
 
     await usersApi.delete(user.id)
-    
+
     const index = users.value.findIndex(u => u.id === user.id)
     if (index > -1) {
       users.value.splice(index, 1)
@@ -952,12 +988,12 @@ const executeBatchOperation = async () => {
   try {
     batchProcessing.value = true
     const userIds = selectedUsers.value.map(u => u.id)
-    
+
     switch (batchOperation.value) {
       case 'enable':
         await usersApi.batchOperation({
           userIds,
-          operation: 'enable'
+          operation: 'enable',
         })
         selectedUsers.value.forEach(user => {
           user.status = 'active'
@@ -967,7 +1003,7 @@ const executeBatchOperation = async () => {
       case 'disable':
         await usersApi.batchOperation({
           userIds,
-          operation: 'disable'
+          operation: 'disable',
         })
         selectedUsers.value.forEach(user => {
           user.status = 'disabled'
@@ -982,7 +1018,7 @@ const executeBatchOperation = async () => {
         await usersApi.batchOperation({
           userIds,
           operation: 'changeRole',
-          newRole: newRole.value
+          newRole: newRole.value,
         })
         selectedUsers.value.forEach(user => {
           user.role = newRole.value as any
@@ -1025,16 +1061,19 @@ const resetFilters = () => {
 
 const getDefaultPermissions = (role: string): string[] => {
   const permissionSets = {
-    'admin': [
-      'user.view', 'user.create', 'user.edit', 'user.delete',
-      'driver.view', 'driver.manage',
-      'system.config', 'system.monitor'
+    admin: [
+      'user.view',
+      'user.create',
+      'user.edit',
+      'user.delete',
+      'driver.view',
+      'driver.manage',
+      'system.config',
+      'system.monitor',
     ],
-    'operator': [
-      'user.view', 'driver.view', 'driver.manage', 'system.monitor'
-    ],
-    'viewer': ['user.view', 'driver.view', 'system.monitor'],
-    'guest': ['user.view', 'driver.view']
+    operator: ['user.view', 'driver.view', 'driver.manage', 'system.monitor'],
+    viewer: ['user.view', 'driver.view', 'system.monitor'],
+    guest: ['user.view', 'driver.view'],
   }
   return permissionSets[role as keyof typeof permissionSets] || []
 }
@@ -1048,9 +1087,13 @@ const loadUserStats = async () => {
     console.error('加载用户统计失败:', error)
     // 使用本地计算作为备用
     userStats.value.totalUsers = users.value.length
-    userStats.value.activeUsers = users.value.filter(u => u.status === 'active').length
+    userStats.value.activeUsers = users.value.filter(
+      u => u.status === 'active'
+    ).length
     userStats.value.onlineUsers = users.value.filter(u => u.isOnline).length
-    userStats.value.adminUsers = users.value.filter(u => u.role === 'admin').length
+    userStats.value.adminUsers = users.value.filter(
+      u => u.role === 'admin'
+    ).length
   }
 }
 
@@ -1063,9 +1106,9 @@ const loadUsers = async () => {
       size: pageSize.value,
       search: searchQuery.value,
       role: selectedRole.value,
-      status: selectedStatus.value
+      status: selectedStatus.value,
     }
-    
+
     const response = await usersApi.list(params)
     users.value = response.data.items || []
   } catch (error) {
@@ -1079,22 +1122,19 @@ const loadUsers = async () => {
 
 // 刷新数据
 const refreshData = async () => {
-  await Promise.all([
-    loadUsers(),
-    loadUserStats()
-  ])
+  await Promise.all([loadUsers(), loadUserStats()])
 }
 
 // 生命周期
 onMounted(async () => {
   await refreshData()
-  
+
   // 连接WebSocket监听用户状态变化
   try {
     if (!wsClient.isConnected) {
       await wsClient.connect()
     }
-    
+
     // 监听用户状态变化
     wsClient.on('user_status_changed', (data: any) => {
       const user = users.value.find(u => u.id === data.userId)
@@ -1104,13 +1144,13 @@ onMounted(async () => {
       }
       loadUserStats()
     })
-    
+
     // 监听新用户创建
     wsClient.on('user_created', (data: any) => {
       users.value.unshift(data.user)
       loadUserStats()
     })
-    
+
     // 监听用户删除
     wsClient.on('user_deleted', (data: any) => {
       const index = users.value.findIndex(u => u.id === data.userId)
@@ -1125,10 +1165,14 @@ onMounted(async () => {
 })
 
 // 监听搜索参数变化
-watch([searchQuery, selectedRole, selectedStatus], () => {
-  currentPage.value = 1
-  loadUsers()
-}, { debounce: 300 })
+watch(
+  [searchQuery, selectedRole, selectedStatus],
+  () => {
+    currentPage.value = 1
+    loadUsers()
+  },
+  { debounce: 300 }
+)
 
 // 监听分页变化
 watch([currentPage, pageSize], () => {
@@ -1150,17 +1194,17 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #f5f7fa;
-  
+
   .page-header {
     background: white;
     padding: 24px;
     border-bottom: 1px solid #e4e7ed;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .title-section {
         h1 {
           margin: 0;
@@ -1168,45 +1212,45 @@ onUnmounted(() => {
           font-weight: 600;
           color: #303133;
         }
-        
+
         .description {
           margin: 8px 0 0 0;
           color: #909399;
           font-size: 14px;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
       }
     }
   }
-  
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     padding: 20px 24px;
-    
+
     .stat-card {
       .stat-content {
         display: flex;
         align-items: center;
         position: relative;
-        
+
         .stat-value {
           font-size: 32px;
           font-weight: bold;
           color: #303133;
           margin-bottom: 4px;
         }
-        
+
         .stat-label {
           color: #909399;
           font-size: 14px;
         }
-        
+
         .stat-icon {
           position: absolute;
           right: 12px;
@@ -1214,45 +1258,53 @@ onUnmounted(() => {
           transform: translateY(-50%);
           font-size: 32px;
           opacity: 0.3;
-          
-          &.users { color: #409eff; }
-          &.active { color: #67c23a; }
-          &.online { color: #67c23a; }
-          &.admin { color: #f56c6c; }
+
+          &.users {
+            color: #409eff;
+          }
+          &.active {
+            color: #67c23a;
+          }
+          &.online {
+            color: #67c23a;
+          }
+          &.admin {
+            color: #f56c6c;
+          }
         }
       }
     }
   }
-  
+
   .main-content {
     flex: 1;
     padding: 0 24px 24px;
-    
+
     .toolbar {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      
+
       .search-section {
         display: flex;
         gap: 12px;
         align-items: center;
       }
     }
-    
+
     .table-view {
       .text-muted {
         color: #909399;
       }
     }
-    
+
     .card-view {
       .user-cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
         gap: 16px;
-        
+
         .user-card {
           border: 1px solid #e4e7ed;
           border-radius: 8px;
@@ -1260,57 +1312,57 @@ onUnmounted(() => {
           background: white;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #409eff;
             box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
           }
-          
+
           .card-header {
             display: flex;
             align-items: center;
             margin-bottom: 12px;
-            
+
             .user-info {
               flex: 1;
               margin-left: 12px;
-              
+
               .username {
                 font-weight: 500;
                 color: #303133;
               }
-              
+
               .email {
                 font-size: 12px;
                 color: #909399;
               }
             }
           }
-          
+
           .card-body {
             .info-item {
               display: flex;
               align-items: center;
               margin-bottom: 8px;
-              
+
               label {
                 min-width: 60px;
                 font-weight: 500;
                 color: #606266;
                 font-size: 12px;
               }
-              
+
               span {
                 font-size: 12px;
                 color: #303133;
-                
+
                 &.text-muted {
                   color: #909399;
                 }
               }
             }
           }
-          
+
           .card-actions {
             display: flex;
             gap: 8px;
@@ -1321,24 +1373,24 @@ onUnmounted(() => {
         }
       }
     }
-    
+
     .pagination-wrapper {
       display: flex;
       justify-content: center;
       margin-top: 20px;
     }
   }
-  
+
   .form-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
   }
-  
+
   .user-detail {
     .detail-section {
       margin-bottom: 24px;
-      
+
       h3 {
         margin: 0 0 16px 0;
         font-size: 16px;
@@ -1347,17 +1399,17 @@ onUnmounted(() => {
         padding-bottom: 8px;
         border-bottom: 1px solid #e4e7ed;
       }
-      
+
       .detail-content {
         .user-avatar-section {
           display: flex;
           align-items: center;
           gap: 16px;
-          
+
           .user-basic-info {
             .info-row {
               margin-bottom: 8px;
-              
+
               &:first-child {
                 font-size: 18px;
                 font-weight: 500;
@@ -1366,7 +1418,7 @@ onUnmounted(() => {
                 align-items: center;
                 gap: 8px;
               }
-              
+
               &:not(:first-child) {
                 color: #606266;
               }
@@ -1374,50 +1426,50 @@ onUnmounted(() => {
           }
         }
       }
-      
+
       .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 16px;
-        
+
         .info-item {
           display: flex;
           align-items: center;
-          
+
           label {
             min-width: 80px;
             font-weight: 500;
             color: #606266;
           }
-          
+
           span {
             color: #303133;
-            
+
             &.text-muted {
               color: #909399;
             }
           }
         }
       }
-      
+
       .permissions-list {
         padding: 12px;
         background: #f8f9fa;
         border-radius: 4px;
         min-height: 60px;
       }
-      
+
       .activity-list {
         .activity-item {
           display: flex;
           align-items: center;
           padding: 12px 0;
           border-bottom: 1px solid #f5f7fa;
-          
+
           &:last-child {
             border-bottom: none;
           }
-          
+
           .activity-icon {
             width: 32px;
             height: 32px;
@@ -1428,16 +1480,16 @@ onUnmounted(() => {
             justify-content: center;
             color: #409eff;
           }
-          
+
           .activity-content {
             flex: 1;
             margin-left: 12px;
-            
+
             .activity-title {
               font-weight: 500;
               color: #303133;
             }
-            
+
             .activity-time {
               font-size: 12px;
               color: #909399;
@@ -1448,16 +1500,16 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .batch-operation {
     .selected-users {
       margin-bottom: 20px;
-      
+
       p {
         margin: 0 0 8px 0;
         font-weight: 500;
       }
-      
+
       .user-tags {
         .el-tag {
           margin: 4px 4px 4px 0;
@@ -1474,35 +1526,35 @@ onUnmounted(() => {
       grid-template-columns: 1fr 1fr;
       padding: 16px;
     }
-    
+
     .page-header {
       padding: 16px;
-      
+
       .header-content {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
       }
     }
-    
+
     .main-content {
       padding: 0 16px 16px;
-      
+
       .toolbar {
         flex-direction: column;
         align-items: stretch;
         gap: 12px;
-        
+
         .search-section {
           flex-wrap: wrap;
         }
       }
     }
-    
+
     .form-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .user-detail .info-grid {
       grid-template-columns: 1fr;
     }

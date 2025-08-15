@@ -70,7 +70,7 @@ impl DriverSupervisor {
         }
     }
 
-    /// 运行单个驱动实例
+    /// 运行单个驱动实例（优化版本，使用批量发布）
     async fn run_driver(&self) -> anyhow::Result<()> {
         // 获取frame-bus sender
         let frame_tx = frame_bus::ring::get_publisher()?.clone();

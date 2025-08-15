@@ -11,16 +11,12 @@
           {{ driversStats.total }} 个驱动
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
-        <el-button
-          type="primary"
-          :icon="Plus"
-          @click="handleAddDriver"
-        >
+        <el-button type="primary" :icon="Plus" @click="handleAddDriver">
           新增驱动
         </el-button>
-        
+
         <el-dropdown trigger="click" @command="handleHeaderAction">
           <el-button :icon="MoreFilled" />
           <template #dropdown>
@@ -45,7 +41,7 @@
         </el-dropdown>
       </div>
     </div>
-    
+
     <!-- 驱动状态概览 -->
     <div class="drivers-overview">
       <el-row :gutter="16">
@@ -60,7 +56,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--running">
             <div class="stat-content">
@@ -72,7 +68,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--stopped">
             <div class="stat-content">
@@ -84,7 +80,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--error">
             <div class="stat-content">
@@ -98,7 +94,7 @@
         </el-col>
       </el-row>
     </div>
-    
+
     <!-- 筛选和搜索 -->
     <div class="drivers-filters">
       <el-card shadow="never">
@@ -111,7 +107,7 @@
               style="width: 300px"
               @search="handleSearch"
             />
-            
+
             <FilterPanel
               v-model="filterConditions"
               :filters="filterOptions"
@@ -122,18 +118,18 @@
               @filter="handleFilter"
             />
           </div>
-          
+
           <div class="filter-right">
             <ActionButtons
               :actions="batchActions"
               :disabled="selectedDrivers.length === 0"
-              @actionClick="handleBatchAction"
+              @action-click="handleBatchAction"
             />
           </div>
         </div>
       </el-card>
     </div>
-    
+
     <!-- 驱动列表表格 -->
     <div class="drivers-table">
       <LoadingCard
@@ -144,7 +140,7 @@
         :progress="loadingProgress"
         min-height="400px"
       />
-      
+
       <BaseTable
         v-else
         v-model:selection="selectedDrivers"
@@ -157,7 +153,7 @@
         @refresh="handleRefresh"
       />
     </div>
-    
+
     <!-- 驱动详情抽屉 -->
     <el-drawer
       v-model="detailDrawerVisible"
@@ -192,7 +188,7 @@
               </el-descriptions-item>
             </el-descriptions>
           </el-tab-pane>
-          
+
           <!-- 连接状态 -->
           <el-tab-pane label="连接状态" name="connection">
             <ConnectionStatus
@@ -201,28 +197,44 @@
               @disconnect="handleDriverDisconnect"
             />
           </el-tab-pane>
-          
+
           <!-- 性能指标 -->
           <el-tab-pane label="性能指标" name="metrics">
             <div class="driver-metrics">
               <el-row :gutter="16">
                 <el-col :span="12">
-                  <el-statistic title="数据点数量" :value="selectedDriver.dataPointCount || 0" />
+                  <el-statistic
+                    title="数据点数量"
+                    :value="selectedDriver.dataPointCount || 0"
+                  />
                 </el-col>
                 <el-col :span="12">
-                  <el-statistic title="消息数/秒" :value="selectedDriver.messageRate || 0" :precision="1" />
+                  <el-statistic
+                    title="消息数/秒"
+                    :value="selectedDriver.messageRate || 0"
+                    :precision="1"
+                  />
                 </el-col>
               </el-row>
-              
+
               <el-row :gutter="16" style="margin-top: 16px">
                 <el-col :span="12">
-                  <el-statistic title="平均延迟" :value="selectedDriver.avgLatency || 0" suffix="ms" />
+                  <el-statistic
+                    title="平均延迟"
+                    :value="selectedDriver.avgLatency || 0"
+                    suffix="ms"
+                  />
                 </el-col>
                 <el-col :span="12">
-                  <el-statistic title="错误率" :value="selectedDriver.errorRate || 0" suffix="%" :precision="2" />
+                  <el-statistic
+                    title="错误率"
+                    :value="selectedDriver.errorRate || 0"
+                    suffix="%"
+                    :precision="2"
+                  />
                 </el-col>
               </el-row>
-              
+
               <!-- 性能图表 -->
               <div style="margin-top: 20px">
                 <ChartContainer
@@ -235,7 +247,7 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 日志查看 -->
           <el-tab-pane label="日志查看" name="logs">
             <LogViewer
@@ -247,34 +259,31 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      
+
       <template #footer>
         <div class="drawer-footer">
           <el-button @click="detailDrawerVisible = false">关闭</el-button>
-          <el-button 
+          <el-button
             v-if="selectedDriver?.status === 'stopped'"
             type="success"
             @click="handleDriverStart(selectedDriver)"
           >
             启动驱动
           </el-button>
-          <el-button 
+          <el-button
             v-if="selectedDriver?.status === 'running'"
             type="warning"
             @click="handleDriverStop(selectedDriver)"
           >
             停止驱动
           </el-button>
-          <el-button 
-            type="primary"
-            @click="handleDriverConfig(selectedDriver)"
-          >
+          <el-button type="primary" @click="handleDriverConfig(selectedDriver)">
             配置驱动
           </el-button>
         </div>
       </template>
     </el-drawer>
-    
+
     <!-- 驱动配置对话框 -->
     <el-dialog
       v-model="configDialogVisible"
@@ -292,7 +301,7 @@
         @cancel="handleConfigCancel"
       />
     </el-dialog>
-    
+
     <!-- 模板管理对话框 -->
     <el-dialog
       v-model="templateDialogVisible"
@@ -305,11 +314,9 @@
           <el-button type="primary" @click="handleCreateTemplate">
             新建模板
           </el-button>
-          <el-button @click="handleImportTemplate">
-            导入模板
-          </el-button>
+          <el-button @click="handleImportTemplate"> 导入模板 </el-button>
         </div>
-        
+
         <BaseTable
           :data="driverTemplates"
           :columns="templateColumns"
@@ -317,7 +324,7 @@
         />
       </div>
     </el-dialog>
-    
+
     <!-- 文件上传对话框 -->
     <el-dialog
       v-model="uploadDialogVisible"
@@ -331,7 +338,7 @@
         @success="handleConfigUploadSuccess"
       />
     </el-dialog>
-    
+
     <!-- 驱动文件上传对话框 -->
     <el-dialog
       v-model="driverUploadDialogVisible"
@@ -356,7 +363,7 @@
             <p>驱动文件必须包含 get_driver_meta 和 create_driver 符号。</p>
           </template>
         </el-alert>
-        
+
         <el-upload
           ref="driverUploadRef"
           class="driver-upload"
@@ -373,7 +380,7 @@
           :file-list="driverFileList"
         >
           <el-icon class="el-icon--upload">
-            <upload-filled />
+            <UploadFilled />
           </el-icon>
           <div class="el-upload__text">
             将驱动文件拖到此处，或<em>点击上传</em>
@@ -385,15 +392,15 @@
           </template>
         </el-upload>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="handleDriverUploadDialogClose">取消</el-button>
-          <el-button 
-            type="primary" 
-            @click="submitDriverUpload"
+          <el-button
+            type="primary"
             :loading="driverUploading"
             :disabled="driverFileList.length === 0"
+            @click="submitDriverUpload"
           >
             上传驱动
           </el-button>
@@ -404,9 +411,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted, h } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useRouter } from 'vue-router'
 import {
   Connection,
   Plus,
@@ -419,14 +423,30 @@ import {
   VideoPlay,
   VideoPause,
   Warning,
-  UploadFilled
+  UploadFilled,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, reactive, onMounted, onUnmounted, h } from 'vue'
+import { useRouter } from 'vue-router'
 
 // 导入基础组件
-import { BaseTable, SearchBox, FilterPanel, ActionButtons, LoadingCard, StatusTag } from '../../components/base'
+import {
+  BaseTable,
+  SearchBox,
+  FilterPanel,
+  ActionButtons,
+  LoadingCard,
+  StatusTag,
+} from '../../components/base'
 
 // 导入业务组件
-import { ConnectionStatus, ProtocolConfig, ChartContainer, LogViewer, FileUploader } from '../../components/business'
+import {
+  ConnectionStatus,
+  ProtocolConfig,
+  ChartContainer,
+  LogViewer,
+  FileUploader,
+} from '../../components/business'
 
 // 导入 Store
 import { useDriversStore } from '@/stores/drivers'
@@ -511,9 +531,9 @@ const driversStats = computed<DriversStats>(() => {
     total: storeDrivers.length,
     running: 0,
     stopped: 0,
-    error: 0
+    error: 0,
   }
-  
+
   storeDrivers.forEach(driver => {
     switch (driver.status) {
       case 'Loaded':
@@ -527,7 +547,7 @@ const driversStats = computed<DriversStats>(() => {
         break
     }
   })
-  
+
   return stats
 })
 
@@ -537,32 +557,37 @@ const drivers = computed(() => driversStore.state.drivers || [])
 const filteredDrivers = computed(() => {
   const storeDrivers = driversStore.state.drivers || []
   let result = storeDrivers
-  
+
   // 搜索过滤
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(driver => 
-      driver.filename.toLowerCase().includes(keyword) ||
-      (driver.info?.protocol || '').toLowerCase().includes(keyword) ||
-      (driver.info?.name || '').toLowerCase().includes(keyword)
+    result = result.filter(
+      driver =>
+        driver.filename.toLowerCase().includes(keyword) ||
+        (driver.info?.protocol || '').toLowerCase().includes(keyword) ||
+        (driver.info?.name || '').toLowerCase().includes(keyword)
     )
   }
-  
+
   // 状态过滤
   if (filterConditions.value.status) {
     const statusMap = {
-      'running': 'Loaded',
-      'stopped': 'Unloaded', 
-      'error': 'Failed'
+      running: 'Loaded',
+      stopped: 'Unloaded',
+      error: 'Failed',
     }
-    result = result.filter(driver => driver.status === statusMap[filterConditions.value.status])
+    result = result.filter(
+      driver => driver.status === statusMap[filterConditions.value.status]
+    )
   }
-  
+
   // 协议过滤
   if (filterConditions.value.protocol) {
-    result = result.filter(driver => driver.info?.protocol === filterConditions.value.protocol)
+    result = result.filter(
+      driver => driver.info?.protocol === filterConditions.value.protocol
+    )
   }
-  
+
   return result
 })
 
@@ -587,8 +612,8 @@ const filterOptions = [
       { label: '运行中', value: 'running' },
       { label: '已停止', value: 'stopped' },
       { label: '异常', value: 'error' },
-      { label: '连接中', value: 'connecting' }
-    ]
+      { label: '连接中', value: 'connecting' },
+    ],
   },
   {
     key: 'protocol',
@@ -599,21 +624,21 @@ const filterOptions = [
       { label: 'Modbus RTU', value: 'modbus_rtu' },
       { label: 'OPC UA', value: 'opcua' },
       { label: 'MQTT5', value: 'mqtt5' },
-      { label: 'Ethernet/IP', value: 'ethernet_ip' }
-    ]
+      { label: 'Ethernet/IP', value: 'ethernet_ip' },
+    ],
   },
   {
     key: 'createTime',
     label: '创建时间',
-    type: 'daterange'
-  }
+    type: 'daterange',
+  },
 ]
 
 const quickFilters = [
   { label: '运行中', key: 'status', value: 'running' },
   { label: '异常', key: 'status', value: 'error' },
   { label: 'Modbus', key: 'protocol', value: 'modbus_tcp' },
-  { label: 'OPC UA', key: 'protocol', value: 'opcua' }
+  { label: 'OPC UA', key: 'protocol', value: 'opcua' },
 ]
 
 // 批量操作
@@ -626,8 +651,8 @@ const batchActions = [
     confirm: {
       title: '确定要启动选中的驱动吗？',
       confirmText: '启动',
-      cancelText: '取消'
-    }
+      cancelText: '取消',
+    },
   },
   {
     key: 'stop',
@@ -637,8 +662,8 @@ const batchActions = [
     confirm: {
       title: '确定要停止选中的驱动吗？',
       confirmText: '停止',
-      cancelText: '取消'
-    }
+      cancelText: '取消',
+    },
   },
   {
     key: 'restart',
@@ -648,8 +673,8 @@ const batchActions = [
     confirm: {
       title: '确定要重启选中的驱动吗？',
       confirmText: '重启',
-      cancelText: '取消'
-    }
+      cancelText: '取消',
+    },
   },
   {
     key: 'delete',
@@ -660,9 +685,9 @@ const batchActions = [
       title: '确定要删除选中的驱动吗？此操作不可恢复！',
       confirmText: '删除',
       cancelText: '取消',
-      type: 'warning'
-    }
-  }
+      type: 'warning',
+    },
+  },
 ]
 
 // 表格列配置
@@ -671,26 +696,26 @@ const tableColumns = [
     key: 'filename',
     label: '驱动文件',
     width: 200,
-    sortable: true
+    sortable: true,
   },
   {
     key: 'info.name',
     label: '驱动名称',
     width: 150,
-    formatter: (row: any) => row.info?.name || '未知'
+    formatter: (row: any) => row.info?.name || '未知',
   },
   {
     key: 'info.protocol',
     label: '协议类型',
     width: 120,
     type: 'tag',
-    formatter: (row: any) => row.info?.protocol || '未知'
+    formatter: (row: any) => row.info?.protocol || '未知',
   },
   {
     key: 'info.version',
     label: '版本',
     width: 100,
-    formatter: (row: any) => row.info?.version || '未知'
+    formatter: (row: any) => row.info?.version || '未知',
   },
   {
     key: 'status',
@@ -699,12 +724,12 @@ const tableColumns = [
     type: 'custom',
     render: (row: any) => {
       const statusMap = {
-        'Loaded': 'running',
-        'Unloaded': 'stopped',
-        'Failed': 'error'
+        Loaded: 'running',
+        Unloaded: 'stopped',
+        Failed: 'error',
       }
       return h(StatusTag, { status: statusMap[row.status] || 'stopped' })
-    }
+    },
   },
   {
     key: 'file_size',
@@ -713,21 +738,23 @@ const tableColumns = [
     align: 'center',
     formatter: (row: any) => {
       const size = row.file_size || 0
-      return size > 1024 * 1024 ? `${(size / 1024 / 1024).toFixed(1)}MB` : `${(size / 1024).toFixed(1)}KB`
-    }
+      return size > 1024 * 1024
+        ? `${(size / 1024 / 1024).toFixed(1)}MB`
+        : `${(size / 1024).toFixed(1)}KB`
+    },
   },
   {
     key: 'uploaded_at',
     label: '上传时间',
     width: 160,
-    type: 'datetime'
+    type: 'datetime',
   },
   {
     key: 'last_loaded_at',
     label: '最后加载',
     width: 160,
     type: 'datetime',
-    formatter: (row: any) => row.last_loaded_at || '未加载'
+    formatter: (row: any) => row.last_loaded_at || '未加载',
   },
   {
     key: 'actions',
@@ -739,27 +766,27 @@ const tableColumns = [
         key: 'view',
         label: '详情',
         type: 'primary',
-        icon: 'View'
+        icon: 'View',
       },
       {
         key: 'config',
         label: '配置',
         type: 'default',
-        icon: 'Setting'
+        icon: 'Setting',
       },
       {
         key: 'start',
         label: '启动',
         type: 'success',
         icon: 'VideoPlay',
-        show: (row: Driver) => row.status !== 'running'
+        show: (row: Driver) => row.status !== 'running',
       },
       {
         key: 'stop',
         label: '停止',
         type: 'warning',
         icon: 'VideoPause',
-        show: (row: Driver) => row.status === 'running'
+        show: (row: Driver) => row.status === 'running',
       },
       {
         key: 'delete',
@@ -769,11 +796,11 @@ const tableColumns = [
         confirm: {
           title: '确定要删除这个驱动吗？',
           confirmText: '删除',
-          cancelText: '取消'
-        }
-      }
-    ]
-  }
+          cancelText: '取消',
+        },
+      },
+    ],
+  },
 ]
 
 // 分页配置
@@ -785,7 +812,8 @@ const paginationConfig = computed(() => ({
   showQuickJumper: true,
   showTotal: true,
   onChange: (page: number) => driversStore.changePage(page),
-  onShowSizeChange: (current: number, size: number) => driversStore.changePageSize(size)
+  onShowSizeChange: (current: number, size: number) =>
+    driversStore.changePageSize(size),
 }))
 
 // 模板表格列
@@ -802,9 +830,9 @@ const templateColumns = [
     actions: [
       { key: 'use', label: '使用', type: 'primary', icon: 'Check' },
       { key: 'edit', label: '编辑', type: 'default', icon: 'Edit' },
-      { key: 'delete', label: '删除', type: 'danger', icon: 'Delete' }
-    ]
-  }
+      { key: 'delete', label: '删除', type: 'danger', icon: 'Delete' },
+    ],
+  },
 ]
 
 // 配置上传类型
@@ -814,15 +842,15 @@ const configUploadTypes = [
     label: 'JSON配置',
     accept: '.json',
     maxSize: 10 * 1024 * 1024,
-    description: '支持JSON格式配置文件，最大10MB'
+    description: '支持JSON格式配置文件，最大10MB',
   },
   {
     value: 'xml',
     label: 'XML配置',
     accept: '.xml',
     maxSize: 10 * 1024 * 1024,
-    description: '支持XML格式配置文件，最大10MB'
-  }
+    description: '支持XML格式配置文件，最大10MB',
+  },
 ]
 
 // 事件处理方法
@@ -859,7 +887,7 @@ const handleBatchAction = (action: string) => {
     ElMessage.warning('请先选择要操作的驱动')
     return
   }
-  
+
   switch (action) {
     case 'start':
       handleBatchStart()
@@ -891,16 +919,16 @@ const handleDriverConfig = (driver: Driver) => {
 const handleDriverStart = async (driver: Driver) => {
   try {
     ElMessage.loading('正在启动驱动...', 0)
-    
+
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 更新驱动状态
     const index = drivers.value.findIndex(d => d.id === driver.id)
     if (index > -1) {
       driversStore.updateDriverStatus(driver.id, 'Loaded')
     }
-    
+
     ElMessage.closeAll()
     ElMessage.success(`驱动 ${driver.name} 启动成功`)
   } catch (error) {
@@ -912,14 +940,14 @@ const handleDriverStart = async (driver: Driver) => {
 const handleDriverStop = async (driver: Driver) => {
   try {
     ElMessage.loading('正在停止驱动...', 0)
-    
+
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     const index = drivers.value.findIndex(d => d.id === driver.id)
     if (index > -1) {
       driversStore.updateDriverStatus(driver.id, 'Unloaded')
     }
-    
+
     ElMessage.closeAll()
     ElMessage.success(`驱动 ${driver.name} 停止成功`)
   } catch (error) {
@@ -954,36 +982,40 @@ const handleDeleteDriver = async (driver: Driver) => {
 }
 
 const handleBatchStart = async () => {
-  const stoppedDrivers = selectedDrivers.value.filter(d => d.status !== 'running')
+  const stoppedDrivers = selectedDrivers.value.filter(
+    d => d.status !== 'running'
+  )
   if (stoppedDrivers.length === 0) {
     ElMessage.warning('选中的驱动都已在运行中')
     return
   }
-  
+
   ElMessage.loading(`正在启动 ${stoppedDrivers.length} 个驱动...`, 0)
-  
+
   for (const driver of stoppedDrivers) {
     await handleDriverStart(driver)
   }
-  
+
   ElMessage.closeAll()
   ElMessage.success(`成功启动 ${stoppedDrivers.length} 个驱动`)
   selectedDrivers.value = []
 }
 
 const handleBatchStop = async () => {
-  const runningDrivers = selectedDrivers.value.filter(d => d.status === 'running')
+  const runningDrivers = selectedDrivers.value.filter(
+    d => d.status === 'running'
+  )
   if (runningDrivers.length === 0) {
     ElMessage.warning('选中的驱动都已停止')
     return
   }
-  
+
   ElMessage.loading(`正在停止 ${runningDrivers.length} 个驱动...`, 0)
-  
+
   for (const driver of runningDrivers) {
     await handleDriverStop(driver)
   }
-  
+
   ElMessage.closeAll()
   ElMessage.success(`成功停止 ${runningDrivers.length} 个驱动`)
   selectedDrivers.value = []
@@ -991,14 +1023,14 @@ const handleBatchStop = async () => {
 
 const handleBatchRestart = async () => {
   ElMessage.loading(`正在重启 ${selectedDrivers.value.length} 个驱动...`, 0)
-  
+
   for (const driver of selectedDrivers.value) {
     if (driver.status === 'running') {
       await handleDriverStop(driver)
     }
     await handleDriverStart(driver)
   }
-  
+
   ElMessage.closeAll()
   ElMessage.success(`成功重启 ${selectedDrivers.value.length} 个驱动`)
   selectedDrivers.value = []
@@ -1006,11 +1038,11 @@ const handleBatchRestart = async () => {
 
 const handleBatchDelete = async () => {
   try {
-    const deletePromises = selectedDrivers.value.map(driver => 
+    const deletePromises = selectedDrivers.value.map(driver =>
       driversStore.deleteDriver(driver.id)
     )
     await Promise.all(deletePromises)
-    
+
     ElMessage.success(`成功删除 ${selectedDrivers.value.length} 个驱动`)
     selectedDrivers.value = []
   } catch (error) {
@@ -1051,21 +1083,21 @@ const handleExportConfig = () => {
       protocol: d.protocol,
       address: d.address,
       port: d.port,
-      config: d.config
+      config: d.config,
     })),
-    exportTime: new Date().toISOString()
+    exportTime: new Date().toISOString(),
   }
-  
+
   const blob = new Blob([JSON.stringify(config, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `drivers_config_${new Date().toISOString().split('T')[0]}.json`
   a.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('配置导出成功')
 }
@@ -1073,7 +1105,7 @@ const handleExportConfig = () => {
 const handleRefresh = () => {
   loading.value = true
   loadingProgress.value = 0
-  
+
   const interval = setInterval(() => {
     loadingProgress.value += 10
     if (loadingProgress.value >= 100) {
@@ -1111,7 +1143,7 @@ const handleConfigSave = async (config: any) => {
 
 const handleConfigTest = async (config: any) => {
   ElMessage.loading('正在测试连接...', 0)
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 2000))
     ElMessage.closeAll()
@@ -1197,7 +1229,7 @@ const submitDriverUpload = () => {
     ElMessage.warning('请选择要上传的驱动文件')
     return
   }
-  
+
   driverUploading.value = true
   driverUploadRef.value?.submit()
 }
@@ -1206,19 +1238,23 @@ const handleDriverUploadProgress = (event: any, file: any, fileList: any) => {
   // 可以在这里更新上传进度
 }
 
-const handleDriverUploadSuccess = async (response: any, file: any, fileList: any) => {
+const handleDriverUploadSuccess = async (
+  response: any,
+  file: any,
+  fileList: any
+) => {
   driverUploading.value = false
-  
+
   if (response.success) {
     ElMessage.success(`驱动文件 ${file.name} 上传成功`)
     handleDriverUploadDialogClose()
-    
+
     // 刷新驱动列表
     await driversStore.fetchDrivers()
     await driversStore.fetchDriverStatus()
   } else {
     ElMessage.warning(`驱动上传完成，但加载失败: ${response.message}`)
-    
+
     // 即使加载失败也要刷新列表，因为文件可能已经上传
     await driversStore.fetchDrivers()
     await driversStore.fetchDriverStatus()
@@ -1241,7 +1277,7 @@ const getProtocolTagType = (protocol: string) => {
     modbus_rtu: 'success',
     opcua: 'warning',
     mqtt5: 'info',
-    ethernet_ip: 'danger'
+    ethernet_ip: 'danger',
   }
   return typeMap[protocol] || 'default'
 }
@@ -1256,14 +1292,20 @@ const getConnectionInfo = (driver: Driver) => {
     name: driver.name,
     status: driver.status === 'running' ? 'connected' : 'disconnected',
     protocol: driver.protocol,
-    host: driver.address.includes('://') ? driver.address.split('://')[1].split(':')[0] : driver.address.split(':')[0],
-    port: driver.port || (driver.address.includes(':') ? parseInt(driver.address.split(':').pop() || '0') : 0),
+    host: driver.address.includes('://')
+      ? driver.address.split('://')[1].split(':')[0]
+      : driver.address.split(':')[0],
+    port:
+      driver.port ||
+      (driver.address.includes(':')
+        ? parseInt(driver.address.split(':').pop() || '0')
+        : 0),
     lastUpdate: driver.updateTime,
     metrics: {
       latency: driver.avgLatency || 0,
       packetLoss: driver.errorRate || 0,
-      throughput: (driver.messageRate || 0) * 64 // 假设每条消息64字节
-    }
+      throughput: (driver.messageRate || 0) * 64, // 假设每条消息64字节
+    },
   }
 }
 
@@ -1271,34 +1313,34 @@ const getDriverChartData = (driver: Driver) => {
   // 生成模拟的性能数据
   const now = Date.now()
   const data = []
-  
+
   for (let i = 29; i >= 0; i--) {
     const time = now - i * 60000 // 30分钟的数据
     data.push({
       timestamp: new Date(time),
       messageRate: (driver.messageRate || 0) + Math.random() * 0.5 - 0.25,
       latency: (driver.avgLatency || 0) + Math.random() * 10 - 5,
-      errorRate: (driver.errorRate || 0) + Math.random() * 0.1
+      errorRate: (driver.errorRate || 0) + Math.random() * 0.1,
     })
   }
-  
+
   return {
     series: [
       {
         name: '消息率',
-        data: data.map(d => ({ x: d.timestamp, y: d.messageRate }))
+        data: data.map(d => ({ x: d.timestamp, y: d.messageRate })),
       },
       {
         name: '延迟',
         data: data.map(d => ({ x: d.timestamp, y: d.latency })),
-        yAxis: 1
+        yAxis: 1,
       },
       {
         name: '错误率',
         data: data.map(d => ({ x: d.timestamp, y: d.errorRate })),
-        yAxis: 2
-      }
-    ]
+        yAxis: 2,
+      },
+    ],
   }
 }
 
@@ -1310,27 +1352,29 @@ const getDriverLogs = (driver: Driver) => {
       timestamp: new Date(),
       level: 'info',
       source: driver.name,
-      message: `驱动 ${driver.name} 运行正常，消息率: ${driver.messageRate}/s`
+      message: `驱动 ${driver.name} 运行正常，消息率: ${driver.messageRate}/s`,
     },
     {
       id: '2',
       timestamp: new Date(Date.now() - 60000),
       level: 'debug',
       source: driver.name,
-      message: `建立连接到 ${driver.address}`
+      message: `建立连接到 ${driver.address}`,
     },
     {
       id: '3',
       timestamp: new Date(Date.now() - 120000),
       level: 'info',
       source: driver.name,
-      message: `驱动启动完成，加载 ${driver.dataPointCount} 个数据点`
-    }
+      message: `驱动启动完成，加载 ${driver.dataPointCount} 个数据点`,
+    },
   ]
 }
 
 const configDialogTitle = computed(() => {
-  return editingDriver.value ? `配置驱动 - ${editingDriver.value.name}` : '驱动配置'
+  return editingDriver.value
+    ? `配置驱动 - ${editingDriver.value.name}`
+    : '驱动配置'
 })
 
 // 实时数据更新
@@ -1344,7 +1388,7 @@ const startRealtimeUpdate = () => {
       console.warn('Failed to update driver status:', error)
     }
   }, 5000)
-  
+
   return updateInterval
 }
 
@@ -1352,13 +1396,13 @@ const startRealtimeUpdate = () => {
 onMounted(async () => {
   // 加载驱动列表数据
   await driversStore.fetchDrivers()
-  
+
   // 加载驱动状态统计
   await driversStore.fetchDriverStatus()
-  
+
   // 启动实时更新
   const updateInterval = startRealtimeUpdate()
-  
+
   // 组件卸载时清理
   onUnmounted(() => {
     if (updateInterval) {
@@ -1380,12 +1424,12 @@ onMounted(async () => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   .header-title {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     h1 {
       margin: 0;
       font-size: 24px;
@@ -1393,7 +1437,7 @@ onMounted(async () => {
       color: var(--el-text-color-primary);
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 12px;
@@ -1402,34 +1446,34 @@ onMounted(async () => {
 
 .drivers-overview {
   margin-bottom: 20px;
-  
+
   .stat-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: var(--el-box-shadow);
     }
-    
+
     .stat-content {
       position: relative;
       z-index: 2;
-      
+
       .stat-number {
         font-size: 32px;
         font-weight: bold;
         margin-bottom: 4px;
       }
-      
+
       .stat-label {
         font-size: 14px;
         color: var(--el-text-color-secondary);
       }
     }
-    
+
     .stat-icon {
       position: absolute;
       right: 16px;
@@ -1438,42 +1482,42 @@ onMounted(async () => {
       font-size: 48px;
       opacity: 0.1;
     }
-    
+
     &.stat-card--total {
       .stat-number {
         color: var(--el-color-primary);
       }
-      
+
       .stat-icon {
         color: var(--el-color-primary);
       }
     }
-    
+
     &.stat-card--running {
       .stat-number {
         color: var(--el-color-success);
       }
-      
+
       .stat-icon {
         color: var(--el-color-success);
       }
     }
-    
+
     &.stat-card--stopped {
       .stat-number {
         color: var(--el-color-info);
       }
-      
+
       .stat-icon {
         color: var(--el-color-info);
       }
     }
-    
+
     &.stat-card--error {
       .stat-number {
         color: var(--el-color-danger);
       }
-      
+
       .stat-icon {
         color: var(--el-color-danger);
       }
@@ -1483,18 +1527,18 @@ onMounted(async () => {
 
 .drivers-filters {
   margin-bottom: 20px;
-  
+
   .filter-content {
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 16px;
-    
+
     .filter-left {
       display: flex;
       align-items: center;
     }
-    
+
     .filter-right {
       display: flex;
       gap: 8px;
@@ -1512,7 +1556,7 @@ onMounted(async () => {
   .driver-metrics {
     .el-row {
       margin-bottom: 16px;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
@@ -1542,12 +1586,12 @@ onMounted(async () => {
       width: 100%;
     }
   }
-  
+
   .el-alert {
     ul {
       margin: 8px 0;
       padding-left: 20px;
-      
+
       li {
         margin: 4px 0;
       }
@@ -1560,24 +1604,24 @@ onMounted(async () => {
   .drivers-list-page {
     padding: 8px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .drivers-overview {
     .el-col {
       margin-bottom: 12px;
     }
   }
-  
+
   .filter-content {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    
+
     .filter-left,
     .filter-right {
       width: 100%;

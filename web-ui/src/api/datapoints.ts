@@ -159,21 +159,27 @@ export const datapointsApi = {
   /**
    * 批量激活数据点
    */
-  batchActivate(ids: string[]): Promise<{ success: boolean; successCount: number; failedCount: number }> {
+  batchActivate(
+    ids: string[]
+  ): Promise<{ success: boolean; successCount: number; failedCount: number }> {
     return post('/datapoints/batch/activate', { ids })
   },
 
   /**
    * 批量停用数据点
    */
-  batchDeactivate(ids: string[]): Promise<{ success: boolean; successCount: number; failedCount: number }> {
+  batchDeactivate(
+    ids: string[]
+  ): Promise<{ success: boolean; successCount: number; failedCount: number }> {
     return post('/datapoints/batch/deactivate', { ids })
   },
 
   /**
    * 批量删除数据点
    */
-  batchDelete(ids: string[]): Promise<{ success: boolean; successCount: number; failedCount: number }> {
+  batchDelete(
+    ids: string[]
+  ): Promise<{ success: boolean; successCount: number; failedCount: number }> {
     return del('/datapoints/batch', { ids })
   },
 
@@ -194,7 +200,11 @@ export const datapointsApi = {
   /**
    * 创建数据点分组
    */
-  createGroup(data: { name: string; description?: string; parentId?: string }): Promise<DataPointGroup> {
+  createGroup(data: {
+    name: string
+    description?: string
+    parentId?: string
+  }): Promise<DataPointGroup> {
     return post('/datapoints/groups', data)
   },
 
@@ -205,7 +215,7 @@ export const datapointsApi = {
     return get(`/datapoints/${query.datapointId}/history`, {
       startTime: query.startTime.toISOString(),
       endTime: query.endTime.toISOString(),
-      interval: query.interval
+      interval: query.interval,
     })
   },
 
@@ -219,21 +229,30 @@ export const datapointsApi = {
   /**
    * 创建报警规则
    */
-  createAlarmRule(data: Omit<AlarmRule, 'id' | 'createTime'>): Promise<AlarmRule> {
+  createAlarmRule(
+    data: Omit<AlarmRule, 'id' | 'createTime'>
+  ): Promise<AlarmRule> {
     return post(`/datapoints/${data.datapointId}/alarm-rules`, data)
   },
 
   /**
    * 更新报警规则
    */
-  updateAlarmRule(datapointId: string, ruleId: string, data: Partial<AlarmRule>): Promise<AlarmRule> {
+  updateAlarmRule(
+    datapointId: string,
+    ruleId: string,
+    data: Partial<AlarmRule>
+  ): Promise<AlarmRule> {
     return put(`/datapoints/${datapointId}/alarm-rules/${ruleId}`, data)
   },
 
   /**
    * 删除报警规则
    */
-  deleteAlarmRule(datapointId: string, ruleId: string): Promise<{ success: boolean }> {
+  deleteAlarmRule(
+    datapointId: string,
+    ruleId: string
+  ): Promise<{ success: boolean }> {
     return del(`/datapoints/${datapointId}/alarm-rules/${ruleId}`)
-  }
+  },
 }

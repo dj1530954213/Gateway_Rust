@@ -12,7 +12,7 @@
             <div class="stat-label">总设备数</div>
           </div>
         </div>
-        
+
         <div class="stat-item online">
           <div class="stat-icon">
             <el-icon><CircleCheck /></el-icon>
@@ -22,7 +22,7 @@
             <div class="stat-label">在线设备</div>
           </div>
         </div>
-        
+
         <div class="stat-item offline">
           <div class="stat-icon">
             <el-icon><CircleClose /></el-icon>
@@ -32,7 +32,7 @@
             <div class="stat-label">离线设备</div>
           </div>
         </div>
-        
+
         <div class="stat-item error">
           <div class="stat-icon">
             <el-icon><Warning /></el-icon>
@@ -43,7 +43,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 连接状态进度条 -->
       <div class="connection-progress">
         <div class="progress-header">
@@ -64,11 +64,11 @@
       <div v-if="loading" class="list-loading">
         <el-skeleton :rows="3" animated />
       </div>
-      
+
       <div v-else-if="devices.length === 0" class="list-empty">
         <el-empty description="暂无设备数据" :image-size="80" />
       </div>
-      
+
       <div v-else class="device-items">
         <div
           v-for="device in devices"
@@ -88,25 +88,32 @@
                 {{ getStatusText(device.status) }}
               </el-tag>
             </div>
-            
+
             <div class="device-details">
               <div class="detail-item">
                 <span class="detail-label">协议:</span>
-                <span class="detail-value">{{ getProtocolDisplayName(device.protocol) }}</span>
+                <span class="detail-value">{{
+                  getProtocolDisplayName(device.protocol)
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">地址:</span>
-                <span class="detail-value">{{ formatDeviceAddress(device) }}</span>
+                <span class="detail-value">{{
+                  formatDeviceAddress(device)
+                }}</span>
               </div>
               <div class="detail-item">
                 <span class="detail-label">最后通信:</span>
-                <span class="detail-value" :class="{ 'outdated': isOutdated(device.lastCommunication) }">
+                <span
+                  class="detail-value"
+                  :class="{ outdated: isOutdated(device.lastCommunication) }"
+                >
                   {{ formatLastCommunication(device.lastCommunication) }}
                 </span>
               </div>
             </div>
           </div>
-          
+
           <div class="device-metrics">
             <div class="metric-item">
               <div class="metric-label">数据点</div>
@@ -114,7 +121,10 @@
             </div>
             <div class="metric-item">
               <div class="metric-label">错误率</div>
-              <div class="metric-value" :class="{ 'high-error': device.errorRate > 5 }">
+              <div
+                class="metric-value"
+                :class="{ 'high-error': device.errorRate > 5 }"
+              >
                 {{ device.errorRate || 0 }}%
               </div>
             </div>
@@ -123,7 +133,7 @@
               <div class="metric-value">{{ device.responseTime || 0 }}ms</div>
             </div>
           </div>
-          
+
           <div class="device-actions">
             <el-button-group size="small">
               <el-tooltip content="测试连接" placement="top">
@@ -135,7 +145,7 @@
                   <el-icon><Connection /></el-icon>
                 </el-button>
               </el-tooltip>
-              
+
               <el-tooltip content="重启设备" placement="top">
                 <el-button
                   type="warning"
@@ -145,22 +155,19 @@
                   <el-icon><Refresh /></el-icon>
                 </el-button>
               </el-tooltip>
-              
+
               <el-tooltip content="查看详情" placement="top">
-                <el-button
-                  type="info"
-                  @click.stop="viewDetails(device)"
-                >
+                <el-button type="info" @click.stop="viewDetails(device)">
                   <el-icon><View /></el-icon>
                 </el-button>
               </el-tooltip>
             </el-button-group>
           </div>
-          
+
           <!-- 实时状态指示器 -->
           <div class="status-indicator">
-            <div 
-              class="indicator-dot" 
+            <div
+              class="indicator-dot"
               :class="`dot-${device.status}`"
               :title="getStatusText(device.status)"
             ></div>
@@ -168,7 +175,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 协议分布图表 -->
     <div class="protocol-distribution">
       <div class="distribution-header">
@@ -177,7 +184,7 @@
           <el-icon><Refresh /></el-icon>
         </el-button>
       </div>
-      
+
       <div class="protocol-chart">
         <div
           v-for="(count, protocol) in protocolStats"
@@ -185,12 +192,14 @@
           class="protocol-bar"
         >
           <div class="protocol-info">
-            <span class="protocol-name">{{ getProtocolDisplayName(protocol) }}</span>
+            <span class="protocol-name">{{
+              getProtocolDisplayName(protocol)
+            }}</span>
             <span class="protocol-count">{{ count }}</span>
           </div>
           <div class="protocol-progress">
-            <div 
-              class="progress-bar" 
+            <div
+              class="progress-bar"
               :style="{ width: `${(count / deviceStats.total) * 100}%` }"
             ></div>
           </div>
@@ -219,20 +228,20 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  Monitor, 
-  CircleCheck, 
-  CircleClose, 
-  Warning, 
-  Connection, 
-  Refresh, 
-  View 
+import {
+  Monitor,
+  CircleCheck,
+  CircleClose,
+  Warning,
+  Connection,
+  Refresh,
+  View,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch } from 'vue'
 
-import { formatDateTime } from '@/utils/date'
 import type { DeviceVO } from '@/api/devices'
+import { formatDateTime } from '@/utils/date'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -253,12 +262,12 @@ const deviceStats = computed(() => {
   const online = props.devices.filter(d => d.status === 'online').length
   const offline = props.devices.filter(d => d.status === 'offline').length
   const error = props.devices.filter(d => d.status === 'error').length
-  
+
   return {
     total,
     online,
     offline,
-    error
+    error,
   }
 })
 
@@ -281,10 +290,10 @@ const connectionHealthStatus = computed(() => {
  */
 function getStatusTagType(status: string): string {
   const typeMap: Record<string, string> = {
-    'online': 'success',
-    'offline': 'info',
-    'error': 'danger',
-    'connecting': 'warning'
+    online: 'success',
+    offline: 'info',
+    error: 'danger',
+    connecting: 'warning',
   }
   return typeMap[status] || 'info'
 }
@@ -294,10 +303,10 @@ function getStatusTagType(status: string): string {
  */
 function getStatusText(status: string): string {
   const textMap: Record<string, string> = {
-    'online': '在线',
-    'offline': '离线', 
-    'error': '异常',
-    'connecting': '连接中'
+    online: '在线',
+    offline: '离线',
+    error: '异常',
+    connecting: '连接中',
   }
   return textMap[status] || status
 }
@@ -307,11 +316,11 @@ function getStatusText(status: string): string {
  */
 function getProtocolDisplayName(protocol: string): string {
   const nameMap: Record<string, string> = {
-    'ModbusTcp': 'Modbus TCP',
-    'ModbusRtu': 'Modbus RTU',
-    'OpcUa': 'OPC UA',
-    'Mqtt': 'MQTT',
-    'Http': 'HTTP'
+    ModbusTcp: 'Modbus TCP',
+    ModbusRtu: 'Modbus RTU',
+    OpcUa: 'OPC UA',
+    Mqtt: 'MQTT',
+    Http: 'HTTP',
   }
   return nameMap[protocol] || protocol
 }
@@ -338,12 +347,12 @@ function formatDeviceAddress(device: DeviceVO): string {
  */
 function formatLastCommunication(time?: string): string {
   if (!time) return '从未通信'
-  
+
   const now = new Date()
   const lastTime = new Date(time)
   const diffMs = now.getTime() - lastTime.getTime()
   const diffMinutes = Math.floor(diffMs / 60000)
-  
+
   if (diffMinutes < 1) return '刚刚'
   if (diffMinutes < 60) return `${diffMinutes}分钟前`
   if (diffMinutes < 1440) return `${Math.floor(diffMinutes / 60)}小时前`
@@ -355,11 +364,11 @@ function formatLastCommunication(time?: string): string {
  */
 function isOutdated(time?: string): boolean {
   if (!time) return true
-  
+
   const now = new Date()
   const lastTime = new Date(time)
   const diffMs = now.getTime() - lastTime.getTime()
-  
+
   return diffMs > 5 * 60 * 1000 // 5分钟无通信视为过时
 }
 
@@ -375,14 +384,14 @@ function handleDeviceClick(device: DeviceVO) {
  */
 async function testConnection(device: DeviceVO) {
   device.testing = true
-  
+
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // 模拟测试结果
     const success = Math.random() > 0.3
-    
+
     if (success) {
       device.status = 'online'
       device.lastCommunication = new Date().toISOString()
@@ -409,19 +418,19 @@ async function restartDevice(device: DeviceVO) {
       {
         type: 'warning',
         confirmButtonText: '重启',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
-    
+
     device.restarting = true
     device.status = 'connecting'
-    
+
     // 模拟重启过程
     await new Promise(resolve => setTimeout(resolve, 3000))
-    
+
     device.status = 'online'
     device.lastCommunication = new Date().toISOString()
-    
+
     ElMessage.success(`设备 ${device.name} 重启成功`)
   } catch (error) {
     if (error !== 'cancel') {
@@ -445,12 +454,12 @@ function viewDetails(device: DeviceVO) {
  */
 function updateProtocolStats() {
   const stats: Record<string, number> = {}
-  
+
   props.devices.forEach(device => {
     const protocol = device.protocol
     stats[protocol] = (stats[protocol] || 0) + 1
   })
-  
+
   protocolStats.value = stats
 }
 
@@ -463,22 +472,26 @@ function refreshProtocolStats() {
 }
 
 // ===== 监听器 =====
-watch(() => props.devices, () => {
-  updateProtocolStats()
-}, { immediate: true, deep: true })
+watch(
+  () => props.devices,
+  () => {
+    updateProtocolStats()
+  },
+  { immediate: true, deep: true }
+)
 </script>
 
 <style scoped lang="scss">
 .device-status-overview {
   .device-summary {
     margin-bottom: 20px;
-    
+
     .summary-stats {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
       gap: 12px;
       margin-bottom: 16px;
-      
+
       .stat-item {
         display: flex;
         align-items: center;
@@ -486,18 +499,26 @@ watch(() => props.devices, () => {
         padding: 12px;
         background: #f9f9f9;
         border-radius: 6px;
-        
+
         .stat-icon {
           font-size: 20px;
-          
+
           .el-icon {
-            &.total { color: #409eff; }
-            &.online { color: #67c23a; }
-            &.offline { color: #909399; }
-            &.error { color: #f56c6c; }
+            &.total {
+              color: #409eff;
+            }
+            &.online {
+              color: #67c23a;
+            }
+            &.offline {
+              color: #909399;
+            }
+            &.error {
+              color: #f56c6c;
+            }
           }
         }
-        
+
         .stat-content {
           .stat-value {
             font-size: 18px;
@@ -505,7 +526,7 @@ watch(() => props.devices, () => {
             color: #303133;
             margin-bottom: 2px;
           }
-          
+
           .stat-label {
             font-size: 12px;
             color: #909399;
@@ -513,19 +534,19 @@ watch(() => props.devices, () => {
         }
       }
     }
-    
+
     .connection-progress {
       .progress-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 8px;
-        
+
         .progress-label {
           font-size: 14px;
           color: #606266;
         }
-        
+
         .progress-value {
           font-size: 14px;
           font-weight: 600;
@@ -534,19 +555,19 @@ watch(() => props.devices, () => {
       }
     }
   }
-  
+
   .device-list {
     margin-bottom: 20px;
-    
+
     .list-loading {
       padding: 16px;
     }
-    
+
     .list-empty {
       text-align: center;
       padding: 40px 16px;
     }
-    
+
     .device-items {
       .device-item {
         display: flex;
@@ -559,60 +580,60 @@ watch(() => props.devices, () => {
         cursor: pointer;
         transition: all 0.3s;
         position: relative;
-        
+
         &:hover {
           box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           transform: translateY(-1px);
         }
-        
+
         &.status-online {
           border-left: 4px solid #67c23a;
         }
-        
+
         &.status-offline {
           border-left: 4px solid #909399;
         }
-        
+
         &.status-error {
           border-left: 4px solid #f56c6c;
         }
-        
+
         .device-info {
           flex: 1;
           min-width: 0;
-          
+
           .device-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
-            
+
             .device-name {
               font-size: 16px;
               font-weight: 600;
               color: #303133;
             }
           }
-          
+
           .device-details {
             display: flex;
             flex-wrap: wrap;
             gap: 16px;
-            
+
             .detail-item {
               display: flex;
               align-items: center;
               font-size: 13px;
-              
+
               .detail-label {
                 color: #909399;
                 margin-right: 4px;
               }
-              
+
               .detail-value {
                 color: #606266;
                 font-family: monospace;
-                
+
                 &.outdated {
                   color: #f56c6c;
                 }
@@ -620,32 +641,32 @@ watch(() => props.devices, () => {
             }
           }
         }
-        
+
         .device-metrics {
           display: flex;
           gap: 16px;
-          
+
           .metric-item {
             text-align: center;
-            
+
             .metric-label {
               font-size: 11px;
               color: #909399;
               margin-bottom: 4px;
             }
-            
+
             .metric-value {
               font-size: 14px;
               font-weight: 600;
               color: #303133;
-              
+
               &.high-error {
                 color: #f56c6c;
               }
             }
           }
         }
-        
+
         .device-actions {
           .el-button-group {
             .el-button {
@@ -653,33 +674,33 @@ watch(() => props.devices, () => {
             }
           }
         }
-        
+
         .status-indicator {
           position: absolute;
           top: 8px;
           right: 8px;
-          
+
           .indicator-dot {
             width: 8px;
             height: 8px;
             border-radius: 50%;
             animation: pulse 2s infinite;
-            
+
             &.dot-online {
               background: #67c23a;
               box-shadow: 0 0 0 0 rgba(103, 194, 58, 0.7);
             }
-            
+
             &.dot-offline {
               background: #909399;
               animation: none;
             }
-            
+
             &.dot-error {
               background: #f56c6c;
               box-shadow: 0 0 0 0 rgba(245, 108, 108, 0.7);
             }
-            
+
             &.dot-connecting {
               background: #e6a23c;
               box-shadow: 0 0 0 0 rgba(230, 162, 60, 0.7);
@@ -689,53 +710,53 @@ watch(() => props.devices, () => {
       }
     }
   }
-  
+
   .protocol-distribution {
     .distribution-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      
+
       span {
         font-size: 14px;
         font-weight: 600;
         color: #303133;
       }
     }
-    
+
     .protocol-chart {
       .protocol-bar {
         margin-bottom: 12px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .protocol-info {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 4px;
-          
+
           .protocol-name {
             font-size: 13px;
             color: #606266;
           }
-          
+
           .protocol-count {
             font-size: 13px;
             font-weight: 600;
             color: #303133;
           }
         }
-        
+
         .protocol-progress {
           height: 6px;
           background: #f0f0f0;
           border-radius: 3px;
           overflow: hidden;
-          
+
           .progress-bar {
             height: 100%;
             background: linear-gradient(90deg, #409eff, #67c23a);
@@ -753,12 +774,12 @@ watch(() => props.devices, () => {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(103, 194, 58, 0.7);
   }
-  
+
   70% {
     transform: scale(1);
     box-shadow: 0 0 0 4px rgba(103, 194, 58, 0);
   }
-  
+
   100% {
     transform: scale(0.95);
     box-shadow: 0 0 0 0 rgba(103, 194, 58, 0);
@@ -772,14 +793,14 @@ watch(() => props.devices, () => {
       .summary-stats {
         grid-template-columns: repeat(2, 1fr);
         gap: 8px;
-        
+
         .stat-item {
           padding: 8px;
-          
+
           .stat-icon {
             font-size: 16px;
           }
-          
+
           .stat-content {
             .stat-value {
               font-size: 16px;
@@ -788,25 +809,25 @@ watch(() => props.devices, () => {
         }
       }
     }
-    
+
     .device-list {
       .device-items {
         .device-item {
           flex-direction: column;
           align-items: stretch;
           gap: 12px;
-          
+
           .device-info {
             .device-details {
               flex-direction: column;
               gap: 8px;
             }
           }
-          
+
           .device-metrics {
             justify-content: space-around;
           }
-          
+
           .device-actions {
             align-self: center;
           }

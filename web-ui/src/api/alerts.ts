@@ -1,6 +1,6 @@
 /**
  * 报警管理 API
- * 
+ *
  * 注意：这些API是代理到独立的alert-engine服务
  */
 
@@ -77,7 +77,7 @@ export interface AlertEventVO {
   triggered_at: string
   resolved_at?: string
   acknowledged_at?: string
-  current_value: any
+  current_value: string | number | boolean
   threshold_value: number
   operator: AlertOperator
 }
@@ -131,33 +131,33 @@ export const alertsApi = {
         // 返回模拟数据以防API未实现
         return [
           {
-            id: "alert-001",
-            rule_id: "rule-001",
-            rule_name: "温度过高报警",
-            tag_id: "temp-001",
-            tag_name: "温度传感器1",
+            id: 'alert-001',
+            rule_id: 'rule-001',
+            rule_name: '温度过高报警',
+            tag_id: 'temp-001',
+            tag_name: '温度传感器1',
             severity: AlertSeverity.Warning,
-            message: "温度传感器读数异常: 当前值85°C，超过阈值80°C",
-            triggered_at: "2025-01-31T08:30:00Z",
+            message: '温度传感器读数异常: 当前值85°C，超过阈值80°C',
+            triggered_at: '2025-01-31T08:30:00Z',
             current_value: 85.0,
             threshold_value: 80.0,
-            operator: AlertOperator.GreaterThan
+            operator: AlertOperator.GreaterThan,
           },
           {
-            id: "alert-002",
-            rule_id: "rule-002", 
-            rule_name: "系统启动通知",
-            tag_id: "system-001",
-            tag_name: "系统状态",
+            id: 'alert-002',
+            rule_id: 'rule-002',
+            rule_name: '系统启动通知',
+            tag_id: 'system-001',
+            tag_name: '系统状态',
             severity: AlertSeverity.Info,
-            message: "系统启动完成",
-            triggered_at: "2025-01-31T08:00:00Z",
-            resolved_at: "2025-01-31T08:00:30Z",
-            acknowledged_at: "2025-01-31T08:01:00Z",
-            current_value: "online",
+            message: '系统启动完成',
+            triggered_at: '2025-01-31T08:00:00Z',
+            resolved_at: '2025-01-31T08:00:30Z',
+            acknowledged_at: '2025-01-31T08:01:00Z',
+            current_value: 'online',
             threshold_value: 1,
-            operator: AlertOperator.Equal
-          }
+            operator: AlertOperator.Equal,
+          },
         ]
       })
   },
@@ -209,7 +209,9 @@ export const alertsApi = {
     /**
      * 测试报警规则
      */
-    test(data: AlertRuleCreateReq): Promise<{ success: boolean; message?: string }> {
+    test(
+      data: AlertRuleCreateReq
+    ): Promise<{ success: boolean; message?: string }> {
       return post('/alerts/rules/test', data)
     },
   },
@@ -247,14 +249,20 @@ export const alertsApi = {
     /**
      * 批量确认报警事件
      */
-    batchAcknowledge(ids: string[], comment?: string): Promise<{ success: number; failed: number }> {
+    batchAcknowledge(
+      ids: string[],
+      comment?: string
+    ): Promise<{ success: number; failed: number }> {
       return post('/alerts/events/batch/acknowledge', { ids, comment })
     },
 
     /**
      * 批量解决报警事件
      */
-    batchResolve(ids: string[], comment?: string): Promise<{ success: number; failed: number }> {
+    batchResolve(
+      ids: string[],
+      comment?: string
+    ): Promise<{ success: number; failed: number }> {
       return post('/alerts/events/batch/resolve', { ids, comment })
     },
   },
@@ -288,20 +296,24 @@ export const alertsApi = {
     /**
      * 获取通知通道列表
      */
-    getChannels(): Promise<Array<{
-      id: string
-      name: string
-      type: 'email' | 'webhook' | 'websocket'
-      config: any
-      enabled: boolean
-    }>> {
+    getChannels(): Promise<
+      Array<{
+        id: string
+        name: string
+        type: 'email' | 'webhook' | 'websocket'
+        config: any
+        enabled: boolean
+      }>
+    > {
       return get('/alerts/notifications/channels')
     },
 
     /**
      * 测试通知通道
      */
-    testChannel(channelId: string): Promise<{ success: boolean; message?: string }> {
+    testChannel(
+      channelId: string
+    ): Promise<{ success: boolean; message?: string }> {
       return post(`/alerts/notifications/channels/${channelId}/test`)
     },
   },

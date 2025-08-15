@@ -13,7 +13,7 @@
           </el-tag>
         </div>
       </div>
-      
+
       <div class="header-right">
         <!-- 实时模式切换 -->
         <el-switch
@@ -23,7 +23,7 @@
           size="small"
           @change="handleRealtimeToggle"
         />
-        
+
         <!-- 刷新按钮 -->
         <el-button
           type="text"
@@ -32,7 +32,7 @@
           :loading="loading"
           @click="handleRefresh"
         />
-        
+
         <!-- 清空日志 -->
         <el-button
           type="text"
@@ -40,7 +40,7 @@
           :icon="Delete"
           @click="handleClear"
         />
-        
+
         <!-- 更多操作 -->
         <el-dropdown trigger="click" @command="handleAction">
           <el-button type="text" size="small" :icon="MoreFilled" />
@@ -60,13 +60,17 @@
         </el-dropdown>
       </div>
     </div>
-    
+
     <!-- 过滤器栏 -->
     <div class="log-filters">
       <!-- 日志级别过滤 -->
       <div class="filter-group">
         <label>级别:</label>
-        <el-checkbox-group v-model="selectedLevels" size="small" @change="handleLevelFilter">
+        <el-checkbox-group
+          v-model="selectedLevels"
+          size="small"
+          @change="handleLevelFilter"
+        >
           <el-checkbox
             v-for="level in logLevels"
             :key="level.value"
@@ -77,7 +81,7 @@
           </el-checkbox>
         </el-checkbox-group>
       </div>
-      
+
       <!-- 时间范围 -->
       <div class="filter-group">
         <label>时间:</label>
@@ -90,7 +94,7 @@
           @change="handleTimeRangeChange"
         />
       </div>
-      
+
       <!-- 搜索框 -->
       <div class="filter-group">
         <SearchBox
@@ -102,7 +106,7 @@
           @clear="handleSearchClear"
         />
       </div>
-      
+
       <!-- 高级过滤 -->
       <el-popover
         v-model:visible="advancedFilterVisible"
@@ -115,11 +119,15 @@
             高级过滤
           </el-button>
         </template>
-        
+
         <div class="advanced-filters">
           <el-form size="small" label-width="80px">
             <el-form-item label="来源模块">
-              <el-select v-model="sourceFilter" clearable placeholder="选择模块">
+              <el-select
+                v-model="sourceFilter"
+                clearable
+                placeholder="选择模块"
+              >
                 <el-option
                   v-for="source in logSources"
                   :key="source"
@@ -128,17 +136,21 @@
                 />
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="线程ID">
               <el-input v-model="threadFilter" placeholder="输入线程ID" />
             </el-form-item>
-            
+
             <el-form-item label="正则表达式">
               <el-input v-model="regexFilter" placeholder="输入正则表达式" />
             </el-form-item>
-            
+
             <el-form-item>
-              <el-button type="primary" size="small" @click="applyAdvancedFilter">
+              <el-button
+                type="primary"
+                size="small"
+                @click="applyAdvancedFilter"
+              >
                 应用筛选
               </el-button>
               <el-button size="small" @click="clearAdvancedFilter">
@@ -149,7 +161,7 @@
         </div>
       </el-popover>
     </div>
-    
+
     <!-- 日志统计 -->
     <div v-if="showStats" class="log-stats">
       <el-row :gutter="16">
@@ -157,19 +169,31 @@
           <el-statistic title="总计" :value="totalLogs" />
         </el-col>
         <el-col :span="6">
-          <el-statistic title="错误" :value="errorCount" value-style="color: var(--el-color-danger)" />
+          <el-statistic
+            title="错误"
+            :value="errorCount"
+            value-style="color: var(--el-color-danger)"
+          />
         </el-col>
         <el-col :span="6">
-          <el-statistic title="警告" :value="warningCount" value-style="color: var(--el-color-warning)" />
+          <el-statistic
+            title="警告"
+            :value="warningCount"
+            value-style="color: var(--el-color-warning)"
+          />
         </el-col>
         <el-col :span="6">
-          <el-statistic title="信息" :value="infoCount" value-style="color: var(--el-color-info)" />
+          <el-statistic
+            title="信息"
+            :value="infoCount"
+            value-style="color: var(--el-color-info)"
+          />
         </el-col>
       </el-row>
     </div>
-    
+
     <!-- 日志内容区域 -->
-    <div class="log-content" ref="logContentRef">
+    <div ref="logContentRef" class="log-content">
       <!-- 加载状态 -->
       <LoadingCard
         v-if="loading && logs.length === 0"
@@ -177,7 +201,7 @@
         loading-text="正在加载日志..."
         :min-height="logHeight"
       />
-      
+
       <!-- 空状态 -->
       <div v-else-if="filteredLogs.length === 0" class="log-empty">
         <el-empty
@@ -185,7 +209,7 @@
           :image-size="100"
         />
       </div>
-      
+
       <!-- 日志列表 -->
       <div v-else class="log-list" :style="{ height: logHeight }">
         <el-scrollbar ref="scrollbarRef" :height="logHeight">
@@ -199,7 +223,7 @@
             <div class="log-timestamp">
               {{ formatTimestamp(log.timestamp) }}
             </div>
-            
+
             <div class="log-level">
               <el-tag
                 :type="getLevelTagType(log.level)"
@@ -209,17 +233,18 @@
                 {{ log.level.toUpperCase() }}
               </el-tag>
             </div>
-            
+
             <div class="log-source">
               {{ log.source || 'Unknown' }}
             </div>
-            
-            <div class="log-message" v-html="highlightKeyword(log.message)"></div>
-            
-            <div v-if="log.thread" class="log-thread">
-              [{{ log.thread }}]
-            </div>
-            
+
+            <div
+              class="log-message"
+              v-html="highlightKeyword(log.message)"
+            ></div>
+
+            <div v-if="log.thread" class="log-thread">[{{ log.thread }}]</div>
+
             <div class="log-actions">
               <el-button
                 type="text"
@@ -229,7 +254,7 @@
               />
             </div>
           </div>
-          
+
           <!-- 加载更多指示器 -->
           <div v-if="hasMoreLogs && !realtimeMode" class="load-more">
             <el-button
@@ -244,14 +269,14 @@
         </el-scrollbar>
       </div>
     </div>
-    
+
     <!-- 日志控制栏 -->
     <div class="log-controls">
       <div class="controls-left">
         <span class="log-count">
           显示 {{ filteredLogs.length }} / {{ totalLogs }} 条日志
         </span>
-        
+
         <el-checkbox
           v-model="autoScroll"
           size="small"
@@ -259,7 +284,7 @@
         >
           自动滚动
         </el-checkbox>
-        
+
         <el-checkbox
           v-model="showTimestamp"
           size="small"
@@ -268,7 +293,7 @@
           显示时间戳
         </el-checkbox>
       </div>
-      
+
       <div class="controls-right">
         <el-pagination
           v-if="!realtimeMode && enablePagination"
@@ -283,7 +308,7 @@
         />
       </div>
     </div>
-    
+
     <!-- 日志详情对话框 -->
     <el-dialog
       v-model="detailDialogVisible"
@@ -311,20 +336,22 @@
           <el-descriptions-item label="消息" span="2">
             <pre class="log-message-detail">{{ selectedLog.message }}</pre>
           </el-descriptions-item>
-          <el-descriptions-item v-if="selectedLog.stackTrace" label="堆栈跟踪" span="2">
+          <el-descriptions-item
+            v-if="selectedLog.stackTrace"
+            label="堆栈跟踪"
+            span="2"
+          >
             <pre class="log-stacktrace">{{ selectedLog.stackTrace }}</pre>
           </el-descriptions-item>
         </el-descriptions>
       </div>
-      
+
       <template #footer>
         <el-button @click="detailDialogVisible = false">关闭</el-button>
-        <el-button type="primary" @click="handleCopyLog">
-          复制日志
-        </el-button>
+        <el-button type="primary" @click="handleCopyLog"> 复制日志 </el-button>
       </template>
     </el-dialog>
-    
+
     <!-- 设置对话框 -->
     <el-dialog
       v-model="settingsDialogVisible"
@@ -337,7 +364,7 @@
         :fields="settingsFields"
         label-width="120px"
       />
-      
+
       <template #footer>
         <el-button @click="settingsDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleSaveSettings">
@@ -349,7 +376,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import {
   Document,
   Refresh,
@@ -359,11 +385,22 @@ import {
   Setting,
   DataAnalysis,
   Filter,
-  View
+  View,
 } from '@element-plus/icons-vue'
-import { LoadingCard, SearchBox, BaseForm, StatusTag } from '../base'
-import { TimeRangePicker } from './'
 import { ElMessage } from 'element-plus'
+import {
+  ref,
+  computed,
+  reactive,
+  watch,
+  nextTick,
+  onMounted,
+  onUnmounted,
+} from 'vue'
+
+import { LoadingCard, SearchBox, BaseForm, StatusTag } from '../base'
+
+import { TimeRangePicker } from './'
 
 export type LogLevel = 'debug' | 'info' | 'warn' | 'error'
 
@@ -382,17 +419,17 @@ export interface LogEntry {
 interface Props {
   title?: string
   logs?: LogEntry[]
-  
+
   // 功能控制
   supportRealtime?: boolean
   enablePagination?: boolean
   showStats?: boolean
   showStatus?: boolean
-  
+
   // 外观配置
   height?: string
   maxLogs?: number
-  
+
   // 自定义样式
   customClass?: string
 }
@@ -430,7 +467,7 @@ const pageSize = ref(100)
 const selectedLevels = ref<LogLevel[]>(['debug', 'info', 'warn', 'error'])
 const timeRange = ref({
   start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  end: new Date().toISOString()
+  end: new Date().toISOString(),
 })
 const searchKeyword = ref('')
 const advancedFilterVisible = ref(false)
@@ -452,7 +489,7 @@ const viewerSettings = reactive({
   lineHeight: 1.4,
   theme: 'light',
   maxDisplayLogs: 1000,
-  autoRefreshInterval: 5000
+  autoRefreshInterval: 5000,
 })
 
 // 引用
@@ -467,7 +504,7 @@ const logLevels = [
   { value: 'debug', label: 'DEBUG', color: '#909399' },
   { value: 'info', label: 'INFO', color: '#409eff' },
   { value: 'warn', label: 'WARN', color: '#e6a23c' },
-  { value: 'error', label: 'ERROR', color: '#f56c6c' }
+  { value: 'error', label: 'ERROR', color: '#f56c6c' },
 ]
 
 // 日志来源列表
@@ -487,7 +524,7 @@ const settingsFields = [
     type: 'number',
     min: 10,
     max: 20,
-    unit: 'px'
+    unit: 'px',
   },
   {
     key: 'lineHeight',
@@ -495,7 +532,7 @@ const settingsFields = [
     type: 'number',
     min: 1,
     max: 2,
-    step: 0.1
+    step: 0.1,
   },
   {
     key: 'theme',
@@ -503,15 +540,15 @@ const settingsFields = [
     type: 'select',
     options: [
       { label: '浅色', value: 'light' },
-      { label: '深色', value: 'dark' }
-    ]
+      { label: '深色', value: 'dark' },
+    ],
   },
   {
     key: 'maxDisplayLogs',
     label: '最大显示条数',
     type: 'number',
     min: 100,
-    max: 5000
+    max: 5000,
   },
   {
     key: 'autoRefreshInterval',
@@ -519,22 +556,22 @@ const settingsFields = [
     type: 'number',
     unit: '毫秒',
     min: 1000,
-    max: 60000
-  }
+    max: 60000,
+  },
 ]
 
 // 计算属性
 const containerClass = computed(() => {
   const classes = ['log-viewer']
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   if (viewerSettings.theme === 'dark') {
     classes.push('log-viewer--dark')
   }
-  
+
   return classes.join(' ')
 })
 
@@ -550,16 +587,16 @@ const connectionStatusText = computed(() => {
 
 const totalLogs = computed(() => logs.value.length)
 
-const errorCount = computed(() => 
-  logs.value.filter(log => log.level === 'error').length
+const errorCount = computed(
+  () => logs.value.filter(log => log.level === 'error').length
 )
 
-const warningCount = computed(() => 
-  logs.value.filter(log => log.level === 'warn').length
+const warningCount = computed(
+  () => logs.value.filter(log => log.level === 'warn').length
 )
 
-const infoCount = computed(() => 
-  logs.value.filter(log => log.level === 'info').length
+const infoCount = computed(
+  () => logs.value.filter(log => log.level === 'info').length
 )
 
 const filteredLogs = computed(() => {
@@ -581,9 +618,10 @@ const filteredLogs = computed(() => {
   // 关键词搜索
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    filtered = filtered.filter(log =>
-      log.message.toLowerCase().includes(keyword) ||
-      (log.source && log.source.toLowerCase().includes(keyword))
+    filtered = filtered.filter(
+      log =>
+        log.message.toLowerCase().includes(keyword) ||
+        (log.source && log.source.toLowerCase().includes(keyword))
     )
   }
 
@@ -614,7 +652,7 @@ const paginatedLogs = computed(() => {
   if (!props.enablePagination || realtimeMode.value) {
     return filteredLogs.value
   }
-  
+
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return filteredLogs.value.slice(start, end)
@@ -635,7 +673,7 @@ const formatTimestamp = (timestamp: Date) => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    fractionalSecondDigits: 3
+    fractionalSecondDigits: 3,
   })
 }
 
@@ -649,7 +687,7 @@ const formatDetailTimestamp = (timestamp: Date) => {
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit',
-    fractionalSecondDigits: 3
+    fractionalSecondDigits: 3,
   })
 }
 
@@ -658,7 +696,7 @@ const getLevelTagType = (level: LogLevel) => {
     debug: '',
     info: 'info',
     warn: 'warning',
-    error: 'danger'
+    error: 'danger',
   }
   return typeMap[level] || ''
 }
@@ -669,7 +707,7 @@ const getLogItemClass = (log: LogEntry) => {
 
 const highlightKeyword = (text: string) => {
   if (!searchKeyword.value) return text
-  
+
   const keyword = searchKeyword.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const regex = new RegExp(`(${keyword})`, 'gi')
   return text.replace(regex, '<mark>$1</mark>')
@@ -678,13 +716,13 @@ const highlightKeyword = (text: string) => {
 // 事件处理
 const handleRealtimeToggle = (enabled: boolean) => {
   realtimeMode.value = enabled
-  
+
   if (enabled) {
     startRealtimeUpdate()
   } else {
     stopRealtimeUpdate()
   }
-  
+
   emit('realtime-toggle', enabled)
 }
 
@@ -692,7 +730,7 @@ const startRealtimeUpdate = () => {
   if (realtimeTimer) {
     clearInterval(realtimeTimer)
   }
-  
+
   realtimeTimer = setInterval(() => {
     // 从WebSocket或API拉取新日志
     fetchLatestLogs()
@@ -718,15 +756,15 @@ const fetchLatestLogs = async () => {
     const response = await fetch('/api/v1/logs/latest', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       const newLogs = await response.json()
       if (newLogs.length > 0) {
         logs.value.push(...newLogs)
-        
+
         // 限制日志数量
         if (logs.value.length > props.maxLogs) {
           logs.value = logs.value.slice(-props.maxLogs)
@@ -749,7 +787,7 @@ const scrollToBottom = () => {
 const handleRefresh = () => {
   loading.value = true
   emit('refresh')
-  
+
   setTimeout(() => {
     loading.value = false
   }, 1000)
@@ -844,19 +882,19 @@ const handleTimestampToggle = () => {
 
 const handleLoadMore = async () => {
   loadingMore.value = true
-  
+
   try {
     // 获取更多历史日志
     const oldestLog = logs.value[0]
     const before = oldestLog ? oldestLog.timestamp : new Date().toISOString()
-    
+
     const response = await fetch(`/api/v1/logs?before=${before}&limit=50`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       const olderLogs = await response.json()
       if (olderLogs.length > 0) {
@@ -888,7 +926,7 @@ const handleSettingsDialogClose = () => {
 const handleSaveSettings = () => {
   settingsDialogVisible.value = false
   ElMessage.success('设置保存成功')
-  
+
   // 如果实时模式开启，重新启动定时器
   if (realtimeMode.value) {
     stopRealtimeUpdate()
@@ -897,9 +935,13 @@ const handleSaveSettings = () => {
 }
 
 // 监听
-watch(() => props.logs, (newLogs) => {
-  logs.value = [...newLogs]
-}, { immediate: true })
+watch(
+  () => props.logs,
+  newLogs => {
+    logs.value = [...newLogs]
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(() => {
@@ -921,12 +963,12 @@ onUnmounted(() => {
   border-radius: 6px;
   display: flex;
   flex-direction: column;
-  
+
   &.log-viewer--dark {
     background: #1e1e1e;
     border-color: #333;
     color: #d4d4d4;
-    
+
     .log-item {
       &:hover {
         background: #2d2d2d;
@@ -942,7 +984,7 @@ onUnmounted(() => {
   padding: 12px 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .header-left {
     .log-title {
       display: flex;
@@ -952,7 +994,7 @@ onUnmounted(() => {
       color: var(--el-text-color-primary);
     }
   }
-  
+
   .header-right {
     display: flex;
     align-items: center;
@@ -968,12 +1010,12 @@ onUnmounted(() => {
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
   flex-wrap: wrap;
-  
+
   .filter-group {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     label {
       font-size: 12px;
       color: var(--el-text-color-secondary);
@@ -996,14 +1038,14 @@ onUnmounted(() => {
 .log-content {
   flex: 1;
   min-height: 0;
-  
+
   .log-empty {
     display: flex;
     align-items: center;
     justify-content: center;
     height: 300px;
   }
-  
+
   .log-list {
     .log-item {
       display: grid;
@@ -1016,38 +1058,38 @@ onUnmounted(() => {
       font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
       font-size: v-bind('viewerSettings.fontSize + "px"');
       line-height: v-bind('viewerSettings.lineHeight');
-      
+
       &:hover {
         background-color: var(--el-fill-color-light);
         cursor: pointer;
       }
-      
+
       &.log-item--debug {
         color: #909399;
       }
-      
+
       &.log-item--info {
         color: #409eff;
       }
-      
+
       &.log-item--warn {
         color: #e6a23c;
       }
-      
+
       &.log-item--error {
         color: #f56c6c;
       }
-      
+
       .log-timestamp {
         font-size: 11px;
         color: var(--el-text-color-secondary);
         white-space: nowrap;
       }
-      
+
       .log-level {
         text-align: center;
       }
-      
+
       .log-source {
         font-size: 12px;
         color: var(--el-text-color-secondary);
@@ -1055,12 +1097,12 @@ onUnmounted(() => {
         text-overflow: ellipsis;
         white-space: nowrap;
       }
-      
+
       .log-message {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        
+
         :deep(mark) {
           background-color: var(--el-color-warning-light-8);
           color: var(--el-color-warning-dark-2);
@@ -1068,24 +1110,24 @@ onUnmounted(() => {
           border-radius: 2px;
         }
       }
-      
+
       .log-thread {
         font-size: 11px;
         color: var(--el-text-color-placeholder);
         text-align: center;
       }
-      
+
       .log-actions {
         text-align: center;
         opacity: 0;
         transition: opacity 0.3s;
       }
-      
+
       &:hover .log-actions {
         opacity: 1;
       }
     }
-    
+
     .load-more {
       text-align: center;
       padding: 16px;
@@ -1100,12 +1142,12 @@ onUnmounted(() => {
   padding: 8px 16px;
   border-top: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .controls-left {
     display: flex;
     align-items: center;
     gap: 16px;
-    
+
     .log-count {
       font-size: 12px;
       color: var(--el-text-color-secondary);
@@ -1143,17 +1185,17 @@ onUnmounted(() => {
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .log-controls {
     flex-direction: column;
     align-items: flex-start;
     gap: 8px;
   }
-  
+
   .log-list .log-item {
     grid-template-columns: 1fr;
     gap: 4px;
-    
+
     .log-timestamp,
     .log-level,
     .log-source,
@@ -1161,12 +1203,12 @@ onUnmounted(() => {
       display: inline-block;
       margin-right: 8px;
     }
-    
+
     .log-message {
       grid-column: 1;
       margin-top: 4px;
     }
-    
+
     .log-actions {
       grid-column: 1;
       text-align: left;

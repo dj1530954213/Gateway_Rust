@@ -19,7 +19,7 @@
         <template #header>
           <span class="section-title">基本信息</span>
         </template>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="点位名称" prop="name">
@@ -30,7 +30,7 @@
               />
             </el-form-item>
           </el-col>
-          
+
           <el-col :span="12">
             <el-form-item label="所属设备" prop="device_id">
               <el-select
@@ -47,7 +47,10 @@
                 >
                   <div class="device-option">
                     <span class="device-name">{{ device.name }}</span>
-                    <el-tag :type="getProtocolTagType(device.protocol)" size="small">
+                    <el-tag
+                      :type="getProtocolTagType(device.protocol)"
+                      size="small"
+                    >
                       {{ device.protocol }}
                     </el-tag>
                   </div>
@@ -56,7 +59,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-form-item label="点位描述" prop="description">
           <el-input
             v-model="formData.description"
@@ -67,7 +70,7 @@
             show-word-limit
           />
         </el-form-item>
-        
+
         <el-form-item label="启用状态" prop="enabled">
           <el-switch
             v-model="formData.enabled"
@@ -82,7 +85,7 @@
         <template #header>
           <span class="section-title">数据配置</span>
         </template>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="数据类型" prop="data_type">
@@ -98,7 +101,7 @@
               </el-select>
             </el-form-item>
           </el-col>
-          
+
           <el-col :span="12">
             <el-form-item label="访问模式" prop="access_mode">
               <el-select
@@ -120,7 +123,7 @@
         <template #header>
           <span class="section-title">地址配置</span>
         </template>
-        
+
         <el-row :gutter="20">
           <el-col :span="16">
             <el-form-item label="寄存器地址" prop="address">
@@ -134,7 +137,7 @@
               </el-input>
             </el-form-item>
           </el-col>
-          
+
           <el-col :span="8">
             <el-form-item label="寄存器类型" prop="register_type">
               <el-select
@@ -150,7 +153,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <!-- 高级配置 -->
         <el-collapse>
           <el-collapse-item title="高级配置" name="advanced">
@@ -168,7 +171,7 @@
                   />
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="偏移量" prop="offset">
                   <el-input-number
@@ -182,7 +185,7 @@
                   />
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="8">
                 <el-form-item label="单位" prop="unit">
                   <el-input
@@ -193,7 +196,7 @@
                 </el-form-item>
               </el-col>
             </el-row>
-            
+
             <el-row :gutter="20">
               <el-col :span="12">
                 <el-form-item label="最小值" prop="min_value">
@@ -205,7 +208,7 @@
                   />
                 </el-form-item>
               </el-col>
-              
+
               <el-col :span="12">
                 <el-form-item label="最大值" prop="max_value">
                   <el-input-number
@@ -226,18 +229,14 @@
       <div class="dialog-footer">
         <el-button @click="handleCancel">取消</el-button>
         <el-button
+          v-if="mode === 'create' && canTestRead"
           type="info"
           :loading="testing"
           @click="handleTestTag"
-          v-if="mode === 'create' && canTestRead"
         >
           测试读取
         </el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="handleSubmit"
-        >
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">
           {{ mode === 'create' ? '创建' : '保存' }}
         </el-button>
       </div>
@@ -263,12 +262,13 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { useTagsStore } from '@/stores'
-import type { TagVO, TagCreateReq, TagDataType } from '@/api/tags'
+import { ref, computed, watch, nextTick } from 'vue'
+
 import type { DeviceVO } from '@/api/devices'
+import type { TagVO, TagCreateReq, TagDataType } from '@/api/tags'
+import { useTagsStore } from '@/stores'
 
 // ===== Props =====
 const props = defineProps<{
@@ -281,7 +281,7 @@ const props = defineProps<{
 // ===== Emits =====
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'success': []
+  success: []
 }>()
 
 // ===== Store =====
@@ -295,7 +295,7 @@ const testing = ref(false)
 // 对话框显示状态
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
+  set: value => emit('update:visible', value),
 })
 
 // 对话框标题
@@ -322,29 +322,31 @@ const formData = ref<TagCreateReq>({
 
 // 检查是否可以测试读取
 const canTestRead = computed(() => {
-  return formData.value.device_id && 
-         formData.value.address && 
-         (formData.value.access_mode === 'ReadOnly' || formData.value.access_mode === 'ReadWrite')
+  return (
+    formData.value.device_id &&
+    formData.value.address &&
+    (formData.value.access_mode === 'ReadOnly' ||
+      formData.value.access_mode === 'ReadWrite')
+  )
 })
 
 // 表单验证规则
 const formRules: FormRules = {
   name: [
     { required: true, message: '请输入点位名称', trigger: 'blur' },
-    { min: 2, max: 100, message: '点位名称长度应在 2-100 字符之间', trigger: 'blur' },
+    {
+      min: 2,
+      max: 100,
+      message: '点位名称长度应在 2-100 字符之间',
+      trigger: 'blur',
+    },
   ],
-  device_id: [
-    { required: true, message: '请选择所属设备', trigger: 'change' },
-  ],
-  data_type: [
-    { required: true, message: '请选择数据类型', trigger: 'change' },
-  ],
+  device_id: [{ required: true, message: '请选择所属设备', trigger: 'change' }],
+  data_type: [{ required: true, message: '请选择数据类型', trigger: 'change' }],
   access_mode: [
     { required: true, message: '请选择访问模式', trigger: 'change' },
   ],
-  address: [
-    { required: true, message: '请输入寄存器地址', trigger: 'blur' },
-  ],
+  address: [{ required: true, message: '请输入寄存器地址', trigger: 'blur' }],
   register_type: [
     { required: true, message: '请选择寄存器类型', trigger: 'change' },
   ],
@@ -357,10 +359,10 @@ const formRules: FormRules = {
  */
 function getProtocolTagType(protocol: string): string {
   const typeMap: Record<string, string> = {
-    'ModbusTcp': 'primary',
-    'ModbusRtu': 'success',
-    'OpcUa': 'warning',
-    'Mqtt': 'info',
+    ModbusTcp: 'primary',
+    ModbusRtu: 'success',
+    OpcUa: 'warning',
+    Mqtt: 'info',
   }
   return typeMap[protocol] || 'default'
 }
@@ -371,13 +373,13 @@ function getProtocolTagType(protocol: string): string {
 async function handleTestTag() {
   // 先验证表单
   if (!formRef.value) return
-  
+
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) {
     ElMessage.warning('请先完善表单信息')
     return
   }
-  
+
   testing.value = true
   try {
     // TODO: 实现点位测试功能
@@ -394,15 +396,15 @@ async function handleTestTag() {
  */
 async function handleSubmit() {
   if (!formRef.value) return
-  
+
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
-  
+
   submitting.value = true
-  
+
   try {
     let success = false
-    
+
     if (props.mode === 'create') {
       const result = await tagsStore.createTag(formData.value)
       success = !!result
@@ -410,7 +412,7 @@ async function handleSubmit() {
       const result = await tagsStore.updateTag(props.tag.id, formData.value)
       success = !!result
     }
-    
+
     if (success) {
       emit('success')
       ElMessage.success(`点位${props.mode === 'create' ? '创建' : '更新'}成功`)
@@ -433,7 +435,7 @@ function handleCancel() {
 function handleDialogClosed() {
   // 重置表单
   formRef.value?.resetFields()
-  
+
   // 重置状态
   submitting.value = false
   testing.value = false
@@ -481,40 +483,46 @@ function initFormData() {
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  if (visible) {
-    nextTick(() => {
-      initFormData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    if (visible) {
+      nextTick(() => {
+        initFormData()
+      })
+    }
   }
-})
+)
 
-watch(() => props.tag, () => {
-  if (props.visible) {
-    initFormData()
+watch(
+  () => props.tag,
+  () => {
+    if (props.visible) {
+      initFormData()
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .form-section {
   margin-bottom: 20px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
-  
+
   .section-title {
     font-weight: 600;
     color: #303133;
   }
-  
+
   :deep(.el-card__header) {
     padding: 12px 20px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #ebeef5;
   }
-  
+
   :deep(.el-card__body) {
     padding: 20px;
   }
@@ -525,7 +533,7 @@ watch(() => props.tag, () => {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  
+
   .device-name {
     flex: 1;
     margin-right: 8px;
@@ -534,10 +542,10 @@ watch(() => props.tag, () => {
 
 .dialog-footer {
   text-align: right;
-  
+
   .el-button {
     margin-left: 12px;
-    
+
     &:first-child {
       margin-left: 0;
     }
@@ -547,12 +555,12 @@ watch(() => props.tag, () => {
 // 表单项优化
 :deep(.el-form-item) {
   margin-bottom: 18px;
-  
+
   .el-form-item__label {
     font-weight: 500;
     color: #606266;
   }
-  
+
   .el-form-item__content {
     .el-input__wrapper,
     .el-select .el-input__wrapper,
@@ -572,7 +580,7 @@ watch(() => props.tag, () => {
 // 折叠面板样式
 :deep(.el-collapse) {
   border: none;
-  
+
   .el-collapse-item__header {
     background-color: #fafafa;
     border: 1px solid #ebeef5;
@@ -580,20 +588,20 @@ watch(() => props.tag, () => {
     padding: 0 16px;
     margin-bottom: 8px;
     font-weight: 500;
-    
+
     &.is-active {
       border-bottom-left-radius: 0;
       border-bottom-right-radius: 0;
       margin-bottom: 0;
     }
   }
-  
+
   .el-collapse-item__wrap {
     border: 1px solid #ebeef5;
     border-top: none;
     border-radius: 0 0 6px 6px;
   }
-  
+
   .el-collapse-item__content {
     padding: 16px;
     background-color: #fafafa;
@@ -613,7 +621,7 @@ watch(() => props.tag, () => {
     width: 95% !important;
     margin: 5vh auto;
   }
-  
+
   .form-section {
     :deep(.el-row) {
       .el-col {
@@ -621,7 +629,7 @@ watch(() => props.tag, () => {
       }
     }
   }
-  
+
   .device-option {
     flex-direction: column;
     align-items: flex-start;

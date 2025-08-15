@@ -57,9 +57,7 @@
                 <el-radio label="active">启用</el-radio>
                 <el-radio label="inactive">禁用</el-radio>
               </el-radio-group>
-              <div class="form-tip">
-                禁用的角色无法分配给用户
-              </div>
+              <div class="form-tip">禁用的角色无法分配给用户</div>
             </el-form-item>
           </div>
         </div>
@@ -69,7 +67,11 @@
           <h3 class="section-title">角色属性</h3>
           <div class="form-grid">
             <el-form-item label="角色级别" prop="level">
-              <el-select v-model="roleForm.level" placeholder="选择角色级别" style="width: 100%">
+              <el-select
+                v-model="roleForm.level"
+                placeholder="选择角色级别"
+                style="width: 100%"
+              >
                 <el-option
                   v-for="level in roleLevels"
                   :key="level.value"
@@ -82,21 +84,21 @@
                   </div>
                 </el-option>
               </el-select>
-              <div class="form-tip">
-                角色级别决定了权限的范围和优先级
-              </div>
+              <div class="form-tip">角色级别决定了权限的范围和优先级</div>
             </el-form-item>
 
             <el-form-item label="数据范围" prop="dataScope">
-              <el-select v-model="roleForm.dataScope" placeholder="选择数据范围" style="width: 100%">
+              <el-select
+                v-model="roleForm.dataScope"
+                placeholder="选择数据范围"
+                style="width: 100%"
+              >
                 <el-option label="全部数据" value="all" />
                 <el-option label="部门数据" value="department" />
                 <el-option label="个人数据" value="personal" />
                 <el-option label="自定义数据" value="custom" />
               </el-select>
-              <div class="form-tip">
-                控制角色可以访问的数据范围
-              </div>
+              <div class="form-tip">控制角色可以访问的数据范围</div>
             </el-form-item>
 
             <el-form-item label="排序顺序" prop="sortOrder">
@@ -107,9 +109,7 @@
                 placeholder="排序顺序"
                 style="width: 100%"
               />
-              <div class="form-tip">
-                数字越小排序越靠前
-              </div>
+              <div class="form-tip">数字越小排序越靠前</div>
             </el-form-item>
 
             <el-form-item label="有效期" prop="expireDate">
@@ -120,9 +120,7 @@
                 style="width: 100%"
                 :disabled-date="disabledDate"
               />
-              <div class="form-tip">
-                留空表示永不过期
-              </div>
+              <div class="form-tip">留空表示永不过期</div>
             </el-form-item>
           </div>
         </div>
@@ -147,9 +145,7 @@
                   :value="tag"
                 />
               </el-select>
-              <div class="form-tip">
-                标签用于角色分类和快速筛选
-              </div>
+              <div class="form-tip">标签用于角色分类和快速筛选</div>
             </el-form-item>
 
             <div class="checkbox-group">
@@ -194,9 +190,7 @@
                   :value="role.id"
                 />
               </el-select>
-              <div class="form-tip">
-                设置角色层级关系，用于权限继承
-              </div>
+              <div class="form-tip">设置角色层级关系，用于权限继承</div>
             </el-form-item>
 
             <el-form-item label="关联部门" prop="departmentIds">
@@ -213,9 +207,7 @@
                   :value="dept.id"
                 />
               </el-select>
-              <div class="form-tip">
-                限制角色只能在特定部门使用
-              </div>
+              <div class="form-tip">限制角色只能在特定部门使用</div>
             </el-form-item>
           </div>
         </div>
@@ -272,9 +264,9 @@
         <el-button @click="resetForm">重置</el-button>
         <el-button
           type="primary"
-          @click="saveRole"
           :loading="saving"
           :disabled="!canSave"
+          @click="saveRole"
         >
           {{ isCreate ? '创建角色' : '保存更改' }}
         </el-button>
@@ -302,9 +294,9 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -315,7 +307,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'save': [roleData: any]
+  save: [roleData: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -342,7 +334,7 @@ const roleForm = ref({
   parentRoleId: '',
   departmentIds: [] as string[],
   templateId: '',
-  remark: ''
+  remark: '',
 })
 
 // 选项数据
@@ -350,28 +342,28 @@ const roleLevels = ref([
   {
     value: 'super',
     label: '超级管理员',
-    description: '系统最高级别，拥有所有权限'
+    description: '系统最高级别，拥有所有权限',
   },
   {
     value: 'admin',
     label: '管理员',
-    description: '管理级别，拥有大部分管理权限'
+    description: '管理级别，拥有大部分管理权限',
   },
   {
     value: 'manager',
     label: '经理',
-    description: '部门级别，拥有部门管理权限'
+    description: '部门级别，拥有部门管理权限',
   },
   {
     value: 'normal',
     label: '普通用户',
-    description: '基础级别，拥有基本操作权限'
+    description: '基础级别，拥有基本操作权限',
   },
   {
     value: 'guest',
     label: '访客',
-    description: '最低级别，只有查看权限'
-  }
+    description: '最低级别，只有查看权限',
+  },
 ])
 
 const commonTags = ref([
@@ -382,7 +374,7 @@ const commonTags = ref([
   '外部',
   '系统',
   '业务',
-  '技术'
+  '技术',
 ])
 
 const availableParentRoles = ref<any[]>([])
@@ -393,31 +385,51 @@ const permissionTemplates = ref<any[]>([])
 const formRules: FormRules = {
   name: [
     { required: true, message: '请输入角色名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '角色名称长度在 2 到 50 个字符', trigger: 'blur' }
+    {
+      min: 2,
+      max: 50,
+      message: '角色名称长度在 2 到 50 个字符',
+      trigger: 'blur',
+    },
   ],
   code: [
     { required: true, message: '请输入角色标识', trigger: 'blur' },
-    { min: 2, max: 50, message: '角色标识长度在 2 到 50 个字符', trigger: 'blur' },
-    { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '角色标识必须以字母开头，只能包含字母、数字和下划线', trigger: 'blur' }
+    {
+      min: 2,
+      max: 50,
+      message: '角色标识长度在 2 到 50 个字符',
+      trigger: 'blur',
+    },
+    {
+      pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
+      message: '角色标识必须以字母开头，只能包含字母、数字和下划线',
+      trigger: 'blur',
+    },
   ],
   description: [
-    { max: 200, message: '描述长度不能超过 200 个字符', trigger: 'blur' }
+    { max: 200, message: '描述长度不能超过 200 个字符', trigger: 'blur' },
   ],
-  level: [
-    { required: true, message: '请选择角色级别', trigger: 'change' }
-  ],
+  level: [{ required: true, message: '请选择角色级别', trigger: 'change' }],
   sortOrder: [
-    { type: 'number', min: 0, max: 9999, message: '排序顺序必须在 0 到 9999 之间', trigger: 'blur' }
-  ]
+    {
+      type: 'number',
+      min: 0,
+      max: 9999,
+      message: '排序顺序必须在 0 到 9999 之间',
+      trigger: 'blur',
+    },
+  ],
 }
 
 // ===== 计算属性 =====
 const isCreate = computed(() => props.isCreate)
 
 const canSave = computed(() => {
-  return roleForm.value.name.trim() !== '' &&
-         roleForm.value.code.trim() !== '' &&
-         roleForm.value.level !== ''
+  return (
+    roleForm.value.name.trim() !== '' &&
+    roleForm.value.code.trim() !== '' &&
+    roleForm.value.level !== ''
+  )
 })
 
 // ===== 方法 =====
@@ -431,7 +443,7 @@ async function initializeData() {
     await Promise.all([
       loadAvailableParentRoles(),
       loadDepartments(),
-      loadPermissionTemplates()
+      loadPermissionTemplates(),
     ])
 
     // 如果是编辑模式，填充表单数据
@@ -441,7 +453,6 @@ async function initializeData() {
       // 创建模式，重置表单
       resetFormData()
     }
-
   } catch (error) {
     console.error('初始化角色编辑对话框失败:', error)
     ElMessage.error('初始化失败')
@@ -456,10 +467,10 @@ async function loadAvailableParentRoles() {
     const response = await fetch('/api/v1/roles?filter=parent', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       availableParentRoles.value = await response.json()
     } else {
@@ -480,10 +491,10 @@ async function loadDepartments() {
     const response = await fetch('/api/v1/users/departments', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       departments.value = await response.json()
     } else {
@@ -504,10 +515,10 @@ async function loadPermissionTemplates() {
     const response = await fetch('/api/v1/permissions/templates', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       permissionTemplates.value = await response.json()
     } else {
@@ -542,7 +553,7 @@ function resetFormData() {
     parentRoleId: '',
     departmentIds: [],
     templateId: '',
-    remark: ''
+    remark: '',
   }
 }
 
@@ -551,14 +562,14 @@ function resetFormData() {
  */
 function handleTemplateChange(templateId: string) {
   if (!templateId) return
-  
+
   const template = permissionTemplates.value.find(t => t.id === templateId)
   if (template) {
     // 根据模板自动填充一些字段
     if (!roleForm.value.description) {
       roleForm.value.description = template.description
     }
-    
+
     // 根据模板设置一些默认值
     switch (templateId) {
       case 'basic_operator':
@@ -578,7 +589,7 @@ function handleTemplateChange(templateId: string) {
         roleForm.value.dataScope = 'all'
         break
     }
-    
+
     ElMessage.success('已应用权限模板配置')
   }
 }
@@ -609,21 +620,23 @@ async function saveRole() {
   try {
     // 验证表单
     await formRef.value?.validate()
-    
+
     saving.value = true
-    
+
     // 调用真实API保存角色
-    const apiUrl = props.isCreate ? '/api/v1/roles' : `/api/v1/roles/${roleForm.value.id}`
+    const apiUrl = props.isCreate
+      ? '/api/v1/roles'
+      : `/api/v1/roles/${roleForm.value.id}`
     const method = props.isCreate ? 'POST' : 'PUT'
-    
+
     const response = await fetch(apiUrl, {
       method,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(roleForm.value)
+      body: JSON.stringify(roleForm.value),
     })
-    
+
     if (response.ok) {
       const roleData = await response.json()
       emit('save', roleData)
@@ -633,7 +646,6 @@ async function saveRole() {
       const errorData = await response.json()
       throw new Error(errorData.message || '保存失败')
     }
-    
   } catch (error) {
     console.error('保存角色失败:', error)
     ElMessage.error(`保存角色失败: ${error.message}`)
@@ -648,17 +660,15 @@ async function saveRole() {
 function handleClose() {
   // 检查是否有未保存的更改
   if (hasUnsavedChanges()) {
-    ElMessageBox.confirm(
-      '你有未保存的更改，确定要关闭吗？',
-      '确认关闭',
-      {
-        type: 'warning'
-      }
-    ).then(() => {
-      dialogVisible.value = false
-    }).catch(() => {
-      // 用户取消关闭
+    ElMessageBox.confirm('你有未保存的更改，确定要关闭吗？', '确认关闭', {
+      type: 'warning',
     })
+      .then(() => {
+        dialogVisible.value = false
+      })
+      .catch(() => {
+        // 用户取消关闭
+      })
   } else {
     dialogVisible.value = false
   }
@@ -669,22 +679,27 @@ function handleClose() {
  */
 function hasUnsavedChanges(): boolean {
   // 简单的检查逻辑，实际应该比较表单数据和原始数据
-  return roleForm.value.name.trim() !== '' || 
-         roleForm.value.code.trim() !== '' ||
-         roleForm.value.description.trim() !== ''
+  return (
+    roleForm.value.name.trim() !== '' ||
+    roleForm.value.code.trim() !== '' ||
+    roleForm.value.description.trim() !== ''
+  )
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible) {
-    nextTick(() => {
-      initializeData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible) {
+      nextTick(() => {
+        initializeData()
+      })
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
   if (!visible) {
     // 重置表单
@@ -693,32 +708,35 @@ watch(dialogVisible, (visible) => {
 })
 
 // 监听角色名称变化，自动生成角色标识
-watch(() => roleForm.value.name, (newName) => {
-  if (props.isCreate && newName && !roleForm.value.code) {
-    // 自动生成角色标识
-    const code = newName
-      .toLowerCase()
-      .replace(/[\u4e00-\u9fa5]/g, '') // 移除中文字符
-      .replace(/\s+/g, '_') // 空格替换为下划线
-      .replace(/[^a-z0-9_]/g, '') // 移除非字母数字下划线字符
-      .substring(0, 20) // 限制长度
-    
-    if (code) {
-      roleForm.value.code = code
+watch(
+  () => roleForm.value.name,
+  newName => {
+    if (props.isCreate && newName && !roleForm.value.code) {
+      // 自动生成角色标识
+      const code = newName
+        .toLowerCase()
+        .replace(/[\u4e00-\u9fa5]/g, '') // 移除中文字符
+        .replace(/\s+/g, '_') // 空格替换为下划线
+        .replace(/[^a-z0-9_]/g, '') // 移除非字母数字下划线字符
+        .substring(0, 20) // 限制长度
+
+      if (code) {
+        roleForm.value.code = code
+      }
     }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .role-edit-dialog {
   .form-section {
     margin-bottom: 32px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .section-title {
       font-size: 16px;
       font-weight: 600;
@@ -727,33 +745,33 @@ watch(() => roleForm.value.name, (newName) => {
       padding-bottom: 8px;
       border-bottom: 1px solid #ebeef5;
     }
-    
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
       gap: 16px;
-      
+
       .el-form-item {
         margin-bottom: 16px;
       }
     }
-    
+
     .form-tip {
       font-size: 12px;
       color: #909399;
       margin-top: 4px;
     }
-    
+
     .advanced-options {
       .checkbox-group {
         display: flex;
         flex-direction: column;
         gap: 16px;
-        
+
         .el-checkbox {
           margin-bottom: 4px;
         }
-        
+
         .checkbox-tip {
           font-size: 12px;
           color: #909399;
@@ -763,32 +781,32 @@ watch(() => roleForm.value.name, (newName) => {
       }
     }
   }
-  
+
   .level-option {
     display: flex;
     flex-direction: column;
-    
+
     .level-name {
       font-weight: 500;
       color: #303133;
     }
-    
+
     .level-desc {
       font-size: 12px;
       color: #909399;
       margin-top: 2px;
     }
   }
-  
+
   .template-option {
     display: flex;
     flex-direction: column;
-    
+
     .template-name {
       font-weight: 500;
       color: #303133;
     }
-    
+
     .template-desc {
       font-size: 12px;
       color: #909399;

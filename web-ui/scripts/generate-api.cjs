@@ -24,16 +24,16 @@ if (!fs.existsSync(OUTPUT_DIR)) {
 
 // 检查 API 是否可用
 async function checkApiAvailability() {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const { spawn } = require('child_process')
     const curl = spawn('curl', ['-f', '-s', OPENAPI_URL], {
-      stdio: 'pipe'
+      stdio: 'pipe',
     })
-    
-    curl.on('close', (code) => {
+
+    curl.on('close', code => {
       resolve(code === 0)
     })
-    
+
     curl.on('error', () => {
       resolve(false)
     })
@@ -43,12 +43,12 @@ async function checkApiAvailability() {
 // 生成客户端
 async function generateClient() {
   const isApiAvailable = await checkApiAvailability()
-  
+
   if (!isApiAvailable) {
     console.warn('⚠️  无法连接到 Gateway Rust API 服务')
     console.warn('   请确保后端服务正在运行，然后重新执行此脚本')
     console.warn('   启动命令: cargo run -p web-gw-api')
-    
+
     // 创建一个占位符文件，说明如何生成客户端
     const placeholderContent = `/**
  * OpenAPI TypeScript 客户端 - 占位符
@@ -75,31 +75,31 @@ export const GatewayRustApiClient = {
 
 export default GatewayRustApiClient
 `
-    
+
     fs.writeFileSync(path.join(OUTPUT_DIR, 'index.ts'), placeholderContent)
     console.log('📝 已创建占位符文件')
     process.exit(1)
   }
-  
+
   console.log('✅ API 服务可用，开始生成客户端...')
-  
+
   // 使用 openapi-typescript-codegen 生成客户端
   const generateCommand = `npx openapi-typescript-codegen --input "${OPENAPI_URL}" --output "${OUTPUT_DIR}" --client axios --useOptions --useUnionTypes --exportCore false --exportSchemas --exportModels --exportServices --write --prettier`
-  
+
   exec(generateCommand, (error, stdout, stderr) => {
     if (error) {
       console.error('❌ 生成失败:', error.message)
       return
     }
-    
+
     if (stderr) {
       console.warn('⚠️  警告:', stderr)
     }
-    
+
     console.log(stdout)
     console.log('🎉 OpenAPI TypeScript 客户端生成完成！')
     console.log('📦 生成的文件位于:', OUTPUT_DIR)
-    
+
     // 创建导出文件
     const exportContent = `/**
  * Gateway Rust - OpenAPI TypeScript 客户端
@@ -116,10 +116,10 @@ export * from './core'
 // 重新导出主要服务
 export { DefaultService as GatewayRustApi } from './services/DefaultService'
 `
-    
+
     fs.writeFileSync(path.join(OUTPUT_DIR, 'index.ts'), exportContent)
     console.log('✅ 创建统一导出文件')
-    
+
     // 更新主 API 文件以使用生成的客户端
     console.log('💡 可以在代码中这样使用生成的客户端:')
     console.log('   import { GatewayRustApi } from "@/api/generated"')

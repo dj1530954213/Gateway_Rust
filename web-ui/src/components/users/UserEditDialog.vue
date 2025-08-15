@@ -28,9 +28,7 @@
                 maxlength="50"
                 show-word-limit
               />
-              <div class="form-tip">
-                用户名用于登录，创建后不可修改
-              </div>
+              <div class="form-tip">用户名用于登录，创建后不可修改</div>
             </el-form-item>
 
             <el-form-item label="真实姓名" prop="name" required>
@@ -135,9 +133,7 @@
                 <el-radio label="active">启用</el-radio>
                 <el-radio label="inactive">禁用</el-radio>
               </el-radio-group>
-              <div class="form-tip">
-                禁用的用户将无法登录系统
-              </div>
+              <div class="form-tip">禁用的用户将无法登录系统</div>
             </el-form-item>
 
             <el-form-item label="账户有效期" prop="expireDate">
@@ -148,9 +144,7 @@
                 style="width: 100%"
                 :disabled-date="disabledDate"
               />
-              <div class="form-tip">
-                留空表示永不过期
-              </div>
+              <div class="form-tip">留空表示永不过期</div>
             </el-form-item>
           </div>
         </div>
@@ -191,7 +185,9 @@
                 >
                   <div class="manager-option">
                     <span class="manager-name">{{ manager.name }}</span>
-                    <span class="manager-dept">{{ manager.departmentName }}</span>
+                    <span class="manager-dept">{{
+                      manager.departmentName
+                    }}</span>
                   </div>
                 </el-option>
               </el-select>
@@ -291,9 +287,9 @@
         <el-button @click="resetForm">重置</el-button>
         <el-button
           type="primary"
-          @click="saveUser"
           :loading="saving"
           :disabled="!canSave"
+          @click="saveUser"
         >
           {{ isCreate ? '创建用户' : '保存更改' }}
         </el-button>
@@ -321,17 +317,17 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
 import {
   UserFilled,
   Monitor,
   Setting,
   Document,
   Connection,
-  Bell
+  Bell,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -342,7 +338,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'save': [userData: any]
+  save: [userData: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -368,7 +364,7 @@ const userForm = ref({
   managerId: '',
   joinDate: '',
   avatar: '',
-  remark: ''
+  remark: '',
 })
 
 // 可用选项数据
@@ -380,19 +376,32 @@ const potentialManagers = ref<any[]>([])
 const formRules: FormRules = {
   username: [
     { required: true, message: '请输入用户名', trigger: 'blur' },
-    { min: 3, max: 50, message: '用户名长度在 3 到 50 个字符', trigger: 'blur' },
-    { pattern: /^[a-zA-Z0-9_]+$/, message: '用户名只能包含字母、数字和下划线', trigger: 'blur' }
+    {
+      min: 3,
+      max: 50,
+      message: '用户名长度在 3 到 50 个字符',
+      trigger: 'blur',
+    },
+    {
+      pattern: /^[a-zA-Z0-9_]+$/,
+      message: '用户名只能包含字母、数字和下划线',
+      trigger: 'blur',
+    },
   ],
   name: [
     { required: true, message: '请输入真实姓名', trigger: 'blur' },
-    { min: 2, max: 50, message: '姓名长度在 2 到 50 个字符', trigger: 'blur' }
+    { min: 2, max: 50, message: '姓名长度在 2 到 50 个字符', trigger: 'blur' },
   ],
   email: [
     { required: true, message: '请输入邮箱地址', trigger: 'blur' },
-    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
+    { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' },
   ],
   phone: [
-    { pattern: /^1[3-9]\d{9}$/, message: '请输入正确的手机号码', trigger: 'blur' }
+    {
+      pattern: /^1[3-9]\d{9}$/,
+      message: '请输入正确的手机号码',
+      trigger: 'blur',
+    },
   ],
   password: [
     {
@@ -402,7 +411,11 @@ const formRules: FormRules = {
             callback(new Error('请输入初始密码'))
           } else if (value.length < 8) {
             callback(new Error('密码长度至少8位'))
-          } else if (!/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]/.test(value)) {
+          } else if (
+            !/^(?=.*[a-zA-Z])(?=.*\d)(?=.*[!@#$%^&*])[A-Za-z\d!@#$%^&*]/.test(
+              value
+            )
+          ) {
             callback(new Error('密码必须包含字母、数字和特殊字符'))
           } else {
             callback()
@@ -411,8 +424,8 @@ const formRules: FormRules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
   confirmPassword: [
     {
@@ -429,22 +442,22 @@ const formRules: FormRules = {
           callback()
         }
       },
-      trigger: 'blur'
-    }
+      trigger: 'blur',
+    },
   ],
-  role: [
-    { required: true, message: '请选择用户角色', trigger: 'change' }
-  ]
+  role: [{ required: true, message: '请选择用户角色', trigger: 'change' }],
 }
 
 // ===== 计算属性 =====
 const isCreate = computed(() => props.isCreate)
 
 const canSave = computed(() => {
-  return userForm.value.username.trim() !== '' &&
-         userForm.value.name.trim() !== '' &&
-         userForm.value.email.trim() !== '' &&
-         userForm.value.role !== ''
+  return (
+    userForm.value.username.trim() !== '' &&
+    userForm.value.name.trim() !== '' &&
+    userForm.value.email.trim() !== '' &&
+    userForm.value.role !== ''
+  )
 })
 
 const selectedRolePermissions = computed(() => {
@@ -454,33 +467,33 @@ const selectedRolePermissions = computed(() => {
 
 const permissionCategories = computed(() => {
   const permissions = selectedRolePermissions.value
-  
+
   return [
     {
       name: '设备管理',
       icon: 'Monitor',
-      permissions: permissions.filter((p: any) => p.category === 'device')
+      permissions: permissions.filter((p: any) => p.category === 'device'),
     },
     {
       name: '系统设置',
       icon: 'Setting',
-      permissions: permissions.filter((p: any) => p.category === 'system')
+      permissions: permissions.filter((p: any) => p.category === 'system'),
     },
     {
       name: '数据管理',
       icon: 'Document',
-      permissions: permissions.filter((p: any) => p.category === 'data')
+      permissions: permissions.filter((p: any) => p.category === 'data'),
     },
     {
       name: '网络连接',
       icon: 'Connection',
-      permissions: permissions.filter((p: any) => p.category === 'network')
+      permissions: permissions.filter((p: any) => p.category === 'network'),
     },
     {
       name: '报警管理',
       icon: 'Bell',
-      permissions: permissions.filter((p: any) => p.category === 'alert')
-    }
+      permissions: permissions.filter((p: any) => p.category === 'alert'),
+    },
   ].filter(category => category.permissions.length > 0)
 })
 
@@ -503,7 +516,6 @@ async function initializeData() {
       // 创建模式，重置表单
       resetFormData()
     }
-
   } catch (error) {
     console.error('初始化用户编辑对话框失败:', error)
     ElMessage.error('初始化失败')
@@ -582,7 +594,7 @@ function resetFormData() {
     managerId: '',
     joinDate: '',
     avatar: '',
-    remark: ''
+    remark: '',
   }
 }
 
@@ -612,7 +624,9 @@ function disabledJoinDate(time: Date): boolean {
  * 头像上传前验证
  */
 function beforeAvatarUpload(file: File): boolean {
-  const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(file.type)
+  const isValidType = ['image/jpeg', 'image/png', 'image/gif'].includes(
+    file.type
+  )
   const isLt2M = file.size / 1024 / 1024 < 2
 
   if (!isValidType) {
@@ -626,7 +640,7 @@ function beforeAvatarUpload(file: File): boolean {
 
   // 模拟上传
   const reader = new FileReader()
-  reader.onload = (e) => {
+  reader.onload = e => {
     userForm.value.avatar = e.target?.result as string
   }
   reader.readAsDataURL(file)
@@ -670,34 +684,35 @@ async function saveUser() {
   try {
     // 验证表单
     await formRef.value?.validate()
-    
+
     saving.value = true
-    
+
     // 调用API保存用户数据
-    const apiUrl = props.isCreate ? '/api/v1/users' : `/api/v1/users/${userForm.value.id}`
+    const apiUrl = props.isCreate
+      ? '/api/v1/users'
+      : `/api/v1/users/${userForm.value.id}`
     const method = props.isCreate ? 'POST' : 'PUT'
-    
+
     const response = await fetch(apiUrl, {
       method,
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
-      body: JSON.stringify(userForm.value)
+      body: JSON.stringify(userForm.value),
     })
-    
+
     if (!response.ok) {
       throw new Error('保存用户信息失败')
     }
-    
+
     const userData = await response.json()
-    
+
     if (props.isCreate) {
       userData.createdAt = new Date().toISOString()
     }
-    
+
     emit('save', userData)
     dialogVisible.value = false
-    
   } catch (error) {
     console.error('保存用户失败:', error)
     ElMessage.error('保存用户失败')
@@ -712,17 +727,15 @@ async function saveUser() {
 function handleClose() {
   // 检查是否有未保存的更改
   if (hasUnsavedChanges()) {
-    ElMessageBox.confirm(
-      '你有未保存的更改，确定要关闭吗？',
-      '确认关闭',
-      {
-        type: 'warning'
-      }
-    ).then(() => {
-      dialogVisible.value = false
-    }).catch(() => {
-      // 用户取消关闭
+    ElMessageBox.confirm('你有未保存的更改，确定要关闭吗？', '确认关闭', {
+      type: 'warning',
     })
+      .then(() => {
+        dialogVisible.value = false
+      })
+      .catch(() => {
+        // 用户取消关闭
+      })
   } else {
     dialogVisible.value = false
   }
@@ -733,22 +746,27 @@ function handleClose() {
  */
 function hasUnsavedChanges(): boolean {
   // 简单的检查逻辑，实际应该比较表单数据和原始数据
-  return userForm.value.username.trim() !== '' || 
-         userForm.value.name.trim() !== '' ||
-         userForm.value.email.trim() !== ''
+  return (
+    userForm.value.username.trim() !== '' ||
+    userForm.value.name.trim() !== '' ||
+    userForm.value.email.trim() !== ''
+  )
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible) {
-    nextTick(() => {
-      initializeData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible) {
+      nextTick(() => {
+        initializeData()
+      })
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
   if (!visible) {
     // 重置表单
@@ -761,11 +779,11 @@ watch(dialogVisible, (visible) => {
 .user-edit-dialog {
   .form-section {
     margin-bottom: 32px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .section-title {
       font-size: 16px;
       font-weight: 600;
@@ -774,73 +792,73 @@ watch(dialogVisible, (visible) => {
       padding-bottom: 8px;
       border-bottom: 1px solid #ebeef5;
     }
-    
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
       gap: 16px;
-      
+
       .el-form-item {
         margin-bottom: 16px;
       }
     }
-    
+
     .form-tip {
       font-size: 12px;
       color: #909399;
       margin-top: 4px;
     }
   }
-  
+
   .role-option {
     display: flex;
     flex-direction: column;
-    
+
     .role-name {
       font-weight: 500;
       color: #303133;
     }
-    
+
     .role-desc {
       font-size: 12px;
       color: #909399;
       margin-top: 2px;
     }
   }
-  
+
   .manager-option {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    
+
     .manager-name {
       font-weight: 500;
       color: #303133;
     }
-    
+
     .manager-dept {
       font-size: 12px;
       color: #909399;
     }
   }
-  
+
   .avatar-section {
     display: flex;
     align-items: flex-start;
     gap: 20px;
-    
+
     .avatar-preview {
       flex-shrink: 0;
     }
-    
+
     .avatar-actions {
       flex: 1;
-      
+
       .el-button {
         margin-right: 12px;
         margin-bottom: 8px;
       }
-      
+
       .avatar-tip {
         font-size: 12px;
         color: #909399;
@@ -848,38 +866,38 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .permissions-preview {
     .permission-categories {
       .permission-category {
         margin-bottom: 20px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .category-header {
           display: flex;
           align-items: center;
           gap: 8px;
           margin-bottom: 12px;
-          
+
           .category-icon {
             font-size: 16px;
             color: #409eff;
           }
-          
+
           .category-name {
             font-weight: 500;
             color: #303133;
           }
         }
-        
+
         .category-permissions {
           display: flex;
           flex-wrap: wrap;
           gap: 8px;
-          
+
           .permission-tag {
             margin: 0;
           }
@@ -902,14 +920,17 @@ watch(dialogVisible, (visible) => {
       grid-template-columns: 1fr;
       gap: 12px;
     }
-    
+
     .avatar-section {
       flex-direction: column;
       gap: 16px;
       align-items: center;
     }
-    
-    .permissions-preview .permission-categories .permission-category .category-permissions {
+
+    .permissions-preview
+      .permission-categories
+      .permission-category
+      .category-permissions {
       gap: 6px;
     }
   }

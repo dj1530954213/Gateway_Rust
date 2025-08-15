@@ -1,0 +1,40 @@
+# 生产环境配置覆盖
+
+# HTTP服务端口配置
+http_addr: "0.0.0.0:50010"
+
+# 生产环境CORS配置 - 严格限制
+cors_allowed:
+  - "${CORS_ALLOWED_ORIGINS:-}"
+
+# 生产环境日志级别
+log_level: "info"
+
+# 生产环境数据库连接池配置 - 高性能优化
+database_pool:
+  # 高并发生产环境推荐配置
+  max_connections: 100
+  min_connections: 20
+  acquire_timeout_secs: 5
+  idle_timeout_secs: 300    # 5分钟，生产环境缩短空闲时间
+  max_lifetime_secs: 1800   # 30分钟，定期刷新连接
+  test_before_acquire: true
+  health_check_interval_secs: 15  # 更频繁的健康检查
+  enable_metrics: true
+  slow_query_threshold_ms: 500    # 生产环境严格的慢查询阈值
+  # 生产环境重试配置 - 快速失败
+  retry_config:
+    max_retries: 5
+    initial_retry_delay_ms: 50
+    backoff_multiplier: 1.5
+    max_retry_delay_ms: 2000
+    enable_jitter: true
+
+# 生产环境WebSocket配置
+ws_max_connections: 5000
+ws_heartbeat_timeout: 30
+ws_cleanup_interval: 10
+
+# 生产环境请求配置
+request_timeout: 15
+max_request_size: 5  # 5MB，生产环境限制更严格

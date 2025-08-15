@@ -105,7 +105,7 @@ impl Default for ModbusConfig {
 }
 
 /// Modbus数据区域
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ModbusRegion {
     /// 线圈（输出线圈）
     Coils,

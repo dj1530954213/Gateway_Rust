@@ -6,27 +6,38 @@
         <el-button :icon="ArrowLeft" @click="handleGoBack">
           返回列表
         </el-button>
-        
+
         <div class="header-title">
           <el-icon :size="24">
             <Connection />
           </el-icon>
           <h1>{{ isEditing ? '编辑连接' : '创建连接' }}</h1>
-          <el-tag v-if="connectionForm.id" type="info">ID: {{ connectionForm.id }}</el-tag>
+          <el-tag v-if="connectionForm.id" type="info"
+            >ID: {{ connectionForm.id }}</el-tag
+          >
         </div>
       </div>
-      
+
       <div class="header-actions">
-        <el-button :icon="Link" @click="handleTestConnection" :loading="testing">
+        <el-button
+          :icon="Link"
+          :loading="testing"
+          @click="handleTestConnection"
+        >
           测试连接
         </el-button>
-        
+
         <el-button @click="handleLoadTemplate">
           <el-icon><DocumentCopy /></el-icon>
           从模板加载
         </el-button>
-        
-        <el-button type="primary" :icon="Check" @click="handleSave" :loading="saving">
+
+        <el-button
+          type="primary"
+          :icon="Check"
+          :loading="saving"
+          @click="handleSave"
+        >
           {{ isEditing ? '更新连接' : '创建连接' }}
         </el-button>
       </div>
@@ -39,11 +50,11 @@
           <div class="form-section">
             <h3>基本信息</h3>
             <BaseForm
+              ref="basicFormRef"
               v-model="connectionForm"
               :fields="basicFields"
               :rules="formRules"
               label-width="140px"
-              ref="basicFormRef"
             />
           </div>
 
@@ -52,9 +63,11 @@
             <h3>
               <el-icon><Setting /></el-icon>
               {{ connectionConfig.title }}
-              <el-tag size="small" type="info">{{ connectionConfig.type }}</el-tag>
+              <el-tag size="small" type="info">{{
+                connectionConfig.type
+              }}</el-tag>
             </h3>
-            
+
             <ProtocolConfig
               v-model="connectionForm.config"
               :protocol-type="connectionForm.protocol"
@@ -77,7 +90,7 @@
               <BaseForm
                 v-model="connectionForm"
                 :fields="poolFields"
-                :rules="poolRules" 
+                :rules="poolRules"
                 label-width="140px"
               />
             </el-collapse-item>
@@ -112,7 +125,7 @@
                 <el-icon><Refresh /></el-icon>
               </el-button>
             </h3>
-            
+
             <div class="config-preview">
               <el-tabs v-model="previewTab" size="small">
                 <el-tab-pane label="JSON" name="json">
@@ -120,16 +133,16 @@
                     <pre><code>{{ formatConfigJson() }}</code></pre>
                   </div>
                 </el-tab-pane>
-                
+
                 <el-tab-pane label="YAML" name="yaml">
                   <div class="yaml-preview">
                     <pre><code>{{ formatConfigYaml() }}</code></pre>
                   </div>
                 </el-tab-pane>
-                
+
                 <el-tab-pane label="验证" name="validation">
                   <div class="config-validation">
-                    <ConfigValidation 
+                    <ConfigValidation
                       :config="connectionForm"
                       :validation-rules="validationRules"
                     />
@@ -140,12 +153,12 @@
           </div>
 
           <!-- 连接状态 -->
-          <div class="status-section" v-if="isEditing">
+          <div v-if="isEditing" class="status-section">
             <h3>
               <el-icon><Monitor /></el-icon>
               连接状态
             </h3>
-            
+
             <ConnectionStatus
               :status="connectionStatus.status"
               :name="connectionForm.name"
@@ -153,14 +166,15 @@
               :show-metrics="true"
               :metrics="connectionStatus.metrics"
             />
-            
+
             <div class="status-details">
               <el-descriptions :column="1" size="small" border>
                 <el-descriptions-item label="建立时间">
                   {{ formatTime(connectionStatus.establishedAt) }}
                 </el-descriptions-item>
                 <el-descriptions-item label="活跃连接">
-                  {{ connectionStatus.activeConnections }} / {{ connectionForm.pool?.maxConnections || 1 }}
+                  {{ connectionStatus.activeConnections }} /
+                  {{ connectionForm.pool?.maxConnections || 1 }}
                 </el-descriptions-item>
                 <el-descriptions-item label="传输字节">
                   {{ formatBytes(connectionStatus.bytesTransferred) }}
@@ -178,7 +192,7 @@
               <el-icon><Operation /></el-icon>
               快速操作
             </h3>
-            
+
             <div class="action-buttons">
               <el-button-group>
                 <el-button :icon="Document" @click="handleExportConfig">
@@ -188,7 +202,7 @@
                   导入配置
                 </el-button>
               </el-button-group>
-              
+
               <el-button-group>
                 <el-button :icon="CopyDocument" @click="handleCopyConfig">
                   复制配置
@@ -213,15 +227,13 @@
     </div>
 
     <!-- 连接测试对话框 -->
-    <el-dialog
-      v-model="testDialogVisible"
-      title="连接测试结果"
-      width="600px"
-    >
+    <el-dialog v-model="testDialogVisible" title="连接测试结果" width="600px">
       <div class="test-result">
         <div class="result-header">
           <el-icon :size="24" :class="testResult.success ? 'success' : 'error'">
-            <component :is="testResult.success ? 'CircleCheck' : 'CircleClose'" />
+            <component
+              :is="testResult.success ? 'CircleCheck' : 'CircleClose'"
+            />
           </el-icon>
           <div class="result-info">
             <h3>{{ testResult.success ? '连接成功' : '连接失败' }}</h3>
@@ -262,7 +274,7 @@
       width="800px"
     >
       <div class="template-grid">
-        <div 
+        <div
           v-for="template in connectionTemplates"
           :key="template.id"
           class="template-card"
@@ -277,14 +289,21 @@
               <h4>{{ template.name }}</h4>
               <p>{{ template.description }}</p>
             </div>
-            <el-tag size="small" :type="getConnectionTypeTagType(template.connectionType)">
+            <el-tag
+              size="small"
+              :type="getConnectionTypeTagType(template.connectionType)"
+            >
               {{ template.connectionType }}
             </el-tag>
           </div>
-          
+
           <div class="template-config">
             <div class="config-items">
-              <span class="config-item" v-for="item in template.configItems" :key="item">
+              <span
+                v-for="item in template.configItems"
+                :key="item"
+                class="config-item"
+              >
                 {{ item }}
               </span>
             </div>
@@ -294,10 +313,10 @@
 
       <template #footer>
         <el-button @click="templateDialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="handleApplyTemplate"
+        <el-button
+          type="primary"
           :disabled="!selectedTemplate"
+          @click="handleApplyTemplate"
         >
           应用模板
         </el-button>
@@ -307,9 +326,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
   Connection,
@@ -328,15 +344,18 @@ import {
   VideoPlay,
   VideoPause,
   CircleCheck,
-  CircleClose
+  CircleClose,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 // 导入组件
 import { BaseForm } from '../../components/base'
-import { 
+import {
   ProtocolConfig,
   ConfigValidation,
-  ConnectionStatus
+  ConnectionStatus,
 } from '../../components/business'
 
 // 类型定义
@@ -345,7 +364,14 @@ interface ConnectionForm {
   name: string
   description: string
   connectionType: 'tcp' | 'serial' | 'websocket' | 'http' | 'https'
-  protocol: 'modbus_tcp' | 'modbus_rtu' | 'opcua' | 'mqtt' | 'ethernet_ip' | 'bacnet' | 'http'
+  protocol:
+    | 'modbus_tcp'
+    | 'modbus_rtu'
+    | 'opcua'
+    | 'mqtt'
+    | 'ethernet_ip'
+    | 'bacnet'
+    | 'http'
   enabled: boolean
   autoReconnect: boolean
   config: Record<string, any>
@@ -435,27 +461,27 @@ const connectionForm = ref<ConnectionForm>({
   config: {},
   security: {
     enableTls: false,
-    verifyCertificate: true
+    verifyCertificate: true,
   },
   pool: {
     maxConnections: 10,
     minConnections: 1,
     connectionTimeout: 5000,
     idleTimeout: 30000,
-    maxIdleTime: 300000
+    maxIdleTime: 300000,
   },
   retry: {
     maxRetries: 3,
     retryInterval: 1000,
     exponentialBackoff: true,
-    maxRetryInterval: 10000
+    maxRetryInterval: 10000,
   },
   monitoring: {
     enableHealthCheck: true,
     healthCheckInterval: 30000,
     enableMetrics: true,
-    metricsInterval: 5000
-  }
+    metricsInterval: 5000,
+  },
 })
 
 const testResult = ref<TestResult>({
@@ -463,7 +489,7 @@ const testResult = ref<TestResult>({
   message: '',
   timestamp: new Date(),
   responseTime: 0,
-  latency: 0
+  latency: 0,
 })
 
 const connectionStatus = ref<ConnectionStatus>({
@@ -472,7 +498,7 @@ const connectionStatus = ref<ConnectionStatus>({
   activeConnections: 0,
   bytesTransferred: 0,
   lastActivity: new Date(),
-  metrics: {}
+  metrics: {},
 })
 
 // 模拟模板数据
@@ -486,9 +512,9 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
     config: {
       host: '',
       port: 502,
-      timeout: 5000
+      timeout: 5000,
     },
-    configItems: ['主机地址', '端口号', '超时时间', '保持连接']
+    configItems: ['主机地址', '端口号', '超时时间', '保持连接'],
   },
   {
     id: '2',
@@ -501,9 +527,9 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
       baudRate: 9600,
       dataBits: 8,
       parity: 'None',
-      stopBits: 1
+      stopBits: 1,
     },
-    configItems: ['串口号', '波特率', '数据位', '校验位', '停止位']
+    configItems: ['串口号', '波特率', '数据位', '校验位', '停止位'],
   },
   {
     id: '3',
@@ -513,9 +539,9 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
     protocol: 'WebSocket',
     config: {
       url: 'ws://localhost:8080/ws/telemetry',
-      protocols: ['mqtt', 'wamp']
+      protocols: ['mqtt', 'wamp'],
     },
-    configItems: ['WebSocket URL', '子协议', '重连机制', '心跳检测']
+    configItems: ['WebSocket URL', '子协议', '重连机制', '心跳检测'],
   },
   {
     id: '4',
@@ -526,10 +552,10 @@ const connectionTemplates = ref<ConnectionTemplate[]>([
     config: {
       baseUrl: 'https://api.example.com',
       timeout: 10000,
-      maxRedirects: 5
+      maxRedirects: 5,
     },
-    configItems: ['基础URL', '超时时间', '重定向', 'SSL证书']
-  }
+    configItems: ['基础URL', '超时时间', '重定向', 'SSL证书'],
+  },
 ])
 
 // 计算属性
@@ -541,7 +567,7 @@ const connectionConfig = computed(() => {
     serial: { title: '串口连接配置', type: 'Serial' },
     websocket: { title: 'WebSocket 连接配置', type: 'WebSocket' },
     http: { title: 'HTTP 连接配置', type: 'HTTP' },
-    https: { title: 'HTTPS 连接配置', type: 'HTTPS' }
+    https: { title: 'HTTPS 连接配置', type: 'HTTPS' },
   }
   return configs[connectionForm.value.connectionType] || configs.tcp
 })
@@ -553,13 +579,13 @@ const basicFields = computed(() => [
     label: '连接名称',
     type: 'input',
     required: true,
-    placeholder: '请输入连接名称'
+    placeholder: '请输入连接名称',
   },
   {
     name: 'description',
     label: '连接描述',
     type: 'textarea',
-    placeholder: '请输入连接描述（可选）'
+    placeholder: '请输入连接描述（可选）',
   },
   {
     name: 'connectionType',
@@ -571,8 +597,8 @@ const basicFields = computed(() => [
       { label: '串口连接', value: 'serial' },
       { label: 'WebSocket 连接', value: 'websocket' },
       { label: 'HTTP 连接', value: 'http' },
-      { label: 'HTTPS 安全连接', value: 'https' }
-    ]
+      { label: 'HTTPS 安全连接', value: 'https' },
+    ],
   },
   {
     name: 'protocol',
@@ -586,66 +612,66 @@ const basicFields = computed(() => [
       { label: 'MQTT', value: 'mqtt' },
       { label: 'EtherNet/IP', value: 'ethernet_ip' },
       { label: 'BACnet', value: 'bacnet' },
-      { label: 'HTTP', value: 'http' }
-    ]
+      { label: 'HTTP', value: 'http' },
+    ],
   },
   {
     name: 'enabled',
     label: '启用状态',
     type: 'switch',
     activeText: '启用',
-    inactiveText: '禁用'
+    inactiveText: '禁用',
   },
   {
     name: 'autoReconnect',
     label: '自动重连',
     type: 'switch',
     activeText: '启用',
-    inactiveText: '禁用'
-  }
+    inactiveText: '禁用',
+  },
 ])
 
 const securityFields = [
   {
     name: 'security.enableTls',
     label: '启用TLS/SSL',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'security.verifyCertificate',
     label: '验证证书',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'security.username',
     label: '用户名',
     type: 'input',
-    placeholder: '连接用户名'
+    placeholder: '连接用户名',
   },
   {
     name: 'security.password',
     label: '密码',
     type: 'password',
-    placeholder: '连接密码'
+    placeholder: '连接密码',
   },
   {
     name: 'security.clientCertPath',
     label: '客户端证书路径',
     type: 'input',
-    placeholder: '客户端证书文件路径'
+    placeholder: '客户端证书文件路径',
   },
   {
     name: 'security.clientKeyPath',
     label: '客户端密钥路径',
     type: 'input',
-    placeholder: '客户端密钥文件路径'
+    placeholder: '客户端密钥文件路径',
   },
   {
     name: 'security.caCertPath',
     label: 'CA证书路径',
     type: 'input',
-    placeholder: 'CA证书文件路径'
-  }
+    placeholder: 'CA证书文件路径',
+  },
 ]
 
 const poolFields = [
@@ -655,7 +681,7 @@ const poolFields = [
     type: 'number',
     min: 1,
     max: 100,
-    placeholder: '连接池最大连接数'
+    placeholder: '连接池最大连接数',
   },
   {
     name: 'pool.minConnections',
@@ -663,7 +689,7 @@ const poolFields = [
     type: 'number',
     min: 0,
     max: 50,
-    placeholder: '连接池最小连接数'
+    placeholder: '连接池最小连接数',
   },
   {
     name: 'pool.connectionTimeout',
@@ -671,7 +697,7 @@ const poolFields = [
     type: 'number',
     min: 1000,
     max: 60000,
-    placeholder: '建立连接超时时间'
+    placeholder: '建立连接超时时间',
   },
   {
     name: 'pool.idleTimeout',
@@ -679,7 +705,7 @@ const poolFields = [
     type: 'number',
     min: 5000,
     max: 300000,
-    placeholder: '连接空闲超时时间'
+    placeholder: '连接空闲超时时间',
   },
   {
     name: 'pool.maxIdleTime',
@@ -687,8 +713,8 @@ const poolFields = [
     type: 'number',
     min: 60000,
     max: 1800000,
-    placeholder: '连接最大空闲时间'
-  }
+    placeholder: '连接最大空闲时间',
+  },
 ]
 
 const retryFields = [
@@ -697,97 +723,95 @@ const retryFields = [
     label: '最大重试次数',
     type: 'number',
     min: 0,
-    max: 10
+    max: 10,
   },
   {
     name: 'retry.retryInterval',
     label: '重试间隔(ms)',
     type: 'number',
     min: 100,
-    max: 10000
+    max: 10000,
   },
   {
     name: 'retry.exponentialBackoff',
     label: '指数退避',
     type: 'switch',
     activeText: '启用',
-    inactiveText: '禁用'
+    inactiveText: '禁用',
   },
   {
     name: 'retry.maxRetryInterval',
     label: '最大重试间隔(ms)',
     type: 'number',
     min: 1000,
-    max: 60000
-  }
+    max: 60000,
+  },
 ]
 
 const monitoringFields = [
   {
     name: 'monitoring.enableHealthCheck',
     label: '启用健康检查',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'monitoring.healthCheckInterval',
     label: '健康检查间隔(ms)',
     type: 'number',
     min: 5000,
-    max: 300000
+    max: 300000,
   },
   {
     name: 'monitoring.enableMetrics',
     label: '启用指标收集',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'monitoring.metricsInterval',
     label: '指标收集间隔(ms)',
     type: 'number',
     min: 1000,
-    max: 60000
-  }
+    max: 60000,
+  },
 ]
 
 // 验证规则
 const formRules = {
   name: [
     { required: true, message: '请输入连接名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '名称长度应在2-50字符之间', trigger: 'blur' }
+    { min: 2, max: 50, message: '名称长度应在2-50字符之间', trigger: 'blur' },
   ],
   connectionType: [
-    { required: true, message: '请选择连接类型', trigger: 'change' }
+    { required: true, message: '请选择连接类型', trigger: 'change' },
   ],
-  protocol: [
-    { required: true, message: '请选择应用协议', trigger: 'change' }
-  ]
+  protocol: [{ required: true, message: '请选择应用协议', trigger: 'change' }],
 }
 
 const securityRules = {
   'security.username': [
-    { min: 3, max: 50, message: '用户名长度应在3-50字符之间', trigger: 'blur' }
+    { min: 3, max: 50, message: '用户名长度应在3-50字符之间', trigger: 'blur' },
   ],
   'security.password': [
-    { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' }
-  ]
+    { min: 6, message: '密码长度不能少于6个字符', trigger: 'blur' },
+  ],
 }
 
 const poolRules = {
   'pool.maxConnections': [
-    { required: true, message: '请输入最大连接数', trigger: 'blur' }
+    { required: true, message: '请输入最大连接数', trigger: 'blur' },
   ],
   'pool.connectionTimeout': [
-    { required: true, message: '请输入连接超时时间', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入连接超时时间', trigger: 'blur' },
+  ],
 }
 
 const retryRules = {
   'retry.maxRetries': [
-    { required: true, message: '请输入最大重试次数', trigger: 'blur' }
+    { required: true, message: '请输入最大重试次数', trigger: 'blur' },
   ],
   'retry.retryInterval': [
-    { required: true, message: '请输入重试间隔', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入重试间隔', trigger: 'blur' },
+  ],
 }
 
 const validationRules = computed(() => ({
@@ -795,8 +819,8 @@ const validationRules = computed(() => ({
   ranges: {
     'pool.maxConnections': { min: 1, max: 100 },
     'pool.connectionTimeout': { min: 1000, max: 60000 },
-    'retry.maxRetries': { min: 0, max: 10 }
-  }
+    'retry.maxRetries': { min: 0, max: 10 },
+  },
 }))
 
 // 方法
@@ -808,7 +832,7 @@ const formatBytes = (bytes: number) => {
   const sizes = ['B', 'KB', 'MB', 'GB']
   if (bytes === 0) return '0 B'
   const i = Math.floor(Math.log(bytes) / Math.log(1024))
-  return `${Math.round(bytes / Math.pow(1024, i) * 100) / 100  } ${  sizes[i]}`
+  return `${Math.round((bytes / Math.pow(1024, i)) * 100) / 100} ${sizes[i]}`
 }
 
 const formatConfigJson = () => {
@@ -823,7 +847,7 @@ const formatConfigYaml = () => {
   try {
     const obj = connectionForm.value
     let yaml = ''
-    
+
     const toYaml = (obj: any, indent = 0) => {
       const spaces = '  '.repeat(indent)
       for (const [key, value] of Object.entries(obj)) {
@@ -835,7 +859,7 @@ const formatConfigYaml = () => {
         }
       }
     }
-    
+
     toYaml(obj)
     return yaml
   } catch (error) {
@@ -845,22 +869,22 @@ const formatConfigYaml = () => {
 
 const getConnectionTypeIcon = (type: string) => {
   const icons: Record<string, string> = {
-    'TCP': 'Connection',
-    'Serial': 'Link',
-    'WebSocket': 'Connection',
-    'HTTP': 'Link',
-    'HTTPS': 'Setting'
+    TCP: 'Connection',
+    Serial: 'Link',
+    WebSocket: 'Connection',
+    HTTP: 'Link',
+    HTTPS: 'Setting',
   }
   return icons[type] || 'Connection'
 }
 
 const getConnectionTypeTagType = (type: string) => {
   const types: Record<string, string> = {
-    'TCP': 'primary',
-    'Serial': 'success',
-    'WebSocket': 'warning',
-    'HTTP': 'info',
-    'HTTPS': 'danger'
+    TCP: 'primary',
+    Serial: 'success',
+    WebSocket: 'warning',
+    HTTP: 'info',
+    HTTPS: 'danger',
   }
   return types[type] || 'info'
 }
@@ -877,22 +901,21 @@ const handleSave = async () => {
     ElMessage.error('请检查表单填写')
     return
   }
-  
+
   saving.value = true
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     if (isEditing.value) {
       ElMessage.success('连接配置已更新')
     } else {
       ElMessage.success('连接创建成功')
     }
-    
+
     setTimeout(() => {
       router.push('/connectors')
     }, 1000)
-    
   } catch (error) {
     ElMessage.error('保存失败，请重试')
   } finally {
@@ -902,27 +925,26 @@ const handleSave = async () => {
 
 const handleTestConnection = async () => {
   testing.value = true
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 2500))
-    
+
     const success = Math.random() > 0.25
     testResult.value = {
       success,
-      message: success 
-        ? '连接测试成功，网络通信正常' 
+      message: success
+        ? '连接测试成功，网络通信正常'
         : '连接测试失败，请检查网络和配置',
       timestamp: new Date(),
       responseTime: Math.floor(Math.random() * 300) + 50,
       latency: Math.floor(Math.random() * 100) + 10,
       bandwidth: success ? '10 Mbps' : undefined,
-      logs: success 
+      logs: success
         ? '初始化连接...\n建立TCP连接\n协议握手成功\n数据传输测试\n连接测试完成'
-        : '初始化连接...\n尝试建立连接\n连接超时\n重试连接失败\n测试失败'
+        : '初始化连接...\n尝试建立连接\n连接超时\n重试连接失败\n测试失败',
     }
-    
+
     testDialogVisible.value = true
-    
   } catch (error) {
     ElMessage.error('连接测试异常')
   } finally {
@@ -936,12 +958,12 @@ const handleLoadTemplate = () => {
 
 const handleApplyTemplate = () => {
   if (!selectedTemplate.value) return
-  
+
   const template = selectedTemplate.value
-  
+
   // 应用模板配置
   Object.assign(connectionForm.value.config, template.config)
-  
+
   // 根据连接类型设置其他字段
   if (template.connectionType === 'TCP') {
     connectionForm.value.connectionType = 'tcp'
@@ -952,7 +974,7 @@ const handleApplyTemplate = () => {
   } else if (template.connectionType === 'HTTPS') {
     connectionForm.value.connectionType = 'https'
   }
-  
+
   // 设置协议
   if (template.protocol === 'Modbus TCP') {
     connectionForm.value.protocol = 'modbus_tcp'
@@ -961,10 +983,10 @@ const handleApplyTemplate = () => {
   } else if (template.protocol === 'OPC UA') {
     connectionForm.value.protocol = 'opcua'
   }
-  
+
   templateDialogVisible.value = false
   selectedTemplate.value = null
-  
+
   ElMessage.success(`已应用模板：${template.name}`)
 }
 
@@ -978,19 +1000,19 @@ const handleExportConfig = () => {
   const exportData = {
     connection: connectionForm.value,
     exportTime: new Date().toISOString(),
-    version: '1.0'
+    version: '1.0',
   }
-  
+
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `connection_${connectionForm.value.name || 'config'}_${new Date().toISOString().split('T')[0]}.json`
   a.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('配置导出成功')
 }
@@ -999,12 +1021,12 @@ const handleImportConfig = () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = '.json'
-  input.onchange = (e) => {
+  input.onchange = e => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
-    
+
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const data = JSON.parse(e.target?.result as string)
         if (data.connection) {
@@ -1038,7 +1060,7 @@ const handleResetForm = () => {
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     }
   ).then(() => {
     // 重置表单到初始状态
@@ -1053,29 +1075,29 @@ const handleResetForm = () => {
       config: {},
       security: {
         enableTls: false,
-        verifyCertificate: true
+        verifyCertificate: true,
       },
       pool: {
         maxConnections: 10,
         minConnections: 1,
         connectionTimeout: 5000,
         idleTimeout: 30000,
-        maxIdleTime: 300000
+        maxIdleTime: 300000,
       },
       retry: {
         maxRetries: 3,
         retryInterval: 1000,
         exponentialBackoff: true,
-        maxRetryInterval: 10000
+        maxRetryInterval: 10000,
       },
       monitoring: {
         enableHealthCheck: true,
         healthCheckInterval: 30000,
         enableMetrics: true,
-        metricsInterval: 5000
-      }
+        metricsInterval: 5000,
+      },
     })
-    
+
     ElMessage.success('表单已重置')
   })
 }
@@ -1105,41 +1127,45 @@ const refreshPreview = () => {
 }
 
 // 监听连接类型变化，更新配置预设
-watch(() => connectionForm.value.connectionType, (newType) => {
-  const defaultConfigs = {
-    tcp: {
-      host: '',
-      port: 502
-    },
-    serial: {
-      serialPort: 'COM1',
-      baudRate: 9600,
-      dataBits: 8,
-      parity: 'None',
-      stopBits: 1
-    },
-    websocket: {
-      url: 'ws://localhost:8080/ws/telemetry'
-    },
-    http: {
-      baseUrl: 'http://localhost:8080'
-    },
-    https: {
-      baseUrl: 'https://localhost:8443'
+watch(
+  () => connectionForm.value.connectionType,
+  newType => {
+    const defaultConfigs = {
+      tcp: {
+        host: '',
+        port: 502,
+      },
+      serial: {
+        serialPort: 'COM1',
+        baudRate: 9600,
+        dataBits: 8,
+        parity: 'None',
+        stopBits: 1,
+      },
+      websocket: {
+        url: 'ws://localhost:8080/ws/telemetry',
+      },
+      http: {
+        baseUrl: 'http://localhost:8080',
+      },
+      https: {
+        baseUrl: 'https://localhost:8443',
+      },
     }
-  }
-  
-  if (!Object.keys(connectionForm.value.config).length) {
-    connectionForm.value.config = defaultConfigs[newType] || {}
-  }
-}, { immediate: true })
+
+    if (!Object.keys(connectionForm.value.config).length) {
+      connectionForm.value.config = defaultConfigs[newType] || {}
+    }
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(async () => {
   if (isEditing.value) {
     // 模拟加载现有连接配置
     const connectionId = route.params.id as string
-    
+
     // 模拟连接数据
     const mockConnection = {
       id: connectionId,
@@ -1151,36 +1177,36 @@ onMounted(async () => {
       autoReconnect: true,
       config: {
         host: '',
-        port: 502
+        port: 502,
       },
       security: {
         enableTls: false,
         verifyCertificate: true,
-        username: 'admin'
+        username: 'admin',
       },
       pool: {
         maxConnections: 10,
         minConnections: 2,
         connectionTimeout: 5000,
         idleTimeout: 30000,
-        maxIdleTime: 300000
+        maxIdleTime: 300000,
       },
       retry: {
         maxRetries: 3,
         retryInterval: 1000,
         exponentialBackoff: true,
-        maxRetryInterval: 10000
+        maxRetryInterval: 10000,
       },
       monitoring: {
         enableHealthCheck: true,
         healthCheckInterval: 30000,
         enableMetrics: true,
-        metricsInterval: 5000
-      }
+        metricsInterval: 5000,
+      },
     }
-    
+
     Object.assign(connectionForm.value, mockConnection)
-    
+
     // 模拟连接状态
     connectionStatus.value = {
       status: 'connected',
@@ -1192,8 +1218,8 @@ onMounted(async () => {
         packetsIn: 15670,
         packetsOut: 12450,
         errorsCount: 2,
-        avgLatency: 25
-      }
+        avgLatency: 25,
+      },
     }
   }
 })
@@ -1213,29 +1239,29 @@ onMounted(async () => {
   margin-bottom: 20px;
   padding: 16px 0;
   border-bottom: 1px solid var(--el-border-color-light);
-  
+
   .header-left {
     display: flex;
     align-items: center;
     gap: 16px;
-    
+
     .header-title {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       h1 {
         margin: 0;
         font-size: 24px;
         color: var(--el-text-color-primary);
       }
-      
+
       .el-icon {
         color: var(--el-color-primary);
       }
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 12px;
@@ -1249,7 +1275,7 @@ onMounted(async () => {
     padding: 20px;
     margin-bottom: 20px;
     border: 1px solid var(--el-border-color-light);
-    
+
     h3 {
       margin: 0 0 20px 0;
       font-size: 18px;
@@ -1257,35 +1283,37 @@ onMounted(async () => {
       display: flex;
       align-items: center;
       gap: 8px;
-      
+
       .el-icon {
         color: var(--el-color-primary);
       }
     }
   }
-  
+
   .advanced-config {
     background: white;
     border-radius: 8px;
     border: 1px solid var(--el-border-color-light);
-    
+
     :deep(.el-collapse-item__header) {
       padding: 0 20px;
     }
-    
+
     :deep(.el-collapse-item__content) {
       padding: 0 20px 20px;
     }
   }
 }
 
-.preview-section, .status-section, .quick-actions {
+.preview-section,
+.status-section,
+.quick-actions {
   background: white;
   border-radius: 8px;
   padding: 16px;
   margin-bottom: 16px;
   border: 1px solid var(--el-border-color-light);
-  
+
   h3 {
     margin: 0 0 16px 0;
     font-size: 16px;
@@ -1293,7 +1321,7 @@ onMounted(async () => {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    
+
     .el-icon {
       color: var(--el-color-primary);
     }
@@ -1301,7 +1329,8 @@ onMounted(async () => {
 }
 
 .config-preview {
-  .json-preview, .yaml-preview {
+  .json-preview,
+  .yaml-preview {
     pre {
       background: var(--el-fill-color-light);
       padding: 12px;
@@ -1309,7 +1338,7 @@ onMounted(async () => {
       font-size: 12px;
       max-height: 300px;
       overflow-y: auto;
-      
+
       code {
         color: var(--el-text-color-primary);
       }
@@ -1319,7 +1348,7 @@ onMounted(async () => {
 
 .status-details {
   margin-top: 16px;
-  
+
   .error {
     color: var(--el-color-danger);
   }
@@ -1329,7 +1358,7 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  
+
   .el-button-group {
     display: flex;
     gap: 0;
@@ -1342,23 +1371,23 @@ onMounted(async () => {
     align-items: center;
     gap: 12px;
     margin-bottom: 20px;
-    
+
     .el-icon {
       &.success {
         color: var(--el-color-success);
       }
-      
+
       &.error {
         color: var(--el-color-danger);
       }
     }
-    
+
     .result-info {
       h3 {
         margin: 0 0 4px 0;
         color: var(--el-text-color-primary);
       }
-      
+
       p {
         margin: 0;
         color: var(--el-text-color-regular);
@@ -1366,15 +1395,15 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .test-logs {
     margin-top: 16px;
-    
+
     h4 {
       margin: 0 0 8px 0;
       font-size: 14px;
     }
-    
+
     .log-content {
       background: var(--el-fill-color-dark);
       color: var(--el-text-color-primary);
@@ -1392,44 +1421,44 @@ onMounted(async () => {
   gap: 16px;
   max-height: 400px;
   overflow-y: auto;
-  
+
   .template-card {
     border: 1px solid var(--el-border-color-light);
     border-radius: 8px;
     padding: 16px;
     cursor: pointer;
     transition: all 0.2s;
-    
+
     &:hover {
       border-color: var(--el-color-primary);
       box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     }
-    
+
     &.active {
       border-color: var(--el-color-primary);
       background-color: var(--el-color-primary-light-9);
     }
-    
+
     .template-header {
       display: flex;
       align-items: center;
       gap: 12px;
       margin-bottom: 12px;
-      
+
       .template-icon {
         color: var(--el-color-primary);
         font-size: 20px;
       }
-      
+
       .template-info {
         flex: 1;
-        
+
         h4 {
           margin: 0 0 4px 0;
           font-size: 14px;
           color: var(--el-text-color-primary);
         }
-        
+
         p {
           margin: 0;
           font-size: 12px;
@@ -1438,12 +1467,12 @@ onMounted(async () => {
         }
       }
     }
-    
+
     .config-items {
       display: flex;
       flex-wrap: wrap;
       gap: 6px;
-      
+
       .config-item {
         background: var(--el-color-info-light-8);
         color: var(--el-color-info);
@@ -1460,7 +1489,7 @@ onMounted(async () => {
   .form-container {
     .el-row {
       flex-direction: column;
-      
+
       .el-col {
         width: 100% !important;
         max-width: none !important;
@@ -1474,12 +1503,12 @@ onMounted(async () => {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    
+
     .header-actions {
       flex-wrap: wrap;
     }
   }
-  
+
   .template-grid {
     grid-template-columns: 1fr;
   }

@@ -9,6 +9,7 @@
 
 use crate::config::ApiConfig;
 use crate::error::{ApiError, ApiResult};
+use crate::database_pool::{DatabasePoolManager, validate_pool_config};
 use actix_cors::Cors;
 use actix_web::web::Data;
 use anyhow::Context;
@@ -18,12 +19,14 @@ use std::env;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 use pg_repo;
+use crate::services::{get_driver_config_monitor, init_driver_config_monitor};
 
 /// 应用状态，包含所有共享资源
 #[derive(Clone)]
 pub struct AppState {
     pub config: ApiConfig,
     pub pg_pool: Pool<Postgres>,
+    pub pool_manager: Arc<DatabasePoolManager>,
     pub influx_client: influxdb2::Client,
     pub frame_bus: Arc<dyn FrameBusClient>,
     pub driver_manager: Arc<driver_manager::DriverManager>,
@@ -63,24 +66,38 @@ impl AppState {
         &self.config
     }
     
-    /// 创建CORS中间件
+    /// 创建CORS中间件 - 安全配置
     pub fn cors(&self) -> Cors {
-        // 配置CORS以支持前端的所有请求头 (包括axios XMLHttpRequest)
-        // 注意：supports_credentials() 不能与 allow_any_origin() 同时使用
-        let cors = Cors::default()
-            .allow_any_origin()
-            .allow_any_method()
-            .allow_any_header()
+        // 从环境变量或配置文件读取允许的来源
+        let allowed_origins = env::var("CORS_ALLOWED_ORIGINS")
+            .unwrap_or_else(|_| "http://localhost:50020,http://127.0.0.1:50020".to_string());
+        
+        let origins: Vec<&str> = allowed_origins.split(',').collect();
+        
+        let mut cors = Cors::default();
+        
+        // 严格配置允许的来源
+        for origin in origins {
+            cors = cors.allowed_origin(origin.trim());
+        }
+        
+        cors = cors
+            .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])  // 限制HTTP方法
+            .allowed_headers(vec![
+                "content-type", 
+                "authorization", 
+                "x-requested-with",
+                "x-api-key"
+            ])  // 限制允许的头部
             .expose_headers(vec![
-                "x-request-id", 
                 "content-length",
-                "date",
-                "server",
-                "content-type"
-            ])
-            .max_age(3600);
-
-        tracing::info!("CORS configured with explicit headers support");
+                "x-total-count", 
+                "x-page-count"
+            ])  // 限制暴露的头部
+            .max_age(300)  // 缩短预检缓存时间到5分钟
+            .supports_credentials();  // 支持凭据
+        
+        tracing::info!("CORS configured with secure origins: {:?}", origins);
         cors
     }
 
@@ -88,10 +105,19 @@ impl AppState {
     pub async fn health_check(&self) -> HashMap<String, String> {
         let mut services = HashMap::new();
 
-        // 检查PostgreSQL连接
-        match sqlx::query("SELECT 1").fetch_one(&self.pg_pool).await {
-            Ok(_) => services.insert("postgres".to_string(), "healthy".to_string()),
-            Err(_) => services.insert("postgres".to_string(), "unhealthy".to_string()),
+        // 检查PostgreSQL连接池健康状态
+        match self.pool_manager.health_check().await {
+            Ok(true) => {
+                services.insert("postgres".to_string(), "healthy".to_string());
+                
+                // 获取连接池统计信息
+                let stats = self.pool_manager.get_pool_stats().await;
+                services.insert("postgres_pool_utilization".to_string(), 
+                    format!("{:.1}%", stats.utilization_percent));
+                services.insert("postgres_active_connections".to_string(), 
+                    stats.active_connections.to_string());
+            }
+            _ => services.insert("postgres".to_string(), "unhealthy".to_string()),
         };
 
         // 检查InfluxDB连接 - 使用HTTP客户端而不是influxdb2库的health()方法
@@ -213,6 +239,31 @@ fn apply_env_overrides(config: &mut ApiConfig) {
         }
     }
     
+    // 数据库连接池环境变量覆盖
+    if let Ok(max_conns) = env::var("WEBGW_DB_MAX_CONNECTIONS") {
+        if let Ok(parsed) = max_conns.parse() {
+            config.database_pool.max_connections = parsed;
+        }
+    }
+    
+    if let Ok(min_conns) = env::var("WEBGW_DB_MIN_CONNECTIONS") {
+        if let Ok(parsed) = min_conns.parse() {
+            config.database_pool.min_connections = parsed;
+        }
+    }
+    
+    if let Ok(timeout) = env::var("WEBGW_DB_ACQUIRE_TIMEOUT_SECS") {
+        if let Ok(parsed) = timeout.parse() {
+            config.database_pool.acquire_timeout_secs = parsed;
+        }
+    }
+    
+    if let Ok(idle_timeout) = env::var("WEBGW_DB_IDLE_TIMEOUT_SECS") {
+        if let Ok(parsed) = idle_timeout.parse() {
+            config.database_pool.idle_timeout_secs = parsed;
+        }
+    }
+    
     if let Ok(timeout) = env::var("WEBGW_WS_HEARTBEAT_TIMEOUT") {
         if let Ok(parsed) = timeout.parse() {
             config.ws_heartbeat_timeout = parsed;
@@ -228,22 +279,29 @@ fn apply_env_overrides(config: &mut ApiConfig) {
     if let Ok(url) = env::var("WEBGW_ALERT_ENGINE_URL") {
         config.alert_engine_url = url;
     }
+    
+    if let Ok(enable_metrics) = env::var("WEBGW_DB_ENABLE_METRICS") {
+        if let Ok(parsed) = enable_metrics.parse::<bool>() {
+            config.database_pool.enable_metrics = parsed;
+        }
+    }
 }
 
 /// 初始化应用状态
 pub async fn init_state(config: &ApiConfig) -> ApiResult<Data<AppState>> {
-    // 初始化PostgreSQL连接池
-    let pg_pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(20)
-        .connect(&config.pg_dsn)
-        .await
-        .context("Failed to connect to PostgreSQL")?;
+    // 验证连接池配置
+    validate_pool_config(&config.database_pool)
+        .context("数据库连接池配置验证失败")?;
     
-    // 运行数据库迁移
-    sqlx::migrate!("../../schema/migrations")
-        .run(&pg_pool)
-        .await
-        .context("Failed to run database migrations")?;
+    // 初始化数据库连接池管理器
+    let pool_manager = Arc::new(
+        DatabasePoolManager::new(&config.pg_dsn, config.database_pool.clone())
+            .await
+            .context("数据库连接池管理器初始化失败")?
+    );
+    
+    // 获取连接池引用
+    let pg_pool = pool_manager.pool().clone();
     
     // 初始化InfluxDB客户端
     let influx_client = influxdb2::Client::new(&config.influx_url, &config.influx_org, &config.influx_token);
@@ -321,13 +379,37 @@ pub async fn init_state(config: &ApiConfig) -> ApiResult<Data<AppState>> {
     let driver_config_repo: Arc<dyn pg_repo::DriverConfigRepo> = Arc::new(
         pg_repo::DriverConfigRepoImpl::new(pg_pool.clone())
     );
+
+    let driver_manager_arc = Arc::new(driver_manager);
+    
+    // 初始化驱动配置监听服务
+    crate::services::init_driver_config_monitor(
+        driver_config_repo.clone(),
+        driver_manager_arc.clone(),
+    );
+
+    // 启动驱动配置监听服务 (带超时)
+    if let Some(monitor) = get_driver_config_monitor() {
+        match tokio::time::timeout(std::time::Duration::from_secs(10), monitor.start()).await {
+            Ok(Ok(())) => {
+                tracing::info!("Driver config monitor started successfully");
+            }
+            Ok(Err(e)) => {
+                tracing::error!("Failed to start driver config monitor: {}", e);
+            }
+            Err(_) => {
+                tracing::warn!("Driver config monitor start timed out, continuing anyway");
+            }
+        }
+    }
     
     let state = AppState {
         config: config.clone(),
         pg_pool,
+        pool_manager,
         influx_client,
         frame_bus,
-        driver_manager: Arc::new(driver_manager),
+        driver_manager: driver_manager_arc,
         driver_config_repo,
         ws_manager,
         frame_bus_bridge,
@@ -374,18 +456,4 @@ impl FrameBusClient for RealFrameBusClient {
     }
 }
 
-// ========== 模拟实现（备用） ==========
-
-struct MockFrameBusClient;
-
-#[async_trait::async_trait]
-impl FrameBusClient for MockFrameBusClient {
-    async fn subscribe(&self, _filter: FrameFilter) -> ApiResult<FrameReceiver> {
-        Ok(FrameReceiver)
-    }
-    
-    async fn publish(&self, _frame: DataFrame) -> ApiResult<()> {
-        Ok(())
-    }
-}
 

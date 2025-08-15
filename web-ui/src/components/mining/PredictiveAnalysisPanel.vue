@@ -18,12 +18,15 @@
             </div>
           </div>
         </template>
-        
+
         <el-form :model="config" label-width="120px" class="config-form">
           <el-row :gutter="24">
             <el-col :span="12">
               <el-form-item label="预测类型">
-                <el-select v-model="config.predictionType" @change="onPredictionTypeChange">
+                <el-select
+                  v-model="config.predictionType"
+                  @change="onPredictionTypeChange"
+                >
                   <el-option
                     v-for="type in predictionTypes"
                     :key="type.value"
@@ -37,7 +40,7 @@
                   </el-option>
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="算法模型">
                 <el-select v-model="config.algorithm">
                   <el-option
@@ -48,7 +51,7 @@
                   />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="目标变量">
                 <el-select v-model="config.targetVariable" filterable>
                   <el-option
@@ -59,7 +62,7 @@
                   />
                 </el-select>
               </el-form-item>
-              
+
               <el-form-item label="特征变量">
                 <el-select
                   v-model="config.featureVariables"
@@ -76,7 +79,7 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="训练数据范围">
                 <el-date-picker
@@ -89,7 +92,7 @@
                   value-format="YYYY-MM-DD HH:mm:ss"
                 />
               </el-form-item>
-              
+
               <el-form-item label="预测周期">
                 <el-row :gutter="8">
                   <el-col :span="16">
@@ -110,7 +113,7 @@
                   </el-col>
                 </el-row>
               </el-form-item>
-              
+
               <el-form-item label="置信度">
                 <el-slider
                   v-model="config.confidenceLevel"
@@ -119,10 +122,10 @@
                   :step="1"
                   show-stops
                   show-input
-                  :format-tooltip="(val) => `${val}%`"
+                  :format-tooltip="val => `${val}%`"
                 />
               </el-form-item>
-              
+
               <el-form-item label="交叉验证">
                 <el-row :gutter="8">
                   <el-col :span="12">
@@ -145,14 +148,18 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <!-- 高级参数 -->
           <el-collapse v-model="activeAdvanced" class="advanced-params">
             <el-collapse-item title="高级参数" name="advanced">
               <el-row :gutter="24">
                 <el-col :span="8">
                   <el-form-item label="季节性周期">
-                    <el-input-number v-model="config.seasonality" :min="0" placeholder="自动检测" />
+                    <el-input-number
+                      v-model="config.seasonality"
+                      :min="0"
+                      placeholder="自动检测"
+                    />
                   </el-form-item>
                 </el-col>
                 <el-col :span="8">
@@ -168,11 +175,15 @@
                 </el-col>
                 <el-col :span="8">
                   <el-form-item label="最大迭代">
-                    <el-input-number v-model="config.maxIterations" :min="10" :max="10000" />
+                    <el-input-number
+                      v-model="config.maxIterations"
+                      :min="10"
+                      :max="10000"
+                    />
                   </el-form-item>
                 </el-col>
               </el-row>
-              
+
               <el-form-item label="特征工程">
                 <el-checkbox-group v-model="config.featureEngineering">
                   <el-checkbox label="lag">滞后特征</el-checkbox>
@@ -183,58 +194,71 @@
               </el-form-item>
             </el-collapse-item>
           </el-collapse>
-          
+
           <el-form-item class="form-actions">
             <el-button @click="resetConfig">重置</el-button>
             <el-button @click="validateConfig">验证配置</el-button>
-            <el-button type="primary" @click="startPrediction" :loading="isTraining">
+            <el-button
+              type="primary"
+              :loading="isTraining"
+              @click="startPrediction"
+            >
               {{ isTraining ? '训练中...' : '开始预测' }}
             </el-button>
           </el-form-item>
         </el-form>
       </el-card>
     </div>
-    
+
     <!-- 训练进度 -->
     <div v-if="isTraining" class="training-progress">
       <el-card shadow="never">
         <template #header>
           <h3>模型训练进度</h3>
         </template>
-        
+
         <div class="progress-content">
           <el-progress
             :percentage="trainingProgress.percentage"
             :status="trainingProgress.status"
             :stroke-width="8"
           />
-          
+
           <div class="progress-details">
             <div class="progress-info">
               <span>当前阶段: {{ trainingProgress.stage }}</span>
               <span>耗时: {{ formatDuration(trainingProgress.elapsed) }}</span>
-              <span>预计剩余: {{ formatDuration(trainingProgress.remaining) }}</span>
+              <span
+                >预计剩余:
+                {{ formatDuration(trainingProgress.remaining) }}</span
+              >
             </div>
-            
+
             <div class="progress-metrics">
               <div class="metric">
                 <span class="metric-label">训练损失:</span>
-                <span class="metric-value">{{ trainingProgress.trainLoss }}</span>
+                <span class="metric-value">{{
+                  trainingProgress.trainLoss
+                }}</span>
               </div>
               <div class="metric">
                 <span class="metric-label">验证损失:</span>
-                <span class="metric-value">{{ trainingProgress.validLoss }}</span>
+                <span class="metric-value">{{
+                  trainingProgress.validLoss
+                }}</span>
               </div>
               <div class="metric">
                 <span class="metric-label">准确率:</span>
-                <span class="metric-value">{{ trainingProgress.accuracy }}%</span>
+                <span class="metric-value"
+                  >{{ trainingProgress.accuracy }}%</span
+                >
               </div>
             </div>
           </div>
         </div>
       </el-card>
     </div>
-    
+
     <!-- 预测结果 -->
     <div v-if="predictionResults" class="prediction-results">
       <el-card shadow="never">
@@ -253,7 +277,7 @@
             </div>
           </div>
         </template>
-        
+
         <!-- 结果摘要 -->
         <div class="results-summary">
           <el-row :gutter="16">
@@ -263,7 +287,9 @@
                   <el-icon><TrendCharts /></el-icon>
                 </div>
                 <div class="summary-content">
-                  <div class="summary-value">{{ predictionResults.accuracy }}%</div>
+                  <div class="summary-value">
+                    {{ predictionResults.accuracy }}%
+                  </div>
                   <div class="summary-label">预测准确率</div>
                 </div>
               </div>
@@ -285,7 +311,9 @@
                   <el-icon><DataAnalysis /></el-icon>
                 </div>
                 <div class="summary-content">
-                  <div class="summary-value">{{ predictionResults.r2Score }}</div>
+                  <div class="summary-value">
+                    {{ predictionResults.r2Score }}
+                  </div>
                   <div class="summary-label">R²决定系数</div>
                 </div>
               </div>
@@ -296,34 +324,36 @@
                   <el-icon><Clock /></el-icon>
                 </div>
                 <div class="summary-content">
-                  <div class="summary-value">{{ predictionResults.trainTime }}s</div>
+                  <div class="summary-value">
+                    {{ predictionResults.trainTime }}s
+                  </div>
                   <div class="summary-label">训练耗时</div>
                 </div>
               </div>
             </el-col>
           </el-row>
         </div>
-        
+
         <!-- 预测图表 -->
         <div class="prediction-chart">
           <div ref="predictionChartRef" class="chart-container"></div>
         </div>
-        
+
         <!-- 模型评估 -->
         <div class="model-evaluation">
           <el-tabs v-model="activeEvalTab">
             <el-tab-pane label="残差分析" name="residuals">
               <div ref="residualsChartRef" class="eval-chart"></div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="特征重要性" name="importance">
               <div ref="importanceChartRef" class="eval-chart"></div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="预测区间" name="intervals">
               <div ref="intervalsChartRef" class="eval-chart"></div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="模型诊断" name="diagnostics">
               <div class="diagnostics-content">
                 <el-descriptions :column="2" border>
@@ -343,10 +373,12 @@
                     {{ config.confidenceLevel }}%
                   </el-descriptions-item>
                   <el-descriptions-item label="交叉验证">
-                    {{ config.crossValidation ? `${config.cvFolds}折` : '未启用' }}
+                    {{
+                      config.crossValidation ? `${config.cvFolds}折` : '未启用'
+                    }}
                   </el-descriptions-item>
                 </el-descriptions>
-                
+
                 <div class="metrics-table">
                   <h4>评估指标</h4>
                   <el-table :data="predictionResults.metrics" stripe>
@@ -382,9 +414,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import * as echarts from 'echarts'
 import {
   Files,
   Download,
@@ -392,8 +421,11 @@ import {
   TrendCharts,
   Warning,
   DataAnalysis,
-  Clock
+  Clock,
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== 响应式数据 =====
 const activeAdvanced = ref([])
@@ -426,7 +458,7 @@ const config = ref({
   seasonality: null,
   learningRate: 0.001,
   maxIterations: 1000,
-  featureEngineering: ['lag', 'rolling']
+  featureEngineering: ['lag', 'rolling'],
 })
 
 // 预测类型选项
@@ -434,23 +466,23 @@ const predictionTypes = ref([
   {
     value: 'timeseries',
     label: '时间序列预测',
-    description: '基于历史时间序列数据预测未来趋势'
+    description: '基于历史时间序列数据预测未来趋势',
   },
   {
     value: 'regression',
     label: '回归预测',
-    description: '基于特征变量预测连续数值'
+    description: '基于特征变量预测连续数值',
   },
   {
     value: 'classification',
     label: '分类预测',
-    description: '预测离散类别或状态'
+    description: '预测离散类别或状态',
   },
   {
     value: 'anomaly',
     label: '异常预测',
-    description: '预测异常事件发生概率'
-  }
+    description: '预测异常事件发生概率',
+  },
 ])
 
 // 算法选项
@@ -460,29 +492,29 @@ const algorithms = computed(() => {
       { value: 'lstm', label: 'LSTM神经网络' },
       { value: 'arima', label: 'ARIMA模型' },
       { value: 'prophet', label: 'Prophet预测' },
-      { value: 'gru', label: 'GRU神经网络' }
+      { value: 'gru', label: 'GRU神经网络' },
     ],
     regression: [
       { value: 'linear', label: '线性回归' },
       { value: 'ridge', label: '岭回归' },
       { value: 'lasso', label: 'Lasso回归' },
       { value: 'randomforest', label: '随机森林' },
-      { value: 'xgboost', label: 'XGBoost' }
+      { value: 'xgboost', label: 'XGBoost' },
     ],
     classification: [
       { value: 'logistic', label: '逻辑回归' },
       { value: 'svm', label: '支持向量机' },
       { value: 'randomforest', label: '随机森林' },
-      { value: 'neuralnet', label: '神经网络' }
+      { value: 'neuralnet', label: '神经网络' },
     ],
     anomaly: [
       { value: 'isolation', label: '孤立森林' },
       { value: 'ocsvm', label: '一类SVM' },
       { value: 'autoencoder', label: '自编码器' },
-      { value: 'lof', label: '局部异常因子' }
-    ]
+      { value: 'lof', label: '局部异常因子' },
+    ],
   }
-  
+
   return algorithmMap[config.value.predictionType] || []
 })
 
@@ -495,7 +527,7 @@ const availableVariables = ref([
   { key: 'vibration', name: '振动' },
   { key: 'efficiency', name: '效率' },
   { key: 'quality', name: '质量指标' },
-  { key: 'energy', name: '能耗' }
+  { key: 'energy', name: '能耗' },
 ])
 
 // 训练进度
@@ -507,7 +539,7 @@ const trainingProgress = ref({
   remaining: 0,
   trainLoss: 0,
   validLoss: 0,
-  accuracy: 0
+  accuracy: 0,
 })
 
 // 预测结果
@@ -521,7 +553,7 @@ const predictionResults = ref(null as any)
 function onPredictionTypeChange() {
   // 重置算法选择
   config.value.algorithm = algorithms.value[0]?.value || ''
-  
+
   // 重置特征变量
   config.value.featureVariables = []
 }
@@ -534,7 +566,7 @@ async function startPrediction() {
   if (!validateConfiguration()) {
     return
   }
-  
+
   isTraining.value = true
   trainingProgress.value = {
     percentage: 0,
@@ -544,19 +576,19 @@ async function startPrediction() {
     remaining: 0,
     trainLoss: 0,
     validLoss: 0,
-    accuracy: 0
+    accuracy: 0,
   }
-  
+
   try {
     // 模拟训练过程
     await simulateTraining()
-    
+
     // 生成预测结果
     await generatePredictionResults()
-    
+
     ElMessage.success('预测分析完成')
   } catch (error) {
-    ElMessage.error(`预测分析失败: ${  error}`)
+    ElMessage.error(`预测分析失败: ${error}`)
     trainingProgress.value.status = 'exception'
   } finally {
     isTraining.value = false
@@ -571,17 +603,17 @@ function validateConfiguration(): boolean {
     ElMessage.warning('请选择目标变量')
     return false
   }
-  
+
   if (config.value.featureVariables.length === 0) {
     ElMessage.warning('请至少选择一个特征变量')
     return false
   }
-  
+
   if (!config.value.trainingDateRange.length) {
     ElMessage.warning('请选择训练数据时间范围')
     return false
   }
-  
+
   return true
 }
 
@@ -589,29 +621,33 @@ function validateConfiguration(): boolean {
  * 模拟训练过程
  */
 async function simulateTraining(): Promise<void> {
-  const stages = [
-    '数据预处理',
-    '特征工程',
-    '模型训练',
-    '交叉验证',
-    '模型优化'
-  ]
-  
+  const stages = ['数据预处理', '特征工程', '模型训练', '交叉验证', '模型优化']
+
   for (let i = 0; i < stages.length; i++) {
     trainingProgress.value.stage = stages[i]
-    
+
     for (let j = 0; j <= 20; j++) {
-      trainingProgress.value.percentage = (i * 20) + j
+      trainingProgress.value.percentage = i * 20 + j
       trainingProgress.value.elapsed = trainingProgress.value.percentage * 100
-      trainingProgress.value.remaining = (100 - trainingProgress.value.percentage) * 100
-      trainingProgress.value.trainLoss = Math.max(0.1, 1 - trainingProgress.value.percentage / 120)
-      trainingProgress.value.validLoss = Math.max(0.15, 1.2 - trainingProgress.value.percentage / 110)
-      trainingProgress.value.accuracy = Math.min(99, trainingProgress.value.percentage * 0.9)
-      
+      trainingProgress.value.remaining =
+        (100 - trainingProgress.value.percentage) * 100
+      trainingProgress.value.trainLoss = Math.max(
+        0.1,
+        1 - trainingProgress.value.percentage / 120
+      )
+      trainingProgress.value.validLoss = Math.max(
+        0.15,
+        1.2 - trainingProgress.value.percentage / 110
+      )
+      trainingProgress.value.accuracy = Math.min(
+        99,
+        trainingProgress.value.percentage * 0.9
+      )
+
       await new Promise(resolve => setTimeout(resolve, 50))
     }
   }
-  
+
   trainingProgress.value.percentage = 100
   trainingProgress.value.status = 'success'
   trainingProgress.value.stage = '训练完成'
@@ -626,7 +662,7 @@ async function generatePredictionResults() {
     const response = await fetch('/api/v1/analytics/prediction', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         algorithm: config.value.algorithm,
@@ -634,16 +670,16 @@ async function generatePredictionResults() {
         dataSource: config.value.dataSource,
         predictRange: config.value.predictRange,
         timeRange: config.value.timeRange,
-        targetVariable: config.value.targetVariable
-      })
+        targetVariable: config.value.targetVariable,
+      }),
     })
-    
+
     if (!response.ok) {
       throw new Error('预测分析请求失败')
     }
-    
+
     predictionResults.value = await response.json()
-    
+
     // 初始化图表
     await nextTick()
     initPredictionCharts()
@@ -653,7 +689,6 @@ async function generatePredictionResults() {
   }
 }
 
-
 /**
  * 初始化预测图表
  */
@@ -662,17 +697,17 @@ function initPredictionCharts() {
     predictionChart.value = echarts.init(predictionChartRef.value)
     updatePredictionChart()
   }
-  
+
   if (residualsChartRef.value) {
     residualsChart.value = echarts.init(residualsChartRef.value)
     updateResidualsChart()
   }
-  
+
   if (importanceChartRef.value) {
     importanceChart.value = echarts.init(importanceChartRef.value)
     updateImportanceChart()
   }
-  
+
   if (intervalsChartRef.value) {
     intervalsChart.value = echarts.init(intervalsChartRef.value)
     updateIntervalsChart()
@@ -684,35 +719,40 @@ function initPredictionCharts() {
  */
 function updatePredictionChart() {
   if (!predictionChart.value || !predictionResults.value) return
-  
+
   const data = predictionResults.value.predictions
-  
+
   const option = {
     title: {
       text: '预测结果',
       left: 'center',
-      textStyle: { fontSize: 14 }
+      textStyle: { fontSize: 14 },
     },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'cross' }
+      axisPointer: { type: 'cross' },
     },
     legend: {
       data: ['历史数据', '预测值', '置信区间'],
-      bottom: 0
+      bottom: 0,
     },
     xAxis: {
       type: 'category',
-      data: [...data.historical, ...data.predictions].map(item => item.timestamp),
+      data: [...data.historical, ...data.predictions].map(
+        item => item.timestamp
+      ),
       axisLabel: {
         formatter(value: string) {
-          return new Date(value).toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
-        }
-      }
+          return new Date(value).toLocaleDateString('zh-CN', {
+            month: '2-digit',
+            day: '2-digit',
+          })
+        },
+      },
     },
     yAxis: {
       type: 'value',
-      name: '数值'
+      name: '数值',
     },
     series: [
       {
@@ -722,49 +762,55 @@ function updatePredictionChart() {
         lineStyle: { color: '#409EFF', width: 2 },
         itemStyle: { color: '#409EFF' },
         symbol: 'circle',
-        symbolSize: 4
+        symbolSize: 4,
       },
       {
         name: '预测值',
         type: 'line',
-        data: Array(data.historical.length).fill(null).concat(data.predictions.map(item => item.value)),
+        data: Array(data.historical.length)
+          .fill(null)
+          .concat(data.predictions.map(item => item.value)),
         lineStyle: { color: '#67C23A', width: 2, type: 'dashed' },
         itemStyle: { color: '#67C23A' },
         symbol: 'circle',
-        symbolSize: 4
+        symbolSize: 4,
       },
       {
         name: '置信区间',
         type: 'line',
-        data: Array(data.historical.length).fill(null).concat(data.confidence.upper),
+        data: Array(data.historical.length)
+          .fill(null)
+          .concat(data.confidence.upper),
         lineStyle: { width: 0 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(103, 194, 58, 0.2)' },
-            { offset: 1, color: 'rgba(103, 194, 58, 0.1)' }
-          ])
+            { offset: 1, color: 'rgba(103, 194, 58, 0.1)' },
+          ]),
         },
         stack: 'confidence',
-        symbol: 'none'
+        symbol: 'none',
       },
       {
         name: '置信区间下界',
         type: 'line',
-        data: Array(data.historical.length).fill(null).concat(data.confidence.lower),
+        data: Array(data.historical.length)
+          .fill(null)
+          .concat(data.confidence.lower),
         lineStyle: { width: 0 },
         areaStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: 'rgba(255, 255, 255, 0.8)' },
-            { offset: 1, color: 'rgba(255, 255, 255, 0.8)' }
-          ])
+            { offset: 1, color: 'rgba(255, 255, 255, 0.8)' },
+          ]),
         },
         stack: 'confidence',
         symbol: 'none',
-        showInLegend: false
-      }
-    ]
+        showInLegend: false,
+      },
+    ],
   }
-  
+
   predictionChart.value.setOption(option)
 }
 
@@ -773,45 +819,51 @@ function updatePredictionChart() {
  */
 function updateResidualsChart() {
   if (!residualsChart.value) return
-  
+
   // 生成模拟残差数据
   const residuals = Array.from({ length: 50 }, (_, i) => ({
     predicted: 90 + Math.random() * 20,
-    residual: (Math.random() - 0.5) * 8
+    residual: (Math.random() - 0.5) * 8,
   }))
-  
+
   const option = {
     title: {
       text: '残差分析',
       left: 'center',
-      textStyle: { fontSize: 14 }
+      textStyle: { fontSize: 14 },
     },
     tooltip: {
       trigger: 'item',
-      formatter: 'Predicted: {c[0]}<br/>Residual: {c[1]}'
+      formatter: 'Predicted: {c[0]}<br/>Residual: {c[1]}',
     },
     xAxis: {
       type: 'value',
-      name: '预测值'
+      name: '预测值',
     },
     yAxis: {
       type: 'value',
-      name: '残差'
+      name: '残差',
     },
-    series: [{
-      type: 'scatter',
-      data: residuals.map(item => [item.predicted, item.residual]),
-      itemStyle: { color: '#E6A23C' },
-      symbolSize: 6
-    }, {
-      type: 'line',
-      data: [[85, 0], [115, 0]],
-      lineStyle: { color: '#F56C6C', type: 'dashed' },
-      symbol: 'none',
-      silent: true
-    }]
+    series: [
+      {
+        type: 'scatter',
+        data: residuals.map(item => [item.predicted, item.residual]),
+        itemStyle: { color: '#E6A23C' },
+        symbolSize: 6,
+      },
+      {
+        type: 'line',
+        data: [
+          [85, 0],
+          [115, 0],
+        ],
+        lineStyle: { color: '#F56C6C', type: 'dashed' },
+        symbol: 'none',
+        silent: true,
+      },
+    ],
   }
-  
+
   residualsChart.value.setOption(option)
 }
 
@@ -820,45 +872,49 @@ function updateResidualsChart() {
  */
 function updateImportanceChart() {
   if (!importanceChart.value) return
-  
-  const features = config.value.featureVariables.map(key => {
-    const variable = availableVariables.value.find(v => v.key === key)
-    return {
-      name: variable?.name || key,
-      importance: Math.random()
-    }
-  }).sort((a, b) => b.importance - a.importance)
-  
+
+  const features = config.value.featureVariables
+    .map(key => {
+      const variable = availableVariables.value.find(v => v.key === key)
+      return {
+        name: variable?.name || key,
+        importance: Math.random(),
+      }
+    })
+    .sort((a, b) => b.importance - a.importance)
+
   const option = {
     title: {
       text: '特征重要性',
       left: 'center',
-      textStyle: { fontSize: 14 }
+      textStyle: { fontSize: 14 },
     },
     tooltip: {
       trigger: 'axis',
-      axisPointer: { type: 'shadow' }
+      axisPointer: { type: 'shadow' },
     },
     xAxis: {
       type: 'value',
-      name: '重要性'
+      name: '重要性',
     },
     yAxis: {
       type: 'category',
-      data: features.map(f => f.name)
+      data: features.map(f => f.name),
     },
-    series: [{
-      type: 'bar',
-      data: features.map(f => f.importance),
-      itemStyle: {
-        color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-          { offset: 0, color: '#91CC75' },
-          { offset: 1, color: '#67C23A' }
-        ])
-      }
-    }]
+    series: [
+      {
+        type: 'bar',
+        data: features.map(f => f.importance),
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+            { offset: 0, color: '#91CC75' },
+            { offset: 1, color: '#67C23A' },
+          ]),
+        },
+      },
+    ],
   }
-  
+
   importanceChart.value.setOption(option)
 }
 
@@ -867,34 +923,38 @@ function updateImportanceChart() {
  */
 function updateIntervalsChart() {
   if (!intervalsChart.value) return
-  
+
   const data = predictionResults.value.predictions
   const intervals = [0.8, 0.9, 0.95, 0.99].map(level => ({
     level,
     name: `${Math.round(level * 100)}%置信区间`,
-    upper: data.predictions.map((_, i) => data.predictions[i].value + (1 - level) * 15),
-    lower: data.predictions.map((_, i) => data.predictions[i].value - (1 - level) * 15)
+    upper: data.predictions.map(
+      (_, i) => data.predictions[i].value + (1 - level) * 15
+    ),
+    lower: data.predictions.map(
+      (_, i) => data.predictions[i].value - (1 - level) * 15
+    ),
   }))
-  
+
   const option = {
     title: {
       text: '预测区间',
       left: 'center',
-      textStyle: { fontSize: 14 }
+      textStyle: { fontSize: 14 },
     },
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
     },
     legend: {
       data: ['预测值', ...intervals.map(i => i.name)],
-      bottom: 0
+      bottom: 0,
     },
     xAxis: {
       type: 'category',
-      data: data.predictions.map(item => item.timestamp)
+      data: data.predictions.map(item => item.timestamp),
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
     },
     series: [
       {
@@ -904,7 +964,7 @@ function updateIntervalsChart() {
         lineStyle: { color: '#409EFF', width: 2 },
         symbol: 'circle',
         symbolSize: 4,
-        z: 10
+        z: 10,
       },
       ...intervals.map((interval, index) => ({
         name: interval.name,
@@ -912,10 +972,10 @@ function updateIntervalsChart() {
         data: interval.upper,
         lineStyle: { width: 0 },
         areaStyle: {
-          color: `rgba(103, 194, 58, ${0.3 - index * 0.05})`
+          color: `rgba(103, 194, 58, ${0.3 - index * 0.05})`,
         },
         stack: `interval_${index}`,
-        symbol: 'none'
+        symbol: 'none',
       })),
       ...intervals.map((interval, index) => ({
         name: `${interval.name}_lower`,
@@ -923,15 +983,15 @@ function updateIntervalsChart() {
         data: interval.lower,
         lineStyle: { width: 0 },
         areaStyle: {
-          color: 'rgba(255, 255, 255, 0.8)'
+          color: 'rgba(255, 255, 255, 0.8)',
         },
         stack: `interval_${index}`,
         symbol: 'none',
-        showInLegend: false
-      }))
-    ]
+        showInLegend: false,
+      })),
+    ],
   }
-  
+
   intervalsChart.value.setOption(option)
 }
 
@@ -941,11 +1001,9 @@ function updateIntervalsChart() {
 function getAlgorithmName(value: string): string {
   const allAlgorithms = [
     ...algorithms.value,
-    ...predictionTypes.value.flatMap(type => 
-      algorithmMap[type.value] || []
-    )
+    ...predictionTypes.value.flatMap(type => algorithmMap[type.value] || []),
   ]
-  
+
   return allAlgorithms.find(algo => algo.value === value)?.label || value
 }
 
@@ -967,7 +1025,7 @@ function resetConfig() {
     seasonality: null,
     learningRate: 0.001,
     maxIterations: 1000,
-    featureEngineering: ['lag', 'rolling']
+    featureEngineering: ['lag', 'rolling'],
   }
 }
 
@@ -1023,27 +1081,27 @@ const algorithmMap: { [key: string]: any[] } = {
     { value: 'lstm', label: 'LSTM神经网络' },
     { value: 'arima', label: 'ARIMA模型' },
     { value: 'prophet', label: 'Prophet预测' },
-    { value: 'gru', label: 'GRU神经网络' }
+    { value: 'gru', label: 'GRU神经网络' },
   ],
   regression: [
     { value: 'linear', label: '线性回归' },
     { value: 'ridge', label: '岭回归' },
     { value: 'lasso', label: 'Lasso回归' },
     { value: 'randomforest', label: '随机森林' },
-    { value: 'xgboost', label: 'XGBoost' }
+    { value: 'xgboost', label: 'XGBoost' },
   ],
   classification: [
     { value: 'logistic', label: '逻辑回归' },
     { value: 'svm', label: '支持向量机' },
     { value: 'randomforest', label: '随机森林' },
-    { value: 'neuralnet', label: '神经网络' }
+    { value: 'neuralnet', label: '神经网络' },
   ],
   anomaly: [
     { value: 'isolation', label: '孤立森林' },
     { value: 'ocsvm', label: '一类SVM' },
     { value: 'autoencoder', label: '自编码器' },
-    { value: 'lof', label: '局部异常因子' }
-  ]
+    { value: 'lof', label: '局部异常因子' },
+  ],
 }
 
 // ===== 生命周期 =====
@@ -1068,53 +1126,56 @@ function handleResize() {
 }
 
 // ===== 监听器 =====
-watch(() => activeEvalTab.value, () => {
-  nextTick(() => {
-    handleResize()
-  })
-})
+watch(
+  () => activeEvalTab.value,
+  () => {
+    nextTick(() => {
+      handleResize()
+    })
+  }
+)
 </script>
 
 <style scoped lang="scss">
 .predictive-analysis-panel {
   .prediction-config {
     margin-bottom: 24px;
-    
+
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       h3 {
         margin: 0;
         color: #303133;
         font-size: 16px;
       }
-      
+
       .header-actions {
         display: flex;
         gap: 8px;
       }
     }
-    
+
     .config-form {
       .advanced-params {
         margin: 20px 0;
       }
-      
+
       .form-actions {
         margin-top: 24px;
         text-align: center;
       }
-      
+
       :deep(.el-collapse-item__header) {
         font-weight: 500;
       }
     }
-    
+
     .option-content {
       width: 100%;
-      
+
       .option-desc {
         display: block;
         color: #909399;
@@ -1123,14 +1184,14 @@ watch(() => activeEvalTab.value, () => {
       }
     }
   }
-  
+
   .training-progress {
     margin-bottom: 24px;
-    
+
     .progress-content {
       .progress-details {
         margin-top: 16px;
-        
+
         .progress-info {
           display: flex;
           justify-content: space-between;
@@ -1138,21 +1199,21 @@ watch(() => activeEvalTab.value, () => {
           font-size: 13px;
           color: #606266;
         }
-        
+
         .progress-metrics {
           display: flex;
           gap: 24px;
-          
+
           .metric {
             display: flex;
             flex-direction: column;
-            
+
             .metric-label {
               font-size: 12px;
               color: #909399;
               margin-bottom: 4px;
             }
-            
+
             .metric-value {
               font-size: 16px;
               font-weight: 600;
@@ -1163,28 +1224,28 @@ watch(() => activeEvalTab.value, () => {
       }
     }
   }
-  
+
   .prediction-results {
     .card-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       h3 {
         margin: 0;
         color: #303133;
         font-size: 16px;
       }
-      
+
       .header-actions {
         display: flex;
         gap: 8px;
       }
     }
-    
+
     .results-summary {
       margin-bottom: 24px;
-      
+
       .summary-item {
         display: flex;
         align-items: center;
@@ -1193,12 +1254,12 @@ watch(() => activeEvalTab.value, () => {
         background: #f8f9fa;
         border-radius: 8px;
         border-left: 4px solid #409eff;
-        
+
         .summary-icon {
           font-size: 24px;
           color: #409eff;
         }
-        
+
         .summary-content {
           .summary-value {
             font-size: 20px;
@@ -1206,7 +1267,7 @@ watch(() => activeEvalTab.value, () => {
             color: #303133;
             margin-bottom: 2px;
           }
-          
+
           .summary-label {
             font-size: 12px;
             color: #606266;
@@ -1214,26 +1275,26 @@ watch(() => activeEvalTab.value, () => {
         }
       }
     }
-    
+
     .prediction-chart {
       margin-bottom: 24px;
-      
+
       .chart-container {
         height: 400px;
         width: 100%;
       }
     }
-    
+
     .model-evaluation {
       .eval-chart {
         height: 300px;
         width: 100%;
       }
-      
+
       .diagnostics-content {
         .metrics-table {
           margin-top: 20px;
-          
+
           h4 {
             margin: 0 0 12px 0;
             font-size: 14px;
@@ -1253,7 +1314,7 @@ watch(() => activeEvalTab.value, () => {
         margin-bottom: 16px;
       }
     }
-    
+
     .progress-metrics {
       flex-wrap: wrap;
       gap: 16px !important;
@@ -1267,17 +1328,17 @@ watch(() => activeEvalTab.value, () => {
       flex-direction: column;
       gap: 12px;
       align-items: stretch !important;
-      
+
       .header-actions {
         justify-content: center;
       }
     }
-    
+
     .progress-info {
       flex-direction: column !important;
       gap: 8px;
     }
-    
+
     .progress-metrics {
       justify-content: center !important;
     }

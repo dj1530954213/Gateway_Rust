@@ -6,13 +6,11 @@
           <WarningFilled />
         </el-icon>
       </div>
-      
+
       <h1 class="error-title">404</h1>
       <h2 class="error-subtitle">页面未找到</h2>
-      <p class="error-description">
-        抱歉，您访问的页面不存在或已被移除。
-      </p>
-      
+      <p class="error-description">抱歉，您访问的页面不存在或已被移除。</p>
+
       <div class="error-actions">
         <el-button type="primary" @click="goHome">
           <el-icon><House /></el-icon>
@@ -54,11 +52,11 @@ const goBack = () => {
   text-align: center;
   max-width: 500px;
   padding: 40px;
-  
+
   .error-image {
     margin-bottom: 30px;
   }
-  
+
   .error-title {
     font-size: 72px;
     font-weight: 300;
@@ -66,19 +64,19 @@ const goBack = () => {
     margin: 0 0 20px 0;
     line-height: 1;
   }
-  
+
   .error-subtitle {
     font-size: 24px;
     color: var(--el-text-color-primary);
     margin: 0 0 16px 0;
   }
-  
+
   .error-description {
     color: var(--el-text-color-secondary);
     margin-bottom: 40px;
     line-height: 1.6;
   }
-  
+
   .error-actions {
     display: flex;
     gap: 16px;

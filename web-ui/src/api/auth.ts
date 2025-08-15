@@ -117,7 +117,9 @@ class AuthApi {
   /**
    * 确认重置密码
    */
-  async confirmPasswordReset(request: ConfirmResetPasswordRequest): Promise<void> {
+  async confirmPasswordReset(
+    request: ConfirmResetPasswordRequest
+  ): Promise<void> {
     await http.post('/auth/reset-password/confirm', request)
   }
 
@@ -159,7 +161,7 @@ class AuthApi {
   async uploadAvatar(file: File): Promise<{ avatar_url: string }> {
     const formData = new FormData()
     formData.append('avatar', file)
-    
+
     const response = await http.post('/auth/avatar', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -202,15 +204,17 @@ class AuthApi {
   /**
    * 获取活跃会话列表
    */
-  async getActiveSessions(): Promise<Array<{
-    id: string
-    ip_address: string
-    user_agent: string
-    location?: string
-    created_at: string
-    expires_at: string
-    is_current: boolean
-  }>> {
+  async getActiveSessions(): Promise<
+    Array<{
+      id: string
+      ip_address: string
+      user_agent: string
+      location?: string
+      created_at: string
+      expires_at: string
+      is_current: boolean
+    }>
+  > {
     const response = await http.get('/auth/sessions')
     return response.data
   }

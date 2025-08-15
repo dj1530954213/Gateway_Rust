@@ -98,9 +98,10 @@ pub struct SerialCfg {
     pub parity: Parity,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Parity {
+    #[default]
     None,
     Odd,
     Even,
@@ -266,11 +267,6 @@ impl Default for PoolCfg {
     }
 }
 
-impl Default for Parity {
-    fn default() -> Self {
-        Parity::None
-    }
-}
 
 impl Default for Access {
     fn default() -> Self {

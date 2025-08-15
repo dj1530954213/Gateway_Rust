@@ -115,3 +115,36 @@ pub struct FrameEnvelope {
     #[prost(bytes, tag = "3")]
     pub payload: ::prost::alloc::vec::Vec<u8>,
 }
+
+// 便利构造函数实现
+impl Value {
+    pub fn bool(v: bool) -> Self {
+        Self {
+            value: Some(value::Value::BoolV(v)),
+        }
+    }
+
+    pub fn int(v: i64) -> Self {
+        Self {
+            value: Some(value::Value::IntV(v)),
+        }
+    }
+
+    pub fn float(v: f64) -> Self {
+        Self {
+            value: Some(value::Value::FloatV(v)),
+        }
+    }
+
+    pub fn string<S: Into<String>>(v: S) -> Self {
+        Self {
+            value: Some(value::Value::StrV(v.into())),
+        }
+    }
+
+    pub fn bytes(v: Vec<u8>) -> Self {
+        Self {
+            value: Some(value::Value::BinV(v)),
+        }
+    }
+}

@@ -18,7 +18,7 @@
               <el-badge is-dot type="success" />
             </div>
           </div>
-          
+
           <div class="user-basic">
             <div class="user-name">{{ userData.name }}</div>
             <div class="user-username">@{{ userData.username }}</div>
@@ -34,7 +34,7 @@
               </el-tag>
             </div>
           </div>
-          
+
           <div class="user-actions">
             <el-button type="primary" @click="editUser">
               <el-icon><Edit /></el-icon>
@@ -122,13 +122,18 @@
                   </div>
                   <div class="detail-item">
                     <label>在线状态：</label>
-                    <el-tag :type="userData.isOnline ? 'success' : 'info'" size="small">
+                    <el-tag
+                      :type="userData.isOnline ? 'success' : 'info'"
+                      size="small"
+                    >
                       {{ userData.isOnline ? '在线' : '离线' }}
                     </el-tag>
                   </div>
                   <div class="detail-item">
                     <label>账户有效期：</label>
-                    <span>{{ formatDate(userData.expireDate) || '永久有效' }}</span>
+                    <span>{{
+                      formatDate(userData.expireDate) || '永久有效'
+                    }}</span>
                   </div>
                   <div class="detail-item">
                     <label>创建时间：</label>
@@ -196,10 +201,16 @@
                         :key="permission.id"
                         class="permission-item"
                       >
-                        <el-icon :class="permission.granted ? 'granted' : 'denied'">
-                          <component :is="permission.granted ? 'Check' : 'Close'" />
+                        <el-icon
+                          :class="permission.granted ? 'granted' : 'denied'"
+                        >
+                          <component
+                            :is="permission.granted ? 'Check' : 'Close'"
+                          />
                         </el-icon>
-                        <span :class="permission.granted ? 'granted' : 'denied'">
+                        <span
+                          :class="permission.granted ? 'granted' : 'denied'"
+                        >
                           {{ permission.name }}
                         </span>
                       </div>
@@ -221,11 +232,15 @@
                   <div class="stat-label">总登录次数</div>
                 </div>
                 <div class="stat-item">
-                  <div class="stat-number">{{ formatDate(userData.lastLoginTime) || '从未' }}</div>
+                  <div class="stat-number">
+                    {{ formatDate(userData.lastLoginTime) || '从未' }}
+                  </div>
                   <div class="stat-label">最后登录</div>
                 </div>
                 <div class="stat-item">
-                  <div class="stat-number">{{ userData.lastLoginIp || '-' }}</div>
+                  <div class="stat-number">
+                    {{ userData.lastLoginIp || '-' }}
+                  </div>
                   <div class="stat-label">最后登录IP</div>
                 </div>
               </div>
@@ -260,7 +275,10 @@
                   </el-table-column>
                   <el-table-column label="状态" width="100">
                     <template #default="{ row }">
-                      <el-tag :type="row.success ? 'success' : 'danger'" size="small">
+                      <el-tag
+                        :type="row.success ? 'success' : 'danger'"
+                        size="small"
+                      >
                         {{ row.success ? '成功' : '失败' }}
                       </el-tag>
                     </template>
@@ -289,7 +307,10 @@
                         <component :is="getActivityIcon(activity.type)" />
                       </el-icon>
                       <span class="activity-title">{{ activity.title }}</span>
-                      <el-tag :type="getActivityTagType(activity.type)" size="small">
+                      <el-tag
+                        :type="getActivityTagType(activity.type)"
+                        size="small"
+                      >
                         {{ getActivityTypeLabel(activity.type) }}
                       </el-tag>
                     </div>
@@ -350,7 +371,10 @@
                 </el-table-column>
                 <el-table-column label="状态" width="100">
                   <template #default="{ row }">
-                    <el-tag :type="row.isActive ? 'success' : 'warning'" size="small">
+                    <el-tag
+                      :type="row.isActive ? 'success' : 'warning'"
+                      size="small"
+                    >
                       {{ row.isActive ? '活跃' : '空闲' }}
                     </el-tag>
                   </template>
@@ -360,8 +384,8 @@
                     <el-button
                       type="link"
                       size="small"
-                      @click="terminateSession(row)"
                       :disabled="row.isCurrent"
+                      @click="terminateSession(row)"
                     >
                       {{ row.isCurrent ? '当前会话' : '终止' }}
                     </el-button>
@@ -377,9 +401,7 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleClose">关闭</el-button>
-        <el-button type="primary" @click="editUser">
-          编辑用户
-        </el-button>
+        <el-button type="primary" @click="editUser"> 编辑用户 </el-button>
       </div>
     </template>
   </el-dialog>
@@ -404,8 +426,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import {
   UserFilled,
   Edit,
@@ -421,8 +441,10 @@ import {
   Lock,
   View,
   Operation,
-  ChatDotRound
+  ChatDotRound,
 } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -432,7 +454,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'edit': [userData: any]
+  edit: [userData: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -454,36 +476,36 @@ const managers = ref<any[]>([])
 // ===== 计算属性 =====
 const userPermissionCategories = computed(() => {
   if (!props.userData?.role) return []
-  
+
   const role = availableRoles.value.find(r => r.id === props.userData.role)
   const permissions = role?.permissions || []
-  
+
   return [
     {
       name: '设备管理',
       icon: 'Monitor',
-      permissions: permissions.filter((p: any) => p.category === 'device')
+      permissions: permissions.filter((p: any) => p.category === 'device'),
     },
     {
       name: '系统设置',
       icon: 'Setting',
-      permissions: permissions.filter((p: any) => p.category === 'system')
+      permissions: permissions.filter((p: any) => p.category === 'system'),
     },
     {
       name: '数据管理',
       icon: 'Document',
-      permissions: permissions.filter((p: any) => p.category === 'data')
+      permissions: permissions.filter((p: any) => p.category === 'data'),
     },
     {
       name: '网络连接',
       icon: 'Connection',
-      permissions: permissions.filter((p: any) => p.category === 'network')
+      permissions: permissions.filter((p: any) => p.category === 'network'),
     },
     {
       name: '报警管理',
       icon: 'Bell',
-      permissions: permissions.filter((p: any) => p.category === 'alert')
-    }
+      permissions: permissions.filter((p: any) => p.category === 'alert'),
+    },
   ].filter(category => category.permissions.length > 0)
 })
 
@@ -503,9 +525,8 @@ async function initializeData() {
     await Promise.all([
       loadLoginHistory(),
       loadUserActivities(),
-      loadUserSessions()
+      loadUserSessions(),
     ])
-
   } catch (error) {
     console.error('初始化用户详情失败:', error)
     ElMessage.error('初始化失败')
@@ -522,39 +543,124 @@ function generateMockRoles() {
       name: '系统管理员',
       description: '拥有系统的最高权限，可以管理所有功能和用户',
       permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: true },
-        { id: 'system_config', name: '系统配置', category: 'system', granted: true },
-        { id: 'user_manage', name: '用户管理', category: 'system', granted: true },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'network_config', name: '网络配置', category: 'network', granted: true },
-        { id: 'alert_manage', name: '报警管理', category: 'alert', granted: true }
-      ]
+        {
+          id: 'device_read',
+          name: '设备查看',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'device_write',
+          name: '设备编辑',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'device_delete',
+          name: '设备删除',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'system_config',
+          name: '系统配置',
+          category: 'system',
+          granted: true,
+        },
+        {
+          id: 'user_manage',
+          name: '用户管理',
+          category: 'system',
+          granted: true,
+        },
+        {
+          id: 'data_export',
+          name: '数据导出',
+          category: 'data',
+          granted: true,
+        },
+        {
+          id: 'network_config',
+          name: '网络配置',
+          category: 'network',
+          granted: true,
+        },
+        {
+          id: 'alert_manage',
+          name: '报警管理',
+          category: 'alert',
+          granted: true,
+        },
+      ],
     },
     {
       id: 'operator',
       name: '操作员',
       description: '负责日常设备操作和监控',
       permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: true },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: false },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: true },
-        { id: 'alert_manage', name: '报警管理', category: 'alert', granted: true }
-      ]
+        {
+          id: 'device_read',
+          name: '设备查看',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'device_write',
+          name: '设备编辑',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'device_delete',
+          name: '设备删除',
+          category: 'device',
+          granted: false,
+        },
+        {
+          id: 'data_export',
+          name: '数据导出',
+          category: 'data',
+          granted: true,
+        },
+        {
+          id: 'alert_manage',
+          name: '报警管理',
+          category: 'alert',
+          granted: true,
+        },
+      ],
     },
     {
       id: 'viewer',
       name: '观察员',
       description: '只能查看数据，无法进行修改操作',
       permissions: [
-        { id: 'device_read', name: '设备查看', category: 'device', granted: true },
-        { id: 'device_write', name: '设备编辑', category: 'device', granted: false },
-        { id: 'device_delete', name: '设备删除', category: 'device', granted: false },
-        { id: 'data_export', name: '数据导出', category: 'data', granted: false }
-      ]
-    }
+        {
+          id: 'device_read',
+          name: '设备查看',
+          category: 'device',
+          granted: true,
+        },
+        {
+          id: 'device_write',
+          name: '设备编辑',
+          category: 'device',
+          granted: false,
+        },
+        {
+          id: 'device_delete',
+          name: '设备删除',
+          category: 'device',
+          granted: false,
+        },
+        {
+          id: 'data_export',
+          name: '数据导出',
+          category: 'data',
+          granted: false,
+        },
+      ],
+    },
   ]
 }
 
@@ -567,7 +673,7 @@ function generateMockDepartments() {
     { id: 'production', name: '生产部门' },
     { id: 'maintenance', name: '维护部门' },
     { id: 'quality', name: '质量部门' },
-    { id: 'management', name: '管理部门' }
+    { id: 'management', name: '管理部门' },
   ]
 }
 
@@ -578,7 +684,7 @@ function generateMockManagers() {
   return [
     { id: 'manager1', name: '张经理' },
     { id: 'manager2', name: '李主管' },
-    { id: 'manager3', name: '王总监' }
+    { id: 'manager3', name: '王总监' },
   ]
 }
 
@@ -590,15 +696,23 @@ async function loadLoginHistory() {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 800))
-    
+
     loginHistory.value = Array.from({ length: 15 }, (_, i) => ({
       id: i + 1,
-      loginTime: new Date(Date.now() - i * 24 * 60 * 60 * 1000 - Math.random() * 12 * 60 * 60 * 1000).toISOString(),
+      loginTime: new Date(
+        Date.now() -
+          i * 24 * 60 * 60 * 1000 -
+          Math.random() * 12 * 60 * 60 * 1000
+      ).toISOString(),
       ipAddress: `192.168.1.${100 + Math.floor(Math.random() * 50)}`,
       location: ['上海', '北京', '深圳', '杭州'][Math.floor(Math.random() * 4)],
-      deviceType: ['Desktop', 'Mobile', 'Tablet'][Math.floor(Math.random() * 3)],
-      browser: ['Chrome', 'Firefox', 'Safari', 'Edge'][Math.floor(Math.random() * 4)],
-      success: Math.random() > 0.1
+      deviceType: ['Desktop', 'Mobile', 'Tablet'][
+        Math.floor(Math.random() * 3)
+      ],
+      browser: ['Chrome', 'Firefox', 'Safari', 'Edge'][
+        Math.floor(Math.random() * 4)
+      ],
+      success: Math.random() > 0.1,
     }))
   } finally {
     loadingHistory.value = false
@@ -612,8 +726,16 @@ async function loadUserActivities() {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 600))
-    
-    const activityTypes = ['login', 'logout', 'create', 'update', 'delete', 'view', 'export']
+
+    const activityTypes = [
+      'login',
+      'logout',
+      'create',
+      'update',
+      'delete',
+      'view',
+      'export',
+    ]
     const activityTitles = {
       login: '登录系统',
       logout: '退出系统',
@@ -621,18 +743,22 @@ async function loadUserActivities() {
       update: '更新配置',
       delete: '删除数据',
       view: '查看报告',
-      export: '导出数据'
+      export: '导出数据',
     }
-    
+
     userActivities.value = Array.from({ length: 20 }, (_, i) => {
-      const type = activityTypes[Math.floor(Math.random() * activityTypes.length)]
+      const type =
+        activityTypes[Math.floor(Math.random() * activityTypes.length)]
       return {
         id: i + 1,
         type,
         title: activityTitles[type as keyof typeof activityTitles],
         description: `用户执行了${activityTitles[type as keyof typeof activityTitles]}操作`,
-        timestamp: new Date(Date.now() - i * 2 * 60 * 60 * 1000 - Math.random() * 60 * 60 * 1000).toISOString(),
-        details: type === 'create' ? { '设备名称': '设备-001', '设备类型': 'PLC' } : null
+        timestamp: new Date(
+          Date.now() - i * 2 * 60 * 60 * 1000 - Math.random() * 60 * 60 * 1000
+        ).toISOString(),
+        details:
+          type === 'create' ? { 设备名称: '设备-001', 设备类型: 'PLC' } : null,
       }
     })
   } catch (error) {
@@ -648,17 +774,19 @@ async function loadUserSessions() {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 500))
-    
+
     userSessions.value = Array.from({ length: 3 }, (_, i) => ({
       sessionId: `sess_${Date.now()}_${i}`,
       ipAddress: `192.168.1.${100 + i}`,
       deviceType: ['Desktop', 'Mobile', 'Tablet'][i % 3],
       browser: ['Chrome 120', 'Firefox 115', 'Safari 17'][i % 3],
       operatingSystem: ['Windows 11', 'macOS 14', 'iOS 17'][i % 3],
-      loginTime: new Date(Date.now() - (i + 1) * 24 * 60 * 60 * 1000).toISOString(),
+      loginTime: new Date(
+        Date.now() - (i + 1) * 24 * 60 * 60 * 1000
+      ).toISOString(),
       lastActivity: new Date(Date.now() - i * 60 * 60 * 1000).toISOString(),
       isActive: i === 0,
-      isCurrent: i === 0
+      isCurrent: i === 0,
     }))
   } finally {
     loadingSessions.value = false
@@ -674,7 +802,7 @@ function getRoleType(role: string): string {
     manager: 'warning',
     engineer: 'primary',
     operator: 'success',
-    viewer: 'info'
+    viewer: 'info',
   }
   return typeMap[role] || 'info'
 }
@@ -719,7 +847,7 @@ function getStatusType(status: string): string {
   const typeMap: { [key: string]: string } = {
     active: 'success',
     inactive: 'warning',
-    locked: 'danger'
+    locked: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -731,7 +859,7 @@ function getStatusLabel(status: string): string {
   const labelMap: { [key: string]: string } = {
     active: '启用',
     inactive: '禁用',
-    locked: '锁定'
+    locked: '锁定',
   }
   return labelMap[status] || status
 }
@@ -742,7 +870,7 @@ function getStatusLabel(status: string): string {
 function getPermissionSummaryType(permissions: any[]): string {
   const granted = permissions.filter(p => p.granted).length
   const total = permissions.length
-  
+
   if (granted === total) return 'success'
   if (granted === 0) return 'danger'
   return 'warning'
@@ -768,7 +896,7 @@ function getActivityType(type: string): string {
     update: 'warning',
     delete: 'danger',
     view: 'info',
-    export: 'success'
+    export: 'success',
   }
   return typeMap[type] || 'info'
 }
@@ -784,7 +912,7 @@ function getActivityIcon(type: string): string {
     update: 'Edit',
     delete: 'Delete',
     view: 'View',
-    export: 'Download'
+    export: 'Download',
   }
   return iconMap[type] || 'Operation'
 }
@@ -807,7 +935,7 @@ function getActivityTypeLabel(type: string): string {
     update: '更新',
     delete: '删除',
     view: '查看',
-    export: '导出'
+    export: '导出',
   }
   return labelMap[type] || type
 }
@@ -866,14 +994,17 @@ function handleClose() {
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible && props.userData) {
-    initializeData()
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible && props.userData) {
+      initializeData()
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
   if (visible) {
     activeTab.value = 'basic'
@@ -892,46 +1023,46 @@ onMounted(() => {
 .user-detail-dialog {
   .user-info-card {
     margin-bottom: 16px;
-    
+
     .user-header {
       display: flex;
       align-items: flex-start;
       gap: 20px;
-      
+
       .user-avatar {
         position: relative;
         flex-shrink: 0;
-        
+
         .online-indicator {
           position: absolute;
           bottom: 0;
           right: 0;
         }
       }
-      
+
       .user-basic {
         flex: 1;
-        
+
         .user-name {
           font-size: 24px;
           font-weight: 600;
           color: #303133;
           margin-bottom: 8px;
         }
-        
+
         .user-username {
           font-size: 14px;
           color: #909399;
           margin-bottom: 12px;
         }
-        
+
         .user-tags {
           display: flex;
           gap: 8px;
           flex-wrap: wrap;
         }
       }
-      
+
       .user-actions {
         display: flex;
         gap: 12px;
@@ -939,17 +1070,17 @@ onMounted(() => {
       }
     }
   }
-  
+
   .detail-tabs {
     .detail-content {
       .detail-sections {
         .detail-section {
           margin-bottom: 32px;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           .section-title {
             font-size: 16px;
             font-weight: 600;
@@ -958,34 +1089,34 @@ onMounted(() => {
             padding-bottom: 8px;
             border-bottom: 1px solid #ebeef5;
           }
-          
+
           .detail-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 16px;
-            
+
             .detail-item {
               display: flex;
               align-items: center;
-              
+
               label {
                 font-weight: 500;
                 color: #606266;
                 width: 100px;
                 flex-shrink: 0;
               }
-              
+
               span {
                 color: #303133;
               }
             }
           }
-          
+
           .remark-content {
             padding: 16px;
             background: #f8f9fa;
             border-radius: 6px;
-            
+
             p {
               margin: 0;
               color: #606266;
@@ -994,59 +1125,59 @@ onMounted(() => {
           }
         }
       }
-      
+
       .permissions-overview {
         .role-info {
           margin-bottom: 32px;
-          
+
           .role-card {
             padding: 20px;
             background: #f8f9fa;
             border-radius: 8px;
-            
+
             .role-header {
               margin-bottom: 12px;
             }
-            
+
             .role-description {
               color: #606266;
               line-height: 1.6;
             }
           }
         }
-        
+
         .permissions-list {
           .permission-categories {
             .permission-category {
               margin-bottom: 24px;
-              
+
               &:last-child {
                 margin-bottom: 0;
               }
-              
+
               .category-header {
                 display: flex;
                 align-items: center;
                 gap: 12px;
                 margin-bottom: 16px;
-                
+
                 .category-icon {
                   font-size: 18px;
                   color: #409eff;
                 }
-                
+
                 .category-name {
                   font-weight: 500;
                   color: #303133;
                   flex: 1;
                 }
               }
-              
+
               .category-permissions {
                 display: grid;
                 grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
                 gap: 12px;
-                
+
                 .permission-item {
                   display: flex;
                   align-items: center;
@@ -1055,26 +1186,26 @@ onMounted(() => {
                   background: #fff;
                   border: 1px solid #e4e7ed;
                   border-radius: 4px;
-                  
+
                   .el-icon {
                     font-size: 16px;
-                    
+
                     &.granted {
                       color: #67c23a;
                     }
-                    
+
                     &.denied {
                       color: #f56c6c;
                     }
                   }
-                  
+
                   span {
                     font-size: 13px;
-                    
+
                     &.granted {
                       color: #303133;
                     }
-                    
+
                     &.denied {
                       color: #909399;
                     }
@@ -1085,34 +1216,34 @@ onMounted(() => {
           }
         }
       }
-      
+
       .login-overview {
         .login-stats {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
           gap: 16px;
           margin-bottom: 32px;
-          
+
           .stat-item {
             text-align: center;
             padding: 20px;
             background: #f8f9fa;
             border-radius: 8px;
-            
+
             .stat-number {
               font-size: 20px;
               font-weight: 600;
               color: #303133;
               margin-bottom: 8px;
             }
-            
+
             .stat-label {
               font-size: 14px;
               color: #606266;
             }
           }
         }
-        
+
         .login-history {
           .ip-address {
             font-family: monospace;
@@ -1120,7 +1251,7 @@ onMounted(() => {
           }
         }
       }
-      
+
       .activity-timeline {
         .activity-item {
           .activity-header {
@@ -1128,25 +1259,25 @@ onMounted(() => {
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
-            
+
             .activity-icon {
               font-size: 16px;
               color: #409eff;
             }
-            
+
             .activity-title {
               font-weight: 500;
               color: #303133;
               flex: 1;
             }
           }
-          
+
           .activity-description {
             color: #606266;
             margin-bottom: 12px;
             line-height: 1.5;
           }
-          
+
           .activity-details {
             padding: 12px;
             background: #f8f9fa;
@@ -1154,19 +1285,19 @@ onMounted(() => {
           }
         }
       }
-      
+
       .sessions-list {
         .session-id {
           font-family: monospace;
           font-size: 12px;
           color: #909399;
         }
-        
+
         .ip-address {
           font-family: monospace;
           color: #409eff;
         }
-        
+
         .device-info {
           .device-os {
             font-size: 12px;
@@ -1192,23 +1323,27 @@ onMounted(() => {
       flex-direction: column;
       align-items: center;
       text-align: center;
-      
+
       .user-actions {
         width: 100%;
         justify-content: center;
       }
     }
-    
+
     .detail-content {
       .detail-sections .detail-section .detail-grid {
         grid-template-columns: 1fr;
         gap: 12px;
       }
-      
-      .permissions-overview .permissions-list .permission-categories .permission-category .category-permissions {
+
+      .permissions-overview
+        .permissions-list
+        .permission-categories
+        .permission-category
+        .category-permissions {
         grid-template-columns: 1fr;
       }
-      
+
       .login-overview .login-stats {
         grid-template-columns: 1fr;
       }

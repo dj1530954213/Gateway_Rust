@@ -1,0 +1,64 @@
+# ModbusTCP驱动配置
+driver:
+  name: modbus-tcp-driver
+  type: modbus-tcp
+  enabled: true
+
+connection:
+  host: 127.0.0.1
+  port: 5502
+  unit_id: 1
+  timeout: 5000
+  retry_count: 3
+
+polling:
+  interval: 1000  # 1秒轮询间隔
+  
+points:
+  - name: sensor.temp1
+    address: 0
+    type: holding_register
+    scale: value / 10.0
+    unit: "°C"
+    
+  - name: sensor.pressure1
+    address: 1
+    type: holding_register
+    scale: value / 100.0
+    unit: "bar"
+    
+  - name: sensor.flow1
+    address: 2
+    type: holding_register
+    scale: value / 10.0
+    unit: "L/min"
+    
+  - name: sensor.temp2
+    address: 3
+    type: holding_register
+    scale: value / 10.0
+    unit: "°C"
+    
+  - name: sensor.pressure2
+    address: 4
+    type: holding_register
+    scale: value / 100.0
+    unit: "bar"
+    
+  - name: sensor.flow2
+    address: 5
+    type: holding_register
+    scale: value / 10.0
+    unit: "L/min"
+    
+  - name: counter
+    address: 10
+    type: holding_register
+    scale: value
+    unit: "count"
+    
+  - name: status
+    address: 20
+    type: holding_register
+    scale: value
+    unit: "hex"

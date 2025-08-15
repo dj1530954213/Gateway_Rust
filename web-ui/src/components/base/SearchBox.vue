@@ -16,11 +16,11 @@
       @blur="handleBlur"
       @keyup.enter="handleEnter"
     >
-      <template #prepend v-if="$slots.prepend">
+      <template v-if="$slots.prepend" #prepend>
         <slot name="prepend" />
       </template>
-      
-      <template #append v-if="showSearchButton || $slots.append">
+
+      <template v-if="showSearchButton || $slots.append" #append>
         <slot name="append">
           <el-button
             v-if="showSearchButton"
@@ -34,12 +34,12 @@
         </slot>
       </template>
     </el-input>
-    
+
     <!-- 搜索建议下拉 -->
     <div
       v-if="showSuggestions && filteredSuggestions.length > 0"
-      class="search-suggestions"
       ref="suggestionsRef"
+      class="search-suggestions"
     >
       <div
         v-for="(suggestion, index) in filteredSuggestions"
@@ -52,20 +52,26 @@
         <el-icon v-if="suggestion.icon" class="suggestion-icon">
           <component :is="suggestion.icon" />
         </el-icon>
-        
+
         <div class="suggestion-content">
-          <div class="suggestion-text" v-html="highlightMatch(suggestion.text)"></div>
+          <div
+            class="suggestion-text"
+            v-html="highlightMatch(suggestion.text)"
+          ></div>
           <div v-if="suggestion.description" class="suggestion-description">
             {{ suggestion.description }}
           </div>
         </div>
-        
+
         <div v-if="suggestion.category" class="suggestion-category">
           {{ suggestion.category }}
         </div>
       </div>
-      
-      <div v-if="showHistory && recentSearches.length > 0" class="search-history">
+
+      <div
+        v-if="showHistory && recentSearches.length > 0"
+        class="search-history"
+      >
         <el-divider>最近搜索</el-divider>
         <div
           v-for="(item, index) in recentSearches"
@@ -86,17 +92,21 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 高级搜索面板 -->
     <div v-if="showAdvancedSearch && advancedVisible" class="advanced-search">
       <el-card shadow="never">
         <template #header>
           <div class="advanced-search-header">
             <span>高级搜索</span>
-            <el-button type="text" :icon="Close" @click="advancedVisible = false" />
+            <el-button
+              type="text"
+              :icon="Close"
+              @click="advancedVisible = false"
+            />
           </div>
         </template>
-        
+
         <el-form :model="advancedForm" size="small" label-width="80px">
           <el-form-item
             v-for="field in advancedFields"
@@ -108,7 +118,7 @@
               v-model="advancedForm[field.key]"
               :placeholder="field.placeholder"
             />
-            
+
             <el-select
               v-else-if="field.type === 'select'"
               v-model="advancedForm[field.key]"
@@ -122,7 +132,7 @@
                 :value="option.value"
               />
             </el-select>
-            
+
             <el-date-picker
               v-else-if="field.type === 'daterange'"
               v-model="advancedForm[field.key]"
@@ -133,9 +143,13 @@
               :placeholder="field.placeholder"
             />
           </el-form-item>
-          
+
           <el-form-item>
-            <el-button type="primary" size="small" @click="handleAdvancedSearch">
+            <el-button
+              type="primary"
+              size="small"
+              @click="handleAdvancedSearch"
+            >
               搜索
             </el-button>
             <el-button size="small" @click="handleAdvancedReset">
@@ -149,8 +163,16 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { Search, Close, Clock } from '@element-plus/icons-vue'
+import {
+  ref,
+  reactive,
+  computed,
+  watch,
+  nextTick,
+  onMounted,
+  onUnmounted,
+} from 'vue'
 
 export interface SearchSuggestion {
   text: string
@@ -175,33 +197,33 @@ interface Props {
   disabled?: boolean
   clearable?: boolean
   searching?: boolean
-  
+
   // 图标
   prefixIcon?: any
   suffixIcon?: any
   searchButtonIcon?: any
   searchButtonText?: string
   showSearchButton?: boolean
-  
+
   // 搜索建议
   suggestions?: SearchSuggestion[]
   showSuggestions?: boolean
   maxSuggestions?: number
   minChars?: number
-  
+
   // 搜索历史
   showHistory?: boolean
   maxHistory?: number
   historyKey?: string
-  
+
   // 高级搜索
   showAdvancedSearch?: boolean
   advancedFields?: AdvancedField[]
-  
+
   // 实时搜索
   realtime?: boolean
   debounceDelay?: number
-  
+
   // 样式
   width?: string
   containerClass?: string
@@ -262,14 +284,17 @@ const advancedForm = reactive<Record<string, any>>({})
 let debounceTimer: NodeJS.Timeout | null = null
 
 // 监听modelValue变化
-watch(() => props.modelValue, (val) => {
-  searchValue.value = val
-})
+watch(
+  () => props.modelValue,
+  val => {
+    searchValue.value = val
+  }
+)
 
 // 监听searchValue变化
-watch(searchValue, (val) => {
+watch(searchValue, val => {
   emit('update:modelValue', val)
-  
+
   if (props.realtime) {
     handleDebouncedSearch()
   }
@@ -280,7 +305,7 @@ const filteredSuggestions = computed(() => {
   if (!searchValue.value || searchValue.value.length < props.minChars) {
     return []
   }
-  
+
   const keyword = searchValue.value.toLowerCase()
   return props.suggestions
     .filter(s => s.text.toLowerCase().includes(keyword))
@@ -290,15 +315,15 @@ const filteredSuggestions = computed(() => {
 // 容器样式类
 const containerClass = computed(() => {
   const classes = ['search-box']
-  
+
   if (props.containerClass) {
     classes.push(props.containerClass)
   }
-  
+
   if (props.width) {
     classes.push('search-box--custom-width')
   }
-  
+
   return classes.join(' ')
 })
 
@@ -326,21 +351,21 @@ const saveSearchHistory = () => {
 // 添加到搜索历史
 const addToHistory = (keyword: string) => {
   if (!keyword.trim()) return
-  
+
   // 移除重复项
   const index = recentSearches.value.indexOf(keyword)
   if (index > -1) {
     recentSearches.value.splice(index, 1)
   }
-  
+
   // 添加到开头
   recentSearches.value.unshift(keyword)
-  
+
   // 限制历史记录数量
   if (recentSearches.value.length > props.maxHistory) {
     recentSearches.value = recentSearches.value.slice(0, props.maxHistory)
   }
-  
+
   saveSearchHistory()
 }
 
@@ -353,7 +378,7 @@ const removeFromHistory = (index: number) => {
 // 高亮匹配文本
 const highlightMatch = (text: string) => {
   if (!searchValue.value) return text
-  
+
   const keyword = searchValue.value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
   const regex = new RegExp(`(${keyword})`, 'gi')
   return text.replace(regex, '<mark>$1</mark>')
@@ -364,7 +389,7 @@ const handleDebouncedSearch = () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
   }
-  
+
   debounceTimer = setTimeout(() => {
     if (searchValue.value.trim()) {
       emit('search', searchValue.value.trim())
@@ -403,8 +428,13 @@ const handleBlur = (event: FocusEvent) => {
 }
 
 const handleEnter = () => {
-  if (activeSuggestionIndex.value >= 0 && filteredSuggestions.value.length > 0) {
-    handleSuggestionClick(filteredSuggestions.value[activeSuggestionIndex.value])
+  if (
+    activeSuggestionIndex.value >= 0 &&
+    filteredSuggestions.value.length > 0
+  ) {
+    handleSuggestionClick(
+      filteredSuggestions.value[activeSuggestionIndex.value]
+    )
   } else {
     handleSearch()
   }
@@ -450,7 +480,7 @@ const handleAdvancedReset = () => {
 // 键盘导航
 const handleKeyNavigation = (event: KeyboardEvent) => {
   if (!showSuggestions.value || filteredSuggestions.value.length === 0) return
-  
+
   switch (event.key) {
     case 'ArrowDown':
       event.preventDefault()
@@ -461,7 +491,10 @@ const handleKeyNavigation = (event: KeyboardEvent) => {
       break
     case 'ArrowUp':
       event.preventDefault()
-      activeSuggestionIndex.value = Math.max(activeSuggestionIndex.value - 1, -1)
+      activeSuggestionIndex.value = Math.max(
+        activeSuggestionIndex.value - 1,
+        -1
+      )
       break
     case 'Escape':
       showSuggestions.value = false
@@ -473,12 +506,12 @@ const handleKeyNavigation = (event: KeyboardEvent) => {
 // 生命周期
 onMounted(() => {
   loadSearchHistory()
-  
+
   // 初始化高级搜索表单
   props.advancedFields.forEach(field => {
     advancedForm[field.key] = ''
   })
-  
+
   // 添加键盘事件监听
   document.addEventListener('keydown', handleKeyNavigation)
 })
@@ -494,11 +527,11 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .search-box {
   position: relative;
-  
+
   &.search-box--custom-width {
     width: v-bind(width);
   }
-  
+
   .search-suggestions {
     position: absolute;
     top: 100%;
@@ -512,32 +545,32 @@ onUnmounted(() => {
     border-radius: 6px;
     box-shadow: var(--el-box-shadow-light);
     margin-top: 4px;
-    
+
     .suggestion-item {
       display: flex;
       align-items: center;
       padding: 8px 12px;
       cursor: pointer;
       transition: background-color 0.3s;
-      
+
       &:hover,
       &.suggestion-item--active {
         background-color: var(--el-fill-color-light);
       }
-      
+
       .suggestion-icon {
         margin-right: 8px;
         color: var(--el-text-color-secondary);
       }
-      
+
       .suggestion-content {
         flex: 1;
         min-width: 0;
-        
+
         .suggestion-text {
           font-size: 14px;
           color: var(--el-text-color-primary);
-          
+
           :deep(mark) {
             background-color: var(--el-color-primary-light-8);
             color: var(--el-color-primary);
@@ -545,41 +578,41 @@ onUnmounted(() => {
             border-radius: 2px;
           }
         }
-        
+
         .suggestion-description {
           font-size: 12px;
           color: var(--el-text-color-secondary);
           margin-top: 2px;
         }
       }
-      
+
       .suggestion-category {
         font-size: 12px;
         color: var(--el-text-color-secondary);
         margin-left: 8px;
       }
     }
-    
+
     .search-history {
       border-top: 1px solid var(--el-border-color-lighter);
-      
+
       .history-item {
         display: flex;
         align-items: center;
         padding: 6px 12px;
         cursor: pointer;
         transition: background-color 0.3s;
-        
+
         &:hover {
           background-color: var(--el-fill-color-light);
         }
-        
+
         .history-icon {
           margin-right: 8px;
           color: var(--el-text-color-secondary);
           font-size: 12px;
         }
-        
+
         .history-text {
           flex: 1;
           font-size: 13px;
@@ -588,7 +621,7 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .advanced-search {
     position: absolute;
     top: 100%;
@@ -596,12 +629,12 @@ onUnmounted(() => {
     right: 0;
     z-index: 1000;
     margin-top: 4px;
-    
+
     .advanced-search-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       span {
         font-weight: 600;
       }
@@ -618,7 +651,7 @@ onUnmounted(() => {
       right: 16px;
       top: auto;
     }
-    
+
     .advanced-search {
       position: fixed;
       left: 16px;

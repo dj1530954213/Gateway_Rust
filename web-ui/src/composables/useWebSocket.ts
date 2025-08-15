@@ -28,7 +28,7 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
   const isConnecting = ref(false)
   const lastMessage = ref<string>('')
   const reconnectAttempts = ref(0)
-  
+
   let reconnectTimer: NodeJS.Timeout | null = null
   let heartbeatTimer: NodeJS.Timeout | null = null
 
@@ -37,58 +37,56 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
       return
     }
 
-
     isConnecting.value = true
 
     try {
       // Determine WebSocket URL
       const wsUrl = new URL(url, window.location.origin)
       wsUrl.protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-      
+
       socket.value = new WebSocket(wsUrl.toString())
 
       socket.value.onopen = () => {
         isConnected.value = true
         isConnecting.value = false
         reconnectAttempts.value = 0
-        
+
         console.log('WebSocket connected:', url)
-        
+
         // Start heartbeat
         startHeartbeat()
-        
+
         onOpen?.()
       }
 
       socket.value.onclose = () => {
         isConnected.value = false
         isConnecting.value = false
-        
+
         console.log('WebSocket disconnected:', url)
-        
+
         // Stop heartbeat
         stopHeartbeat()
-        
+
         onClose?.()
-        
+
         // Auto reconnect
         if (reconnectAttempts.value < maxReconnectAttempts) {
           scheduleReconnect()
         }
       }
 
-      socket.value.onerror = (error) => {
+      socket.value.onerror = error => {
         console.error('WebSocket error:', error)
         isConnecting.value = false
-        
+
         onError?.(error)
       }
 
-      socket.value.onmessage = (event) => {
+      socket.value.onmessage = event => {
         lastMessage.value = event.data
         onMessage?.(event.data)
       }
-
     } catch (error) {
       console.error('Failed to create WebSocket connection:', error)
       isConnecting.value = false
@@ -100,10 +98,10 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
       socket.value.close()
       socket.value = null
     }
-    
+
     stopHeartbeat()
     stopReconnect()
-    
+
     isConnected.value = false
     isConnecting.value = false
   }
@@ -135,9 +133,11 @@ export function useWebSocket(url: string, options: UseWebSocketOptions = {}) {
     }
 
     reconnectAttempts.value++
-    
-    console.log(`Scheduling WebSocket reconnect attempt ${reconnectAttempts.value}/${maxReconnectAttempts}`)
-    
+
+    console.log(
+      `Scheduling WebSocket reconnect attempt ${reconnectAttempts.value}/${maxReconnectAttempts}`
+    )
+
     reconnectTimer = setTimeout(() => {
       connect()
     }, reconnectInterval)

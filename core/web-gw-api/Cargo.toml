@@ -50,10 +50,14 @@ url = { workspace = true }
 # Regular expressions
 regex = { workspace = true }
 
+# Random number generation
+fastrand = "2.0"
+
 # Local dependencies
 frame-bus = { path = "../frame-bus" }
 pg-repo = { path = "../../infra/pg-repo" }
 driver-manager = { path = "../driver-manager" }
+common-errors = { path = "../common-errors" }
 
 [[bin]]
 name = "web-gw-api"

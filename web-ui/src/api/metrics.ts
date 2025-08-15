@@ -75,8 +75,8 @@ class MetricsApi {
           networkSpeed: '0 MB/s',
           uploadSpeed: '0 MB/s',
           downloadSpeed: '0 MB/s',
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       }
     }
   }
@@ -84,7 +84,9 @@ class MetricsApi {
   /**
    * 获取指标历史数据
    */
-  async getMetricsHistory(params: MetricsQuery): Promise<{ data: MetricsHistory }> {
+  async getMetricsHistory(
+    params: MetricsQuery
+  ): Promise<{ data: MetricsHistory }> {
     try {
       return await http.get('/api/v1/metrics/history', { params })
     } catch (error) {
@@ -100,8 +102,8 @@ class MetricsApi {
           diskWriteHistory: [],
           loadAverage1m: [],
           loadAverage5m: [],
-          loadAverage15m: []
-        }
+          loadAverage15m: [],
+        },
       }
     }
   }
@@ -132,8 +134,8 @@ class MetricsApi {
           cpuStatus: 'normal',
           memoryStatus: 'normal',
           diskStatus: 'normal',
-          networkStatus: 'normal'
-        }
+          networkStatus: 'normal',
+        },
       }
     }
   }
@@ -200,7 +202,7 @@ class MetricsApi {
   async exportMetrics(params: MetricsQuery & { format?: 'csv' | 'json' }) {
     return http.get('/api/v1/metrics/export', {
       params,
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 
@@ -236,7 +238,9 @@ class MetricsApi {
    * 清理历史指标数据
    */
   async cleanupMetrics(olderThanDays: number) {
-    return http.post('/api/v1/metrics/cleanup', { older_than_days: olderThanDays })
+    return http.post('/api/v1/metrics/cleanup', {
+      older_than_days: olderThanDays,
+    })
   }
 
   /**

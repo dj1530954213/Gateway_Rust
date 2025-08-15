@@ -7,13 +7,17 @@
           <h1 class="page-title">历史数据</h1>
           <p class="page-description">查询和分析设备的历史数据变化趋势</p>
         </div>
-        
+
         <div class="header-actions">
-          <el-button type="primary" @click="showExportDialog = true" :disabled="!hasData">
+          <el-button
+            type="primary"
+            :disabled="!hasData"
+            @click="showExportDialog = true"
+          >
             <el-icon><Download /></el-icon>
             导出数据
           </el-button>
-          <el-button @click="refreshData" :loading="loading">
+          <el-button :loading="loading" @click="refreshData">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -67,7 +71,7 @@
                 <div class="tag-option">
                   <span class="tag-name">{{ tag.name }}</span>
                   <span class="tag-address">{{ tag.address }}</span>
-                  <span class="tag-unit" v-if="tag.unit">({{ tag.unit }})</span>
+                  <span v-if="tag.unit" class="tag-unit">({{ tag.unit }})</span>
                 </div>
               </el-option>
             </el-select>
@@ -122,21 +126,21 @@
           <div class="query-actions">
             <el-button
               type="primary"
-              @click="executeQuery"
               :loading="loading"
               :disabled="!canQuery"
+              @click="executeQuery"
             >
               <el-icon><Search /></el-icon>
               查询数据
             </el-button>
-            
+
             <el-button @click="resetQuery">
               <el-icon><RefreshLeft /></el-icon>
               重置条件
             </el-button>
 
-            <el-button 
-              type="text" 
+            <el-button
+              type="text"
               @click="showAdvancedOptions = !showAdvancedOptions"
             >
               {{ showAdvancedOptions ? '收起' : '展开' }}高级选项
@@ -147,7 +151,7 @@
             </el-button>
           </div>
 
-          <div class="query-stats" v-if="queryStats.totalRecords > 0">
+          <div v-if="queryStats.totalRecords > 0" class="query-stats">
             <span class="stats-item">
               查询结果: {{ formatNumber(queryStats.totalRecords) }} 条记录
             </span>
@@ -189,11 +193,15 @@
             </div>
 
             <div class="option-item">
-              <el-checkbox v-model="queryForm.includeNull">包含空值</el-checkbox>
+              <el-checkbox v-model="queryForm.includeNull"
+                >包含空值</el-checkbox
+              >
             </div>
 
             <div class="option-item">
-              <el-checkbox v-model="queryForm.fillGaps">填充数据间隙</el-checkbox>
+              <el-checkbox v-model="queryForm.fillGaps"
+                >填充数据间隙</el-checkbox
+              >
             </div>
           </div>
         </div>
@@ -213,9 +221,9 @@
         <div class="display-actions">
           <el-tooltip content="全屏显示">
             <el-button
+              v-if="displayMode !== 'table'"
               type="text"
               @click="toggleFullscreen"
-              v-if="displayMode !== 'table'"
             >
               <el-icon><FullScreen /></el-icon>
             </el-button>
@@ -224,11 +232,11 @@
       </div>
 
       <!-- 图表视图 -->
-      <el-card 
-        v-if="displayMode === 'chart' || displayMode === 'both'" 
-        class="chart-container" 
+      <el-card
+        v-if="displayMode === 'chart' || displayMode === 'both'"
+        class="chart-container"
         shadow="never"
-        :class="{ 'fullscreen': isFullscreen }"
+        :class="{ fullscreen: isFullscreen }"
       >
         <HistoryDataChart
           :data="historyData"
@@ -240,9 +248,9 @@
       </el-card>
 
       <!-- 表格视图 -->
-      <el-card 
-        v-if="displayMode === 'table' || displayMode === 'both'" 
-        class="table-container" 
+      <el-card
+        v-if="displayMode === 'table' || displayMode === 'both'"
+        class="table-container"
         shadow="never"
       >
         <HistoryDataTable
@@ -256,11 +264,12 @@
       </el-card>
 
       <!-- 空状态 -->
-      <el-card v-if="!loading && !hasData" class="empty-container" shadow="never">
-        <el-empty
-          description="暂无历史数据"
-          :image-size="120"
-        >
+      <el-card
+        v-if="!loading && !hasData"
+        class="empty-container"
+        shadow="never"
+      >
+        <el-empty description="暂无历史数据" :image-size="120">
           <template #description>
             <p>请选择设备和数据点位，然后点击查询按钮获取历史数据</p>
           </template>
@@ -270,7 +279,7 @@
         </el-empty>
       </el-card>
     </div>
-    
+
     <!-- 数据导出对话框 -->
     <DataExportDialog
       v-model:visible="showExportDialog"
@@ -302,9 +311,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Download,
   Refresh,
@@ -312,18 +318,21 @@ import {
   RefreshLeft,
   ArrowDown,
   ArrowUp,
-  FullScreen
+  FullScreen,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRouter } from 'vue-router'
 
-import { useDevicesStore, useTagsStore, useHistoryStore } from '@/stores'
-import { formatNumber } from '@/utils/format'
-import { formatDateTime, getTimeRange } from '@/utils/date'
-
-// 组件导入
-import TimeRangeSelector from '@/components/history/TimeRangeSelector.vue'
+import DataExportDialog from '@/components/history/DataExportDialog.vue'
 import HistoryDataChart from '@/components/history/HistoryDataChart.vue'
 import HistoryDataTable from '@/components/history/HistoryDataTable.vue'
-import DataExportDialog from '@/components/history/DataExportDialog.vue'
+import TimeRangeSelector from '@/components/history/TimeRangeSelector.vue'
+import { useDevicesStore, useTagsStore, useHistoryStore } from '@/stores'
+import { formatDateTime, getTimeRange } from '@/utils/date'
+import { formatNumber } from '@/utils/format'
+
+// 组件导入
 
 // ===== 路由 =====
 const router = useRouter()
@@ -352,21 +361,21 @@ const queryForm = ref({
   maxRecords: 10000,
   quality: 'all',
   includeNull: false,
-  fillGaps: false
+  fillGaps: false,
 })
 
 // 查询统计
 const queryStats = ref({
   totalRecords: 0,
   timeSpan: '',
-  queryTime: 0
+  queryTime: 0,
 })
 
 // 表格分页
 const tablePagination = ref({
   currentPage: 1,
   pageSize: 50,
-  total: 0
+  total: 0,
 })
 
 // 可用设备和标签
@@ -378,10 +387,12 @@ const historyData = ref([])
 
 // ===== 计算属性 =====
 const canQuery = computed(() => {
-  return queryForm.value.deviceIds.length > 0 && 
-         queryForm.value.tagIds.length > 0 &&
-         (queryForm.value.timeRange !== 'custom' || 
-          (queryForm.value.startTime && queryForm.value.endTime))
+  return (
+    queryForm.value.deviceIds.length > 0 &&
+    queryForm.value.tagIds.length > 0 &&
+    (queryForm.value.timeRange !== 'custom' ||
+      (queryForm.value.startTime && queryForm.value.endTime))
+  )
 })
 
 const hasData = computed(() => {
@@ -403,7 +414,6 @@ async function initializeData() {
     const timeRange = getTimeRange('hour', 1)
     queryForm.value.startTime = timeRange.start
     queryForm.value.endTime = timeRange.end
-
   } catch (error) {
     console.error('初始化历史数据页面失败:', error)
     ElMessage.error('页面初始化失败')
@@ -425,7 +435,7 @@ async function handleDeviceChange() {
     const tagPromises = queryForm.value.deviceIds.map(deviceId =>
       tagsStore.fetchTagsByDevice(deviceId)
     )
-    
+
     const tagResults = await Promise.all(tagPromises)
     availableTags.value = tagResults.flat()
 
@@ -433,7 +443,6 @@ async function handleDeviceChange() {
     queryForm.value.tagIds = queryForm.value.tagIds.filter(tagId =>
       availableTags.value.some(tag => tag.id === tagId)
     )
-
   } catch (error) {
     console.error('加载设备标签失败:', error)
     ElMessage.error('加载设备标签失败')
@@ -467,14 +476,14 @@ async function executeQuery() {
       aggregation: queryForm.value.aggregation as any,
       interval: queryForm.value.aggregation === 'raw' ? '1s' : '1m',
       page: 1,
-      size: queryForm.value.maxRecords
+      size: queryForm.value.maxRecords,
     }
 
     // 调用缓存版本的查询方法
     await historyStore.fetchTimeSeriesData(queryParams)
-    
+
     // 从 store 状态获取数据
-    historyData.value = historyStore.state.timeSeriesData.flatMap(series => 
+    historyData.value = historyStore.state.timeSeriesData.flatMap(series =>
       series.data.map((point, index) => ({
         id: `${series.tag_id}_${index}`,
         timestamp: point.timestamp,
@@ -487,15 +496,18 @@ async function executeQuery() {
         rawValue: point.value,
         unit: series.unit || '',
         dataType: 'float',
-        quality: 'good'
+        quality: 'good',
       }))
     )
-    
+
     // 更新查询统计
     queryStats.value = {
       totalRecords: historyData.value.length,
-      timeSpan: formatTimeSpan(queryForm.value.startTime, queryForm.value.endTime),
-      queryTime: Date.now() - startTime
+      timeSpan: formatTimeSpan(
+        queryForm.value.startTime,
+        queryForm.value.endTime
+      ),
+      queryTime: Date.now() - startTime,
     }
 
     // 更新表格分页
@@ -505,9 +517,10 @@ async function executeQuery() {
     if (historyData.value.length === 0) {
       ElMessage.info('未查询到符合条件的历史数据')
     } else {
-      ElMessage.success(`查询完成，共获取 ${queryStats.value.totalRecords} 条记录`)
+      ElMessage.success(
+        `查询完成，共获取 ${queryStats.value.totalRecords} 条记录`
+      )
     }
-
   } catch (error) {
     console.error('查询历史数据失败:', error)
     ElMessage.error('查询历史数据失败')
@@ -533,7 +546,7 @@ function resetQuery() {
     maxRecords: 10000,
     quality: 'all',
     includeNull: false,
-    fillGaps: false
+    fillGaps: false,
   }
 
   // 重置时间范围
@@ -574,7 +587,7 @@ function showQuickQuery() {
  */
 function toggleFullscreen() {
   isFullscreen.value = !isFullscreen.value
-  
+
   nextTick(() => {
     // 触发图表重新渲染
     window.dispatchEvent(new Event('resize'))
@@ -627,20 +640,20 @@ function handleDataExport(exportConfig: any) {
  */
 function formatTimeSpan(startTime: string, endTime: string): string {
   if (!startTime || !endTime) return ''
-  
+
   const start = new Date(startTime)
   const end = new Date(endTime)
   const diffMs = end.getTime() - start.getTime()
-  
+
   const days = Math.floor(diffMs / (24 * 60 * 60 * 1000))
   const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
   const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
-  
+
   const parts = []
   if (days > 0) parts.push(`${days}天`)
   if (hours > 0) parts.push(`${hours}小时`)
   if (minutes > 0) parts.push(`${minutes}分钟`)
-  
+
   return parts.join('') || '1分钟内'
 }
 
@@ -650,24 +663,37 @@ onMounted(async () => {
 })
 
 // ===== 监听器 =====
-watch(() => queryForm.value.timeRange, (newRange) => {
-  if (newRange !== 'custom') {
-    const timeRange = getTimeRange(
-      newRange === '1h' ? 'hour' : 
-      newRange === '6h' ? 'hour' : 
-      newRange === '24h' ? 'hour' : 
-      newRange === '7d' ? 'day' : 'day',
-      
-      newRange === '1h' ? 1 :
-      newRange === '6h' ? 6 :
-      newRange === '24h' ? 24 :
-      newRange === '7d' ? 7 : 1
-    )
-    
-    queryForm.value.startTime = timeRange.start
-    queryForm.value.endTime = timeRange.end
+watch(
+  () => queryForm.value.timeRange,
+  newRange => {
+    if (newRange !== 'custom') {
+      const timeRange = getTimeRange(
+        newRange === '1h'
+          ? 'hour'
+          : newRange === '6h'
+            ? 'hour'
+            : newRange === '24h'
+              ? 'hour'
+              : newRange === '7d'
+                ? 'day'
+                : 'day',
+
+        newRange === '1h'
+          ? 1
+          : newRange === '6h'
+            ? 6
+            : newRange === '24h'
+              ? 24
+              : newRange === '7d'
+                ? 7
+                : 1
+      )
+
+      queryForm.value.startTime = timeRange.start
+      queryForm.value.endTime = timeRange.end
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
@@ -678,12 +704,12 @@ watch(() => queryForm.value.timeRange, (newRange) => {
 
   .page-header {
     margin-bottom: 16px;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      
+
       .title-section {
         .page-title {
           font-size: 28px;
@@ -691,14 +717,14 @@ watch(() => queryForm.value.timeRange, (newRange) => {
           color: #303133;
           margin: 0 0 8px 0;
         }
-        
+
         .page-description {
           font-size: 14px;
           color: #606266;
           margin: 0;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
@@ -708,7 +734,7 @@ watch(() => queryForm.value.timeRange, (newRange) => {
 
   .query-panel {
     margin-bottom: 16px;
-    
+
     .query-form {
       .query-row {
         display: flex;
@@ -716,16 +742,16 @@ watch(() => queryForm.value.timeRange, (newRange) => {
         gap: 24px;
         margin-bottom: 16px;
         flex-wrap: wrap;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
       }
-      
+
       .query-item {
         display: flex;
         flex-direction: column;
-        
+
         .query-label {
           font-size: 13px;
           color: #606266;
@@ -733,48 +759,48 @@ watch(() => queryForm.value.timeRange, (newRange) => {
           font-weight: 500;
         }
       }
-      
+
       .device-option,
       .tag-option {
         display: flex;
         justify-content: space-between;
         align-items: center;
         width: 100%;
-        
+
         .device-name,
         .tag-name {
           font-weight: 500;
         }
-        
+
         .device-protocol,
         .tag-address {
           font-size: 12px;
           color: #909399;
           font-family: monospace;
         }
-        
+
         .tag-unit {
           font-size: 12px;
           color: #67c23a;
         }
       }
-      
+
       .query-actions {
         display: flex;
         align-items: center;
         gap: 12px;
       }
-      
+
       .query-stats {
         display: flex;
         align-items: center;
         gap: 16px;
         margin-left: auto;
-        
+
         .stats-item {
           font-size: 13px;
           color: #606266;
-          
+
           &:not(:last-child)::after {
             content: '|';
             margin-left: 16px;
@@ -782,23 +808,23 @@ watch(() => queryForm.value.timeRange, (newRange) => {
           }
         }
       }
-      
+
       .advanced-options {
         padding-top: 16px;
         border-top: 1px solid #ebeef5;
-        
+
         .options-row {
           display: flex;
           align-items: center;
           gap: 24px;
           flex-wrap: wrap;
         }
-        
+
         .option-item {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .option-label {
             font-size: 13px;
             color: #606266;
@@ -815,23 +841,23 @@ watch(() => queryForm.value.timeRange, (newRange) => {
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      
+
       .display-tabs {
         .el-radio-button {
           margin-right: 0;
         }
       }
-      
+
       .display-actions {
         display: flex;
         gap: 8px;
       }
     }
-    
+
     .chart-container,
     .table-container {
       margin-bottom: 16px;
-      
+
       &.fullscreen {
         position: fixed;
         top: 0;
@@ -843,7 +869,7 @@ watch(() => queryForm.value.timeRange, (newRange) => {
         border-radius: 0;
       }
     }
-    
+
     .empty-container {
       text-align: center;
       padding: 60px 20px;
@@ -858,24 +884,24 @@ watch(() => queryForm.value.timeRange, (newRange) => {
       gap: 16px;
       align-items: stretch;
     }
-    
+
     .query-panel .query-form .query-row {
       flex-direction: column;
       align-items: stretch;
       gap: 16px;
-      
+
       .query-item {
         width: 100%;
-        
+
         :deep(.el-select) {
           width: 100% !important;
         }
       }
-      
+
       .query-actions {
         justify-content: center;
       }
-      
+
       .query-stats {
         margin-left: 0;
         justify-content: center;
@@ -888,19 +914,19 @@ watch(() => queryForm.value.timeRange, (newRange) => {
 @media (max-width: 768px) {
   .history-page {
     padding: 16px;
-    
+
     .page-header .title-section .page-title {
       font-size: 24px;
     }
-    
+
     .data-display .display-header {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
-      
+
       .display-tabs {
         width: 100%;
-        
+
         :deep(.el-radio-button) {
           flex: 1;
         }

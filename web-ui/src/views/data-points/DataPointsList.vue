@@ -11,16 +11,12 @@
           {{ datapointsStats.total }} 个数据点
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
-        <el-button
-          type="primary"
-          :icon="Plus"
-          @click="handleAddDatapoint"
-        >
+        <el-button type="primary" :icon="Plus" @click="handleAddDatapoint">
           新增数据点
         </el-button>
-        
+
         <el-dropdown trigger="click" @command="handleHeaderAction">
           <el-button :icon="MoreFilled" />
           <template #dropdown>
@@ -42,7 +38,7 @@
         </el-dropdown>
       </div>
     </div>
-    
+
     <!-- 数据点状态概览 -->
     <div class="datapoints-overview">
       <el-row :gutter="16">
@@ -57,7 +53,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--active">
             <div class="stat-content">
@@ -69,7 +65,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--good">
             <div class="stat-content">
@@ -81,7 +77,7 @@
             </el-icon>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--alarm">
             <div class="stat-content">
@@ -95,7 +91,7 @@
         </el-col>
       </el-row>
     </div>
-    
+
     <!-- 主要内容区域 -->
     <div class="datapoints-content">
       <el-row :gutter="16">
@@ -106,9 +102,9 @@
               <div class="tree-header">
                 <span>数据点分组</span>
                 <div class="tree-actions">
-                  <el-button 
-                    type="text" 
-                    size="small" 
+                  <el-button
+                    type="text"
+                    size="small"
                     :icon="FolderAdd"
                     @click="handleAddGroup"
                   >
@@ -117,7 +113,7 @@
                 </div>
               </div>
             </template>
-            
+
             <DataPointSelector
               ref="datapointSelectorRef"
               v-model="selectedDatapoints"
@@ -125,13 +121,13 @@
               :show-tree="true"
               :show-values="true"
               multiple
+              style="height: 600px"
               @node-click="handleTreeNodeClick"
               @selection-change="handleTreeSelectionChange"
-              style="height: 600px"
             />
           </el-card>
         </el-col>
-        
+
         <!-- 右侧：数据点列表和详情 -->
         <el-col :span="18">
           <!-- 筛选和搜索 -->
@@ -146,7 +142,7 @@
                     style="width: 300px"
                     @search="handleSearch"
                   />
-                  
+
                   <FilterPanel
                     v-model="filterConditions"
                     :filters="filterOptions"
@@ -157,18 +153,18 @@
                     @filter="handleFilter"
                   />
                 </div>
-                
+
                 <div class="filter-right">
                   <ActionButtons
                     :actions="batchActions"
                     :disabled="selectedDatapoints.length === 0"
-                    @actionClick="handleBatchAction"
+                    @action-click="handleBatchAction"
                   />
                 </div>
               </div>
             </el-card>
           </div>
-          
+
           <!-- 数据点列表表格 -->
           <div class="datapoints-table">
             <LoadingCard
@@ -179,7 +175,7 @@
               :progress="loadingProgress"
               min-height="400px"
             />
-            
+
             <BaseTable
               v-else
               v-model:selection="selectedDatapoints"
@@ -195,7 +191,7 @@
         </el-col>
       </el-row>
     </div>
-    
+
     <!-- 数据点详情抽屉 -->
     <el-drawer
       v-model="detailDrawerVisible"
@@ -235,26 +231,38 @@
                 {{ formatTime(selectedDatapoint.updateTime) }}
               </el-descriptions-item>
             </el-descriptions>
-            
+
             <!-- 实时数值 -->
             <div class="current-value-section" style="margin-top: 20px">
               <el-divider content-position="left">实时数值</el-divider>
               <div class="value-display">
                 <div class="value-item">
                   <div class="value-label">当前值</div>
-                  <div class="value-number" :class="getValueClass(selectedDatapoint)">
-                    {{ formatValue(selectedDatapoint.currentValue, selectedDatapoint.dataType) }}
-                    <span v-if="selectedDatapoint.unit" class="value-unit">{{ selectedDatapoint.unit }}</span>
+                  <div
+                    class="value-number"
+                    :class="getValueClass(selectedDatapoint)"
+                  >
+                    {{
+                      formatValue(
+                        selectedDatapoint.currentValue,
+                        selectedDatapoint.dataType
+                      )
+                    }}
+                    <span v-if="selectedDatapoint.unit" class="value-unit">{{
+                      selectedDatapoint.unit
+                    }}</span>
                   </div>
                 </div>
                 <div class="value-item">
                   <div class="value-label">最后读取时间</div>
-                  <div class="value-time">{{ formatTime(selectedDatapoint.lastReadTime) }}</div>
+                  <div class="value-time">
+                    {{ formatTime(selectedDatapoint.lastReadTime) }}
+                  </div>
                 </div>
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 历史趋势 -->
           <el-tab-pane label="历史趋势" name="history">
             <div class="datapoint-history">
@@ -267,7 +275,7 @@
                   刷新数据
                 </el-button>
               </div>
-              
+
               <ChartContainer
                 title="数据点历史趋势"
                 chart-type="line"
@@ -277,18 +285,22 @@
               />
             </div>
           </el-tab-pane>
-          
+
           <!-- 报警配置 -->
           <el-tab-pane label="报警配置" name="alarms">
             <div class="datapoint-alarms">
               <div class="alarm-rules">
                 <div class="rule-header">
                   <h4>报警规则</h4>
-                  <el-button type="primary" size="small" @click="handleAddAlarmRule">
+                  <el-button
+                    type="primary"
+                    size="small"
+                    @click="handleAddAlarmRule"
+                  >
                     新增规则
                   </el-button>
                 </div>
-                
+
                 <BaseTable
                   :data="getDatapointAlarmRules(selectedDatapoint)"
                   :columns="alarmRuleColumns"
@@ -298,7 +310,7 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 配置参数 -->
           <el-tab-pane label="配置参数" name="config">
             <div class="datapoint-config">
@@ -313,7 +325,7 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      
+
       <template #footer>
         <div class="drawer-footer">
           <el-button @click="detailDrawerVisible = false">关闭</el-button>
@@ -340,7 +352,7 @@
         </div>
       </template>
     </el-drawer>
-    
+
     <!-- 数据点配置对话框 -->
     <el-dialog
       v-model="configDialogVisible"
@@ -358,7 +370,7 @@
         @cancel="handleFormCancel"
       />
     </el-dialog>
-    
+
     <!-- 批量配置对话框 -->
     <el-dialog
       v-model="batchConfigDialogVisible"
@@ -375,7 +387,7 @@
             show-icon
           />
         </div>
-        
+
         <BaseForm
           v-model="batchConfigData"
           :fields="batchConfigFields"
@@ -383,7 +395,7 @@
           style="margin-top: 20px"
         />
       </div>
-      
+
       <template #footer>
         <el-button @click="batchConfigDialogVisible = false">取消</el-button>
         <el-button type="primary" @click="handleBatchConfigSave">
@@ -391,7 +403,7 @@
         </el-button>
       </template>
     </el-dialog>
-    
+
     <!-- 文件上传对话框 -->
     <el-dialog
       v-model="uploadDialogVisible"
@@ -409,8 +421,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted, h } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   DataLine,
   Plus,
@@ -422,14 +432,29 @@ import {
   CircleCheckFilled,
   SuccessFilled,
   WarningFilled,
-  FolderAdd
+  FolderAdd,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, reactive, onMounted, onUnmounted, h } from 'vue'
 
 // 导入基础组件
-import { BaseTable, SearchBox, FilterPanel, ActionButtons, LoadingCard, StatusTag, BaseForm } from '../../components/base'
+import {
+  BaseTable,
+  SearchBox,
+  FilterPanel,
+  ActionButtons,
+  LoadingCard,
+  StatusTag,
+  BaseForm,
+} from '../../components/base'
 
 // 导入业务组件
-import { DataPointSelector, TimeRangePicker, ChartContainer, FileUploader } from '../../components/business'
+import {
+  DataPointSelector,
+  TimeRangePicker,
+  ChartContainer,
+  FileUploader,
+} from '../../components/business'
 
 // 导入API
 import { datapointsApi } from '@/api'
@@ -519,7 +544,7 @@ const detailActiveTab = ref('basic')
 // 历史数据查询
 const historyTimeRange = ref({
   startTime: new Date(Date.now() - 24 * 60 * 60 * 1000),
-  endTime: new Date()
+  endTime: new Date(),
 })
 
 // WebSocket连接（实时数据）
@@ -556,9 +581,9 @@ const datapointsStats = computed<DatapointsStats>(() => {
     total: datapoints.value.length,
     active: 0,
     goodQuality: 0,
-    alarming: 0
+    alarming: 0,
   }
-  
+
   datapoints.value.forEach(dp => {
     if (dp.status === 'active') {
       stats.active++
@@ -570,43 +595,48 @@ const datapointsStats = computed<DatapointsStats>(() => {
       stats.alarming++
     }
   })
-  
+
   return stats
 })
 
 const filteredDatapoints = computed(() => {
   let result = datapoints.value
-  
+
   // 搜索过滤
   if (searchKeyword.value) {
     const keyword = searchKeyword.value.toLowerCase()
-    result = result.filter(dp => 
-      dp.name.toLowerCase().includes(keyword) ||
-      dp.address.toLowerCase().includes(keyword) ||
-      (dp.description?.toLowerCase() || '').includes(keyword)
+    result = result.filter(
+      dp =>
+        dp.name.toLowerCase().includes(keyword) ||
+        dp.address.toLowerCase().includes(keyword) ||
+        (dp.description?.toLowerCase() || '').includes(keyword)
     )
   }
-  
+
   // 状态过滤
   if (filterConditions.value.status) {
     result = result.filter(dp => dp.status === filterConditions.value.status)
   }
-  
+
   // 数据类型过滤
   if (filterConditions.value.dataType) {
-    result = result.filter(dp => dp.dataType === filterConditions.value.dataType)
+    result = result.filter(
+      dp => dp.dataType === filterConditions.value.dataType
+    )
   }
-  
+
   // 质量过滤
   if (filterConditions.value.quality) {
     result = result.filter(dp => dp.quality === filterConditions.value.quality)
   }
-  
+
   // 驱动过滤
   if (filterConditions.value.driverId) {
-    result = result.filter(dp => dp.driverId === filterConditions.value.driverId)
+    result = result.filter(
+      dp => dp.driverId === filterConditions.value.driverId
+    )
   }
-  
+
   return result
 })
 
@@ -623,7 +653,7 @@ const searchSuggestions = computed(() => {
 const datapointTree = computed(() => {
   // 构建树形结构数据
   const tree = []
-  
+
   datapointGroups.value.forEach(group => {
     const groupNode = {
       id: group.id,
@@ -641,12 +671,12 @@ const datapointTree = computed(() => {
           quality: dp.quality,
           currentValue: dp.currentValue,
           unit: dp.unit,
-          lastUpdate: dp.lastReadTime
-        }))
+          lastUpdate: dp.lastReadTime,
+        })),
     }
     tree.push(groupNode)
   })
-  
+
   // 未分组的数据点
   const ungrouped = datapoints.value.filter(dp => !dp.groupId)
   if (ungrouped.length > 0) {
@@ -664,11 +694,11 @@ const datapointTree = computed(() => {
         quality: dp.quality,
         currentValue: dp.currentValue,
         unit: dp.unit,
-        lastUpdate: dp.lastReadTime
-      }))
+        lastUpdate: dp.lastReadTime,
+      })),
     })
   }
-  
+
   return tree
 })
 
@@ -681,8 +711,8 @@ const filterOptions = [
     options: [
       { label: '激活', value: 'active' },
       { label: '未激活', value: 'inactive' },
-      { label: '错误', value: 'error' }
-    ]
+      { label: '错误', value: 'error' },
+    ],
   },
   {
     key: 'quality',
@@ -692,8 +722,8 @@ const filterOptions = [
       { label: '良好', value: 'good' },
       { label: '不确定', value: 'uncertain' },
       { label: '错误', value: 'bad' },
-      { label: '无效', value: 'invalid' }
-    ]
+      { label: '无效', value: 'invalid' },
+    ],
   },
   {
     key: 'dataType',
@@ -704,8 +734,8 @@ const filterOptions = [
       { label: '整数', value: 'integer' },
       { label: '浮点', value: 'float' },
       { label: '字符串', value: 'string' },
-      { label: '时间', value: 'datetime' }
-    ]
+      { label: '时间', value: 'datetime' },
+    ],
   },
   {
     key: 'driverId',
@@ -715,16 +745,16 @@ const filterOptions = [
       { label: 'PLC主控制器', value: '1' },
       { label: '温度传感器组', value: '2' },
       { label: 'SCADA系统', value: '3' },
-      { label: 'MQTT网关', value: '4' }
-    ]
-  }
+      { label: 'MQTT网关', value: '4' },
+    ],
+  },
 ]
 
 const quickFilters = [
   { label: '激活', key: 'status', value: 'active' },
   { label: '质量良好', key: 'quality', value: 'good' },
   { label: '浮点数', key: 'dataType', value: 'float' },
-  { label: '布尔值', key: 'dataType', value: 'boolean' }
+  { label: '布尔值', key: 'dataType', value: 'boolean' },
 ]
 
 // 批量操作
@@ -737,8 +767,8 @@ const batchActions = [
     confirm: {
       title: '确定要激活选中的数据点吗？',
       confirmText: '激活',
-      cancelText: '取消'
-    }
+      cancelText: '取消',
+    },
   },
   {
     key: 'deactivate',
@@ -748,15 +778,15 @@ const batchActions = [
     confirm: {
       title: '确定要停用选中的数据点吗？',
       confirmText: '停用',
-      cancelText: '取消'
-    }
+      cancelText: '取消',
+    },
   },
   {
     key: 'config',
     label: '批量配置',
     type: 'primary',
     icon: 'Setting',
-    action: () => batchConfigDialogVisible.value = true
+    action: () => (batchConfigDialogVisible.value = true),
   },
   {
     key: 'delete',
@@ -767,9 +797,9 @@ const batchActions = [
       title: '确定要删除选中的数据点吗？此操作不可恢复！',
       confirmText: '删除',
       cancelText: '取消',
-      type: 'warning'
-    }
-  }
+      type: 'warning',
+    },
+  },
 ]
 
 // 表格列配置
@@ -778,13 +808,13 @@ const tableColumns = [
     key: 'name',
     label: '数据点名称',
     width: 200,
-    sortable: true
+    sortable: true,
   },
   {
     key: 'address',
     label: '地址',
     width: 120,
-    sortable: true
+    sortable: true,
   },
   {
     key: 'dataType',
@@ -797,18 +827,21 @@ const tableColumns = [
         integer: 'Int',
         float: 'Float',
         string: 'String',
-        datetime: 'DateTime'
+        datetime: 'DateTime',
       }
       return typeMap[row.dataType] || row.dataType
-    }
+    },
   },
   {
     key: 'currentValue',
     label: '当前值',
     width: 150,
     formatter: (row: DataPoint) => {
-      return formatValue(row.currentValue, row.dataType) + (row.unit ? ` ${row.unit}` : '')
-    }
+      return (
+        formatValue(row.currentValue, row.dataType) +
+        (row.unit ? ` ${row.unit}` : '')
+      )
+    },
   },
   {
     key: 'quality',
@@ -817,7 +850,7 @@ const tableColumns = [
     type: 'custom',
     render: (row: DataPoint) => {
       return h(StatusTag, { status: row.quality })
-    }
+    },
   },
   {
     key: 'status',
@@ -826,19 +859,19 @@ const tableColumns = [
     type: 'custom',
     render: (row: DataPoint) => {
       return h(StatusTag, { status: row.status })
-    }
+    },
   },
   {
     key: 'driverId',
     label: '驱动来源',
     width: 150,
-    formatter: (row: DataPoint) => getDriverName(row.driverId)
+    formatter: (row: DataPoint) => getDriverName(row.driverId),
   },
   {
     key: 'lastReadTime',
     label: '最后读取',
     width: 160,
-    type: 'datetime'
+    type: 'datetime',
   },
   {
     key: 'actions',
@@ -850,27 +883,27 @@ const tableColumns = [
         key: 'view',
         label: '详情',
         type: 'primary',
-        icon: 'View'
+        icon: 'View',
       },
       {
         key: 'edit',
         label: '编辑',
         type: 'default',
-        icon: 'Edit'
+        icon: 'Edit',
       },
       {
         key: 'activate',
         label: '激活',
         type: 'success',
         icon: 'CircleCheckFilled',
-        show: (row: DataPoint) => row.status !== 'active'
+        show: (row: DataPoint) => row.status !== 'active',
       },
       {
         key: 'deactivate',
         label: '停用',
         type: 'warning',
         icon: 'CircleCloseFilled',
-        show: (row: DataPoint) => row.status === 'active'
+        show: (row: DataPoint) => row.status === 'active',
       },
       {
         key: 'delete',
@@ -880,11 +913,11 @@ const tableColumns = [
         confirm: {
           title: '确定要删除这个数据点吗？',
           confirmText: '删除',
-          cancelText: '取消'
-        }
-      }
-    ]
-  }
+          cancelText: '取消',
+        },
+      },
+    ],
+  },
 ]
 
 // 分页配置
@@ -892,20 +925,37 @@ const paginationConfig = {
   pageSize: 15,
   showSizeChanger: true,
   showQuickJumper: true,
-  showTotal: true
+  showTotal: true,
 }
 
 // 报警规则表格列
 const alarmRuleColumns = [
   { key: 'name', label: '规则名称', width: 150 },
-  { key: 'condition', label: '条件', width: 80, formatter: (row: any) => getConditionText(row.condition) },
+  {
+    key: 'condition',
+    label: '条件',
+    width: 80,
+    formatter: (row: any) => getConditionText(row.condition),
+  },
   { key: 'value', label: '阈值', width: 100 },
   { key: 'priority', label: '优先级', width: 80, type: 'tag' },
-  { key: 'enabled', label: '状态', width: 80, type: 'tag', formatter: (row: any) => row.enabled ? '启用' : '禁用' },
-  { key: 'actions', label: '操作', width: 120, type: 'action', actions: [
-    { key: 'edit', label: '编辑', type: 'primary', icon: 'Edit' },
-    { key: 'delete', label: '删除', type: 'danger', icon: 'Delete' }
-  ]}
+  {
+    key: 'enabled',
+    label: '状态',
+    width: 80,
+    type: 'tag',
+    formatter: (row: any) => (row.enabled ? '启用' : '禁用'),
+  },
+  {
+    key: 'actions',
+    label: '操作',
+    width: 120,
+    type: 'action',
+    actions: [
+      { key: 'edit', label: '编辑', type: 'primary', icon: 'Edit' },
+      { key: 'delete', label: '删除', type: 'danger', icon: 'Delete' },
+    ],
+  },
 ]
 
 // 数据点表单字段
@@ -915,20 +965,20 @@ const datapointFormFields = [
     label: '数据点名称',
     type: 'text',
     required: true,
-    placeholder: '请输入数据点名称'
+    placeholder: '请输入数据点名称',
   },
   {
     key: 'description',
     label: '描述',
     type: 'textarea',
-    placeholder: '请输入数据点描述'
+    placeholder: '请输入数据点描述',
   },
   {
     key: 'address',
     label: '地址',
     type: 'text',
     required: true,
-    placeholder: '如：40001'
+    placeholder: '如：40001',
   },
   {
     key: 'dataType',
@@ -940,8 +990,8 @@ const datapointFormFields = [
       { label: '整数', value: 'integer' },
       { label: '浮点数', value: 'float' },
       { label: '字符串', value: 'string' },
-      { label: '日期时间', value: 'datetime' }
-    ]
+      { label: '日期时间', value: 'datetime' },
+    ],
   },
   {
     key: 'driverId',
@@ -952,8 +1002,8 @@ const datapointFormFields = [
       { label: 'PLC主控制器', value: '1' },
       { label: '温度传感器组', value: '2' },
       { label: 'SCADA系统', value: '3' },
-      { label: 'MQTT网关', value: '4' }
-    ]
+      { label: 'MQTT网关', value: '4' },
+    ],
   },
   {
     key: 'groupId',
@@ -964,22 +1014,22 @@ const datapointFormFields = [
       { label: '流量监控', value: 'flow_group' },
       { label: '安全监控', value: 'safety_group' },
       { label: '状态监控', value: 'status_group' },
-      { label: '信息监控', value: 'info_group' }
-    ]
+      { label: '信息监控', value: 'info_group' },
+    ],
   },
   {
     key: 'unit',
     label: '单位',
     type: 'text',
-    placeholder: '如：°C, L/min, bar'
-  }
+    placeholder: '如：°C, L/min, bar',
+  },
 ]
 
 const datapointFormRules = {
   name: [{ required: true, message: '请输入数据点名称' }],
   address: [{ required: true, message: '请输入数据点地址' }],
   dataType: [{ required: true, message: '请选择数据类型' }],
-  driverId: [{ required: true, message: '请选择驱动来源' }]
+  driverId: [{ required: true, message: '请选择驱动来源' }],
 }
 
 // 数据点配置字段
@@ -989,27 +1039,27 @@ const datapointConfigFields = [
     label: '缩放系数',
     type: 'number',
     placeholder: '默认为1',
-    step: 0.01
+    step: 0.01,
   },
   {
     key: 'scaling.offset',
     label: '偏移量',
     type: 'number',
     placeholder: '默认为0',
-    step: 0.01
+    step: 0.01,
   },
   {
     key: 'limits.min',
     label: '最小值',
     type: 'number',
-    placeholder: '数值最小值限制'
+    placeholder: '数值最小值限制',
   },
   {
     key: 'limits.max',
     label: '最大值',
     type: 'number',
-    placeholder: '数值最大值限制'
-  }
+    placeholder: '数值最大值限制',
+  },
 ]
 
 const datapointConfigRules = {}
@@ -1022,21 +1072,21 @@ const batchConfigFields = [
     type: 'select',
     options: [
       { label: '激活', value: 'active' },
-      { label: '未激活', value: 'inactive' }
-    ]
+      { label: '未激活', value: 'inactive' },
+    ],
   },
   {
     key: 'scaling.factor',
     label: '缩放系数',
     type: 'number',
-    step: 0.01
+    step: 0.01,
   },
   {
     key: 'scaling.offset',
     label: '偏移量',
     type: 'number',
-    step: 0.01
-  }
+    step: 0.01,
+  },
 ]
 
 // 上传类型配置
@@ -1046,15 +1096,15 @@ const datapointUploadTypes = [
     label: 'CSV文件',
     accept: '.csv',
     maxSize: 5 * 1024 * 1024,
-    description: '支持CSV格式数据点配置，最大5MB'
+    description: '支持CSV格式数据点配置，最大5MB',
   },
   {
     value: 'excel',
     label: 'Excel文件',
     accept: '.xlsx,.xls',
     maxSize: 10 * 1024 * 1024,
-    description: '支持Excel格式数据点配置，最大10MB'
-  }
+    description: '支持Excel格式数据点配置，最大10MB',
+  },
 ]
 
 // 事件处理方法
@@ -1091,7 +1141,7 @@ const handleBatchAction = (action: string) => {
     ElMessage.warning('请先选择要操作的数据点')
     return
   }
-  
+
   switch (action) {
     case 'activate':
       handleBatchActivate()
@@ -1121,8 +1171,10 @@ const handleTreeSelectionChange = (selectedNodes: any[]) => {
   const selectedIds = selectedNodes
     .filter(node => node.type === 'datapoint')
     .map(node => node.id)
-  
-  selectedDatapoints.value = datapoints.value.filter(dp => selectedIds.includes(dp.id))
+
+  selectedDatapoints.value = datapoints.value.filter(dp =>
+    selectedIds.includes(dp.id)
+  )
 }
 
 const handleViewDatapoint = (datapoint: DataPoint) => {
@@ -1140,7 +1192,7 @@ const handleEditDatapoint = (datapoint: DataPoint) => {
     dataType: datapoint.dataType,
     driverId: datapoint.driverId,
     groupId: datapoint.groupId,
-    unit: datapoint.unit
+    unit: datapoint.unit,
   }
   configDialogVisible.value = true
 }
@@ -1149,10 +1201,10 @@ const handleActivateDatapoint = async (datapoint: DataPoint) => {
   try {
     ElMessage.loading('正在激活数据点...', 0)
     await datapointsApi.activate(datapoint.id)
-    
+
     // 重新加载数据点列表
     await loadDatapoints()
-    
+
     ElMessage.closeAll()
     ElMessage.success(`数据点 ${datapoint.name} 激活成功`)
   } catch (error) {
@@ -1165,10 +1217,10 @@ const handleDeactivateDatapoint = async (datapoint: DataPoint) => {
   try {
     ElMessage.loading('正在停用数据点...', 0)
     await datapointsApi.deactivate(datapoint.id)
-    
+
     // 重新加载数据点列表
     await loadDatapoints()
-    
+
     ElMessage.closeAll()
     ElMessage.success(`数据点 ${datapoint.name} 停用成功`)
   } catch (error) {
@@ -1188,20 +1240,22 @@ const handleDeleteDatapoint = async (datapoint: DataPoint) => {
 }
 
 const handleBatchActivate = async () => {
-  const inactiveDatapoints = selectedDatapoints.value.filter(dp => dp.status !== 'active')
+  const inactiveDatapoints = selectedDatapoints.value.filter(
+    dp => dp.status !== 'active'
+  )
   if (inactiveDatapoints.length === 0) {
     ElMessage.warning('选中的数据点都已激活')
     return
   }
-  
+
   try {
     ElMessage.loading(`正在激活 ${inactiveDatapoints.length} 个数据点...`, 0)
-    
+
     const ids = inactiveDatapoints.map(dp => dp.id)
     const result = await datapointsApi.batchActivate(ids)
-    
+
     await loadDatapoints()
-    
+
     ElMessage.closeAll()
     ElMessage.success(`成功激活 ${result.successCount} 个数据点`)
     selectedDatapoints.value = []
@@ -1212,20 +1266,22 @@ const handleBatchActivate = async () => {
 }
 
 const handleBatchDeactivate = async () => {
-  const activeDatapoints = selectedDatapoints.value.filter(dp => dp.status === 'active')
+  const activeDatapoints = selectedDatapoints.value.filter(
+    dp => dp.status === 'active'
+  )
   if (activeDatapoints.length === 0) {
     ElMessage.warning('选中的数据点都已停用')
     return
   }
-  
+
   try {
     ElMessage.loading(`正在停用 ${activeDatapoints.length} 个数据点...`, 0)
-    
+
     const ids = activeDatapoints.map(dp => dp.id)
     const result = await datapointsApi.batchDeactivate(ids)
-    
+
     await loadDatapoints()
-    
+
     ElMessage.closeAll()
     ElMessage.success(`成功停用 ${result.successCount} 个数据点`)
     selectedDatapoints.value = []
@@ -1239,9 +1295,9 @@ const handleBatchDelete = async () => {
   try {
     const ids = selectedDatapoints.value.map(dp => dp.id)
     const result = await datapointsApi.batchDelete(ids)
-    
+
     await loadDatapoints()
-    
+
     ElMessage.success(`成功删除 ${result.successCount} 个数据点`)
     selectedDatapoints.value = []
   } catch (error) {
@@ -1291,21 +1347,21 @@ const handleExportDatapoints = () => {
       groupId: dp.groupId,
       unit: dp.unit,
       scaling: dp.scaling,
-      limits: dp.limits
+      limits: dp.limits,
     })),
-    exportTime: new Date().toISOString()
+    exportTime: new Date().toISOString(),
   }
-  
+
   const blob = new Blob([JSON.stringify(config, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `datapoints_config_${new Date().toISOString().split('T')[0]}.json`
   a.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('数据点配置导出成功')
 }
@@ -1335,12 +1391,14 @@ const handleBatchConfigDialogClose = () => {
 const handleFormSubmit = (data: any) => {
   if (editingDatapoint.value) {
     // 编辑数据点
-    const index = datapoints.value.findIndex(dp => dp.id === editingDatapoint.value!.id)
+    const index = datapoints.value.findIndex(
+      dp => dp.id === editingDatapoint.value!.id
+    )
     if (index > -1) {
       datapoints.value[index] = {
         ...datapoints.value[index],
         ...data,
-        updateTime: new Date()
+        updateTime: new Date(),
       }
     }
     ElMessage.success('数据点更新成功')
@@ -1354,12 +1412,12 @@ const handleFormSubmit = (data: any) => {
       currentValue: null,
       lastReadTime: new Date(),
       createTime: new Date(),
-      updateTime: new Date()
+      updateTime: new Date(),
     }
     datapoints.value.push(newDatapoint)
     ElMessage.success('数据点创建成功')
   }
-  
+
   handleConfigDialogClose()
 }
 
@@ -1369,12 +1427,14 @@ const handleFormCancel = () => {
 
 const handleConfigSave = (config: any) => {
   if (selectedDatapoint.value) {
-    const index = datapoints.value.findIndex(dp => dp.id === selectedDatapoint.value!.id)
+    const index = datapoints.value.findIndex(
+      dp => dp.id === selectedDatapoint.value!.id
+    )
     if (index > -1) {
       datapoints.value[index] = {
         ...datapoints.value[index],
         ...config,
-        updateTime: new Date()
+        updateTime: new Date(),
       }
     }
     ElMessage.success('配置保存成功')
@@ -1388,11 +1448,11 @@ const handleBatchConfigSave = () => {
       datapoints.value[index] = {
         ...datapoints.value[index],
         ...batchConfigData.value,
-        updateTime: new Date()
+        updateTime: new Date(),
       }
     }
   })
-  
+
   ElMessage.success(`成功配置 ${selectedDatapoints.value.length} 个数据点`)
   handleBatchConfigDialogClose()
 }
@@ -1426,7 +1486,7 @@ const handleAlarmRuleAction = (action: string, row: any) => {
 // 辅助方法
 const formatValue = (value: any, dataType: string) => {
   if (value === null || value === undefined) return '-'
-  
+
   switch (dataType) {
     case 'boolean':
       return value ? '是' : '否'
@@ -1453,25 +1513,28 @@ const getDataTypeTagType = (dataType: string) => {
     integer: 'primary',
     float: 'success',
     string: 'warning',
-    datetime: 'danger'
+    datetime: 'danger',
   }
   return typeMap[dataType] || 'default'
 }
 
 const getValueClass = (datapoint: DataPoint) => {
   const classes = ['value-number']
-  
+
   if (datapoint.quality !== 'good') {
     classes.push('value-uncertain')
   }
-  
+
   if (datapoint.limits) {
     const value = Number(datapoint.currentValue)
-    if (value < (datapoint.limits.min || -Infinity) || value > (datapoint.limits.max || Infinity)) {
+    if (
+      value < (datapoint.limits.min || -Infinity) ||
+      value > (datapoint.limits.max || Infinity)
+    ) {
       classes.push('value-alarm')
     }
   }
-  
+
   return classes.join(' ')
 }
 
@@ -1480,7 +1543,7 @@ const getDriverName = (driverId: string) => {
     '1': 'PLC主控制器',
     '2': '温度传感器组',
     '3': 'SCADA系统',
-    '4': 'MQTT网关'
+    '4': 'MQTT网关',
   }
   return driverMap[driverId] || '未知驱动'
 }
@@ -1491,49 +1554,54 @@ const getConditionText = (condition: string) => {
     lt: '<',
     eq: '=',
     ne: '≠',
-    range: '范围'
+    range: '范围',
   }
   return conditionMap[condition] || condition
 }
 
 const hasAlarm = (datapoint: DataPoint) => {
   // 模拟报警判断逻辑
-  return datapoint.quality === 'bad' || 
-         datapoint.status === 'error' ||
-         (datapoint.limits && datapoint.currentValue && 
-          (Number(datapoint.currentValue) < (datapoint.limits.min || -Infinity) ||
-           Number(datapoint.currentValue) > (datapoint.limits.max || Infinity)))
+  return (
+    datapoint.quality === 'bad' ||
+    datapoint.status === 'error' ||
+    (datapoint.limits &&
+      datapoint.currentValue &&
+      (Number(datapoint.currentValue) < (datapoint.limits.min || -Infinity) ||
+        Number(datapoint.currentValue) > (datapoint.limits.max || Infinity)))
+  )
 }
 
 const getDatapointChartData = async (datapoint: DataPoint) => {
   try {
     const endTime = new Date()
     const startTime = new Date(endTime.getTime() - 2 * 60 * 60 * 1000) // 2小时前
-    
+
     const historyData = await datapointsApi.getHistory({
       datapointId: datapoint.id,
       startTime,
       endTime,
-      interval: '1m'
+      interval: '1m',
     })
-    
+
     return {
       series: [
         {
           name: datapoint.name,
           data: historyData.map(d => ({ x: d.timestamp, y: d.value })),
-          unit: datapoint.unit
-        }
-      ]
+          unit: datapoint.unit,
+        },
+      ],
     }
   } catch (error) {
     console.error('Failed to load chart data:', error)
     return {
-      series: [{
-        name: datapoint.name,
-        data: [],
-        unit: datapoint.unit
-      }]
+      series: [
+        {
+          name: datapoint.name,
+          data: [],
+          unit: datapoint.unit,
+        },
+      ],
     }
   }
 }
@@ -1548,22 +1616,24 @@ const getDatapointAlarmRules = async (datapoint: DataPoint) => {
 }
 
 const configDialogTitle = computed(() => {
-  return editingDatapoint.value ? `编辑数据点 - ${editingDatapoint.value.name}` : '新增数据点'
+  return editingDatapoint.value
+    ? `编辑数据点 - ${editingDatapoint.value.name}`
+    : '新增数据点'
 })
 
 // 实时数据更新（通过WebSocket）
 const startRealtimeUpdate = () => {
   // 建立WebSocket连接获取实时数据
   const wsUrl = `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/datapoints`
-  
+
   try {
     wsConnection.value = new WebSocket(wsUrl)
-    
+
     wsConnection.value.onopen = () => {
       console.log('DataPoints WebSocket connected')
     }
-    
-    wsConnection.value.onmessage = (event) => {
+
+    wsConnection.value.onmessage = event => {
       try {
         const data = JSON.parse(event.data)
         if (data.type === 'datapoint_update') {
@@ -1575,7 +1645,7 @@ const startRealtimeUpdate = () => {
               currentValue: data.value,
               quality: data.quality,
               lastReadTime: new Date(data.timestamp),
-              updateTime: new Date()
+              updateTime: new Date(),
             }
           }
         }
@@ -1583,16 +1653,19 @@ const startRealtimeUpdate = () => {
         console.error('Failed to parse WebSocket message:', error)
       }
     }
-    
-    wsConnection.value.onerror = (error) => {
+
+    wsConnection.value.onerror = error => {
       console.error('DataPoints WebSocket error:', error)
     }
-    
+
     wsConnection.value.onclose = () => {
       console.log('DataPoints WebSocket disconnected')
       // 5秒后重连
       setTimeout(() => {
-        if (!wsConnection.value || wsConnection.value.readyState === WebSocket.CLOSED) {
+        if (
+          !wsConnection.value ||
+          wsConnection.value.readyState === WebSocket.CLOSED
+        ) {
           startRealtimeUpdate()
         }
       }, 5000)
@@ -1605,11 +1678,8 @@ const startRealtimeUpdate = () => {
 // 生命周期钩子
 onMounted(async () => {
   // 加载数据点列表和分组
-  await Promise.all([
-    loadDatapoints(),
-    loadDatapointGroups()
-  ])
-  
+  await Promise.all([loadDatapoints(), loadDatapointGroups()])
+
   // 启动实时数据更新
   startRealtimeUpdate()
 })
@@ -1635,12 +1705,12 @@ onUnmounted(() => {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 20px;
-  
+
   .header-title {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     h1 {
       margin: 0;
       font-size: 24px;
@@ -1648,7 +1718,7 @@ onUnmounted(() => {
       color: var(--el-text-color-primary);
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 12px;
@@ -1657,34 +1727,34 @@ onUnmounted(() => {
 
 .datapoints-overview {
   margin-bottom: 20px;
-  
+
   .stat-card {
     position: relative;
     overflow: hidden;
     cursor: pointer;
     transition: all 0.3s;
-    
+
     &:hover {
       transform: translateY(-2px);
       box-shadow: var(--el-box-shadow);
     }
-    
+
     .stat-content {
       position: relative;
       z-index: 2;
-      
+
       .stat-number {
         font-size: 32px;
         font-weight: bold;
         margin-bottom: 4px;
       }
-      
+
       .stat-label {
         font-size: 14px;
         color: var(--el-text-color-secondary);
       }
     }
-    
+
     .stat-icon {
       position: absolute;
       right: 16px;
@@ -1693,25 +1763,41 @@ onUnmounted(() => {
       font-size: 48px;
       opacity: 0.1;
     }
-    
+
     &.stat-card--total {
-      .stat-number { color: var(--el-color-primary); }
-      .stat-icon { color: var(--el-color-primary); }
+      .stat-number {
+        color: var(--el-color-primary);
+      }
+      .stat-icon {
+        color: var(--el-color-primary);
+      }
     }
-    
+
     &.stat-card--active {
-      .stat-number { color: var(--el-color-success); }
-      .stat-icon { color: var(--el-color-success); }
+      .stat-number {
+        color: var(--el-color-success);
+      }
+      .stat-icon {
+        color: var(--el-color-success);
+      }
     }
-    
+
     &.stat-card--good {
-      .stat-number { color: var(--el-color-info); }
-      .stat-icon { color: var(--el-color-info); }
+      .stat-number {
+        color: var(--el-color-info);
+      }
+      .stat-icon {
+        color: var(--el-color-info);
+      }
     }
-    
+
     &.stat-card--alarm {
-      .stat-number { color: var(--el-color-danger); }
-      .stat-icon { color: var(--el-color-danger); }
+      .stat-number {
+        color: var(--el-color-danger);
+      }
+      .stat-icon {
+        color: var(--el-color-danger);
+      }
     }
   }
 }
@@ -1719,35 +1805,35 @@ onUnmounted(() => {
 .datapoints-content {
   .tree-card {
     height: 680px;
-    
+
     .tree-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .tree-actions {
         display: flex;
         gap: 8px;
       }
     }
   }
-  
+
   .datapoints-filters {
     margin-bottom: 16px;
-    
+
     .filter-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
       padding: 16px;
-      
+
       .filter-left {
         display: flex;
         align-items: center;
       }
     }
   }
-  
+
   .datapoints-table {
     background: var(--el-bg-color);
     border-radius: 8px;
@@ -1760,36 +1846,36 @@ onUnmounted(() => {
     .value-display {
       display: flex;
       gap: 40px;
-      
+
       .value-item {
         flex: 1;
-        
+
         .value-label {
           font-size: 14px;
           color: var(--el-text-color-secondary);
           margin-bottom: 8px;
         }
-        
+
         .value-number {
           font-size: 28px;
           font-weight: bold;
           color: var(--el-color-success);
-          
+
           &.value-uncertain {
             color: var(--el-color-warning);
           }
-          
+
           &.value-alarm {
             color: var(--el-color-danger);
           }
-          
+
           .value-unit {
             font-size: 16px;
             color: var(--el-text-color-secondary);
             margin-left: 8px;
           }
         }
-        
+
         .value-time {
           font-size: 14px;
           color: var(--el-text-color-regular);
@@ -1797,7 +1883,7 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .datapoint-history {
     .history-controls {
       display: flex;
@@ -1806,14 +1892,14 @@ onUnmounted(() => {
       margin-bottom: 20px;
     }
   }
-  
+
   .datapoint-alarms {
     .rule-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      
+
       h4 {
         margin: 0;
         font-size: 16px;
@@ -1843,7 +1929,7 @@ onUnmounted(() => {
     .el-row > .el-col:first-child {
       span: 8;
     }
-    
+
     .el-row > .el-col:last-child {
       span: 16;
     }
@@ -1854,34 +1940,34 @@ onUnmounted(() => {
   .datapoints-list-page {
     padding: 8px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
   }
-  
+
   .datapoints-overview {
     .el-col {
       margin-bottom: 12px;
     }
   }
-  
+
   .datapoints-content {
     .el-row {
       flex-direction: column;
     }
-    
+
     .tree-card {
       height: 300px;
       margin-bottom: 16px;
     }
-    
+
     .filter-content {
       flex-direction: column;
       align-items: flex-start;
       gap: 16px;
-      
+
       .filter-left {
         width: 100%;
       }

@@ -27,106 +27,122 @@
             {{ getStatusText(component.status) }}
           </el-tag>
         </div>
-        
+
         <div class="card-metrics">
           <div class="metric-row">
             <div class="metric-item">
               <span class="metric-label">运行时间</span>
-              <span class="metric-value">{{ formatUptime(component.uptime) }}</span>
+              <span class="metric-value">{{
+                formatUptime(component.uptime)
+              }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-label">进程PID</span>
               <span class="metric-value">{{ component.pid || 'N/A' }}</span>
             </div>
           </div>
-          
+
           <div class="metric-row">
             <div class="metric-item">
               <span class="metric-label">内存使用</span>
-              <span class="metric-value">{{ formatMemory(component.memoryUsage) }}</span>
+              <span class="metric-value">{{
+                formatMemory(component.memoryUsage)
+              }}</span>
             </div>
             <div class="metric-item">
               <span class="metric-label">CPU使用率</span>
               <span class="metric-value">{{ component.cpuUsage }}%</span>
             </div>
           </div>
-          
+
           <div class="metric-row">
             <div class="metric-item">
               <span class="metric-label">错误计数</span>
-              <span class="metric-value error-count" :class="{ 'has-errors': component.errorCount > 0 }">
+              <span
+                class="metric-value error-count"
+                :class="{ 'has-errors': component.errorCount > 0 }"
+              >
                 {{ component.errorCount }}
               </span>
             </div>
             <div class="metric-item">
               <span class="metric-label">最后检查</span>
-              <span class="metric-value">{{ formatDateTime(component.lastCheck) }}</span>
+              <span class="metric-value">{{
+                formatDateTime(component.lastCheck)
+              }}</span>
             </div>
           </div>
         </div>
-        
+
         <div class="card-actions">
           <el-button-group size="small">
             <el-button
               v-if="component.status === 'stopped'"
               type="success"
-              @click="startComponent(component.name)"
               :loading="component.loading"
+              @click="startComponent(component.name)"
             >
               启动
             </el-button>
             <el-button
               v-else-if="component.status === 'running'"
               type="warning"
-              @click="restartComponent(component.name)"
               :loading="component.loading"
+              @click="restartComponent(component.name)"
             >
               重启
             </el-button>
             <el-button
               v-if="component.status !== 'stopped'"
               type="danger"
-              @click="stopComponent(component.name)"
               :loading="component.loading"
+              @click="stopComponent(component.name)"
             >
               停止
             </el-button>
-            <el-button
-              type="info"
-              @click="viewLogs(component.name)"
-            >
+            <el-button type="info" @click="viewLogs(component.name)">
               日志
             </el-button>
           </el-button-group>
         </div>
-        
+
         <!-- 错误详情面板 -->
-        <div v-if="component.lastError && component.status === 'error'" class="error-panel">
+        <div
+          v-if="component.lastError && component.status === 'error'"
+          class="error-panel"
+        >
           <div class="error-header">
             <el-icon><Warning /></el-icon>
             <span>最近错误</span>
           </div>
           <div class="error-content">
-            <div class="error-time">{{ formatDateTime(component.lastError.time) }}</div>
+            <div class="error-time">
+              {{ formatDateTime(component.lastError.time) }}
+            </div>
             <div class="error-message">{{ component.lastError.message }}</div>
           </div>
         </div>
       </div>
     </div>
-    
+
     <!-- 系统总览 -->
     <div class="system-overview">
       <el-card class="overview-card" shadow="never">
         <template #header>
           <div class="overview-header">
             <span>系统概览</span>
-            <el-button type="text" size="small" @click="refreshAll" :loading="loading">
+            <el-button
+              type="text"
+              size="small"
+              :loading="loading"
+              @click="refreshAll"
+            >
               <el-icon><Refresh /></el-icon>
               刷新全部
             </el-button>
           </div>
         </template>
-        
+
         <div class="overview-stats">
           <div class="stat-item running">
             <div class="stat-value">{{ runningCount }}</div>
@@ -145,7 +161,7 @@
             <div class="stat-label">已停止</div>
           </div>
         </div>
-        
+
         <div class="overview-progress">
           <div class="progress-label">系统健康度</div>
           <el-progress
@@ -179,20 +195,20 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { 
-  CircleCheck, 
-  Warning, 
-  CircleClose, 
-  Loading, 
-  Remove, 
-  Refresh 
+import {
+  CircleCheck,
+  Warning,
+  CircleClose,
+  Loading,
+  Remove,
+  Refresh,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
+import { systemApi } from '@/api'
 import { formatDateTime, formatUptime } from '@/utils/date'
 import { formatFileSize } from '@/utils/format'
-import { systemApi } from '@/api'
 
 // ===== Props & Emits =====
 defineProps<{
@@ -200,7 +216,7 @@ defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'refresh': []
+  refresh: []
 }>()
 
 // ===== 响应式数据 =====
@@ -208,20 +224,20 @@ const systemComponents = ref<any[]>([])
 const loading = ref(false)
 
 // ===== 计算属性 =====
-const runningCount = computed(() => 
-  systemComponents.value.filter(c => c.status === 'running').length
+const runningCount = computed(
+  () => systemComponents.value.filter(c => c.status === 'running').length
 )
 
-const warningCount = computed(() => 
-  systemComponents.value.filter(c => c.status === 'warning').length
+const warningCount = computed(
+  () => systemComponents.value.filter(c => c.status === 'warning').length
 )
 
-const errorCount = computed(() => 
-  systemComponents.value.filter(c => c.status === 'error').length
+const errorCount = computed(
+  () => systemComponents.value.filter(c => c.status === 'error').length
 )
 
-const stoppedCount = computed(() => 
-  systemComponents.value.filter(c => c.status === 'stopped').length
+const stoppedCount = computed(
+  () => systemComponents.value.filter(c => c.status === 'stopped').length
 )
 
 const systemHealthPercentage = computed(() => {
@@ -248,7 +264,7 @@ async function fetchSystemComponents() {
     const response = await systemApi.getComponentStatus()
     systemComponents.value = response.data.map((component: any) => ({
       ...component,
-      loading: false
+      loading: false,
     }))
   } catch (error) {
     console.error('获取系统组件状态失败:', error)
@@ -263,11 +279,11 @@ async function fetchSystemComponents() {
  */
 function getStatusTagType(status: string): string {
   const typeMap: Record<string, string> = {
-    'running': 'success',
-    'warning': 'warning', 
-    'error': 'danger',
-    'starting': 'info',
-    'stopped': 'info'
+    running: 'success',
+    warning: 'warning',
+    error: 'danger',
+    starting: 'info',
+    stopped: 'info',
   }
   return typeMap[status] || 'info'
 }
@@ -277,11 +293,11 @@ function getStatusTagType(status: string): string {
  */
 function getStatusText(status: string): string {
   const textMap: Record<string, string> = {
-    'running': '运行中',
-    'warning': '警告',
-    'error': '错误',
-    'starting': '启动中',
-    'stopped': '已停止'
+    running: '运行中',
+    warning: '警告',
+    error: '错误',
+    starting: '启动中',
+    stopped: '已停止',
   }
   return textMap[status] || status
 }
@@ -299,7 +315,7 @@ function formatMemory(bytes: number): string {
 async function startComponent(componentName: string) {
   const component = systemComponents.value.find(c => c.name === componentName)
   if (!component) return
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要启动 "${component.description}" 服务吗？`,
@@ -307,14 +323,14 @@ async function startComponent(componentName: string) {
       {
         type: 'info',
         confirmButtonText: '启动',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
-    
+
     component.loading = true
-    
+
     const response = await systemApi.startComponent(componentName)
-    
+
     if (response.success) {
       component.status = 'running'
       component.lastCheck = new Date().toISOString()
@@ -323,7 +339,6 @@ async function startComponent(componentName: string) {
     } else {
       throw new Error(response.message || '启动失败')
     }
-    
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('启动服务失败:', error)
@@ -340,7 +355,7 @@ async function startComponent(componentName: string) {
 async function stopComponent(componentName: string) {
   const component = systemComponents.value.find(c => c.name === componentName)
   if (!component) return
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要停止 "${component.description}" 服务吗？`,
@@ -349,14 +364,14 @@ async function stopComponent(componentName: string) {
         type: 'warning',
         confirmButtonText: '停止',
         cancelButtonText: '取消',
-        confirmButtonClass: 'el-button--danger'
+        confirmButtonClass: 'el-button--danger',
       }
     )
-    
+
     component.loading = true
-    
+
     const response = await systemApi.stopComponent(componentName)
-    
+
     if (response.success) {
       component.status = 'stopped'
       component.lastCheck = new Date().toISOString()
@@ -365,7 +380,6 @@ async function stopComponent(componentName: string) {
     } else {
       throw new Error(response.message || '停止失败')
     }
-    
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('停止服务失败:', error)
@@ -382,7 +396,7 @@ async function stopComponent(componentName: string) {
 async function restartComponent(componentName: string) {
   const component = systemComponents.value.find(c => c.name === componentName)
   if (!component) return
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要重启 "${component.description}" 服务吗？`,
@@ -390,22 +404,21 @@ async function restartComponent(componentName: string) {
       {
         type: 'warning',
         confirmButtonText: '重启',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
-    
+
     component.loading = true
     component.status = 'starting'
-    
+
     const response = await systemApi.restartComponent(componentName)
-    
+
     if (response.success) {
       ElMessage.success(`${component.description} 重启成功`)
       await fetchSystemComponents() // 刷新状态
     } else {
       throw new Error(response.message || '重启失败')
     }
-    
   } catch (error: any) {
     if (error !== 'cancel') {
       console.error('重启服务失败:', error)
@@ -435,12 +448,12 @@ async function refreshAll() {
 onMounted(async () => {
   // 初始加载系统组件状态
   await fetchSystemComponents()
-  
+
   // 启动定时刷新（每30秒）
   const refreshInterval = setInterval(() => {
     fetchSystemComponents()
   }, 30000)
-  
+
   // 清理定时器
   onUnmounted(() => {
     clearInterval(refreshInterval)
@@ -455,91 +468,91 @@ onMounted(async () => {
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 16px;
     margin-bottom: 20px;
-    
+
     .status-card {
       padding: 16px;
       border: 1px solid #ebeef5;
       border-radius: 8px;
       background: #fff;
       transition: all 0.3s;
-      
+
       &:hover {
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       }
-      
+
       &.status-running {
         border-left: 4px solid #67c23a;
       }
-      
+
       &.status-warning {
         border-left: 4px solid #e6a23c;
       }
-      
+
       &.status-error {
         border-left: 4px solid #f56c6c;
       }
-      
+
       &.status-stopped {
         border-left: 4px solid #909399;
         background: #f9f9f9;
       }
-      
+
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
         margin-bottom: 16px;
-        
+
         .component-info {
           flex: 1;
-          
+
           .component-name {
             font-size: 16px;
             font-weight: 600;
             color: #303133;
             margin-bottom: 4px;
           }
-          
+
           .component-description {
             font-size: 13px;
             color: #909399;
           }
         }
-        
+
         .status-icon {
           margin-right: 4px;
           font-size: 12px;
         }
       }
-      
+
       .card-metrics {
         margin-bottom: 16px;
-        
+
         .metric-row {
           display: flex;
           justify-content: space-between;
           margin-bottom: 8px;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           .metric-item {
             flex: 1;
             display: flex;
             flex-direction: column;
-            
+
             .metric-label {
               font-size: 12px;
               color: #909399;
               margin-bottom: 4px;
             }
-            
+
             .metric-value {
               font-size: 13px;
               font-weight: 500;
               color: #303133;
-              
+
               &.error-count.has-errors {
                 color: #f56c6c;
                 font-weight: 600;
@@ -548,27 +561,27 @@ onMounted(async () => {
           }
         }
       }
-      
+
       .card-actions {
         display: flex;
         justify-content: center;
-        
+
         .el-button-group {
           width: 100%;
-          
+
           .el-button {
             flex: 1;
           }
         }
       }
-      
+
       .error-panel {
         margin-top: 12px;
         padding: 12px;
         background: #fef0f0;
         border: 1px solid #fde2e2;
         border-radius: 4px;
-        
+
         .error-header {
           display: flex;
           align-items: center;
@@ -576,19 +589,19 @@ onMounted(async () => {
           color: #f56c6c;
           font-weight: 500;
           font-size: 13px;
-          
+
           .el-icon {
             margin-right: 6px;
           }
         }
-        
+
         .error-content {
           .error-time {
             font-size: 11px;
             color: #909399;
             margin-bottom: 4px;
           }
-          
+
           .error-message {
             font-size: 12px;
             color: #606266;
@@ -599,7 +612,7 @@ onMounted(async () => {
       }
     }
   }
-  
+
   .system-overview {
     .overview-card {
       .overview-header {
@@ -609,33 +622,41 @@ onMounted(async () => {
         font-weight: 600;
         color: #303133;
       }
-      
+
       .overview-stats {
         display: flex;
         justify-content: space-around;
         margin-bottom: 20px;
-        
+
         .stat-item {
           text-align: center;
-          
+
           .stat-value {
             font-size: 24px;
             font-weight: 600;
             margin-bottom: 4px;
           }
-          
+
           .stat-label {
             font-size: 12px;
             color: #909399;
           }
-          
-          &.running .stat-value { color: #67c23a; }
-          &.warning .stat-value { color: #e6a23c; }
-          &.error .stat-value { color: #f56c6c; }
-          &.stopped .stat-value { color: #909399; }
+
+          &.running .stat-value {
+            color: #67c23a;
+          }
+          &.warning .stat-value {
+            color: #e6a23c;
+          }
+          &.error .stat-value {
+            color: #f56c6c;
+          }
+          &.stopped .stat-value {
+            color: #909399;
+          }
         }
       }
-      
+
       .overview-progress {
         .progress-label {
           font-size: 14px;
@@ -653,26 +674,26 @@ onMounted(async () => {
     .status-grid {
       grid-template-columns: 1fr;
       gap: 12px;
-      
+
       .status-card {
         padding: 12px;
-        
+
         .card-header {
           flex-direction: column;
           align-items: flex-start;
           gap: 8px;
         }
-        
+
         .card-metrics {
           .metric-row {
             flex-direction: column;
             gap: 8px;
-            
+
             .metric-item {
               flex-direction: row;
               justify-content: space-between;
               align-items: baseline;
-              
+
               .metric-label {
                 margin-bottom: 0;
               }
@@ -681,7 +702,7 @@ onMounted(async () => {
         }
       }
     }
-    
+
     .system-overview {
       .overview-stats {
         display: grid;

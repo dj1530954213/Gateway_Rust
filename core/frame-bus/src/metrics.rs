@@ -13,6 +13,11 @@ pub struct BusMetrics {
     pub backlog_lag: IntGauge,
     pub wal_bytes: IntGauge,
     pub wal_flush_duration: Histogram,
+    // 批量处理指标
+    pub batch_size: Histogram,
+    pub batch_flush_duration: Histogram,
+    pub batch_send_duration: Histogram,
+    pub batch_memory_usage: IntGauge,
 }
 
 impl BusMetrics {
@@ -52,6 +57,36 @@ impl BusMetrics {
         ).unwrap();
         registry.register(Box::new(wal_flush_duration.clone())).unwrap();
 
+        // 批量处理指标
+        let batch_size = Histogram::with_opts(
+            HistogramOpts::new(
+                "framebus_batch_size",
+                "Batch size distribution"
+            ).buckets(vec![1.0, 5.0, 10.0, 25.0, 50.0, 100.0, 250.0, 500.0])
+        ).unwrap();
+        registry.register(Box::new(batch_size.clone())).unwrap();
+
+        let batch_flush_duration = Histogram::with_opts(
+            HistogramOpts::new(
+                "framebus_batch_flush_duration_ms",
+                "Batch flush duration in milliseconds"
+            ).buckets(vec![0.01, 0.1, 0.5, 1.0, 5.0, 10.0, 25.0])
+        ).unwrap();
+        registry.register(Box::new(batch_flush_duration.clone())).unwrap();
+
+        let batch_send_duration = Histogram::with_opts(
+            HistogramOpts::new(
+                "framebus_batch_send_duration_ms",
+                "Batch send operation duration in milliseconds"
+            ).buckets(vec![0.01, 0.1, 0.5, 1.0, 2.0, 5.0, 10.0])
+        ).unwrap();
+        registry.register(Box::new(batch_send_duration.clone())).unwrap();
+
+        let batch_memory_usage = IntGauge::with_opts(
+            Opts::new("framebus_batch_memory_bytes", "Batch buffer memory usage in bytes")
+        ).unwrap();
+        registry.register(Box::new(batch_memory_usage.clone())).unwrap();
+
         Self {
             ring_used,
             publish_total,
@@ -59,6 +94,10 @@ impl BusMetrics {
             backlog_lag,
             wal_bytes,
             wal_flush_duration,
+            batch_size,
+            batch_flush_duration,
+            batch_send_duration,
+            batch_memory_usage,
         }
     }
 }

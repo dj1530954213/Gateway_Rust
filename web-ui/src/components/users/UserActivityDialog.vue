@@ -21,7 +21,9 @@
             <el-tag :type="getRoleType(userData?.role)" size="small">
               {{ getRoleName(userData?.role) }}
             </el-tag>
-            <el-tag type="warning" size="small">{{ getDepartmentName(userData?.departmentId) }}</el-tag>
+            <el-tag type="warning" size="small">{{
+              getDepartmentName(userData?.departmentId)
+            }}</el-tag>
           </div>
         </div>
         <div class="activity-stats">
@@ -62,7 +64,7 @@
               <el-option label="系统" value="system" />
             </el-select>
           </div>
-          
+
           <div class="filter-item">
             <label class="filter-label">严重程度</label>
             <el-select
@@ -79,7 +81,7 @@
               <el-option label="严重" value="critical" />
             </el-select>
           </div>
-          
+
           <div class="filter-item">
             <label class="filter-label">时间范围</label>
             <el-date-picker
@@ -92,28 +94,28 @@
               @change="handleFilterChange"
             />
           </div>
-          
+
           <div class="filter-item">
             <label class="filter-label">关键词</label>
             <el-input
               v-model="filterForm.keyword"
               placeholder="搜索活动内容"
               style="width: 200px"
-              @input="handleFilterChange"
               clearable
+              @input="handleFilterChange"
             >
               <template #prefix>
                 <el-icon><Search /></el-icon>
               </template>
             </el-input>
           </div>
-          
+
           <div class="filter-actions">
-            <el-button @click="exportActivities" :loading="exporting">
+            <el-button :loading="exporting" @click="exportActivities">
               <el-icon><Download /></el-icon>
               导出
             </el-button>
-            <el-button @click="refreshActivities" :loading="loading">
+            <el-button :loading="loading" @click="refreshActivities">
               <el-icon><Refresh /></el-icon>
               刷新
             </el-button>
@@ -122,11 +124,11 @@
       </div>
 
       <!-- 活动时间线 -->
-      <div class="activity-timeline" v-loading="loading">
+      <div v-loading="loading" class="activity-timeline">
         <div v-if="groupedActivities.length === 0" class="empty-state">
           <el-empty description="暂无活动记录" />
         </div>
-        
+
         <div v-else class="timeline-container">
           <div
             v-for="group in groupedActivities"
@@ -135,9 +137,11 @@
           >
             <div class="group-header">
               <h4 class="group-date">{{ group.date }}</h4>
-              <el-tag type="info" size="small">{{ group.activities.length }} 项活动</el-tag>
+              <el-tag type="info" size="small"
+                >{{ group.activities.length }} 项活动</el-tag
+              >
             </div>
-            
+
             <el-timeline class="activity-timeline-items">
               <el-timeline-item
                 v-for="activity in group.activities"
@@ -171,13 +175,17 @@
                     </div>
                     <div class="activity-meta">
                       <span class="activity-ip">{{ activity.ip }}</span>
-                      <span class="activity-device">{{ activity.device || '未知设备' }}</span>
+                      <span class="activity-device">{{
+                        activity.device || '未知设备'
+                      }}</span>
                     </div>
                   </div>
-                  
+
                   <div class="activity-content">
-                    <p class="activity-description">{{ activity.description }}</p>
-                    
+                    <p class="activity-description">
+                      {{ activity.description }}
+                    </p>
+
                     <!-- 活动详情 -->
                     <div v-if="activity.details" class="activity-details">
                       <div
@@ -185,11 +193,15 @@
                         :key="key"
                         class="detail-item"
                       >
-                        <span class="detail-key">{{ formatDetailKey(key) }}:</span>
-                        <span class="detail-value">{{ formatDetailValue(value) }}</span>
+                        <span class="detail-key"
+                          >{{ formatDetailKey(key) }}:</span
+                        >
+                        <span class="detail-value">{{
+                          formatDetailValue(value)
+                        }}</span>
                       </div>
                     </div>
-                    
+
                     <!-- 错误信息 -->
                     <div v-if="activity.error" class="activity-error">
                       <div class="error-header">
@@ -197,17 +209,21 @@
                         <span class="error-title">错误信息</span>
                       </div>
                       <div class="error-content">
-                        <pre class="error-message">{{ activity.error.message }}</pre>
+                        <pre class="error-message">{{
+                          activity.error.message
+                        }}</pre>
                         <div v-if="activity.error.stack" class="error-stack">
                           <el-collapse>
                             <el-collapse-item title="堆栈跟踪" name="stack">
-                              <pre class="stack-trace">{{ activity.error.stack }}</pre>
+                              <pre class="stack-trace">{{
+                                activity.error.stack
+                              }}</pre>
                             </el-collapse-item>
                           </el-collapse>
                         </div>
                       </div>
                     </div>
-                    
+
                     <!-- 关联数据 -->
                     <div v-if="activity.relatedData" class="related-data">
                       <div class="related-header">关联数据</div>
@@ -224,27 +240,27 @@
                       </div>
                     </div>
                   </div>
-                  
+
                   <!-- 活动操作 -->
                   <div class="activity-actions">
-                    <el-button 
-                      size="small" 
-                      text 
+                    <el-button
+                      size="small"
+                      text
                       @click="viewActivityDetails(activity)"
                     >
                       查看详情
                     </el-button>
-                    <el-button 
+                    <el-button
                       v-if="activity.type === 'operation'"
-                      size="small" 
-                      text 
+                      size="small"
+                      text
                       @click="rollbackOperation(activity)"
                     >
                       回滚操作
                     </el-button>
-                    <el-button 
-                      size="small" 
-                      text 
+                    <el-button
+                      size="small"
+                      text
                       @click="copyActivityInfo(activity)"
                     >
                       复制信息
@@ -292,8 +308,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   UserFilled,
   Search,
@@ -307,8 +321,10 @@ import {
   User,
   Lock,
   Operation,
-  DataAnalysis
+  DataAnalysis,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -330,14 +346,14 @@ const filterForm = ref({
   type: '',
   level: '',
   dateRange: [],
-  keyword: ''
+  keyword: '',
 })
 
 // 分页配置
 const pagination = ref({
   page: 1,
   size: 20,
-  total: 0
+  total: 0,
 })
 
 // 活动数据
@@ -350,8 +366,8 @@ const totalActivities = computed(() => activities.value.length)
 
 const todayActivities = computed(() => {
   const today = new Date().toDateString()
-  return activities.value.filter(activity => 
-    new Date(activity.timestamp).toDateString() === today
+  return activities.value.filter(
+    activity => new Date(activity.timestamp).toDateString() === today
   ).length
 })
 
@@ -363,29 +379,34 @@ const lastActiveTime = computed(() => {
 
 const groupedActivities = computed(() => {
   const groups: { [key: string]: any[] } = {}
-  
+
   activities.value.forEach(activity => {
     const date = new Date(activity.timestamp).toLocaleDateString('zh-CN', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      weekday: 'long'
+      weekday: 'long',
     })
-    
+
     if (!groups[date]) {
       groups[date] = []
     }
     groups[date].push(activity)
   })
-  
-  return Object.entries(groups).map(([date, activities]) => ({
-    date,
-    activities: activities.sort((a, b) => 
-      new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+
+  return Object.entries(groups)
+    .map(([date, activities]) => ({
+      date,
+      activities: activities.sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      ),
+    }))
+    .sort(
+      (a, b) =>
+        new Date(b.activities[0].timestamp).getTime() -
+        new Date(a.activities[0].timestamp).getTime()
     )
-  })).sort((a, b) => 
-    new Date(b.activities[0].timestamp).getTime() - new Date(a.activities[0].timestamp).getTime()
-  )
 })
 
 // ===== 方法 =====
@@ -396,14 +417,10 @@ const groupedActivities = computed(() => {
 async function initializeData() {
   try {
     // 从API加载真实数据
-    await Promise.all([
-      loadAvailableRoles(),
-      loadDepartments()
-    ])
-    
+    await Promise.all([loadAvailableRoles(), loadDepartments()])
+
     // 加载活动数据
     await loadActivities()
-    
   } catch (error) {
     console.error('初始化用户活动对话框失败:', error)
     ElMessage.error('初始化失败')
@@ -416,20 +433,23 @@ async function initializeData() {
 async function loadActivities() {
   try {
     loading.value = true
-    
-    const response = await fetch(`/api/v1/users/${props.userData.id}/activities`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      params: {
-        page: pagination.value.currentPage,
-        size: pagination.value.pageSize,
-        type: filters.value.activityType,
-        dateRange: filters.value.dateRange
+
+    const response = await fetch(
+      `/api/v1/users/${props.userData.id}/activities`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        params: {
+          page: pagination.value.currentPage,
+          size: pagination.value.pageSize,
+          type: filters.value.activityType,
+          dateRange: filters.value.dateRange,
+        },
       }
-    })
-    
+    )
+
     if (response.ok) {
       const data = await response.json()
       activities.value = data.items || []
@@ -439,7 +459,6 @@ async function loadActivities() {
       pagination.value.total = 0
       console.error('加载活动数据失败:', response.statusText)
     }
-    
   } catch (error) {
     console.error('加载活动数据失败:', error)
     ElMessage.error('加载活动数据失败')
@@ -450,7 +469,6 @@ async function loadActivities() {
   }
 }
 
-
 /**
  * 生成活动标题
  */
@@ -460,9 +478,9 @@ function generateActivityTitle(type: string, level: string): string {
     operation: ['设备操作', '数据修改', '配置更新', '批量操作'],
     config: ['系统配置', '参数调整', '策略更新', '规则修改'],
     data: ['数据导入', '数据导出', '数据备份', '数据清理'],
-    system: ['系统升级', '服务重启', '错误检测', '性能监控']
+    system: ['系统升级', '服务重启', '错误检测', '性能监控'],
   }
-  
+
   const typeTitles = titles[type as keyof typeof titles] || ['未知操作']
   return typeTitles[Math.floor(Math.random() * typeTitles.length)]
 }
@@ -476,9 +494,9 @@ function generateActivityDescription(type: string, level: string): string {
     operation: '用户对设备PLC-001执行了启动操作',
     config: '用户修改了报警阈值配置参数',
     data: '用户导出了过去7天的历史数据',
-    system: '系统自动执行了定期备份任务'
+    system: '系统自动执行了定期备份任务',
   }
-  
+
   return descriptions[type as keyof typeof descriptions] || '执行了系统操作'
 }
 
@@ -493,7 +511,13 @@ function generateRandomIP(): string {
  * 生成随机设备信息
  */
 function generateRandomDevice(): string {
-  const devices = ['Windows PC', 'Mac', 'iPad', 'Android Phone', 'Linux Terminal']
+  const devices = [
+    'Windows PC',
+    'Mac',
+    'iPad',
+    'Android Phone',
+    'Linux Terminal',
+  ]
   return devices[Math.floor(Math.random() * devices.length)]
 }
 
@@ -505,26 +529,26 @@ function generateActivityDetails(type: string) {
     login: {
       browser: 'Chrome 119.0',
       os: 'Windows 10',
-      location: '北京市朝阳区'
+      location: '北京市朝阳区',
     },
     operation: {
       deviceId: 'PLC-001',
       command: 'START',
-      duration: '2.3s'
+      duration: '2.3s',
     },
     config: {
       module: 'alert-engine',
       parameter: 'threshold',
       oldValue: '80',
-      newValue: '85'
+      newValue: '85',
     },
     data: {
       format: 'CSV',
       records: '15,234',
-      size: '2.1MB'
-    }
+      size: '2.1MB',
+    },
   }
-  
+
   return details[type as keyof typeof details] || {}
 }
 
@@ -535,7 +559,8 @@ function generateErrorInfo() {
   return {
     message: 'Connection timeout: Failed to connect to device after 30 seconds',
     code: 'DEVICE_TIMEOUT',
-    stack: 'Error: Connection timeout\n    at DeviceManager.connect (device-manager.js:123:15)\n    at async Handler.execute (handler.js:45:7)'
+    stack:
+      'Error: Connection timeout\n    at DeviceManager.connect (device-manager.js:123:15)\n    at async Handler.execute (handler.js:45:7)',
   }
 }
 
@@ -545,7 +570,7 @@ function generateErrorInfo() {
 function generateRelatedData() {
   return [
     { id: 'device_1', type: '设备', name: 'PLC-001' },
-    { id: 'rule_1', type: '规则', name: '温度监控' }
+    { id: 'rule_1', type: '规则', name: '温度监控' },
   ]
 }
 
@@ -557,10 +582,10 @@ async function loadAvailableRoles() {
     const response = await fetch('/api/v1/roles', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       availableRoles.value = await response.json()
     } else {
@@ -581,10 +606,10 @@ async function loadDepartments() {
     const response = await fetch('/api/v1/users/departments', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       departments.value = await response.json()
     } else {
@@ -602,11 +627,16 @@ async function loadDepartments() {
  */
 function getRoleType(roleId: string): string {
   switch (roleId) {
-    case 'admin': return 'danger'
-    case 'manager': return 'warning'
-    case 'operator': return 'success'
-    case 'viewer': return 'info'
-    default: return 'info'
+    case 'admin':
+      return 'danger'
+    case 'manager':
+      return 'warning'
+    case 'operator':
+      return 'success'
+    case 'viewer':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
@@ -631,12 +661,18 @@ function getDepartmentName(departmentId: string): string {
  */
 function getActivityIcon(type: string): string {
   switch (type) {
-    case 'login': return 'User'
-    case 'operation': return 'Operation'
-    case 'config': return 'Setting'
-    case 'data': return 'Document'
-    case 'system': return 'Monitor'
-    default: return 'Document'
+    case 'login':
+      return 'User'
+    case 'operation':
+      return 'Operation'
+    case 'config':
+      return 'Setting'
+    case 'data':
+      return 'Document'
+    case 'system':
+      return 'Monitor'
+    default:
+      return 'Document'
   }
 }
 
@@ -645,11 +681,16 @@ function getActivityIcon(type: string): string {
  */
 function getTimelineType(level: string): string {
   switch (level) {
-    case 'critical': return 'danger'
-    case 'error': return 'danger'
-    case 'warning': return 'warning'
-    case 'info': return 'primary'
-    default: return 'primary'
+    case 'critical':
+      return 'danger'
+    case 'error':
+      return 'danger'
+    case 'warning':
+      return 'warning'
+    case 'info':
+      return 'primary'
+    default:
+      return 'primary'
   }
 }
 
@@ -658,11 +699,16 @@ function getTimelineType(level: string): string {
  */
 function getTimelineColor(level: string): string {
   switch (level) {
-    case 'critical': return '#F56C6C'
-    case 'error': return '#F56C6C'
-    case 'warning': return '#E6A23C'
-    case 'info': return '#409EFF'
-    default: return '#409EFF'
+    case 'critical':
+      return '#F56C6C'
+    case 'error':
+      return '#F56C6C'
+    case 'warning':
+      return '#E6A23C'
+    case 'info':
+      return '#409EFF'
+    default:
+      return '#409EFF'
   }
 }
 
@@ -671,12 +717,18 @@ function getTimelineColor(level: string): string {
  */
 function getActivityTypeTag(type: string): string {
   switch (type) {
-    case 'login': return 'success'
-    case 'operation': return 'primary'
-    case 'config': return 'warning'
-    case 'data': return 'info'
-    case 'system': return 'danger'
-    default: return 'info'
+    case 'login':
+      return 'success'
+    case 'operation':
+      return 'primary'
+    case 'config':
+      return 'warning'
+    case 'data':
+      return 'info'
+    case 'system':
+      return 'danger'
+    default:
+      return 'info'
   }
 }
 
@@ -685,12 +737,18 @@ function getActivityTypeTag(type: string): string {
  */
 function getActivityTypeText(type: string): string {
   switch (type) {
-    case 'login': return '登录'
-    case 'operation': return '操作'
-    case 'config': return '配置'
-    case 'data': return '数据'
-    case 'system': return '系统'
-    default: return '未知'
+    case 'login':
+      return '登录'
+    case 'operation':
+      return '操作'
+    case 'config':
+      return '配置'
+    case 'data':
+      return '数据'
+    case 'system':
+      return '系统'
+    default:
+      return '未知'
   }
 }
 
@@ -699,11 +757,16 @@ function getActivityTypeText(type: string): string {
  */
 function getLevelTypeTag(level: string): string {
   switch (level) {
-    case 'critical': return 'danger'
-    case 'error': return 'danger'
-    case 'warning': return 'warning'
-    case 'info': return 'success'
-    default: return 'info'
+    case 'critical':
+      return 'danger'
+    case 'error':
+      return 'danger'
+    case 'warning':
+      return 'warning'
+    case 'info':
+      return 'success'
+    default:
+      return 'info'
   }
 }
 
@@ -712,11 +775,16 @@ function getLevelTypeTag(level: string): string {
  */
 function getLevelText(level: string): string {
   switch (level) {
-    case 'critical': return '严重'
-    case 'error': return '错误'
-    case 'warning': return '警告'
-    case 'info': return '信息'
-    default: return '未知'
+    case 'critical':
+      return '严重'
+    case 'error':
+      return '错误'
+    case 'warning':
+      return '警告'
+    case 'info':
+      return '信息'
+    default:
+      return '未知'
   }
 }
 
@@ -737,9 +805,9 @@ function formatDetailKey(key: string): string {
     newValue: '新值',
     format: '格式',
     records: '记录数',
-    size: '大小'
+    size: '大小',
   }
-  
+
   return keyMap[key] || key
 }
 
@@ -760,17 +828,17 @@ function formatRelativeTime(timestamp: string): string {
   const now = new Date()
   const time = new Date(timestamp)
   const diff = now.getTime() - time.getTime()
-  
+
   const minutes = Math.floor(diff / 60000)
   if (minutes < 1) return '刚刚'
   if (minutes < 60) return `${minutes}分钟前`
-  
+
   const hours = Math.floor(minutes / 60)
   if (hours < 24) return `${hours}小时前`
-  
+
   const days = Math.floor(hours / 24)
   if (days < 7) return `${days}天前`
-  
+
   return time.toLocaleDateString('zh-CN')
 }
 
@@ -796,12 +864,11 @@ function refreshActivities() {
 async function exportActivities() {
   try {
     exporting.value = true
-    
+
     // 模拟导出操作
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     ElMessage.success('活动日志导出成功')
-    
   } catch (error) {
     console.error('导出活动数据失败:', error)
     ElMessage.error('导出活动数据失败')
@@ -829,7 +896,7 @@ function viewActivityDetails(activity: any) {
     '活动详情',
     {
       dangerouslyUseHTMLString: true,
-      confirmButtonText: '关闭'
+      confirmButtonText: '关闭',
     }
   )
 }
@@ -842,13 +909,15 @@ function rollbackOperation(activity: any) {
     `确定要回滚操作 "${activity.title}" 吗？此操作不可撤销。`,
     '确认回滚',
     {
-      type: 'warning'
+      type: 'warning',
     }
-  ).then(() => {
-    ElMessage.success('操作回滚成功')
-  }).catch(() => {
-    // 用户取消
-  })
+  )
+    .then(() => {
+      ElMessage.success('操作回滚成功')
+    })
+    .catch(() => {
+      // 用户取消
+    })
 }
 
 /**
@@ -856,12 +925,15 @@ function rollbackOperation(activity: any) {
  */
 function copyActivityInfo(activity: any) {
   const info = `活动: ${activity.title}\n时间: ${new Date(activity.timestamp).toLocaleString('zh-CN')}\n描述: ${activity.description}\nIP: ${activity.ip}`
-  
-  navigator.clipboard.writeText(info).then(() => {
-    ElMessage.success('活动信息已复制到剪贴板')
-  }).catch(() => {
-    ElMessage.error('复制失败')
-  })
+
+  navigator.clipboard
+    .writeText(info)
+    .then(() => {
+      ElMessage.success('活动信息已复制到剪贴板')
+    })
+    .catch(() => {
+      ElMessage.error('复制失败')
+    })
 }
 
 /**
@@ -872,16 +944,19 @@ function handleClose() {
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible) {
-    nextTick(() => {
-      initializeData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible) {
+      nextTick(() => {
+        initializeData()
+      })
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
 })
 </script>
@@ -895,35 +970,35 @@ watch(dialogVisible, (visible) => {
     padding: 16px;
     background: #f8f9fa;
     border-radius: 8px;
-    
+
     .user-avatar {
       flex-shrink: 0;
     }
-    
+
     .user-details {
       flex: 1;
-      
+
       .user-name {
         margin: 0 0 8px 0;
         font-size: 18px;
         font-weight: 600;
         color: #303133;
       }
-      
+
       .user-meta {
         display: flex;
         gap: 8px;
         flex-wrap: wrap;
       }
     }
-    
+
     .activity-stats {
       display: flex;
       gap: 24px;
-      
+
       .stat-item {
         text-align: center;
-        
+
         .stat-value {
           display: block;
           font-size: 20px;
@@ -931,7 +1006,7 @@ watch(dialogVisible, (visible) => {
           color: #409eff;
           margin-bottom: 4px;
         }
-        
+
         .stat-label {
           font-size: 12px;
           color: #909399;
@@ -939,31 +1014,31 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .filter-panel {
     margin: 20px 0;
     padding: 16px;
     background: #fafafa;
     border-radius: 8px;
-    
+
     .filter-row {
       display: flex;
       align-items: center;
       gap: 16px;
       flex-wrap: wrap;
-      
+
       .filter-item {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .filter-label {
           font-size: 14px;
           color: #606266;
           white-space: nowrap;
         }
       }
-      
+
       .filter-actions {
         margin-left: auto;
         display: flex;
@@ -971,20 +1046,20 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .activity-timeline {
     margin: 20px 0;
     min-height: 400px;
-    
+
     .empty-state {
       text-align: center;
       padding: 60px 0;
     }
-    
+
     .timeline-container {
       .timeline-group {
         margin-bottom: 32px;
-        
+
         .group-header {
           display: flex;
           justify-content: space-between;
@@ -992,7 +1067,7 @@ watch(dialogVisible, (visible) => {
           margin-bottom: 16px;
           padding-bottom: 8px;
           border-bottom: 1px solid #ebeef5;
-          
+
           .group-date {
             margin: 0;
             font-size: 16px;
@@ -1000,7 +1075,7 @@ watch(dialogVisible, (visible) => {
             color: #303133;
           }
         }
-        
+
         .activity-timeline-items {
           .activity-item {
             .activity-header {
@@ -1008,29 +1083,29 @@ watch(dialogVisible, (visible) => {
               justify-content: space-between;
               align-items: flex-start;
               margin-bottom: 8px;
-              
+
               .activity-info {
                 display: flex;
                 align-items: center;
                 gap: 8px;
                 flex: 1;
-                
+
                 .activity-icon {
                   font-size: 16px;
                   color: #409eff;
                 }
-                
+
                 .activity-title {
                   font-weight: 500;
                   color: #303133;
                 }
-                
+
                 .activity-type,
                 .activity-level {
                   margin: 0;
                 }
               }
-              
+
               .activity-meta {
                 display: flex;
                 flex-direction: column;
@@ -1038,74 +1113,74 @@ watch(dialogVisible, (visible) => {
                 gap: 4px;
                 font-size: 12px;
                 color: #909399;
-                
+
                 .activity-ip,
                 .activity-device {
                   white-space: nowrap;
                 }
               }
             }
-            
+
             .activity-content {
               margin: 12px 0;
-              
+
               .activity-description {
                 color: #606266;
                 margin: 0 0 12px 0;
                 line-height: 1.5;
               }
-              
+
               .activity-details {
                 background: #f8f9fa;
                 padding: 12px;
                 border-radius: 6px;
                 margin: 8px 0;
-                
+
                 .detail-item {
                   display: flex;
                   margin-bottom: 4px;
-                  
+
                   &:last-child {
                     margin-bottom: 0;
                   }
-                  
+
                   .detail-key {
                     font-weight: 500;
                     color: #606266;
                     min-width: 80px;
                     margin-right: 8px;
                   }
-                  
+
                   .detail-value {
                     color: #303133;
                     flex: 1;
                   }
                 }
               }
-              
+
               .activity-error {
                 background: #fef0f0;
                 border: 1px solid #fbc4c4;
                 border-radius: 6px;
                 padding: 12px;
                 margin: 8px 0;
-                
+
                 .error-header {
                   display: flex;
                   align-items: center;
                   gap: 8px;
                   margin-bottom: 8px;
-                  
+
                   .error-icon {
                     color: #f56c6c;
                   }
-                  
+
                   .error-title {
                     font-weight: 500;
                     color: #f56c6c;
                   }
                 }
-                
+
                 .error-content {
                   .error-message {
                     background: #fff;
@@ -1118,7 +1193,7 @@ watch(dialogVisible, (visible) => {
                     white-space: pre-wrap;
                     color: #303133;
                   }
-                  
+
                   .error-stack {
                     .stack-trace {
                       background: #f5f5f5;
@@ -1136,32 +1211,32 @@ watch(dialogVisible, (visible) => {
                   }
                 }
               }
-              
+
               .related-data {
                 background: #f0f9ff;
                 border: 1px solid #b3d8ff;
                 border-radius: 6px;
                 padding: 12px;
                 margin: 8px 0;
-                
+
                 .related-header {
                   font-weight: 500;
                   color: #409eff;
                   margin-bottom: 8px;
                 }
-                
+
                 .related-items {
                   display: flex;
                   gap: 6px;
                   flex-wrap: wrap;
-                  
+
                   .related-tag {
                     margin: 0;
                   }
                 }
               }
             }
-            
+
             .activity-actions {
               display: flex;
               gap: 8px;
@@ -1174,7 +1249,7 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .pagination-container {
     margin-top: 20px;
     text-align: center;
@@ -1188,49 +1263,53 @@ watch(dialogVisible, (visible) => {
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
-      
+
       .activity-stats {
         width: 100%;
         justify-content: space-around;
       }
     }
-    
+
     .filter-panel .filter-row {
       flex-direction: column;
       align-items: stretch;
       gap: 12px;
-      
+
       .filter-item {
         flex-direction: column;
         align-items: stretch;
         gap: 4px;
-        
+
         .filter-label {
           font-size: 12px;
         }
       }
-      
+
       .filter-actions {
         margin-left: 0;
         justify-content: center;
       }
     }
-    
-    .activity-timeline .timeline-container .timeline-group .activity-timeline-items .activity-item {
+
+    .activity-timeline
+      .timeline-container
+      .timeline-group
+      .activity-timeline-items
+      .activity-item {
       .activity-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
-        
+
         .activity-info {
           flex-wrap: wrap;
         }
-        
+
         .activity-meta {
           align-items: flex-start;
         }
       }
-      
+
       .activity-actions {
         flex-wrap: wrap;
       }

@@ -97,20 +97,25 @@ export const tagsApi = {
   /**
    * 批量导入点位
    */
-  bulkImport(file: File): Promise<{ success: number; failed: number; errors?: string[] }> {
+  bulkImport(
+    file: File
+  ): Promise<{ success: number; failed: number; errors?: string[] }> {
     const formData = new FormData()
     formData.append('file', file)
     return post('/tags/import', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' }
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
   },
 
   /**
    * 批量导出点位
    */
-  bulkExport(params?: { device_id?: string; format?: 'csv' | 'xlsx' }): Promise<void> {
+  bulkExport(params?: {
+    device_id?: string
+    format?: 'csv' | 'xlsx'
+  }): Promise<void> {
     return get('/tags/export', params, {
-      responseType: 'blob'
+      responseType: 'blob',
     })
   },
 }

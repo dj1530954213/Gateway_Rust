@@ -34,3 +34,6 @@ endpoint-kit = { path = "../endpoint-kit" }
 
 # New driver SDK integration
 driver-sdk = { path = "../driver-sdk" }
+
+# Local dependencies
+common-errors = { path = "../common-errors" }

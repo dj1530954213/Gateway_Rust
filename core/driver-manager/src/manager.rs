@@ -11,7 +11,7 @@ use uuid::Uuid;
 use crate::driver::{DriverState, DriverMeta};
 use crate::registry::StaticDriverRegistry;
 use crate::supervisor::DriverSupervisor;
-use crate::dynamic::{DynamicDriverLoader, DynamicDriverEvent};
+use crate::dynamic::DynamicDriverLoader;
 use crate::registry_manager::{RegistryManager, DriverQueryRequest, DriverQueryResponse, RegistryOverview};
 
 /// 协议类型枚举
@@ -170,7 +170,7 @@ impl DriverManager {
         &self,
         file_path: P,
         driver_id: String,
-        config: serde_json::Value,
+        _config: serde_json::Value,
     ) -> Result<()> {
         // 先加载到动态加载器
         let sdk_driver_id = self.dynamic_loader.load_driver(file_path).await?;
@@ -297,7 +297,7 @@ impl DriverManager {
 
         // 监听动态加载器事件并同步到管理器
         let mut event_rx = self.dynamic_loader.subscribe_events();
-        let drivers = self.drivers.clone();
+        let _drivers = self.drivers.clone();
 
         tokio::spawn(async move {
             while let Ok(event) = event_rx.recv().await {

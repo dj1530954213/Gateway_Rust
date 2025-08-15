@@ -25,12 +25,13 @@ rustls = { workspace = true }
 rustls-native-certs = { workspace = true }
 
 # Additional dependencies
-url = "2.5"
-base64 = "0.21"
-uuid = { version = "1.0", features = ["v4"] }
+url = { workspace = true }
+base64 = { workspace = true }
+uuid = { workspace = true }
 humantime-serde = "1.1"
 once_cell = { workspace = true }
 prost = { workspace = true }
+chrono = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 serde_yaml = { workspace = true }

@@ -136,7 +136,7 @@ class SystemApi {
       const response = await http.get('/system/metrics')
       return {
         success: true,
-        data: response.data
+        data: response.data,
       }
     } catch (error) {
       // 如果API尚未实现，返回模拟数据
@@ -150,8 +150,8 @@ class SystemApi {
           messagesPerSecond: Math.floor(Math.random() * 1000),
           uptime: Date.now() - Math.random() * 86400000,
           networkIn: Math.random() * 1024 * 1024,
-          networkOut: Math.random() * 1024 * 1024
-        }
+          networkOut: Math.random() * 1024 * 1024,
+        },
       }
     }
   }
@@ -169,7 +169,7 @@ class SystemApi {
         database: { status: 'healthy', uptime: 86400, connections: 5 },
         messageQueue: { status: 'healthy', queueSize: 0, throughput: 100 },
         webServer: { status: 'healthy', activeConnections: 3, requests: 1024 },
-        fileSystem: { status: 'healthy', freeSpace: '15.2GB', diskUsage: 75 }
+        fileSystem: { status: 'healthy', freeSpace: '15.2GB', diskUsage: 75 },
       }
     }
   }
@@ -205,14 +205,14 @@ class SystemApi {
           database: 'unknown',
           message_bus: 'unknown',
           driver_manager: 'unknown',
-          web_server: 'healthy'
+          web_server: 'healthy',
         },
         metrics: {
           uptime: 0,
           memory_usage: 0,
           cpu_usage: 0,
-          disk_usage: 0
-        }
+          disk_usage: 0,
+        },
       }
     }
   }
@@ -220,12 +220,17 @@ class SystemApi {
   /**
    * 获取系统指标
    */
-  async getMetrics(timeRange?: { start: string; end: string }): Promise<SystemMetrics[]> {
-    const params = timeRange ? { 
-      start: timeRange.start, 
-      end: timeRange.end 
-    } : {}
-    
+  async getMetrics(timeRange?: {
+    start: string
+    end: string
+  }): Promise<SystemMetrics[]> {
+    const params = timeRange
+      ? {
+          start: timeRange.start,
+          end: timeRange.end,
+        }
+      : {}
+
     const response = await http.get('/system/metrics', { params })
     return response.data
   }
@@ -249,15 +254,17 @@ class SystemApi {
    * 清理系统日志
    */
   async clearLogs(before?: string): Promise<void> {
-    await http.delete('/system/logs', { 
-      params: before ? { before } : {} 
+    await http.delete('/system/logs', {
+      params: before ? { before } : {},
     })
   }
 
   /**
    * 创建系统备份
    */
-  async createBackup(type: 'full' | 'incremental' = 'full'): Promise<BackupInfo> {
+  async createBackup(
+    type: 'full' | 'incremental' = 'full'
+  ): Promise<BackupInfo> {
     const response = await http.post('/system/backup', { type })
     return response.data
   }

@@ -93,7 +93,11 @@ export const historyApi = {
   /**
    * 获取标签统计信息
    */
-  getTagStats(tagId: string, startTime: string, endTime: string): Promise<{
+  getTagStats(
+    tagId: string,
+    startTime: string,
+    endTime: string
+  ): Promise<{
     count: number
     min: number
     max: number

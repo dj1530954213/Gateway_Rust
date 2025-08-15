@@ -1,16 +1,16 @@
 <template>
   <div class="devices-table">
     <el-table
-      :data="devices"
       v-loading="loading"
-      @selection-change="handleSelectionChange"
+      :data="devices"
       empty-text="暂无设备数据"
       stripe
       style="width: 100%"
+      @selection-change="handleSelectionChange"
     >
       <!-- 选择列 -->
       <el-table-column type="selection" width="50" />
-      
+
       <!-- 设备名称 -->
       <el-table-column prop="name" label="设备名称" min-width="180">
         <template #default="{ row }">
@@ -20,12 +20,14 @@
             </el-icon>
             <div class="name-content">
               <div class="name-text">{{ row.name }}</div>
-              <div v-if="row.description" class="description-text">{{ row.description }}</div>
+              <div v-if="row.description" class="description-text">
+                {{ row.description }}
+              </div>
             </div>
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 协议类型 -->
       <el-table-column prop="protocol" label="协议类型" width="120">
         <template #default="{ row }">
@@ -34,27 +36,35 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <!-- 连接配置 -->
       <el-table-column label="连接配置" min-width="200">
         <template #default="{ row }">
           <div class="connection-config">
             <div v-if="row.connection_config.host" class="config-item">
               <span class="config-label">主机:</span>
-              <span class="config-value">{{ row.connection_config.host }}:{{ row.connection_config.port || 502 }}</span>
+              <span class="config-value"
+                >{{ row.connection_config.host }}:{{
+                  row.connection_config.port || 502
+                }}</span
+              >
             </div>
             <div v-if="row.connection_config.slave_id" class="config-item">
               <span class="config-label">从站ID:</span>
-              <span class="config-value">{{ row.connection_config.slave_id }}</span>
+              <span class="config-value">{{
+                row.connection_config.slave_id
+              }}</span>
             </div>
             <div v-if="row.connection_config.endpoint" class="config-item">
               <span class="config-label">端点:</span>
-              <span class="config-value">{{ row.connection_config.endpoint }}</span>
+              <span class="config-value">{{
+                row.connection_config.endpoint
+              }}</span>
             </div>
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 状态 -->
       <el-table-column prop="enabled" label="状态" width="80">
         <template #default="{ row }">
@@ -63,21 +73,21 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <!-- 创建时间 -->
       <el-table-column prop="created_at" label="创建时间" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.created_at) }}
         </template>
       </el-table-column>
-      
+
       <!-- 更新时间 -->
       <el-table-column prop="updated_at" label="更新时间" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.updated_at) }}
         </template>
       </el-table-column>
-      
+
       <!-- 操作列 -->
       <el-table-column label="操作" width="200" fixed="right">
         <template #default="{ row }">
@@ -93,9 +103,12 @@
                 <el-icon><Connection /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 启用/禁用 -->
-            <el-tooltip :content="row.enabled ? '禁用设备' : '启用设备'" placement="top">
+            <el-tooltip
+              :content="row.enabled ? '禁用设备' : '启用设备'"
+              placement="top"
+            >
               <el-button
                 :type="row.enabled ? 'warning' : 'success'"
                 link
@@ -106,7 +119,7 @@
                 <el-icon v-else><VideoPause /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 编辑 -->
             <el-tooltip content="编辑设备" placement="top">
               <el-button
@@ -118,7 +131,7 @@
                 <el-icon><Edit /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 删除 -->
             <el-tooltip content="删除设备" placement="top">
               <el-button
@@ -155,8 +168,16 @@
  *  - 2025-07-27  初始创建
  */
 
+import {
+  Monitor,
+  Connection,
+  VideoPlay,
+  VideoPause,
+  Edit,
+  Delete,
+} from '@element-plus/icons-vue'
+
 import type { DeviceVO } from '@/api/devices'
-import { Monitor, Connection, VideoPlay, VideoPause, Edit, Delete } from '@element-plus/icons-vue'
 import { formatDateTime } from '@/utils/date'
 
 // ===== Props =====
@@ -190,10 +211,10 @@ function handleSelectionChange(selection: DeviceVO[]) {
  */
 function getProtocolTagType(protocol: string): string {
   const typeMap: Record<string, string> = {
-    'ModbusTcp': 'primary',
-    'ModbusRtu': 'success',
-    'OpcUa': 'warning',
-    'Mqtt': 'info',
+    ModbusTcp: 'primary',
+    ModbusRtu: 'success',
+    OpcUa: 'warning',
+    Mqtt: 'info',
   }
   return typeMap[protocol] || 'default'
 }
@@ -203,10 +224,10 @@ function getProtocolTagType(protocol: string): string {
  */
 function getProtocolDisplayName(protocol: string): string {
   const nameMap: Record<string, string> = {
-    'ModbusTcp': 'Modbus TCP',
-    'ModbusRtu': 'Modbus RTU',
-    'OpcUa': 'OPC UA',
-    'Mqtt': 'MQTT',
+    ModbusTcp: 'Modbus TCP',
+    ModbusRtu: 'Modbus RTU',
+    OpcUa: 'OPC UA',
+    Mqtt: 'MQTT',
   }
   return nameMap[protocol] || protocol
 }
@@ -218,23 +239,23 @@ function getProtocolDisplayName(protocol: string): string {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .device-icon {
       color: #409eff;
       font-size: 16px;
       flex-shrink: 0;
     }
-    
+
     .name-content {
       min-width: 0;
       flex: 1;
-      
+
       .name-text {
         font-weight: 500;
         color: #303133;
         margin-bottom: 2px;
       }
-      
+
       .description-text {
         font-size: 12px;
         color: #909399;
@@ -245,37 +266,37 @@ function getProtocolDisplayName(protocol: string): string {
       }
     }
   }
-  
+
   .connection-config {
     .config-item {
       margin-bottom: 4px;
       font-size: 13px;
       line-height: 1.4;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
-      
+
       .config-label {
         color: #909399;
         margin-right: 4px;
       }
-      
+
       .config-value {
         color: #303133;
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
       }
     }
   }
-  
+
   .action-buttons {
     display: flex;
     align-items: center;
     gap: 4px;
-    
+
     .el-button {
       padding: 4px;
-      
+
       .el-icon {
         font-size: 14px;
       }
@@ -290,7 +311,7 @@ function getProtocolDisplayName(protocol: string): string {
       th {
         background-color: #fafafa;
         border-bottom: 1px solid #ebeef5;
-        
+
         .cell {
           font-weight: 600;
           color: #303133;
@@ -298,17 +319,17 @@ function getProtocolDisplayName(protocol: string): string {
       }
     }
   }
-  
+
   .el-table__body-wrapper {
     .el-table__body {
       tr {
         &:hover {
           background-color: #f5f7fa;
         }
-        
+
         td {
           border-bottom: 1px solid #f0f0f0;
-          
+
           .cell {
             padding: 8px 0;
           }
@@ -326,7 +347,7 @@ function getProtocolDisplayName(protocol: string): string {
         overflow-x: auto;
       }
     }
-    
+
     .device-name {
       .name-content {
         .description-text {
@@ -334,17 +355,17 @@ function getProtocolDisplayName(protocol: string): string {
         }
       }
     }
-    
+
     .connection-config {
       .config-item {
         font-size: 12px;
       }
     }
-    
+
     .action-buttons {
       flex-direction: column;
       gap: 2px;
-      
+
       .el-button {
         width: 100%;
         justify-content: center;

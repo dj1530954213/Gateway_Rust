@@ -8,7 +8,7 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-use crate::error::{RepoError, RepoResult};
+use crate::error::RepoResult;
 use crate::models::{
     DriverConfig, NewDriverConfig, DriverConfigUpdate, DriverConfigFilter
 };

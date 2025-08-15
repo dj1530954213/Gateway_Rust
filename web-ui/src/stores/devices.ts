@@ -1,487 +1,480 @@
 /**
- * 设备管理 Pinia Store
- * 
- * 管理设备列表、CRUD操作、搜索过滤等状态
+ * 设备管理 Pinia Store - 简化版本
+ * 避免复杂继承，直接使用defineStore
  */
 
 import { defineStore } from 'pinia'
-import { ref, computed, readonly } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { devicesApi } from '@/api'
-import type { 
-  DeviceVO, 
-  DeviceCreateReq, 
-  DevicePatchReq, 
-  DeviceQuery, 
-  ProtocolKind,
-  PaginatedResponse 
-} from '@/api/devices'
+import { ref, computed } from 'vue'
+import { ElMessage } from 'element-plus'
 
-export interface DeviceState {
-  // 设备列表数据
-  devices: DeviceVO[]
-  total: number
-  
-  // 分页信息
-  currentPage: number
-  pageSize: number
-  
-  // 加载状态
-  loading: boolean
-  
-  // 查询条件
-  query: DeviceQuery
-  
-  // 选中的设备
-  selectedDevices: DeviceVO[]
-  
-  // 当前编辑的设备
-  currentDevice: DeviceVO | null
+// 设备类型定义
+export interface Device {
+  id: string
+  name: string
+  protocol: string
+  endpoint: string
+  enabled: boolean
+  location?: string
+  description?: string
+  created_at?: string
+  updated_at?: string
+}
+
+export interface DeviceCreateReq {
+  name: string
+  protocol: string
+  endpoint: string
+  enabled?: boolean
+  location?: string
+  description?: string
+}
+
+export interface DeviceQuery {
+  page?: number
+  size?: number
+  name_contains?: string
+  protocol?: string
+  enabled?: boolean
 }
 
 export const useDevicesStore = defineStore('devices', () => {
-  // ===== 状态定义 =====
-  const state = ref<DeviceState>({
-    devices: [],
+  // 状态
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+  const devices = ref<Device[]>([])
+  const selectedDevices = ref<Device[]>([])
+  const currentDevice = ref<Device | null>(null)
+  
+  // 分页信息
+  const pagination = ref({
+    page: 1,
+    size: 20,
     total: 0,
-    currentPage: 1,
-    pageSize: 20,
-    loading: false,
-    query: {
-      page: 1,
-      size: 20,
-    },
-    selectedDevices: [],
-    currentDevice: null,
+    pages: 0
   })
 
-  // ===== 计算属性 =====
-  const totalPages = computed(() => {
-    return Math.ceil(state.value.total / state.value.pageSize)
+  // 搜索条件
+  const searchQuery = ref<DeviceQuery>({
+    page: 1,
+    size: 20
   })
 
-  const hasDevices = computed(() => {
-    return state.value.devices.length > 0
-  })
+  // 计算属性
+  const enabledDevices = computed(() => 
+    devices.value.filter(device => device.enabled)
+  )
 
-  const isLoading = computed(() => {
-    return state.value.loading
-  })
-
-  const enabledDevices = computed(() => {
-    return state.value.devices.filter(device => device.enabled)
-  })
-
-  const disabledDevices = computed(() => {
-    return state.value.devices.filter(device => !device.enabled)
-  })
+  const disabledDevices = computed(() => 
+    devices.value.filter(device => !device.enabled)
+  )
 
   const devicesByProtocol = computed(() => {
-    const grouped: Record<string, DeviceVO[]> = {}
-    state.value.devices.forEach(device => {
-      if (!grouped[device.protocol]) {
-        grouped[device.protocol] = []
+    const groups: Record<string, Device[]> = {}
+    devices.value.forEach(device => {
+      if (!groups[device.protocol]) {
+        groups[device.protocol] = []
       }
-      grouped[device.protocol].push(device)
+      groups[device.protocol].push(device)
     })
-    return grouped
+    return groups
   })
 
-  // ===== 操作方法 =====
+  const hasDevices = computed(() => devices.value.length > 0)
+  const isLoading = computed(() => loading.value)
+  const hasError = computed(() => error.value !== null)
 
-  /**
-   * 获取设备列表
-   */
-  async function fetchDevices(params?: Partial<DeviceQuery>) {
+  const totalPages = computed(() => 
+    Math.ceil(pagination.value.total / pagination.value.size)
+  )
+
+  const selectedIds = computed(() => 
+    selectedDevices.value.map(device => device.id)
+  )
+
+  // 操作方法
+  async function fetchDevices(query?: Partial<DeviceQuery>) {
+    loading.value = true
+    error.value = null
+    
     try {
-      state.value.loading = true
+      const finalQuery = { ...searchQuery.value, ...query }
+      const queryParams = new URLSearchParams()
       
-      const query = {
-        ...state.value.query,
-        ...params,
+      Object.entries(finalQuery).forEach(([key, value]) => {
+        if (value !== undefined && value !== null && value !== '') {
+          queryParams.append(key, String(value))
+        }
+      })
+      
+      const response = await fetch(`http://localhost:50016/api/devices?${queryParams}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
-
-      const response: PaginatedResponse<DeviceVO> = await devicesApi.list(query)
       
-      state.value.devices = response.items
-      state.value.total = response.total
-      state.value.currentPage = response.page
-      state.value.pageSize = response.size
+      const data = await response.json()
       
-      // 更新查询条件
-      state.value.query = { ...query }
+      // 适配不同的响应格式
+      if (data.success && data.data) {
+        devices.value = Array.isArray(data.data) ? data.data : []
+        pagination.value.total = data.total || devices.value.length
+      } else if (Array.isArray(data)) {
+        devices.value = data
+        pagination.value.total = data.length
+      } else if (data.data && Array.isArray(data.data)) {
+        devices.value = data.data
+        pagination.value.total = data.total || devices.value.length
+      } else {
+        devices.value = []
+        pagination.value.total = 0
+      }
       
-    } catch (error) {
-      console.error('获取设备列表失败:', error)
-      ElMessage.error('获取设备列表失败')
+      // 更新分页信息
+      pagination.value.page = finalQuery.page || 1
+      pagination.value.size = finalQuery.size || 20
+      pagination.value.pages = totalPages.value
+      
+      searchQuery.value = finalQuery
+      
+      return devices.value
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取设备列表失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
+      devices.value = []
+      return []
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 获取设备详情
-   */
-  async function fetchDevice(id: string): Promise<DeviceVO | null> {
+  async function fetchDevice(id: string) {
+    loading.value = true
+    error.value = null
+    
     try {
-      const device = await devicesApi.get(id)
-      state.value.currentDevice = device
+      const response = await fetch(`http://localhost:50016/api/devices/${id}`)
+      
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      const device = data.success ? data.data : data
+      
+      currentDevice.value = device
       return device
-    } catch (error) {
-      console.error('获取设备详情失败:', error)
-      ElMessage.error('获取设备详情失败')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '获取设备详情失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
       return null
+    } finally {
+      loading.value = false
     }
   }
 
-  /**
-   * 创建设备
-   */
-  async function createDevice(data: DeviceCreateReq): Promise<DeviceVO | null> {
+  async function createDevice(deviceData: DeviceCreateReq) {
+    loading.value = true
+    error.value = null
+    
     try {
-      state.value.loading = true
+      const response = await fetch('http://localhost:50016/api/devices', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(deviceData)
+      })
       
-      const device = await devicesApi.create(data)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
       
-      // 添加到列表开头
-      state.value.devices.unshift(device)
-      state.value.total += 1
+      const data = await response.json()
+      const newDevice = data.success ? data.data : data
+      
+      devices.value.unshift(newDevice)
+      pagination.value.total += 1
       
       ElMessage.success('设备创建成功')
-      return device
-      
-    } catch (error) {
-      console.error('创建设备失败:', error)
-      ElMessage.error('创建设备失败')
+      return newDevice
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '创建设备失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
       return null
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 更新设备
-   */
-  async function updateDevice(id: string, data: DevicePatchReq): Promise<DeviceVO | null> {
+  async function updateDevice(id: string, deviceData: Partial<DeviceCreateReq>) {
+    loading.value = true
+    error.value = null
+    
     try {
-      state.value.loading = true
+      const response = await fetch(`http://localhost:50016/api/devices/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(deviceData)
+      })
       
-      const updatedDevice = await devicesApi.update(id, data)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      const updatedDevice = data.success ? data.data : data
       
       // 更新列表中的设备
-      const index = state.value.devices.findIndex(d => d.id === id)
+      const index = devices.value.findIndex(device => device.id === id)
       if (index !== -1) {
-        state.value.devices[index] = updatedDevice
+        devices.value[index] = updatedDevice
       }
       
       // 更新当前设备
-      if (state.value.currentDevice?.id === id) {
-        state.value.currentDevice = updatedDevice
+      if (currentDevice.value && currentDevice.value.id === id) {
+        currentDevice.value = updatedDevice
       }
       
       ElMessage.success('设备更新成功')
       return updatedDevice
-      
-    } catch (error) {
-      console.error('更新设备失败:', error)
-      ElMessage.error('更新设备失败')
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '更新设备失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
       return null
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 删除设备
-   */
-  async function deleteDevice(id: string): Promise<boolean> {
+  async function deleteDevice(id: string) {
+    loading.value = true
+    error.value = null
+    
     try {
-      await ElMessageBox.confirm(
-        '确定要删除这个设备吗？删除后无法恢复。',
-        '确认删除',
-        {
-          type: 'warning',
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          confirmButtonClass: 'el-button--danger',
-        }
-      )
-
-      state.value.loading = true
+      const response = await fetch(`http://localhost:50016/api/devices/${id}`, {
+        method: 'DELETE'
+      })
       
-      await devicesApi.delete(id)
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+      }
       
       // 从列表中移除
-      state.value.devices = state.value.devices.filter(d => d.id !== id)
-      state.value.total -= 1
+      devices.value = devices.value.filter(device => device.id !== id)
+      pagination.value.total -= 1
       
       // 清除当前设备
-      if (state.value.currentDevice?.id === id) {
-        state.value.currentDevice = null
+      if (currentDevice.value && currentDevice.value.id === id) {
+        currentDevice.value = null
       }
       
       // 从选中列表中移除
-      state.value.selectedDevices = state.value.selectedDevices.filter(d => d.id !== id)
+      selectedDevices.value = selectedDevices.value.filter(device => device.id !== id)
       
       ElMessage.success('设备删除成功')
       return true
-      
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('删除设备失败:', error)
-        ElMessage.error('删除设备失败')
-      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '删除设备失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
       return false
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 批量删除设备
-   */
-  async function batchDeleteDevices(ids: string[]): Promise<boolean> {
+  async function batchDeleteDevices(ids: string[]) {
+    loading.value = true
+    error.value = null
+    
     try {
-      await ElMessageBox.confirm(
-        `确定要删除选中的 ${ids.length} 个设备吗？删除后无法恢复。`,
-        '确认批量删除',
-        {
-          type: 'warning',
-          confirmButtonText: '删除',
-          cancelButtonText: '取消',
-          confirmButtonClass: 'el-button--danger',
-        }
-      )
-
-      state.value.loading = true
-      
-      // 并行删除所有设备
       const results = await Promise.allSettled(
-        ids.map(id => devicesApi.delete(id))
+        ids.map(id => fetch(`http://localhost:50016/api/devices/${id}`, {
+          method: 'DELETE'
+        }))
       )
       
-      // 统计成功和失败的数量
-      const successCount = results.filter(r => r.status === 'fulfilled').length
-      const failedCount = results.filter(r => r.status === 'rejected').length
+      let successful = 0
+      let failed = 0
       
-      // 从列表中移除成功删除的设备
-      const successIds = ids.slice(0, successCount)
-      state.value.devices = state.value.devices.filter(d => !successIds.includes(d.id))
-      state.value.total -= successCount
+      results.forEach((result, index) => {
+        if (result.status === 'fulfilled' && result.value.ok) {
+          const id = ids[index]
+          devices.value = devices.value.filter(device => device.id !== id)
+          successful++
+        } else {
+          failed++
+        }
+      })
       
-      // 清空选中列表
-      state.value.selectedDevices = []
+      pagination.value.total -= successful
+      selectedDevices.value = []
       
-      if (failedCount === 0) {
-        ElMessage.success(`成功删除 ${successCount} 个设备`)
-      } else {
-        ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failedCount} 个`)
-      }
-      
-      return failedCount === 0
-      
-    } catch (error) {
-      if (error !== 'cancel') {
-        console.error('批量删除设备失败:', error)
-        ElMessage.error('批量删除设备失败')
-      }
-      return false
+      ElMessage.success(`批量删除完成：成功 ${successful} 项，失败 ${failed} 项`)
+      return { successful, failed }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '批量删除失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
+      return { successful: 0, failed: ids.length }
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 启用/禁用设备
-   */
-  async function toggleDevice(id: string, enabled: boolean): Promise<boolean> {
-    try {
-      const device = await devicesApi.update(id, { enabled })
-      
-      // 更新列表中的设备
-      const index = state.value.devices.findIndex(d => d.id === id)
-      if (index !== -1) {
-        state.value.devices[index] = device
-      }
-      
-      ElMessage.success(enabled ? '设备已启用' : '设备已禁用')
-      return true
-      
-    } catch (error) {
-      console.error('切换设备状态失败:', error)
-      ElMessage.error('操作失败')
-      return false
-    }
+  // 设备特定操作
+  async function toggleDevice(id: string) {
+    const device = devices.value.find(d => d.id === id)
+    if (!device) return false
+    
+    return updateDevice(id, { enabled: !device.enabled })
   }
 
-  /**
-   * 测试设备连接
-   */
-  async function testDeviceConnection(data: DeviceCreateReq): Promise<boolean> {
+  async function testDeviceConnection(id: string) {
+    loading.value = true
+    error.value = null
+    
     try {
-      state.value.loading = true
+      const response = await fetch(`http://localhost:50016/api/devices/${id}/test`, {
+        method: 'POST'
+      })
       
-      const result = await devicesApi.testConnection(data)
-      
-      if (result.success) {
-        ElMessage.success('连接测试成功')
-        return true
-      } else {
-        ElMessage.error(result.message || '连接测试失败')
-        return false
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`)
       }
       
-    } catch (error) {
-      console.error('测试连接失败:', error)
-      ElMessage.error('连接测试失败')
-      return false
+      const data = await response.json()
+      const result = data.success ? data.data : data
+      
+      ElMessage.success('设备连接测试成功')
+      return result
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '设备连接测试失败'
+      error.value = errorMessage
+      ElMessage.error(errorMessage)
+      return null
     } finally {
-      state.value.loading = false
+      loading.value = false
     }
   }
 
-  /**
-   * 搜索设备
-   */
-  async function searchDevices(keyword: string) {
-    await fetchDevices({
-      ...state.value.query,
+  // 搜索和过滤
+  function searchDevices(keyword: string) {
+    return fetchDevices({
       name_contains: keyword || undefined,
-      page: 1,
+      page: 1
     })
   }
 
-  /**
-   * 按协议筛选
-   */
-  async function filterByProtocol(protocol: ProtocolKind | undefined) {
-    await fetchDevices({
-      ...state.value.query,
-      protocol,
-      page: 1,
+  function filterByProtocol(protocol: string) {
+    return fetchDevices({
+      protocol: protocol || undefined,
+      page: 1
     })
   }
 
-  /**
-   * 按状态筛选
-   */
-  async function filterByStatus(enabled: boolean | undefined) {
-    await fetchDevices({
-      ...state.value.query,
+  function filterByStatus(enabled: boolean) {
+    return fetchDevices({
       enabled,
-      page: 1,
+      page: 1
     })
   }
 
-  /**
-   * 重置搜索条件
-   */
-  async function resetSearch() {
-    state.value.query = {
+  function resetSearch() {
+    return fetchDevices({
       page: 1,
-      size: state.value.pageSize,
-    }
-    await fetchDevices()
-  }
-
-  /**
-   * 分页跳转
-   */
-  async function changePage(page: number) {
-    await fetchDevices({
-      ...state.value.query,
-      page,
+      size: pagination.value.size
     })
   }
 
-  /**
-   * 更改分页大小
-   */
-  async function changePageSize(size: number) {
-    await fetchDevices({
-      ...state.value.query,
-      size,
-      page: 1,
-    })
+  // 分页操作
+  function changePage(page: number) {
+    return fetchDevices({ page })
   }
 
-  /**
-   * 选择设备
-   */
-  function selectDevices(devices: DeviceVO[]) {
-    state.value.selectedDevices = devices
+  function changePageSize(size: number) {
+    return fetchDevices({ size, page: 1 })
   }
 
-  /**
-   * 切换设备选择
-   */
-  function toggleSelectDevice(device: DeviceVO) {
-    const index = state.value.selectedDevices.findIndex(d => d.id === device.id)
+  // 选择操作
+  function selectDevices(deviceList: Device[]) {
+    selectedDevices.value = deviceList
+  }
+
+  function toggleSelectDevice(device: Device) {
+    const index = selectedDevices.value.findIndex(d => d.id === device.id)
     if (index !== -1) {
-      state.value.selectedDevices.splice(index, 1)
+      selectedDevices.value.splice(index, 1)
     } else {
-      state.value.selectedDevices.push(device)
+      selectedDevices.value.push(device)
     }
   }
 
-  /**
-   * 全选/取消全选
-   */
   function toggleSelectAll() {
-    if (state.value.selectedDevices.length === state.value.devices.length) {
-      state.value.selectedDevices = []
+    if (selectedDevices.value.length === devices.value.length) {
+      selectedDevices.value = []
     } else {
-      state.value.selectedDevices = [...state.value.devices]
+      selectedDevices.value = [...devices.value]
     }
   }
 
-  /**
-   * 清空选择
-   */
   function clearSelection() {
-    state.value.selectedDevices = []
+    selectedDevices.value = []
   }
 
-  /**
-   * 设置当前设备
-   */
-  function setCurrentDevice(device: DeviceVO | null) {
-    state.value.currentDevice = device
+  function setCurrentDevice(device: Device | null) {
+    currentDevice.value = device
   }
 
-  /**
-   * 刷新列表
-   */
-  async function refresh() {
-    await fetchDevices(state.value.query)
+  // 刷新
+  function refresh() {
+    return fetchDevices(searchQuery.value)
   }
 
-  /**
-   * 重置状态
-   */
+  // 重置
   function reset() {
-    state.value.devices = []
-    state.value.total = 0
-    state.value.currentPage = 1
-    state.value.pageSize = 20
-    state.value.loading = false
-    state.value.query = { page: 1, size: 20 }
-    state.value.selectedDevices = []
-    state.value.currentDevice = null
+    loading.value = false
+    error.value = null
+    devices.value = []
+    selectedDevices.value = []
+    currentDevice.value = null
+    pagination.value = {
+      page: 1,
+      size: 20,
+      total: 0,
+      pages: 0
+    }
+    searchQuery.value = {
+      page: 1,
+      size: 20
+    }
   }
 
-  // ===== 返回 Store API =====
   return {
     // 状态
-    state: readonly(state),
+    loading: computed(() => loading.value),
+    error: computed(() => error.value),
+    devices: computed(() => devices.value),
+    selectedDevices: computed(() => selectedDevices.value),
+    currentDevice: computed(() => currentDevice.value),
+    pagination: computed(() => pagination.value),
+    searchQuery: computed(() => searchQuery.value),
     
     // 计算属性
-    totalPages,
-    hasDevices,
-    isLoading,
     enabledDevices,
     disabledDevices,
     devicesByProtocol,
+    hasDevices,
+    isLoading,
+    hasError,
+    totalPages,
+    selectedIds,
     
     // 方法
     fetchDevices,
@@ -504,9 +497,8 @@ export const useDevicesStore = defineStore('devices', () => {
     clearSelection,
     setCurrentDevice,
     refresh,
-    reset,
+    reset
   }
 })
 
-// 类型导出
 export type DevicesStore = ReturnType<typeof useDevicesStore>

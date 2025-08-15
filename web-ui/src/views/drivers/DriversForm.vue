@@ -6,27 +6,38 @@
         <el-button :icon="ArrowLeft" @click="handleGoBack">
           返回列表
         </el-button>
-        
+
         <div class="header-title">
           <el-icon :size="24">
             <Setting />
           </el-icon>
           <h1>{{ isEditing ? '编辑驱动' : '创建驱动' }}</h1>
-          <el-tag v-if="driverForm.id" type="info">ID: {{ driverForm.id }}</el-tag>
+          <el-tag v-if="driverForm.id" type="info"
+            >ID: {{ driverForm.id }}</el-tag
+          >
         </div>
       </div>
-      
+
       <div class="header-actions">
-        <el-button :icon="Link" @click="handleTestConnection" :loading="testing">
+        <el-button
+          :icon="Link"
+          :loading="testing"
+          @click="handleTestConnection"
+        >
           测试连接
         </el-button>
-        
+
         <el-button @click="handleLoadTemplate">
           <el-icon><DocumentCopy /></el-icon>
           从模板加载
         </el-button>
-        
-        <el-button type="primary" :icon="Check" @click="handleSave" :loading="saving">
+
+        <el-button
+          type="primary"
+          :icon="Check"
+          :loading="saving"
+          @click="handleSave"
+        >
           {{ isEditing ? '更新配置' : '创建驱动' }}
         </el-button>
       </div>
@@ -39,11 +50,11 @@
           <div class="form-section">
             <h3>基本信息</h3>
             <BaseForm
+              ref="basicFormRef"
               v-model="driverForm"
               :fields="basicFields"
               :rules="formRules"
               label-width="140px"
-              ref="basicFormRef"
             />
           </div>
 
@@ -52,9 +63,11 @@
             <h3>
               <el-icon><Tools /></el-icon>
               {{ protocolConfig.title }}
-              <el-tag size="small" type="info">{{ protocolConfig.protocol }}</el-tag>
+              <el-tag size="small" type="info">{{
+                protocolConfig.protocol
+              }}</el-tag>
             </h3>
-            
+
             <ProtocolConfig
               v-model="driverForm.config"
               :protocol="driverForm.protocol"
@@ -78,7 +91,7 @@
               <BaseForm
                 v-model="driverForm"
                 :fields="retryFields"
-                :rules="retryRules" 
+                :rules="retryRules"
                 label-width="140px"
               />
             </el-collapse-item>
@@ -112,7 +125,7 @@
                 <el-icon><Refresh /></el-icon>
               </el-button>
             </h3>
-            
+
             <div class="config-preview">
               <el-tabs v-model="previewTab" size="small">
                 <el-tab-pane label="JSON" name="json">
@@ -120,16 +133,16 @@
                     <pre><code>{{ formatConfigJson() }}</code></pre>
                   </div>
                 </el-tab-pane>
-                
+
                 <el-tab-pane label="YAML" name="yaml">
                   <div class="yaml-preview">
                     <pre><code>{{ formatConfigYaml() }}</code></pre>
                   </div>
                 </el-tab-pane>
-                
+
                 <el-tab-pane label="摘要" name="summary">
                   <div class="config-summary">
-                    <ConfigValidation 
+                    <ConfigValidation
                       :config="driverForm"
                       :validation-rules="validationRules"
                     />
@@ -140,12 +153,12 @@
           </div>
 
           <!-- 连接状态 -->
-          <div class="status-section" v-if="isEditing">
+          <div v-if="isEditing" class="status-section">
             <h3>
               <el-icon><Connection /></el-icon>
               连接状态
             </h3>
-            
+
             <ConnectionStatus
               :status="driverStatus.status"
               :name="driverForm.name"
@@ -153,7 +166,7 @@
               :show-metrics="true"
               :metrics="driverStatus.metrics"
             />
-            
+
             <div class="status-details">
               <el-descriptions :column="1" size="small" border>
                 <el-descriptions-item label="运行时间">
@@ -180,7 +193,7 @@
               <el-icon><Operation /></el-icon>
               快速操作
             </h3>
-            
+
             <div class="action-buttons">
               <el-button-group>
                 <el-button :icon="Document" @click="handleExportConfig">
@@ -190,7 +203,7 @@
                   导入配置
                 </el-button>
               </el-button-group>
-              
+
               <el-button-group>
                 <el-button :icon="CopyDocument" @click="handleCopyConfig">
                   复制配置
@@ -206,15 +219,13 @@
     </div>
 
     <!-- 连接测试对话框 -->
-    <el-dialog
-      v-model="testDialogVisible"
-      title="连接测试结果"
-      width="600px"
-    >
+    <el-dialog v-model="testDialogVisible" title="连接测试结果" width="600px">
       <div class="test-result">
         <div class="result-header">
           <el-icon :size="24" :class="testResult.success ? 'success' : 'error'">
-            <component :is="testResult.success ? 'CircleCheck' : 'CircleClose'" />
+            <component
+              :is="testResult.success ? 'CircleCheck' : 'CircleClose'"
+            />
           </el-icon>
           <div class="result-info">
             <h3>{{ testResult.success ? '连接成功' : '连接失败' }}</h3>
@@ -255,7 +266,7 @@
       width="800px"
     >
       <div class="template-grid">
-        <div 
+        <div
           v-for="template in driverTemplates"
           :key="template.id"
           class="template-card"
@@ -274,10 +285,14 @@
               {{ template.protocol }}
             </el-tag>
           </div>
-          
+
           <div class="template-config">
             <div class="config-items">
-              <span class="config-item" v-for="item in template.configItems" :key="item">
+              <span
+                v-for="item in template.configItems"
+                :key="item"
+                class="config-item"
+              >
                 {{ item }}
               </span>
             </div>
@@ -287,10 +302,10 @@
 
       <template #footer>
         <el-button @click="templateDialogVisible = false">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="handleApplyTemplate"
+        <el-button
+          type="primary"
           :disabled="!selectedTemplate"
+          @click="handleApplyTemplate"
         >
           应用模板
         </el-button>
@@ -300,9 +315,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
   Setting,
@@ -319,26 +331,35 @@ import {
   CopyDocument,
   DeleteFilled,
   CircleCheck,
-  CircleClose
+  CircleClose,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, reactive, onMounted, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 // 导入组件
+import { driverConfigsApi } from '../../api/drivers'
 import { BaseForm } from '../../components/base'
-import { 
+import {
   ProtocolConfig,
   ConfigValidation,
-  ConnectionStatus
+  ConnectionStatus,
 } from '../../components/business'
 
 // 导入API
-import { driverConfigsApi } from '../../api/drivers'
 
 // 类型定义
 interface DriverForm {
   id: string
   name: string
   description: string
-  protocol: 'modbus_tcp' | 'modbus_rtu' | 'opcua' | 'mqtt' | 'ethernet_ip' | 'bacnet'
+  protocol:
+    | 'modbus_tcp'
+    | 'modbus_rtu'
+    | 'opcua'
+    | 'mqtt'
+    | 'ethernet_ip'
+    | 'bacnet'
   connectionType: 'ethernet' | 'serial'
   enabled: boolean
   config: Record<string, any>
@@ -424,31 +445,31 @@ const driverForm = ref<DriverForm>({
     scanInterval: 1000,
     timeout: 5000,
     maxConcurrentRequests: 10,
-    batchSize: 100
+    batchSize: 100,
   },
   retry: {
     maxRetries: 3,
     retryInterval: 1000,
     exponentialBackoff: true,
-    maxRetryInterval: 10000
+    maxRetryInterval: 10000,
   },
   logging: {
     level: 'info',
     enableRequestLog: false,
     enableResponseLog: false,
-    maxLogSize: 10
+    maxLogSize: 10,
   },
   security: {
     enableSsl: false,
-    verifyCertificate: true
-  }
+    verifyCertificate: true,
+  },
 })
 
 const testResult = ref<TestResult>({
   success: false,
   message: '',
   timestamp: new Date(),
-  responseTime: 0
+  responseTime: 0,
 })
 
 const driverStatus = ref<DriverStatus>({
@@ -457,7 +478,7 @@ const driverStatus = ref<DriverStatus>({
   messageCount: 0,
   errorCount: 0,
   lastUpdate: new Date(),
-  metrics: {}
+  metrics: {},
 })
 
 // 模拟模板数据
@@ -471,9 +492,9 @@ const driverTemplates = ref<DriverTemplate[]>([
       host: '',
       port: 502,
       unitId: 1,
-      timeout: 5000
+      timeout: 5000,
     },
-    configItems: ['主机地址', '端口号', '单元ID', '超时时间']
+    configItems: ['主机地址', '端口号', '单元ID', '超时时间'],
   },
   {
     id: '2',
@@ -483,9 +504,9 @@ const driverTemplates = ref<DriverTemplate[]>([
     config: {
       endpoint: 'opc.tcp://localhost:4840',
       securityPolicy: 'Basic256Sha256',
-      messageSecurityMode: 'SignAndEncrypt'
+      messageSecurityMode: 'SignAndEncrypt',
     },
-    configItems: ['端点URL', '安全策略', '消息安全模式', '用户认证']
+    configItems: ['端点URL', '安全策略', '消息安全模式', '用户认证'],
   },
   {
     id: '3',
@@ -497,10 +518,10 @@ const driverTemplates = ref<DriverTemplate[]>([
       baudRate: 9600,
       dataBits: 8,
       parity: 'None',
-      stopBits: 1
+      stopBits: 1,
     },
-    configItems: ['串口号', '波特率', '数据位', '校验位', '停止位']
-  }
+    configItems: ['串口号', '波特率', '数据位', '校验位', '停止位'],
+  },
 ])
 
 // 计算属性
@@ -513,7 +534,7 @@ const protocolConfig = computed(() => {
     opcua: { title: 'OPC UA 配置', protocol: 'OPC UA' },
     mqtt: { title: 'MQTT 配置', protocol: 'MQTT' },
     ethernet_ip: { title: 'EtherNet/IP 配置', protocol: 'EtherNet/IP' },
-    bacnet: { title: 'BACnet 配置', protocol: 'BACnet' }
+    bacnet: { title: 'BACnet 配置', protocol: 'BACnet' },
   }
   return configs[driverForm.value.protocol] || configs.modbus_tcp
 })
@@ -525,13 +546,13 @@ const basicFields = computed(() => [
     label: '驱动名称',
     type: 'input',
     required: true,
-    placeholder: '请输入驱动名称'
+    placeholder: '请输入驱动名称',
   },
   {
     name: 'description',
     label: '驱动描述',
     type: 'textarea',
-    placeholder: '请输入驱动描述（可选）'
+    placeholder: '请输入驱动描述（可选）',
   },
   {
     name: 'protocol',
@@ -544,8 +565,8 @@ const basicFields = computed(() => [
       { label: 'OPC UA', value: 'opcua' },
       { label: 'MQTT', value: 'mqtt' },
       { label: 'EtherNet/IP', value: 'ethernet_ip' },
-      { label: 'BACnet', value: 'bacnet' }
-    ]
+      { label: 'BACnet', value: 'bacnet' },
+    ],
   },
   {
     name: 'connectionType',
@@ -554,16 +575,16 @@ const basicFields = computed(() => [
     required: true,
     options: [
       { label: '以太网', value: 'ethernet' },
-      { label: '串口', value: 'serial' }
-    ]
+      { label: '串口', value: 'serial' },
+    ],
   },
   {
     name: 'enabled',
     label: '启用状态',
     type: 'switch',
     activeText: '启用',
-    inactiveText: '禁用'
-  }
+    inactiveText: '禁用',
+  },
 ])
 
 const performanceFields = [
@@ -573,7 +594,7 @@ const performanceFields = [
     type: 'number',
     min: 100,
     max: 60000,
-    placeholder: '数据扫描间隔'
+    placeholder: '数据扫描间隔',
   },
   {
     name: 'performance.timeout',
@@ -581,7 +602,7 @@ const performanceFields = [
     type: 'number',
     min: 1000,
     max: 30000,
-    placeholder: '单次请求超时时间'
+    placeholder: '单次请求超时时间',
   },
   {
     name: 'performance.maxConcurrentRequests',
@@ -589,7 +610,7 @@ const performanceFields = [
     type: 'number',
     min: 1,
     max: 50,
-    placeholder: '最大同时请求数量'
+    placeholder: '最大同时请求数量',
   },
   {
     name: 'performance.batchSize',
@@ -597,8 +618,8 @@ const performanceFields = [
     type: 'number',
     min: 1,
     max: 1000,
-    placeholder: '批量读取数据点数量'
-  }
+    placeholder: '批量读取数据点数量',
+  },
 ]
 
 const retryFields = [
@@ -607,29 +628,29 @@ const retryFields = [
     label: '最大重试次数',
     type: 'number',
     min: 0,
-    max: 10
+    max: 10,
   },
   {
     name: 'retry.retryInterval',
     label: '重试间隔(ms)',
     type: 'number',
     min: 100,
-    max: 10000
+    max: 10000,
   },
   {
     name: 'retry.exponentialBackoff',
     label: '指数退避',
     type: 'switch',
     activeText: '启用',
-    inactiveText: '禁用'
+    inactiveText: '禁用',
   },
   {
     name: 'retry.maxRetryInterval',
     label: '最大重试间隔(ms)',
     type: 'number',
     min: 1000,
-    max: 60000
-  }
+    max: 60000,
+  },
 ]
 
 const loggingFields = [
@@ -642,83 +663,81 @@ const loggingFields = [
       { label: '警告 (Warn)', value: 'warn' },
       { label: '信息 (Info)', value: 'info' },
       { label: '调试 (Debug)', value: 'debug' },
-      { label: '跟踪 (Trace)', value: 'trace' }
-    ]
+      { label: '跟踪 (Trace)', value: 'trace' },
+    ],
   },
   {
     name: 'logging.enableRequestLog',
     label: '记录请求日志',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'logging.enableResponseLog',
     label: '记录响应日志',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'logging.maxLogSize',
     label: '最大日志大小(MB)',
     type: 'number',
     min: 1,
-    max: 100
-  }
+    max: 100,
+  },
 ]
 
 const securityFields = [
   {
     name: 'security.enableSsl',
     label: '启用SSL/TLS',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'security.verifyCertificate',
     label: '验证证书',
-    type: 'switch'
+    type: 'switch',
   },
   {
     name: 'security.clientCertPath',
     label: '客户端证书路径',
     type: 'input',
-    placeholder: '客户端证书文件路径'
+    placeholder: '客户端证书文件路径',
   },
   {
     name: 'security.clientKeyPath',
     label: '客户端密钥路径',
     type: 'input',
-    placeholder: '客户端密钥文件路径'
-  }
+    placeholder: '客户端密钥文件路径',
+  },
 ]
 
 // 验证规则
 const formRules = {
   name: [
     { required: true, message: '请输入驱动名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '名称长度应在2-50字符之间', trigger: 'blur' }
+    { min: 2, max: 50, message: '名称长度应在2-50字符之间', trigger: 'blur' },
   ],
-  protocol: [
-    { required: true, message: '请选择通信协议', trigger: 'change' }
-  ],
+  protocol: [{ required: true, message: '请选择通信协议', trigger: 'change' }],
   connectionType: [
-    { required: true, message: '请选择连接方式', trigger: 'change' }
-  ]
+    { required: true, message: '请选择连接方式', trigger: 'change' },
+  ],
 }
 
 const performanceRules = {
   'performance.scanInterval': [
-    { required: true, message: '请输入扫描间隔', trigger: 'blur' }
+    { required: true, message: '请输入扫描间隔', trigger: 'blur' },
   ],
   'performance.timeout': [
-    { required: true, message: '请输入请求超时时间', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入请求超时时间', trigger: 'blur' },
+  ],
 }
 
 const retryRules = {
   'retry.maxRetries': [
-    { required: true, message: '请输入最大重试次数', trigger: 'blur' }
+    { required: true, message: '请输入最大重试次数', trigger: 'blur' },
   ],
   'retry.retryInterval': [
-    { required: true, message: '请输入重试间隔', trigger: 'blur' }
-  ]
+    { required: true, message: '请输入重试间隔', trigger: 'blur' },
+  ],
 }
 
 const validationRules = computed(() => ({
@@ -727,8 +746,8 @@ const validationRules = computed(() => ({
   ranges: {
     'config.port': { min: 1, max: 65535 },
     'performance.scanInterval': { min: 100, max: 60000 },
-    'performance.timeout': { min: 1000, max: 30000 }
-  }
+    'performance.timeout': { min: 1000, max: 30000 },
+  },
 }))
 
 // 方法
@@ -759,7 +778,7 @@ const formatConfigYaml = () => {
   try {
     const obj = driverForm.value
     let yaml = ''
-    
+
     const toYaml = (obj: any, indent = 0) => {
       const spaces = '  '.repeat(indent)
       for (const [key, value] of Object.entries(obj)) {
@@ -771,7 +790,7 @@ const formatConfigYaml = () => {
         }
       }
     }
-    
+
     toYaml(obj)
     return yaml
   } catch (error) {
@@ -784,9 +803,9 @@ const getProtocolIcon = (protocol: string) => {
     'Modbus TCP': 'Connection',
     'Modbus RTU': 'Link',
     'OPC UA': 'Setting',
-    'MQTT': 'Connection',
+    MQTT: 'Connection',
     'EtherNet/IP': 'Link',
-    'BACnet': 'Setting'
+    BACnet: 'Setting',
   }
   return icons[protocol] || 'Setting'
 }
@@ -796,9 +815,9 @@ const getProtocolTagType = (protocol: string) => {
     'Modbus TCP': 'primary',
     'Modbus RTU': 'success',
     'OPC UA': 'warning',
-    'MQTT': 'info',
+    MQTT: 'info',
     'EtherNet/IP': 'danger',
-    'BACnet': 'primary'
+    BACnet: 'primary',
   }
   return types[protocol] || 'info'
 }
@@ -816,9 +835,9 @@ const handleSave = async () => {
     ElMessage.error('请检查表单填写')
     return
   }
-  
+
   saving.value = true
-  
+
   try {
     if (isEditing.value) {
       // 更新驱动配置
@@ -846,7 +865,7 @@ const handleSave = async () => {
         client_cert_path: driverForm.value.security.clientCertPath,
         client_key_path: driverForm.value.security.clientKeyPath,
       }
-      
+
       await driverConfigsApi.update(driverForm.value.id, updateReq)
       ElMessage.success('驱动配置已更新')
     } else {
@@ -875,20 +894,20 @@ const handleSave = async () => {
         client_cert_path: driverForm.value.security.clientCertPath,
         client_key_path: driverForm.value.security.clientKeyPath,
       }
-      
+
       const response = await driverConfigsApi.create(createReq)
       driverForm.value.id = response.driver_config.id
       ElMessage.success('驱动创建成功')
     }
-    
+
     // 返回列表
     setTimeout(() => {
       router.push('/drivers')
     }, 1000)
-    
   } catch (error: any) {
     console.error('保存驱动配置失败:', error)
-    const errorMessage = error?.response?.data?.message || error?.message || '保存失败，请重试'
+    const errorMessage =
+      error?.response?.data?.message || error?.message || '保存失败，请重试'
     ElMessage.error(errorMessage)
   } finally {
     saving.value = false
@@ -897,28 +916,27 @@ const handleSave = async () => {
 
 const handleTestConnection = async () => {
   testing.value = true
-  
+
   try {
     // 模拟连接测试
     await new Promise(resolve => setTimeout(resolve, 3000))
-    
+
     const success = Math.random() > 0.3
     testResult.value = {
       success,
-      message: success 
-        ? '连接测试成功，设备响应正常' 
+      message: success
+        ? '连接测试成功，设备响应正常'
         : '连接测试失败，请检查网络和配置',
       timestamp: new Date(),
       responseTime: Math.floor(Math.random() * 500) + 100,
       protocolVersion: success ? 'v1.0' : undefined,
       deviceInfo: success ? 'Device Model: ABC-123' : undefined,
-      logs: success 
+      logs: success
         ? '连接建立...\n握手成功\n读取设备信息\n测试完成'
-        : '连接尝试...\n连接超时\n无法建立连接\n测试失败'
+        : '连接尝试...\n连接超时\n无法建立连接\n测试失败',
     }
-    
+
     testDialogVisible.value = true
-    
   } catch (error) {
     ElMessage.error('连接测试异常')
   } finally {
@@ -932,12 +950,12 @@ const handleLoadTemplate = () => {
 
 const handleApplyTemplate = () => {
   if (!selectedTemplate.value) return
-  
+
   const template = selectedTemplate.value
-  
+
   // 应用模板配置
   Object.assign(driverForm.value.config, template.config)
-  
+
   // 根据协议设置其他字段
   if (template.protocol === 'Modbus TCP') {
     driverForm.value.protocol = 'modbus_tcp'
@@ -949,10 +967,10 @@ const handleApplyTemplate = () => {
     driverForm.value.protocol = 'opcua'
     driverForm.value.connectionType = 'ethernet'
   }
-  
+
   templateDialogVisible.value = false
   selectedTemplate.value = null
-  
+
   ElMessage.success(`已应用模板：${template.name}`)
 }
 
@@ -967,19 +985,19 @@ const handleExportConfig = () => {
   const exportData = {
     driver: driverForm.value,
     exportTime: new Date().toISOString(),
-    version: '1.0'
+    version: '1.0',
   }
-  
+
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `driver_${driverForm.value.name || 'config'}_${new Date().toISOString().split('T')[0]}.json`
   a.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('配置导出成功')
 }
@@ -988,12 +1006,12 @@ const handleImportConfig = () => {
   const input = document.createElement('input')
   input.type = 'file'
   input.accept = '.json'
-  input.onchange = (e) => {
+  input.onchange = e => {
     const file = (e.target as HTMLInputElement).files?.[0]
     if (!file) return
-    
+
     const reader = new FileReader()
-    reader.onload = (e) => {
+    reader.onload = e => {
       try {
         const data = JSON.parse(e.target?.result as string)
         if (data.driver) {
@@ -1027,7 +1045,7 @@ const handleResetForm = () => {
     {
       confirmButtonText: '确定',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     }
   ).then(() => {
     // 重置表单到初始状态
@@ -1043,26 +1061,26 @@ const handleResetForm = () => {
         scanInterval: 1000,
         timeout: 5000,
         maxConcurrentRequests: 10,
-        batchSize: 100
+        batchSize: 100,
       },
       retry: {
         maxRetries: 3,
         retryInterval: 1000,
         exponentialBackoff: true,
-        maxRetryInterval: 10000
+        maxRetryInterval: 10000,
       },
       logging: {
         level: 'info',
         enableRequestLog: false,
         enableResponseLog: false,
-        maxLogSize: 10
+        maxLogSize: 10,
       },
       security: {
         enableSsl: false,
-        verifyCertificate: true
-      }
+        verifyCertificate: true,
+      },
     })
-    
+
     ElMessage.success('表单已重置')
   })
 }
@@ -1072,49 +1090,53 @@ const refreshPreview = () => {
 }
 
 // 监听协议变化，更新配置预设
-watch(() => driverForm.value.protocol, (newProtocol) => {
-  // 根据协议类型设置默认配置
-  const defaultConfigs = {
-    modbus_tcp: {
-      host: '',
-      port: 502,
-      unitId: 1
-    },
-    modbus_rtu: {
-      serialPort: 'COM1',
-      baudRate: 9600,
-      unitId: 1
-    },
-    opcua: {
-      endpoint: 'opc.tcp://localhost:4840',
-      securityPolicy: 'None'
-    },
-    mqtt: {
-      broker: 'mqtt://localhost:1883',
-      topic: 'data/#'
-    },
-    ethernet_ip: {
-      host: '',
-      port: 44818
-    },
-    bacnet: {
-      host: '',
-      port: 47808,
-      deviceId: 1001
+watch(
+  () => driverForm.value.protocol,
+  newProtocol => {
+    // 根据协议类型设置默认配置
+    const defaultConfigs = {
+      modbus_tcp: {
+        host: '',
+        port: 502,
+        unitId: 1,
+      },
+      modbus_rtu: {
+        serialPort: 'COM1',
+        baudRate: 9600,
+        unitId: 1,
+      },
+      opcua: {
+        endpoint: 'opc.tcp://localhost:4840',
+        securityPolicy: 'None',
+      },
+      mqtt: {
+        broker: 'mqtt://localhost:1883',
+        topic: 'data/#',
+      },
+      ethernet_ip: {
+        host: '',
+        port: 44818,
+      },
+      bacnet: {
+        host: '',
+        port: 47808,
+        deviceId: 1001,
+      },
     }
-  }
-  
-  if (!Object.keys(driverForm.value.config).length) {
-    driverForm.value.config = defaultConfigs[newProtocol] || {}
-  }
-}, { immediate: true })
+
+    if (!Object.keys(driverForm.value.config).length) {
+      driverForm.value.config = defaultConfigs[newProtocol] || {}
+    }
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(async () => {
   if (isEditing.value) {
     // 模拟加载现有驱动配置
     const driverId = route.params.id as string
-    
+
     // 模拟驱动数据
     const mockDriver = {
       id: driverId,
@@ -1126,34 +1148,34 @@ onMounted(async () => {
       config: {
         host: '',
         port: 502,
-        unitId: 1
+        unitId: 1,
       },
       performance: {
         scanInterval: 1000,
         timeout: 5000,
         maxConcurrentRequests: 10,
-        batchSize: 100
+        batchSize: 100,
       },
       retry: {
         maxRetries: 3,
         retryInterval: 1000,
         exponentialBackoff: true,
-        maxRetryInterval: 10000
+        maxRetryInterval: 10000,
       },
       logging: {
         level: 'info' as const,
         enableRequestLog: true,
         enableResponseLog: false,
-        maxLogSize: 10
+        maxLogSize: 10,
       },
       security: {
         enableSsl: false,
-        verifyCertificate: true
-      }
+        verifyCertificate: true,
+      },
     }
-    
+
     Object.assign(driverForm.value, mockDriver)
-    
+
     // 模拟驱动状态
     driverStatus.value = {
       status: 'connected',
@@ -1164,8 +1186,8 @@ onMounted(async () => {
       metrics: {
         readRate: 850,
         writeRate: 120,
-        avgLatency: 45
-      }
+        avgLatency: 45,
+      },
     }
   }
 })

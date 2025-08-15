@@ -5,15 +5,17 @@
       <div class="header-content">
         <div class="title-section">
           <h1 class="page-title">报警规则管理</h1>
-          <p class="page-description">配置和管理设备数据的报警规则，实现智能监控和及时预警</p>
+          <p class="page-description">
+            配置和管理设备数据的报警规则，实现智能监控和及时预警
+          </p>
         </div>
-        
+
         <div class="header-actions">
           <el-button type="primary" @click="showCreateDialog = true">
             <el-icon><Plus /></el-icon>
             新建规则
           </el-button>
-          <el-button @click="refreshRules" :loading="loading">
+          <el-button :loading="loading" @click="refreshRules">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -21,7 +23,10 @@
             <el-icon><Upload /></el-icon>
             导入规则
           </el-button>
-          <el-button @click="exportRules" :disabled="selectedRules.length === 0">
+          <el-button
+            :disabled="selectedRules.length === 0"
+            @click="exportRules"
+          >
             <el-icon><Download /></el-icon>
             导出规则
           </el-button>
@@ -36,7 +41,11 @@
         <div class="filter-row">
           <div class="filter-item">
             <label class="filter-label">规则状态</label>
-            <el-select v-model="filterForm.status" placeholder="选择状态" style="width: 150px">
+            <el-select
+              v-model="filterForm.status"
+              placeholder="选择状态"
+              style="width: 150px"
+            >
               <el-option label="全部" value="" />
               <el-option label="启用" value="enabled" />
               <el-option label="禁用" value="disabled" />
@@ -46,7 +55,11 @@
 
           <div class="filter-item">
             <label class="filter-label">报警级别</label>
-            <el-select v-model="filterForm.severity" placeholder="选择级别" style="width: 150px">
+            <el-select
+              v-model="filterForm.severity"
+              placeholder="选择级别"
+              style="width: 150px"
+            >
               <el-option label="全部" value="" />
               <el-option label="严重" value="critical" />
               <el-option label="警告" value="warning" />
@@ -138,16 +151,18 @@
           >
             全选
           </el-checkbox>
-          <span class="selection-info" v-if="selectedRules.length > 0">
+          <span v-if="selectedRules.length > 0" class="selection-info">
             已选择 {{ selectedRules.length }} 条规则
           </span>
         </div>
 
         <div class="toolbar-right">
-          <div class="batch-actions" v-if="selectedRules.length > 0">
+          <div v-if="selectedRules.length > 0" class="batch-actions">
             <el-button size="small" @click="batchEnable">批量启用</el-button>
             <el-button size="small" @click="batchDisable">批量禁用</el-button>
-            <el-button size="small" type="danger" @click="batchDelete">批量删除</el-button>
+            <el-button size="small" type="danger" @click="batchDelete"
+              >批量删除</el-button
+            >
           </div>
 
           <div class="view-options">
@@ -168,7 +183,7 @@
             v-for="rule in filteredRules"
             :key="rule.id"
             class="rule-item"
-            :class="{ 'selected': selectedRules.includes(rule.id) }"
+            :class="{ selected: selectedRules.includes(rule.id) }"
             @click="selectRule(rule.id)"
           >
             <div class="rule-checkbox">
@@ -183,35 +198,41 @@
               <div class="rule-header">
                 <div class="rule-name">
                   <span class="name-text">{{ rule.name }}</span>
-                  <el-tag
-                    :type="getRuleStatusType(rule.status)"
-                    size="small"
-                  >
+                  <el-tag :type="getRuleStatusType(rule.status)" size="small">
                     {{ getRuleStatusText(rule.status) }}
                   </el-tag>
-                  <el-tag
-                    :type="getSeverityType(rule.severity)"
-                    size="small"
-                  >
+                  <el-tag :type="getSeverityType(rule.severity)" size="small">
                     {{ getSeverityText(rule.severity) }}
                   </el-tag>
                 </div>
-                
+
                 <div class="rule-actions">
                   <el-tooltip content="编辑规则">
-                    <el-button type="link" size="small" @click.stop="editRule(rule)">
+                    <el-button
+                      type="link"
+                      size="small"
+                      @click.stop="editRule(rule)"
+                    >
                       <el-icon><Edit /></el-icon>
                     </el-button>
                   </el-tooltip>
-                  
+
                   <el-tooltip content="测试规则">
-                    <el-button type="link" size="small" @click.stop="testRule(rule)">
+                    <el-button
+                      type="link"
+                      size="small"
+                      @click.stop="testRule(rule)"
+                    >
                       <el-icon><VideoPlay /></el-icon>
                     </el-button>
                   </el-tooltip>
-                  
+
                   <el-tooltip content="复制规则">
-                    <el-button type="link" size="small" @click.stop="copyRule(rule)">
+                    <el-button
+                      type="link"
+                      size="small"
+                      @click.stop="copyRule(rule)"
+                    >
                       <el-icon><CopyDocument /></el-icon>
                     </el-button>
                   </el-tooltip>
@@ -250,22 +271,30 @@
               <div class="rule-details">
                 <div class="detail-item">
                   <span class="detail-label">监控设备:</span>
-                  <span class="detail-value">{{ rule.deviceNames?.join(', ') || '未设置' }}</span>
+                  <span class="detail-value">{{
+                    rule.deviceNames?.join(', ') || '未设置'
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">监控点位:</span>
-                  <span class="detail-value">{{ rule.tagNames?.join(', ') || '未设置' }}</span>
+                  <span class="detail-value">{{
+                    rule.tagNames?.join(', ') || '未设置'
+                  }}</span>
                 </div>
                 <div class="detail-item">
                   <span class="detail-label">触发条件:</span>
-                  <span class="detail-value">{{ formatConditions(rule.conditions) }}</span>
+                  <span class="detail-value">{{
+                    formatConditions(rule.conditions)
+                  }}</span>
                 </div>
               </div>
 
               <div class="rule-stats">
                 <div class="stats-item">
                   <span class="stats-label">最近触发:</span>
-                  <span class="stats-value">{{ formatDateTime(rule.lastTriggered) }}</span>
+                  <span class="stats-value">{{
+                    formatDateTime(rule.lastTriggered)
+                  }}</span>
                 </div>
                 <div class="stats-item">
                   <span class="stats-label">触发次数:</span>
@@ -273,7 +302,9 @@
                 </div>
                 <div class="stats-item">
                   <span class="stats-label">创建时间:</span>
-                  <span class="stats-value">{{ formatDateTime(rule.createdAt) }}</span>
+                  <span class="stats-value">{{
+                    formatDateTime(rule.createdAt)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -281,10 +312,7 @@
 
           <!-- 空状态 -->
           <div v-if="filteredRules.length === 0" class="empty-state">
-            <el-empty
-              description="暂无报警规则"
-              :image-size="120"
-            >
+            <el-empty description="暂无报警规则" :image-size="120">
               <template #description>
                 <p>还没有配置任何报警规则</p>
                 <p>点击"新建规则"开始创建您的第一个报警规则</p>
@@ -302,7 +330,7 @@
             v-for="rule in filteredRules"
             :key="rule.id"
             class="rule-card"
-            :class="{ 'selected': selectedRules.includes(rule.id) }"
+            :class="{ selected: selectedRules.includes(rule.id) }"
           >
             <div class="card-header">
               <div class="card-title">
@@ -312,12 +340,9 @@
                 />
                 <span class="title-text">{{ rule.name }}</span>
               </div>
-              
+
               <div class="card-status">
-                <el-tag
-                  :type="getRuleStatusType(rule.status)"
-                  size="small"
-                >
+                <el-tag :type="getRuleStatusType(rule.status)" size="small">
                   {{ getRuleStatusText(rule.status) }}
                 </el-tag>
               </div>
@@ -341,7 +366,9 @@
                 </div>
                 <div class="metric-item">
                   <span class="metric-label">最近触发</span>
-                  <span class="metric-value">{{ formatRelativeTime(rule.lastTriggered) }}</span>
+                  <span class="metric-value">{{
+                    formatRelativeTime(rule.lastTriggered)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -366,15 +393,12 @@
             @selection-change="handleTableSelectionChange"
           >
             <el-table-column type="selection" width="50" />
-            
+
             <el-table-column prop="name" label="规则名称" width="200">
               <template #default="{ row }">
                 <div class="rule-name-cell">
                   <span class="name-text">{{ row.name }}</span>
-                  <el-tag
-                    :type="getRuleStatusType(row.status)"
-                    size="small"
-                  >
+                  <el-tag :type="getRuleStatusType(row.status)" size="small">
                     {{ getRuleStatusText(row.status) }}
                   </el-tag>
                 </div>
@@ -419,8 +443,8 @@
                   </el-button>
                   <el-switch
                     :model-value="row.status === 'enabled'"
-                    @change="toggleRuleStatus(row)"
                     size="small"
+                    @change="toggleRuleStatus(row)"
                   />
                 </div>
               </template>
@@ -430,7 +454,7 @@
       </div>
 
       <!-- 分页 -->
-      <div class="pagination-container" v-if="filteredRules.length > 0">
+      <div v-if="filteredRules.length > 0" class="pagination-container">
         <el-pagination
           v-model:current-page="pagination.currentPage"
           v-model:page-size="pagination.pageSize"
@@ -452,10 +476,7 @@
     />
 
     <!-- 规则测试对话框 -->
-    <AlertRuleTest
-      v-model:visible="showTestDialog"
-      :rule="testingRule"
-    />
+    <AlertRuleTest v-model:visible="showTestDialog" :rule="testingRule" />
 
     <!-- 导入规则对话框 -->
     <AlertRuleImport
@@ -485,9 +506,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,
   Refresh,
@@ -497,16 +515,19 @@ import {
   Edit,
   VideoPlay,
   CopyDocument,
-  MoreFilled
+  MoreFilled,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter } from 'vue-router'
 
+import AlertRuleEditor from '@/components/alerts/AlertRuleEditor.vue'
+import AlertRuleImport from '@/components/alerts/AlertRuleImport.vue'
+import AlertRuleTest from '@/components/alerts/AlertRuleTest.vue'
 import { useAlertsStore, useDevicesStore } from '@/stores'
 import { formatDateTime, getRelativeTime } from '@/utils/date'
 
 // 组件导入（这些组件将在后续步骤中创建）
-import AlertRuleEditor from '@/components/alerts/AlertRuleEditor.vue'
-import AlertRuleTest from '@/components/alerts/AlertRuleTest.vue'
-import AlertRuleImport from '@/components/alerts/AlertRuleImport.vue'
 
 // ===== 路由 =====
 const router = useRouter()
@@ -533,14 +554,14 @@ const filterForm = ref({
   status: '',
   severity: '',
   deviceIds: [] as string[],
-  keyword: ''
+  keyword: '',
 })
 
 // 分页
 const pagination = ref({
   currentPage: 1,
   pageSize: 20,
-  total: 0
+  total: 0,
 })
 
 // 当前操作的规则
@@ -575,7 +596,7 @@ const filteredRules = computed(() => {
 
   // 设备筛选
   if (filterForm.value.deviceIds.length > 0) {
-    rules = rules.filter(rule => 
+    rules = rules.filter(rule =>
       rule.deviceIds?.some(id => filterForm.value.deviceIds.includes(id))
     )
   }
@@ -583,9 +604,10 @@ const filteredRules = computed(() => {
   // 关键词搜索
   if (filterForm.value.keyword) {
     const keyword = filterForm.value.keyword.toLowerCase()
-    rules = rules.filter(rule => 
-      rule.name.toLowerCase().includes(keyword) ||
-      rule.description?.toLowerCase().includes(keyword)
+    rules = rules.filter(
+      rule =>
+        rule.name.toLowerCase().includes(keyword) ||
+        rule.description?.toLowerCase().includes(keyword)
     )
   }
 
@@ -598,7 +620,7 @@ const ruleStats = computed(() => {
     enabled: 0,
     disabled: 0,
     error: 0,
-    recentAlerts: 0
+    recentAlerts: 0,
   }
 
   alertRules.value.forEach(rule => {
@@ -618,7 +640,8 @@ const ruleStats = computed(() => {
     if (rule.lastTriggered) {
       const lastTriggered = new Date(rule.lastTriggered)
       const now = new Date()
-      const diffHours = (now.getTime() - lastTriggered.getTime()) / (1000 * 60 * 60)
+      const diffHours =
+        (now.getTime() - lastTriggered.getTime()) / (1000 * 60 * 60)
       if (diffHours <= 24) {
         stats.recentAlerts++
       }
@@ -643,7 +666,6 @@ async function initializeData() {
 
     // 加载报警规则
     await loadAlertRules()
-
   } catch (error) {
     console.error('初始化报警规则页面失败:', error)
     ElMessage.error('页面初始化失败')
@@ -661,7 +683,7 @@ async function loadAlertRules() {
     const response = await fetch('/api/v1/alerts/rules', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       params: {
         page: pagination.value.currentPage,
@@ -669,10 +691,10 @@ async function loadAlertRules() {
         search: searchKeyword.value,
         status: filters.value.status,
         severity: filters.value.severity,
-        deviceId: filters.value.deviceId
-      }
+        deviceId: filters.value.deviceId,
+      },
     })
-    
+
     if (response.ok) {
       const data = await response.json()
       alertRules.value = data.items || []
@@ -682,22 +704,20 @@ async function loadAlertRules() {
       pagination.value.total = 0
       console.error('加载报警规则失败:', response.statusText)
     }
-
   } catch (error) {
     console.error('加载报警规则失败:', error)
     ElMessage.error('加载报警规则失败')
   }
 }
 
-
 /**
  * 获取规则状态类型
  */
 function getRuleStatusType(status: string): string {
   const typeMap: Record<string, string> = {
-    'enabled': 'success',
-    'disabled': 'info',
-    'error': 'danger'
+    enabled: 'success',
+    disabled: 'info',
+    error: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -707,9 +727,9 @@ function getRuleStatusType(status: string): string {
  */
 function getRuleStatusText(status: string): string {
   const textMap: Record<string, string> = {
-    'enabled': '启用',
-    'disabled': '禁用',
-    'error': '错误'
+    enabled: '启用',
+    disabled: '禁用',
+    error: '错误',
   }
   return textMap[status] || status
 }
@@ -719,9 +739,9 @@ function getRuleStatusText(status: string): string {
  */
 function getSeverityType(severity: string): string {
   const typeMap: Record<string, string> = {
-    'critical': 'danger',
-    'warning': 'warning',
-    'info': 'info'
+    critical: 'danger',
+    warning: 'warning',
+    info: 'info',
   }
   return typeMap[severity] || 'info'
 }
@@ -731,9 +751,9 @@ function getSeverityType(severity: string): string {
  */
 function getSeverityText(severity: string): string {
   const textMap: Record<string, string> = {
-    'critical': '严重',
-    'warning': '警告',
-    'info': '信息'
+    critical: '严重',
+    warning: '警告',
+    info: '信息',
   }
   return textMap[severity] || severity
 }
@@ -743,10 +763,12 @@ function getSeverityText(severity: string): string {
  */
 function formatConditions(conditions: any[]): string {
   if (!conditions || conditions.length === 0) return '未设置'
-  
-  return conditions.map(condition => {
-    return `${condition.field} ${condition.operator} ${condition.value}${condition.unit || ''}`
-  }).join(', ')
+
+  return conditions
+    .map(condition => {
+      return `${condition.field} ${condition.operator} ${condition.value}${condition.unit || ''}`
+    })
+    .join(', ')
 }
 
 /**
@@ -786,7 +808,7 @@ function resetFilters() {
     status: '',
     severity: '',
     deviceIds: [],
-    keyword: ''
+    keyword: '',
   }
   pagination.value.currentPage = 1
 }
@@ -858,8 +880,8 @@ function copyRule(rule: any) {
   const copiedRule = {
     ...rule,
     id: undefined,
-    name: `${rule.name  } (副本)`,
-    status: 'disabled'
+    name: `${rule.name} (副本)`,
+    status: 'disabled',
   }
   currentRule.value = copiedRule
   showCreateDialog.value = true
@@ -871,13 +893,13 @@ function copyRule(rule: any) {
 async function toggleRuleStatus(rule: any) {
   try {
     const newStatus = rule.status === 'enabled' ? 'disabled' : 'enabled'
-    
+
     // 这里应该调用API更新状态
     // await alertsStore.updateRuleStatus(rule.id, newStatus)
-    
+
     // 模拟更新
     rule.status = newStatus
-    
+
     ElMessage.success(`规则已${newStatus === 'enabled' ? '启用' : '禁用'}`)
   } catch (error) {
     console.error('更新规则状态失败:', error)
@@ -894,16 +916,16 @@ async function deleteRule(rule: any) {
       `确定要删除规则"${rule.name}"吗？此操作不可恢复。`,
       '确认删除',
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
     // 这里应该调用API删除
     // await alertsStore.deleteRule(rule.id)
-    
+
     // 模拟删除
     alertRules.value = alertRules.value.filter(r => r.id !== rule.id)
-    
+
     ElMessage.success('规则已删除')
   } catch (error) {
     if (error !== 'cancel') {
@@ -959,12 +981,12 @@ async function batchDelete() {
       `确定要删除选中的 ${selectedRules.value.length} 个规则吗？此操作不可恢复。`,
       '确认批量删除',
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
-    alertRules.value = alertRules.value.filter(rule => 
-      !selectedRules.value.includes(rule.id)
+    alertRules.value = alertRules.value.filter(
+      rule => !selectedRules.value.includes(rule.id)
     )
 
     ElMessage.success(`已删除 ${selectedRules.value.length} 个规则`)
@@ -981,26 +1003,27 @@ async function batchDelete() {
  * 导出规则
  */
 function exportRules() {
-  const rulesToExport = selectedRules.value.length > 0 
-    ? alertRules.value.filter(rule => selectedRules.value.includes(rule.id))
-    : alertRules.value
+  const rulesToExport =
+    selectedRules.value.length > 0
+      ? alertRules.value.filter(rule => selectedRules.value.includes(rule.id))
+      : alertRules.value
 
   const exportData = {
     rules: rulesToExport,
     exportTime: new Date().toISOString(),
-    version: '1.0'
+    version: '1.0',
   }
 
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const link = document.createElement('a')
   link.href = url
   link.download = `alert_rules_${new Date().toISOString().slice(0, 10)}.json`
   link.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('规则导出完成')
 }
@@ -1044,7 +1067,7 @@ function handleRuleSave(ruleData: any) {
     ruleData.createdAt = new Date().toISOString()
     alertRules.value.unshift(ruleData)
   }
-  
+
   showCreateDialog.value = false
   currentRule.value = null
   ElMessage.success('规则保存成功')
@@ -1059,7 +1082,7 @@ function handleRuleImport(importedRules: any[]) {
     rule.createdAt = new Date().toISOString()
     alertRules.value.unshift(rule)
   })
-  
+
   showImportDialog.value = false
   ElMessage.success(`已导入 ${importedRules.length} 个规则`)
 }
@@ -1080,7 +1103,7 @@ function handlePageSizeChange(size: number) {
 }
 
 // ===== 监听器 =====
-watch(selectedRules, (newSelection) => {
+watch(selectedRules, newSelection => {
   const total = filteredRules.value.length
   selectAll.value = newSelection.length === total && total > 0
 })
@@ -1099,12 +1122,12 @@ onMounted(async () => {
 
   .page-header {
     margin-bottom: 16px;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      
+
       .title-section {
         .page-title {
           font-size: 28px;
@@ -1112,14 +1135,14 @@ onMounted(async () => {
           color: #303133;
           margin: 0 0 8px 0;
         }
-        
+
         .page-description {
           font-size: 14px;
           color: #606266;
           margin: 0;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
@@ -1129,7 +1152,7 @@ onMounted(async () => {
 
   .filter-panel {
     margin-bottom: 16px;
-    
+
     .filter-content {
       .filter-row {
         display: flex;
@@ -1137,67 +1160,73 @@ onMounted(async () => {
         gap: 20px;
         margin-bottom: 16px;
         flex-wrap: wrap;
-        
+
         .filter-item {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .filter-label {
             font-size: 13px;
             color: #606266;
             white-space: nowrap;
           }
         }
-        
+
         .filter-actions {
           margin-left: auto;
           display: flex;
           gap: 8px;
         }
       }
-      
+
       .stats-row {
         display: flex;
         justify-content: space-between;
         align-items: center;
         padding-top: 16px;
         border-top: 1px solid #ebeef5;
-        
+
         .stats-group {
           display: flex;
           gap: 24px;
-          
+
           .stat-item {
             display: flex;
             align-items: center;
             gap: 4px;
-            
+
             .stat-label {
               font-size: 13px;
               color: #909399;
             }
-            
+
             .stat-value {
               font-weight: 600;
-              
-              &.enabled { color: #67c23a; }
-              &.disabled { color: #909399; }
-              &.error { color: #f56c6c; }
+
+              &.enabled {
+                color: #67c23a;
+              }
+              &.disabled {
+                color: #909399;
+              }
+              &.error {
+                color: #f56c6c;
+              }
             }
           }
         }
-        
+
         .recent-alerts {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .recent-label {
             font-size: 13px;
             color: #606266;
           }
-          
+
           .recent-count {
             font-weight: 600;
             color: #e6a23c;
@@ -1214,30 +1243,30 @@ onMounted(async () => {
       align-items: center;
       margin-bottom: 16px;
       padding: 0 4px;
-      
+
       .toolbar-left {
         display: flex;
         align-items: center;
         gap: 16px;
-        
+
         .selection-info {
           font-size: 13px;
           color: #606266;
         }
       }
-      
+
       .toolbar-right {
         display: flex;
         align-items: center;
         gap: 16px;
-        
+
         .batch-actions {
           display: flex;
           gap: 8px;
         }
       }
     }
-    
+
     .rules-content {
       .rules-list {
         .rule-item {
@@ -1249,94 +1278,94 @@ onMounted(async () => {
           background: white;
           cursor: pointer;
           transition: all 0.2s;
-          
+
           &:hover {
             border-color: #c0c4cc;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
-          
+
           &.selected {
             border-color: #409eff;
             background: #f0f8ff;
           }
-          
+
           .rule-checkbox {
             margin-right: 12px;
             display: flex;
             align-items: flex-start;
             padding-top: 2px;
           }
-          
+
           .rule-info {
             flex: 1;
-            
+
             .rule-header {
               display: flex;
               justify-content: space-between;
               align-items: flex-start;
               margin-bottom: 8px;
-              
+
               .rule-name {
                 display: flex;
                 align-items: center;
                 gap: 8px;
-                
+
                 .name-text {
                   font-size: 16px;
                   font-weight: 600;
                   color: #303133;
                 }
               }
-              
+
               .rule-actions {
                 display: flex;
                 align-items: center;
                 gap: 8px;
               }
             }
-            
+
             .rule-description {
               color: #606266;
               margin-bottom: 12px;
               line-height: 1.4;
             }
-            
+
             .rule-details {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
               gap: 8px;
               margin-bottom: 12px;
-              
+
               .detail-item {
                 display: flex;
                 gap: 8px;
-                
+
                 .detail-label {
                   font-size: 13px;
                   color: #909399;
                   white-space: nowrap;
                 }
-                
+
                 .detail-value {
                   font-size: 13px;
                   color: #303133;
                 }
               }
             }
-            
+
             .rule-stats {
               display: flex;
               gap: 24px;
-              
+
               .stats-item {
                 display: flex;
                 gap: 4px;
-                
+
                 .stats-label {
                   font-size: 12px;
                   color: #909399;
                 }
-                
+
                 .stats-value {
                   font-size: 12px;
                   color: #303133;
@@ -1346,70 +1375,70 @@ onMounted(async () => {
           }
         }
       }
-      
+
       .rules-cards {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 16px;
-        
+
         .rule-card {
           border: 1px solid #ebeef5;
           border-radius: 8px;
           padding: 16px;
           background: white;
           transition: all 0.2s;
-          
+
           &:hover {
             border-color: #c0c4cc;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
           }
-          
+
           &.selected {
             border-color: #409eff;
             background: #f0f8ff;
           }
-          
+
           .card-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 12px;
-            
+
             .card-title {
               display: flex;
               align-items: center;
               gap: 8px;
-              
+
               .title-text {
                 font-weight: 600;
                 color: #303133;
               }
             }
           }
-          
+
           .card-content {
             margin-bottom: 16px;
-            
+
             .card-description {
               color: #606266;
               margin-bottom: 12px;
               line-height: 1.4;
             }
-            
+
             .card-metrics {
               display: flex;
               justify-content: space-between;
-              
+
               .metric-item {
                 text-align: center;
-                
+
                 .metric-label {
                   display: block;
                   font-size: 12px;
                   color: #909399;
                   margin-bottom: 4px;
                 }
-                
+
                 .metric-value {
                   font-size: 13px;
                   color: #303133;
@@ -1418,7 +1447,7 @@ onMounted(async () => {
               }
             }
           }
-          
+
           .card-actions {
             display: flex;
             justify-content: space-between;
@@ -1428,40 +1457,40 @@ onMounted(async () => {
           }
         }
       }
-      
+
       .rules-table {
         .rule-name-cell {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .name-text {
             font-weight: 500;
           }
         }
-        
+
         .monitor-targets {
           font-size: 12px;
-          
+
           div {
             margin-bottom: 2px;
             color: #606266;
           }
         }
-        
+
         .table-actions {
           display: flex;
           align-items: center;
           gap: 8px;
         }
       }
-      
+
       .empty-state {
         text-align: center;
         padding: 60px 20px;
       }
     }
-    
+
     .pagination-container {
       margin-top: 16px;
       display: flex;
@@ -1477,20 +1506,20 @@ onMounted(async () => {
       gap: 16px;
       align-items: stretch;
     }
-    
+
     .filter-panel .filter-content .filter-row {
       flex-direction: column;
       align-items: stretch;
       gap: 12px;
-      
+
       .filter-item {
         justify-content: space-between;
-        
+
         :deep(.el-select) {
           width: 100% !important;
         }
       }
-      
+
       .filter-actions {
         margin-left: 0;
         justify-content: center;
@@ -1502,23 +1531,23 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .alert-rules-page {
     padding: 16px;
-    
+
     .page-header .title-section .page-title {
       font-size: 24px;
     }
-    
+
     .rules-list-card {
       .list-toolbar {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
-        
+
         .toolbar-left,
         .toolbar-right {
           justify-content: center;
         }
       }
-      
+
       .rules-content .rules-cards {
         grid-template-columns: 1fr;
       }

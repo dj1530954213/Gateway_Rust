@@ -171,7 +171,7 @@ pub const PLUGIN_ENTRY_POINT: &[u8] = b"bridge_entry\0";
 /// 基础ABI实现
 pub struct BaseABI {
     plugin_info: HashMap<String, serde_json::Value>,
-    context: Option<*const PluginContext>,
+    context: Option<usize>, // 使用usize代替原始指针以保证Send+Sync
     stats: HashMap<String, serde_json::Value>,
     initialized: bool,
     running: bool,
@@ -207,7 +207,7 @@ impl BaseABI {
     /// 记录日志
     pub fn log(&self, level: LogLevel, message: &str) {
         if let Some(context) = self.context {
-            if let Some(callbacks) = unsafe { (*context).get_host_callbacks() } {
+            if let Some(callbacks) = unsafe { (*(context as *const PluginContext)).get_host_callbacks() } {
                 let c_message = CString::new(message).unwrap_or_default();
                 (callbacks.log)(level as u32, c_message.as_ptr());
             }
@@ -217,7 +217,7 @@ impl BaseABI {
     /// 发送数据到主机
     pub fn send_data_to_host(&self, data: &DataExchange) -> Result<(), String> {
         if let Some(context) = self.context {
-            if let Some(callbacks) = unsafe { (*context).get_host_callbacks() } {
+            if let Some(callbacks) = unsafe { (*(context as *const PluginContext)).get_host_callbacks() } {
                 let result = (callbacks.send_data)(data);
                 if result == 0 {
                     Ok(())
@@ -235,7 +235,7 @@ impl BaseABI {
     /// 从主机接收数据
     pub fn receive_data_from_host(&self, data: &mut DataExchange) -> Result<(), String> {
         if let Some(context) = self.context {
-            if let Some(callbacks) = unsafe { (*context).get_host_callbacks() } {
+            if let Some(callbacks) = unsafe { (*(context as *const PluginContext)).get_host_callbacks() } {
                 let result = (callbacks.receive_data)(data);
                 if result == 0 {
                     Ok(())
@@ -253,7 +253,7 @@ impl BaseABI {
     /// 通知主机事件
     pub fn notify_host_event(&self, event_type: EventType, event_data: &str) {
         if let Some(context) = self.context {
-            if let Some(callbacks) = unsafe { (*context).get_host_callbacks() } {
+            if let Some(callbacks) = unsafe { (*(context as *const PluginContext)).get_host_callbacks() } {
                 let c_event_data = CString::new(event_data).unwrap_or_default();
                 (callbacks.notify_event)(event_type as u32, c_event_data.as_ptr());
             }
@@ -314,7 +314,7 @@ impl ABIv1 for BaseABI {
         Ok(())
     }
 
-    fn set_context(&self, context: *const PluginContext) -> Result<(), String> {
+    fn set_context(&self, _context: *const PluginContext) -> Result<(), String> {
         // 注意：这里我们不能修改self，因为trait方法是&self
         // 在实际实现中，需要使用内部可变性（如RefCell）
         Ok(())

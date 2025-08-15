@@ -19,20 +19,20 @@
               {{ getConditionTypeText(condition.type) }}
             </el-tag>
           </div>
-          
+
           <div class="condition-actions">
             <el-tooltip content="复制条件">
               <el-button type="link" size="small" @click="copyCondition(index)">
                 <el-icon><CopyDocument /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <el-tooltip content="删除条件">
               <el-button
                 type="link"
                 size="small"
-                @click="removeCondition(index)"
                 :disabled="conditions.length <= 1"
+                @click="removeCondition(index)"
               >
                 <el-icon><Delete /></el-icon>
               </el-button>
@@ -84,7 +84,9 @@
                     <div class="field-option">
                       <span class="field-name">{{ field.label }}</span>
                       <span class="field-type">{{ field.dataType }}</span>
-                      <span class="field-unit" v-if="field.unit">({{ field.unit }})</span>
+                      <span v-if="field.unit" class="field-unit"
+                        >({{ field.unit }})</span
+                      >
                     </div>
                   </el-option>
                 </el-select>
@@ -92,7 +94,10 @@
 
               <div class="config-item">
                 <label class="config-label">比较运算符</label>
-                <el-select v-model="condition.operator" placeholder="选择运算符">
+                <el-select
+                  v-model="condition.operator"
+                  placeholder="选择运算符"
+                >
                   <el-option
                     v-for="op in getOperatorOptions(condition.field)"
                     :key="op.value"
@@ -130,7 +135,10 @@
                     <el-option label="True" value="true" />
                     <el-option label="False" value="false" />
                   </el-select>
-                  <span v-if="getFieldUnit(condition.field)" class="threshold-unit">
+                  <span
+                    v-if="getFieldUnit(condition.field)"
+                    class="threshold-unit"
+                  >
                     {{ getFieldUnit(condition.field) }}
                   </span>
                 </div>
@@ -142,7 +150,7 @@
               <el-checkbox v-model="condition.useHysteresis">
                 启用滞回（防止抖动）
               </el-checkbox>
-              
+
               <div v-if="condition.useHysteresis" class="hysteresis-config">
                 <div class="config-item">
                   <label class="config-label">滞回值</label>
@@ -177,7 +185,10 @@
 
               <div class="config-item">
                 <label class="config-label">变化类型</label>
-                <el-select v-model="condition.rateType" placeholder="选择变化类型">
+                <el-select
+                  v-model="condition.rateType"
+                  placeholder="选择变化类型"
+                >
                   <el-option label="增长率" value="increase" />
                   <el-option label="下降率" value="decrease" />
                   <el-option label="变化率（绝对值）" value="absolute" />
@@ -193,7 +204,10 @@
                     :max="3600"
                     placeholder="时间值"
                   />
-                  <el-select v-model="condition.timeWindow.unit" style="width: 80px">
+                  <el-select
+                    v-model="condition.timeWindow.unit"
+                    style="width: 80px"
+                  >
                     <el-option label="秒" value="seconds" />
                     <el-option label="分钟" value="minutes" />
                     <el-option label="小时" value="hours" />
@@ -266,7 +280,10 @@
             <div class="config-row">
               <div class="config-item">
                 <label class="config-label">监控对象</label>
-                <el-select v-model="condition.target" placeholder="选择监控对象">
+                <el-select
+                  v-model="condition.target"
+                  placeholder="选择监控对象"
+                >
                   <el-option label="设备状态" value="device_status" />
                   <el-option label="连接状态" value="connection_status" />
                   <el-option label="数据质量" value="data_quality" />
@@ -276,7 +293,10 @@
 
               <div class="config-item">
                 <label class="config-label">期望状态</label>
-                <el-select v-model="condition.expectedStatus" placeholder="选择状态">
+                <el-select
+                  v-model="condition.expectedStatus"
+                  placeholder="选择状态"
+                >
                   <el-option
                     v-for="status in getStatusOptions(condition.target)"
                     :key="status.value"
@@ -295,7 +315,10 @@
                     :max="3600"
                     placeholder="持续时间"
                   />
-                  <el-select v-model="condition.duration.unit" style="width: 80px">
+                  <el-select
+                    v-model="condition.duration.unit"
+                    style="width: 80px"
+                  >
                     <el-option label="秒" value="seconds" />
                     <el-option label="分钟" value="minutes" />
                     <el-option label="小时" value="hours" />
@@ -306,7 +329,10 @@
           </div>
 
           <!-- 表达式条件配置 -->
-          <div v-else-if="condition.type === 'expression'" class="expression-config">
+          <div
+            v-else-if="condition.type === 'expression'"
+            class="expression-config"
+          >
             <div class="config-row">
               <div class="config-item full-width">
                 <label class="config-label">表达式</label>
@@ -318,7 +344,11 @@
                 />
                 <div class="expression-help">
                   <span>可用变量: value, quality, timestamp, device, tag</span>
-                  <el-button type="link" size="small" @click="showExpressionHelp">
+                  <el-button
+                    type="link"
+                    size="small"
+                    @click="showExpressionHelp"
+                  >
                     查看帮助
                   </el-button>
                 </div>
@@ -328,15 +358,29 @@
             <div class="config-row">
               <div class="config-item">
                 <label class="config-label">表达式验证</label>
-                <el-button @click="validateExpression(index)">验证表达式</el-button>
-                <div v-if="condition.validationResult" class="validation-result">
+                <el-button @click="validateExpression(index)"
+                  >验证表达式</el-button
+                >
+                <div
+                  v-if="condition.validationResult"
+                  class="validation-result"
+                >
                   <el-tag
-                    :type="condition.validationResult.valid ? 'success' : 'danger'"
+                    :type="
+                      condition.validationResult.valid ? 'success' : 'danger'
+                    "
                     size="small"
                   >
-                    {{ condition.validationResult.valid ? '表达式有效' : '表达式无效' }}
+                    {{
+                      condition.validationResult.valid
+                        ? '表达式有效'
+                        : '表达式无效'
+                    }}
                   </el-tag>
-                  <span v-if="condition.validationResult.error" class="validation-error">
+                  <span
+                    v-if="condition.validationResult.error"
+                    class="validation-error"
+                  >
                     {{ condition.validationResult.error }}
                   </span>
                 </div>
@@ -367,14 +411,10 @@
     <div v-if="conditions.length > 1" class="condition-logic">
       <div class="logic-title">条件逻辑关系</div>
       <el-radio-group v-model="logicOperator">
-        <el-radio label="AND">
-          所有条件都满足时触发（AND）
-        </el-radio>
-        <el-radio label="OR">
-          任一条件满足时触发（OR）
-        </el-radio>
+        <el-radio label="AND"> 所有条件都满足时触发（AND） </el-radio>
+        <el-radio label="OR"> 任一条件满足时触发（OR） </el-radio>
       </el-radio-group>
-      
+
       <div class="logic-preview">
         <span class="logic-text">
           {{ getLogicPreview() }}
@@ -383,11 +423,7 @@
     </div>
 
     <!-- 表达式帮助对话框 -->
-    <el-dialog
-      v-model="showHelpDialog"
-      title="表达式帮助"
-      width="600px"
-    >
+    <el-dialog v-model="showHelpDialog" title="表达式帮助" width="600px">
       <div class="expression-help-content">
         <h4>可用变量</h4>
         <ul>
@@ -441,13 +477,9 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch } from 'vue'
+import { Plus, Delete, CopyDocument } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import {
-  Plus,
-  Delete,
-  CopyDocument
-} from '@element-plus/icons-vue'
+import { ref, computed, watch } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -472,28 +504,28 @@ const conditionTypes = [
   {
     value: 'threshold',
     label: '阈值条件',
-    description: '数值达到指定阈值时触发'
+    description: '数值达到指定阈值时触发',
   },
   {
     value: 'rate',
     label: '变化率条件',
-    description: '数值变化率超过阈值时触发'
+    description: '数值变化率超过阈值时触发',
   },
   {
     value: 'range',
     label: '范围条件',
-    description: '数值在指定范围内或外时触发'
+    description: '数值在指定范围内或外时触发',
   },
   {
     value: 'status',
     label: '状态条件',
-    description: '设备或连接状态变化时触发'
+    description: '设备或连接状态变化时触发',
   },
   {
     value: 'expression',
     label: '表达式条件',
-    description: '自定义JavaScript表达式'
-  }
+    description: '自定义JavaScript表达式',
+  },
 ]
 
 // ===== 计算属性 =====
@@ -502,26 +534,26 @@ const availableFields = computed(() => {
 
   if (props.scope === 'device' && props.selectedDevices.length > 0) {
     // 基于选中设备的标签
-    fields = props.availableTags.filter(tag =>
-      props.selectedDevices.includes(tag.deviceId)
-    ).map(tag => ({
-      value: tag.id,
-      label: tag.name,
-      dataType: tag.dataType,
-      unit: tag.unit,
-      deviceName: tag.deviceName
-    }))
+    fields = props.availableTags
+      .filter(tag => props.selectedDevices.includes(tag.deviceId))
+      .map(tag => ({
+        value: tag.id,
+        label: tag.name,
+        dataType: tag.dataType,
+        unit: tag.unit,
+        deviceName: tag.deviceName,
+      }))
   } else if (props.scope === 'tag' && props.selectedTags.length > 0) {
     // 选中的特定标签
-    fields = props.availableTags.filter(tag =>
-      props.selectedTags.includes(tag.id)
-    ).map(tag => ({
-      value: tag.id,
-      label: tag.name,
-      dataType: tag.dataType,
-      unit: tag.unit,
-      deviceName: tag.deviceName
-    }))
+    fields = props.availableTags
+      .filter(tag => props.selectedTags.includes(tag.id))
+      .map(tag => ({
+        value: tag.id,
+        label: tag.name,
+        dataType: tag.dataType,
+        unit: tag.unit,
+        deviceName: tag.deviceName,
+      }))
   } else {
     // 所有可用标签
     fields = props.availableTags.map(tag => ({
@@ -529,7 +561,7 @@ const availableFields = computed(() => {
       label: tag.name,
       dataType: tag.dataType,
       unit: tag.unit,
-      deviceName: tag.deviceName
+      deviceName: tag.deviceName,
     }))
   }
 
@@ -571,7 +603,7 @@ function addCondition() {
     duration: { value: 30, unit: 'seconds' },
     expression: '',
     validationResult: null,
-    hasError: false
+    hasError: false,
   }
 
   conditions.value.push(newCondition)
@@ -593,7 +625,7 @@ function copyCondition(index: number) {
   const originalCondition = conditions.value[index]
   const copiedCondition = {
     ...originalCondition,
-    id: Date.now().toString()
+    id: Date.now().toString(),
   }
   conditions.value.splice(index + 1, 0, copiedCondition)
   updateModelValue()
@@ -604,13 +636,13 @@ function copyCondition(index: number) {
  */
 function handleConditionTypeChange(index: number) {
   const condition = conditions.value[index]
-  
+
   // 重置条件特定的字段
   condition.field = ''
   condition.operator = 'gt'
   condition.value = null
   condition.hasError = false
-  
+
   updateModelValue()
 }
 
@@ -620,7 +652,7 @@ function handleConditionTypeChange(index: number) {
 function handleFieldChange(index: number) {
   const condition = conditions.value[index]
   const field = availableFields.value.find(f => f.value === condition.field)
-  
+
   if (field) {
     // 根据字段类型设置默认运算符
     if (field.dataType === 'boolean') {
@@ -631,7 +663,7 @@ function handleFieldChange(index: number) {
       condition.operator = 'gt'
     }
   }
-  
+
   updateModelValue()
 }
 
@@ -646,8 +678,8 @@ function getAvailableFields() {
  * 获取数值字段
  */
 function getNumericFields() {
-  return availableFields.value.filter(field => 
-    field.dataType === 'float' || field.dataType === 'integer'
+  return availableFields.value.filter(
+    field => field.dataType === 'float' || field.dataType === 'integer'
   )
 }
 
@@ -656,31 +688,61 @@ function getNumericFields() {
  */
 function getOperatorOptions(fieldId: string) {
   const field = availableFields.value.find(f => f.value === fieldId)
-  
+
   if (!field) {
     return []
   }
 
   const commonOperators = [
     { value: 'eq', label: '等于', symbol: '=', description: '等于指定值' },
-    { value: 'ne', label: '不等于', symbol: '≠', description: '不等于指定值' }
+    { value: 'ne', label: '不等于', symbol: '≠', description: '不等于指定值' },
   ]
 
   if (field.dataType === 'float' || field.dataType === 'integer') {
     return [
       ...commonOperators,
       { value: 'gt', label: '大于', symbol: '>', description: '大于指定值' },
-      { value: 'gte', label: '大于等于', symbol: '≥', description: '大于或等于指定值' },
+      {
+        value: 'gte',
+        label: '大于等于',
+        symbol: '≥',
+        description: '大于或等于指定值',
+      },
       { value: 'lt', label: '小于', symbol: '<', description: '小于指定值' },
-      { value: 'lte', label: '小于等于', symbol: '≤', description: '小于或等于指定值' }
+      {
+        value: 'lte',
+        label: '小于等于',
+        symbol: '≤',
+        description: '小于或等于指定值',
+      },
     ]
   } else if (field.dataType === 'string') {
     return [
       ...commonOperators,
-      { value: 'contains', label: '包含', symbol: '⊇', description: '包含指定文本' },
-      { value: 'starts_with', label: '开始于', symbol: '▶', description: '以指定文本开始' },
-      { value: 'ends_with', label: '结束于', symbol: '◀', description: '以指定文本结束' },
-      { value: 'regex', label: '正则匹配', symbol: '~', description: '匹配正则表达式' }
+      {
+        value: 'contains',
+        label: '包含',
+        symbol: '⊇',
+        description: '包含指定文本',
+      },
+      {
+        value: 'starts_with',
+        label: '开始于',
+        symbol: '▶',
+        description: '以指定文本开始',
+      },
+      {
+        value: 'ends_with',
+        label: '结束于',
+        symbol: '◀',
+        description: '以指定文本结束',
+      },
+      {
+        value: 'regex',
+        label: '正则匹配',
+        symbol: '~',
+        description: '匹配正则表达式',
+      },
     ]
   } else {
     return commonOperators
@@ -695,23 +757,23 @@ function getStatusOptions(target: string) {
     device_status: [
       { value: 'online', label: '在线' },
       { value: 'offline', label: '离线' },
-      { value: 'error', label: '错误' }
+      { value: 'error', label: '错误' },
     ],
     connection_status: [
       { value: 'connected', label: '已连接' },
       { value: 'disconnected', label: '已断开' },
-      { value: 'connecting', label: '连接中' }
+      { value: 'connecting', label: '连接中' },
     ],
     data_quality: [
       { value: 'good', label: '良好' },
       { value: 'uncertain', label: '可疑' },
-      { value: 'bad', label: '错误' }
+      { value: 'bad', label: '错误' },
     ],
     communication_error: [
       { value: 'timeout', label: '超时' },
       { value: 'protocol_error', label: '协议错误' },
-      { value: 'network_error', label: '网络错误' }
-    ]
+      { value: 'network_error', label: '网络错误' },
+    ],
   }
 
   return statusMap[target] || []
@@ -758,11 +820,11 @@ function getFieldUnit(fieldId: string): string {
  */
 function getConditionTypeTag(type: string): string {
   const typeMap: Record<string, string> = {
-    'threshold': 'primary',
-    'rate': 'warning',
-    'range': 'success',
-    'status': 'info',
-    'expression': 'danger'
+    threshold: 'primary',
+    rate: 'warning',
+    range: 'success',
+    status: 'info',
+    expression: 'danger',
   }
   return typeMap[type] || 'info'
 }
@@ -780,7 +842,7 @@ function getConditionTypeText(type: string): string {
  */
 function validateExpression(index: number) {
   const condition = conditions.value[index]
-  
+
   try {
     // 创建测试上下文
     const testContext = {
@@ -788,15 +850,20 @@ function validateExpression(index: number) {
       quality: 'good',
       timestamp: new Date().toISOString(),
       device: { status: 'online', name: 'test-device' },
-      tag: { name: 'test-tag', type: 'float' }
+      tag: { name: 'test-tag', type: 'float' },
     }
-    
+
     // 创建函数来评估表达式
     const func = new Function(
-      'value', 'quality', 'timestamp', 'device', 'tag', 'Math',
+      'value',
+      'quality',
+      'timestamp',
+      'device',
+      'tag',
+      'Math',
       `return ${condition.expression}`
     )
-    
+
     // 测试表达式
     const result = func(
       testContext.value,
@@ -806,12 +873,12 @@ function validateExpression(index: number) {
       testContext.tag,
       Math
     )
-    
+
     condition.validationResult = {
       valid: typeof result === 'boolean',
-      error: typeof result !== 'boolean' ? '表达式必须返回布尔值' : null
+      error: typeof result !== 'boolean' ? '表达式必须返回布尔值' : null,
     }
-    
+
     if (condition.validationResult.valid) {
       ElMessage.success('表达式验证通过')
       condition.hasError = false
@@ -819,16 +886,15 @@ function validateExpression(index: number) {
       ElMessage.warning('表达式必须返回布尔值')
       condition.hasError = true
     }
-    
   } catch (error) {
     condition.validationResult = {
       valid: false,
-      error: (error as Error).message
+      error: (error as Error).message,
     }
     condition.hasError = true
     ElMessage.error('表达式语法错误')
   }
-  
+
   updateModelValue()
 }
 
@@ -855,7 +921,9 @@ function getConditionPreview(condition: any): string {
       if (!condition.field || condition.value === null) {
         return '请完成阈值条件配置'
       }
-      const operator = getOperatorOptions(condition.field).find(op => op.value === condition.operator)
+      const operator = getOperatorOptions(condition.field).find(
+        op => op.value === condition.operator
+      )
       const operatorSymbol = operator?.symbol || condition.operator
       const unit = getFieldUnit(condition.field)
       return `当 ${fieldName} ${operatorSymbol} ${condition.value}${unit} 时触发`
@@ -864,15 +932,20 @@ function getConditionPreview(condition: any): string {
       if (!condition.field) {
         return '请完成变化率条件配置'
       }
-      const rateTypeText = {
-        'increase': '增长率',
-        'decrease': '下降率',
-        'absolute': '变化率'
-      }[condition.rateType] || '变化率'
+      const rateTypeText =
+        {
+          increase: '增长率',
+          decrease: '下降率',
+          absolute: '变化率',
+        }[condition.rateType] || '变化率'
       return `当 ${fieldName} ${rateTypeText} > ${condition.rateThreshold}${condition.rateUnit === 'percent' ? '%' : ''} (${condition.timeWindow.value}${condition.timeWindow.unit}) 时触发`
 
     case 'range':
-      if (!condition.field || condition.minValue === null || condition.maxValue === null) {
+      if (
+        !condition.field ||
+        condition.minValue === null ||
+        condition.maxValue === null
+      ) {
         return '请完成范围条件配置'
       }
       const rangeTypeText = condition.rangeType === 'within' ? '在' : '不在'
@@ -882,13 +955,16 @@ function getConditionPreview(condition: any): string {
       if (!condition.target || !condition.expectedStatus) {
         return '请完成状态条件配置'
       }
-      const targetText = {
-        'device_status': '设备状态',
-        'connection_status': '连接状态',
-        'data_quality': '数据质量',
-        'communication_error': '通信错误'
-      }[condition.target] || condition.target
-      const statusOption = getStatusOptions(condition.target).find(s => s.value === condition.expectedStatus)
+      const targetText =
+        {
+          device_status: '设备状态',
+          connection_status: '连接状态',
+          data_quality: '数据质量',
+          communication_error: '通信错误',
+        }[condition.target] || condition.target
+      const statusOption = getStatusOptions(condition.target).find(
+        s => s.value === condition.expectedStatus
+      )
       const statusText = statusOption?.label || condition.expectedStatus
       return `当 ${targetText} 为 ${statusText} 持续 ${condition.duration.value}${condition.duration.unit} 时触发`
 
@@ -911,14 +987,14 @@ function getLogicPreview(): string {
     return ''
   }
 
-  const conditionPreviews = conditions.value.map((condition, index) => 
-    `条件${index + 1}`
+  const conditionPreviews = conditions.value.map(
+    (condition, index) => `条件${index + 1}`
   )
 
   if (logicOperator.value === 'AND') {
-    return `${conditionPreviews.join(' 且 ')  } 都满足时触发`
+    return `${conditionPreviews.join(' 且 ')} 都满足时触发`
   } else {
-    return `${conditionPreviews.join(' 或 ')  } 任一满足时触发`
+    return `${conditionPreviews.join(' 或 ')} 任一满足时触发`
   }
 }
 
@@ -930,13 +1006,21 @@ function updateModelValue() {
 }
 
 // ===== 监听器 =====
-watch(() => props.modelValue, (newValue) => {
-  conditions.value = newValue || []
-}, { deep: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    conditions.value = newValue || []
+  },
+  { deep: true }
+)
 
-watch(conditions, () => {
-  updateModelValue()
-}, { deep: true })
+watch(
+  conditions,
+  () => {
+    updateModelValue()
+  },
+  { deep: true }
+)
 
 watch(logicOperator, () => {
   updateModelValue()
@@ -955,11 +1039,11 @@ initializeConditions()
       margin-bottom: 16px;
       background: white;
       transition: border-color 0.2s;
-      
+
       &.has-error {
         border-color: #f56c6c;
       }
-      
+
       .condition-header {
         display: flex;
         justify-content: space-between;
@@ -968,45 +1052,45 @@ initializeConditions()
         background: #f8f9fa;
         border-bottom: 1px solid #ebeef5;
         border-radius: 6px 6px 0 0;
-        
+
         .condition-title {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .condition-index {
             font-weight: 600;
             color: #303133;
           }
         }
-        
+
         .condition-actions {
           display: flex;
           gap: 4px;
         }
       }
-      
+
       .condition-config {
         padding: 16px;
-        
+
         .config-row {
           display: flex;
           gap: 16px;
           margin-bottom: 16px;
           flex-wrap: wrap;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           .config-item {
             flex: 1;
             min-width: 200px;
-            
+
             &.full-width {
               flex: 100%;
             }
-            
+
             .config-label {
               display: block;
               font-size: 13px;
@@ -1016,7 +1100,7 @@ initializeConditions()
             }
           }
         }
-        
+
         .type-option,
         .field-option,
         .operator-option {
@@ -1024,13 +1108,13 @@ initializeConditions()
           justify-content: space-between;
           align-items: center;
           width: 100%;
-          
+
           .type-name,
           .field-name,
           .operator-symbol {
             font-weight: 500;
           }
-          
+
           .type-desc,
           .field-type,
           .field-unit,
@@ -1039,7 +1123,7 @@ initializeConditions()
             color: #909399;
           }
         }
-        
+
         .threshold-input,
         .time-window-input,
         .rate-threshold,
@@ -1047,7 +1131,7 @@ initializeConditions()
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .threshold-unit,
           .hysteresis-tip {
             font-size: 12px;
@@ -1055,10 +1139,10 @@ initializeConditions()
             white-space: nowrap;
           }
         }
-        
+
         .advanced-threshold {
           margin-top: 12px;
-          
+
           .hysteresis-config {
             margin-top: 8px;
             padding: 12px;
@@ -1066,7 +1150,7 @@ initializeConditions()
             border-radius: 4px;
           }
         }
-        
+
         .expression-help {
           display: flex;
           justify-content: space-between;
@@ -1075,32 +1159,32 @@ initializeConditions()
           font-size: 12px;
           color: #909399;
         }
-        
+
         .validation-result {
           display: flex;
           align-items: center;
           gap: 8px;
           margin-top: 8px;
-          
+
           .validation-error {
             font-size: 12px;
             color: #f56c6c;
           }
         }
-        
+
         .condition-preview {
           margin-top: 16px;
           padding: 12px;
           background: #f0f8ff;
           border-radius: 4px;
           border-left: 3px solid #409eff;
-          
+
           .preview-title {
             font-size: 13px;
             color: #606266;
             margin-bottom: 4px;
           }
-          
+
           .preview-content {
             font-size: 14px;
             color: #303133;
@@ -1110,32 +1194,32 @@ initializeConditions()
       }
     }
   }
-  
+
   .add-condition {
     text-align: center;
     margin: 16px 0;
   }
-  
+
   .condition-logic {
     margin-top: 24px;
     padding: 16px;
     background: #f8f9fa;
     border-radius: 6px;
-    
+
     .logic-title {
       font-size: 14px;
       font-weight: 600;
       color: #303133;
       margin-bottom: 12px;
     }
-    
+
     .logic-preview {
       margin-top: 12px;
       padding: 8px 12px;
       background: white;
       border-radius: 4px;
       border: 1px solid #dcdfe6;
-      
+
       .logic-text {
         font-size: 13px;
         color: #606266;
@@ -1149,18 +1233,18 @@ initializeConditions()
   h4 {
     color: #303133;
     margin: 16px 0 8px 0;
-    
+
     &:first-child {
       margin-top: 0;
     }
   }
-  
+
   ul {
     margin: 0 0 16px 20px;
-    
+
     li {
       margin-bottom: 4px;
-      
+
       code {
         background: #f1f1f1;
         padding: 2px 4px;
@@ -1169,7 +1253,7 @@ initializeConditions()
       }
     }
   }
-  
+
   .example-expressions {
     .example-item {
       display: flex;
@@ -1179,7 +1263,7 @@ initializeConditions()
       margin-bottom: 8px;
       background: #f8f9fa;
       border-radius: 4px;
-      
+
       code {
         background: #e6f7ff;
         color: #1890ff;
@@ -1188,7 +1272,7 @@ initializeConditions()
         font-family: monospace;
         font-weight: 500;
       }
-      
+
       span {
         font-size: 13px;
         color: #606266;
@@ -1203,12 +1287,12 @@ initializeConditions()
     .conditions-list .condition-item .condition-config .config-row {
       flex-direction: column;
       gap: 12px;
-      
+
       .config-item {
         min-width: auto;
       }
     }
-    
+
     .threshold-input,
     .time-window-input,
     .rate-threshold,

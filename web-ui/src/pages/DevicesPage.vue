@@ -4,7 +4,9 @@
     <div class="page-header">
       <div class="page-title">
         <h1>设备管理</h1>
-        <p class="page-description">管理物联网设备，包括添加、配置、监控和维护设备连接</p>
+        <p class="page-description">
+          管理物联网设备，包括添加、配置、监控和维护设备连接
+        </p>
       </div>
       <div class="page-actions">
         <el-button type="primary" @click="openCreateDialog">
@@ -26,22 +28,22 @@
             v-model="searchKeyword"
             placeholder="搜索设备名称"
             clearable
-            @input="handleSearch"
             style="width: 240px"
+            @input="handleSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </div>
-        
+
         <div class="filter-item">
           <el-select
             v-model="selectedProtocol"
             placeholder="协议类型"
             clearable
-            @change="handleProtocolFilter"
             style="width: 150px"
+            @change="handleProtocolFilter"
           >
             <el-option label="Modbus TCP" value="ModbusTcp" />
             <el-option label="Modbus RTU" value="ModbusRtu" />
@@ -49,28 +51,30 @@
             <el-option label="MQTT" value="Mqtt" />
           </el-select>
         </div>
-        
+
         <div class="filter-item">
           <el-select
             v-model="selectedStatus"
             placeholder="设备状态"
             clearable
-            @change="handleStatusFilter"
             style="width: 120px"
+            @change="handleStatusFilter"
           >
             <el-option label="已启用" :value="true" />
             <el-option label="已禁用" :value="false" />
           </el-select>
         </div>
-        
+
         <div class="filter-item">
           <el-button @click="resetFilters">重置筛选</el-button>
         </div>
       </div>
-      
+
       <!-- 批量操作栏 -->
       <div v-if="selectedDevices.length > 0" class="batch-actions">
-        <span class="selected-info">已选择 {{ selectedDevices.length }} 个设备</span>
+        <span class="selected-info"
+          >已选择 {{ selectedDevices.length }} 个设备</span
+        >
         <el-button type="danger" @click="handleBatchDelete">批量删除</el-button>
         <el-button @click="clearSelection">取消选择</el-button>
       </div>
@@ -85,7 +89,7 @@
         </div>
         <el-icon class="stat-icon"><Monitor /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card">
         <div class="stat-content">
           <div class="stat-value">{{ enabledDevicesCount }}</div>
@@ -93,7 +97,7 @@
         </div>
         <el-icon class="stat-icon"><CircleCheck /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card">
         <div class="stat-content">
           <div class="stat-value">{{ disabledDevicesCount }}</div>
@@ -101,7 +105,7 @@
         </div>
         <el-icon class="stat-icon"><CircleClose /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card">
         <div class="stat-content">
           <div class="stat-value">{{ protocolTypesCount }}</div>
@@ -123,7 +127,7 @@
         @toggle-device="handleToggleDevice"
         @test-connection="handleTestConnection"
       />
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
@@ -168,13 +172,22 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
+import {
+  Plus,
+  Refresh,
+  Search,
+  Monitor,
+  CircleCheck,
+  CircleClose,
+  Setting,
+} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh, Search, Monitor, CircleCheck, CircleClose, Setting } from '@element-plus/icons-vue'
-import { useDevicesStore } from '@/stores'
-import DevicesTable from '@/components/devices/DevicesTable.vue'
-import DeviceFormDialog from '@/components/devices/DeviceFormDialog.vue'
+import { ref, computed, onMounted, watch } from 'vue'
+
 import type { DeviceVO } from '@/api/devices'
+import DeviceFormDialog from '@/components/devices/DeviceFormDialog.vue'
+import DevicesTable from '@/components/devices/DevicesTable.vue'
+import { useDevicesStore } from '@/stores'
 
 // ===== Store =====
 const devicesStore = useDevicesStore()
@@ -306,7 +319,7 @@ async function handleTestConnection(device: DeviceVO) {
     connection_config: device.connection_config,
     enabled: true,
   }
-  
+
   await devicesStore.testDeviceConnection(testData)
 }
 
@@ -381,7 +394,7 @@ watch([currentPage, pageSize], () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
-  
+
   .page-title {
     h1 {
       margin: 0 0 8px 0;
@@ -389,7 +402,7 @@ watch([currentPage, pageSize], () => {
       font-weight: 600;
       color: #303133;
     }
-    
+
     .page-description {
       margin: 0;
       color: #606266;
@@ -397,7 +410,7 @@ watch([currentPage, pageSize], () => {
       line-height: 1.4;
     }
   }
-  
+
   .page-actions {
     display: flex;
     gap: 12px;
@@ -406,19 +419,19 @@ watch([currentPage, pageSize], () => {
 
 .filter-card {
   margin-bottom: 16px;
-  
+
   .filter-row {
     display: flex;
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
   }
-  
+
   .filter-item {
     display: flex;
     align-items: center;
   }
-  
+
   .batch-actions {
     margin-top: 16px;
     padding-top: 16px;
@@ -426,7 +439,7 @@ watch([currentPage, pageSize], () => {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .selected-info {
       color: #409eff;
       font-weight: 500;
@@ -439,7 +452,7 @@ watch([currentPage, pageSize], () => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 16px;
-  
+
   .stat-card {
     .el-card__body {
       padding: 20px;
@@ -447,7 +460,7 @@ watch([currentPage, pageSize], () => {
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .stat-content {
       .stat-value {
         font-size: 28px;
@@ -456,13 +469,13 @@ watch([currentPage, pageSize], () => {
         line-height: 1;
         margin-bottom: 8px;
       }
-      
+
       .stat-label {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .stat-icon {
       font-size: 32px;
       color: #409eff;
@@ -483,24 +496,24 @@ watch([currentPage, pageSize], () => {
   .devices-page {
     padding: 16px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
-  
+
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .filter-row {
     flex-direction: column;
     align-items: stretch;
-    
+
     .filter-item {
       width: 100%;
-      
+
       :deep(.el-input),
       :deep(.el-select) {
         width: 100% !important;

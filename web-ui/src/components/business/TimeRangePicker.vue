@@ -9,24 +9,31 @@
       :popper-class="popoverClass"
     >
       <template #reference>
-        <div class="time-range-trigger" :class="triggerClass" @click="handleTriggerClick">
+        <div
+          class="time-range-trigger"
+          :class="triggerClass"
+          @click="handleTriggerClick"
+        >
           <el-icon class="trigger-icon">
             <Clock />
           </el-icon>
-          
+
           <div class="trigger-content">
             <div class="time-display">{{ displayText }}</div>
             <div v-if="showDuration" class="duration-display">
               {{ durationText }}
             </div>
           </div>
-          
-          <el-icon class="trigger-arrow" :class="{ 'is-reverse': pickerVisible }">
+
+          <el-icon
+            class="trigger-arrow"
+            :class="{ 'is-reverse': pickerVisible }"
+          >
             <ArrowDown />
           </el-icon>
         </div>
       </template>
-      
+
       <!-- 时间选择面板 -->
       <div class="time-picker-panel">
         <!-- 标签页切换 -->
@@ -56,18 +63,21 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 自定义选择 -->
           <el-tab-pane label="自定义" name="custom">
             <div class="custom-range">
               <!-- 时间模式选择 -->
               <div class="time-mode">
-                <el-radio-group v-model="timeMode" @change="handleTimeModeChange">
+                <el-radio-group
+                  v-model="timeMode"
+                  @change="handleTimeModeChange"
+                >
                   <el-radio label="absolute">绝对时间</el-radio>
                   <el-radio label="relative">相对时间</el-radio>
                 </el-radio-group>
               </div>
-              
+
               <!-- 绝对时间选择 -->
               <div v-if="timeMode === 'absolute'" class="absolute-time">
                 <el-form label-width="80px" size="small">
@@ -93,7 +103,7 @@
                   </el-form-item>
                 </el-form>
               </div>
-              
+
               <!-- 相对时间选择 -->
               <div v-else class="relative-time">
                 <el-form label-width="80px" size="small">
@@ -116,15 +126,21 @@
                       <el-option label="月" value="months" />
                     </el-select>
                   </el-form-item>
-                  
+
                   <el-form-item label="结束于">
-                    <el-radio-group v-model="relativeTime.endAt" @change="handleRelativeTimeChange">
+                    <el-radio-group
+                      v-model="relativeTime.endAt"
+                      @change="handleRelativeTimeChange"
+                    >
                       <el-radio label="now">现在</el-radio>
                       <el-radio label="custom">指定时间</el-radio>
                     </el-radio-group>
                   </el-form-item>
-                  
-                  <el-form-item v-if="relativeTime.endAt === 'custom'" label="结束时间">
+
+                  <el-form-item
+                    v-if="relativeTime.endAt === 'custom'"
+                    label="结束时间"
+                  >
                     <el-date-picker
                       v-model="relativeTime.customEnd"
                       type="datetime"
@@ -138,7 +154,7 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 预设模板 -->
           <el-tab-pane v-if="showTemplates" label="预设模板" name="templates">
             <div class="time-templates">
@@ -146,15 +162,15 @@
                 <el-button
                   type="primary"
                   size="small"
-                  @click="handleSaveTemplate"
                   :disabled="!hasValidRange"
+                  @click="handleSaveTemplate"
                 >
                   保存当前为模板
                 </el-button>
               </div>
-              
+
               <el-divider />
-              
+
               <div class="template-list">
                 <div
                   v-for="template in timeTemplates"
@@ -166,7 +182,7 @@
                     <div class="template-name">{{ template.name }}</div>
                     <div class="template-range">{{ template.description }}</div>
                   </div>
-                  
+
                   <el-button
                     type="text"
                     size="small"
@@ -177,22 +193,18 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <!-- 历史记录 -->
           <el-tab-pane v-if="showHistory" label="历史记录" name="history">
             <div class="time-history">
               <div class="history-actions">
-                <el-button
-                  type="text"
-                  size="small"
-                  @click="clearHistory"
-                >
+                <el-button type="text" size="small" @click="clearHistory">
                   清空历史
                 </el-button>
               </div>
-              
+
               <el-divider />
-              
+
               <div class="history-list">
                 <div
                   v-for="(record, index) in timeHistory"
@@ -202,14 +214,16 @@
                 >
                   <div class="history-info">
                     <div class="history-range">{{ record.description }}</div>
-                    <div class="history-time">{{ formatTime(record.timestamp) }}</div>
+                    <div class="history-time">
+                      {{ formatTime(record.timestamp) }}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </el-tab-pane>
         </el-tabs>
-        
+
         <!-- 时间预览 -->
         <div class="time-preview">
           <el-divider content-position="left">时间预览</el-divider>
@@ -228,15 +242,15 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 操作按钮 -->
         <div class="picker-actions">
           <el-button size="small" @click="handleCancel">取消</el-button>
           <el-button
             type="primary"
             size="small"
-            @click="handleConfirm"
             :disabled="!hasValidRange"
+            @click="handleConfirm"
           >
             确定
           </el-button>
@@ -247,9 +261,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
 import { Clock, ArrowDown, Delete } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted } from 'vue'
 
 export interface TimeRange {
   start: string | Date
@@ -281,25 +295,25 @@ export interface TimeHistoryRecord {
 
 interface Props {
   modelValue?: TimeRange
-  
+
   // 显示控制
   showTemplates?: boolean
   showHistory?: boolean
   showDuration?: boolean
-  
+
   // 外观配置
   size?: 'small' | 'default' | 'large'
   placeholder?: string
   disabled?: boolean
-  
+
   // 时间限制
   minDate?: Date
   maxDate?: Date
   disableFuture?: boolean
-  
+
   // 快速选择配置
   enableQuickRanges?: string[]
-  
+
   // 自定义样式
   popoverWidth?: number
   customClass?: string
@@ -314,7 +328,7 @@ const props = withDefaults(defineProps<Props>(), {
   disabled: false,
   disableFuture: false,
   popoverWidth: 500,
-  enableQuickRanges: () => ['recent', 'today', 'custom']
+  enableQuickRanges: () => ['recent', 'today', 'custom'],
 })
 
 interface Emits {
@@ -334,13 +348,13 @@ const timeMode = ref<'absolute' | 'relative'>('absolute')
 // 当前时间范围
 const currentRange = ref<TimeRange>({
   start: '',
-  end: ''
+  end: '',
 })
 
 // 自定义时间范围
 const customRange = ref<TimeRange>({
   start: '',
-  end: ''
+  end: '',
 })
 
 // 相对时间配置
@@ -348,7 +362,7 @@ const relativeTime = ref({
   value: 1,
   unit: 'hours' as 'minutes' | 'hours' | 'days' | 'weeks' | 'months',
   endAt: 'now' as 'now' | 'custom',
-  customEnd: ''
+  customEnd: '',
 })
 
 // 时间模板
@@ -359,8 +373,8 @@ const timeTemplates = ref<TimeTemplate[]>([
     description: '08:00-18:00',
     range: { start: '08:00:00', end: '18:00:00' },
     type: 'absolute',
-    createTime: new Date()
-  }
+    createTime: new Date(),
+  },
 ])
 
 // 历史记录
@@ -372,62 +386,128 @@ const quickRangeCategories = [
     key: 'recent',
     title: '最近时间',
     ranges: [
-      { key: 'last_15min', label: '最近15分钟', value: 15, unit: 'minutes', type: 'relative' },
-      { key: 'last_1hour', label: '最近1小时', value: 1, unit: 'hours', type: 'relative' },
-      { key: 'last_6hours', label: '最近6小时', value: 6, unit: 'hours', type: 'relative' },
-      { key: 'last_12hours', label: '最近12小时', value: 12, unit: 'hours', type: 'relative' },
-      { key: 'last_24hours', label: '最近24小时', value: 24, unit: 'hours', type: 'relative' }
-    ]
+      {
+        key: 'last_15min',
+        label: '最近15分钟',
+        value: 15,
+        unit: 'minutes',
+        type: 'relative',
+      },
+      {
+        key: 'last_1hour',
+        label: '最近1小时',
+        value: 1,
+        unit: 'hours',
+        type: 'relative',
+      },
+      {
+        key: 'last_6hours',
+        label: '最近6小时',
+        value: 6,
+        unit: 'hours',
+        type: 'relative',
+      },
+      {
+        key: 'last_12hours',
+        label: '最近12小时',
+        value: 12,
+        unit: 'hours',
+        type: 'relative',
+      },
+      {
+        key: 'last_24hours',
+        label: '最近24小时',
+        value: 24,
+        unit: 'hours',
+        type: 'relative',
+      },
+    ],
   },
   {
     key: 'today',
     title: '今日时间',
     ranges: [
       { key: 'today', label: '今天', value: 0, unit: 'days', type: 'absolute' },
-      { key: 'yesterday', label: '昨天', value: 1, unit: 'days', type: 'absolute' },
-      { key: 'this_week', label: '本周', value: 0, unit: 'weeks', type: 'absolute' },
-      { key: 'last_week', label: '上周', value: 1, unit: 'weeks', type: 'absolute' }
-    ]
+      {
+        key: 'yesterday',
+        label: '昨天',
+        value: 1,
+        unit: 'days',
+        type: 'absolute',
+      },
+      {
+        key: 'this_week',
+        label: '本周',
+        value: 0,
+        unit: 'weeks',
+        type: 'absolute',
+      },
+      {
+        key: 'last_week',
+        label: '上周',
+        value: 1,
+        unit: 'weeks',
+        type: 'absolute',
+      },
+    ],
   },
   {
     key: 'period',
     title: '时间周期',
     ranges: [
-      { key: 'last_7days', label: '最近7天', value: 7, unit: 'days', type: 'relative' },
-      { key: 'last_30days', label: '最近30天', value: 30, unit: 'days', type: 'relative' },
-      { key: 'last_3months', label: '最近3个月', value: 3, unit: 'months', type: 'relative' }
-    ]
-  }
+      {
+        key: 'last_7days',
+        label: '最近7天',
+        value: 7,
+        unit: 'days',
+        type: 'relative',
+      },
+      {
+        key: 'last_30days',
+        label: '最近30天',
+        value: 30,
+        unit: 'days',
+        type: 'relative',
+      },
+      {
+        key: 'last_3months',
+        label: '最近3个月',
+        value: 3,
+        unit: 'months',
+        type: 'relative',
+      },
+    ],
+  },
 ]
 
 // 计算属性
 const containerClass = computed(() => {
   const classes = []
-  
+
   classes.push(`time-range-picker--${props.size}`)
-  
+
   if (props.disabled) {
     classes.push('is-disabled')
   }
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   return classes.join(' ')
 })
 
 const triggerClass = computed(() => {
   const classes = ['time-range-trigger']
-  
+
   if (pickerVisible.value) {
     classes.push('is-active')
   }
-  
+
   if (props.disabled) {
     classes.push('is-disabled')
   }
-  
+
   return classes.join(' ')
 })
 
@@ -439,10 +519,10 @@ const displayText = computed(() => {
   if (!currentRange.value.start || !currentRange.value.end) {
     return props.placeholder
   }
-  
+
   const start = formatDisplayTime(currentRange.value.start)
   const end = formatDisplayTime(currentRange.value.end)
-  
+
   return `${start} ~ ${end}`
 })
 
@@ -450,7 +530,7 @@ const durationText = computed(() => {
   if (!currentRange.value.start || !currentRange.value.end) {
     return ''
   }
-  
+
   return calculateDuration(currentRange.value.start, currentRange.value.end)
 })
 
@@ -458,13 +538,16 @@ const previewDuration = computed(() => {
   if (!currentRange.value.start || !currentRange.value.end) {
     return '无效范围'
   }
-  
+
   return calculateDuration(currentRange.value.start, currentRange.value.end)
 })
 
 const hasValidRange = computed(() => {
-  return currentRange.value.start && currentRange.value.end && 
-         new Date(currentRange.value.start) < new Date(currentRange.value.end)
+  return (
+    currentRange.value.start &&
+    currentRange.value.end &&
+    new Date(currentRange.value.start) < new Date(currentRange.value.end)
+  )
 })
 
 // 方法
@@ -478,7 +561,7 @@ const formatDisplayTime = (time: string | Date) => {
     month: '2-digit',
     day: '2-digit',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
   })
 }
 
@@ -492,11 +575,11 @@ const calculateDuration = (start: string | Date, end: string | Date) => {
   const startTime = new Date(start)
   const endTime = new Date(end)
   const diff = endTime.getTime() - startTime.getTime()
-  
+
   const days = Math.floor(diff / (24 * 60 * 60 * 1000))
   const hours = Math.floor((diff % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
   const minutes = Math.floor((diff % (60 * 60 * 1000)) / (60 * 1000))
-  
+
   if (days > 0) {
     return `${days}天${hours}小时`
   } else if (hours > 0) {
@@ -509,10 +592,10 @@ const calculateDuration = (start: string | Date, end: string | Date) => {
 const getMaxValue = (unit: string) => {
   const maxValues = {
     minutes: 1440, // 24小时
-    hours: 168,    // 7天
-    days: 365,     // 1年
-    weeks: 52,     // 1年
-    months: 12     // 1年
+    hours: 168, // 7天
+    days: 365, // 1年
+    weeks: 52, // 1年
+    months: 12, // 1年
   }
   return maxValues[unit] || 100
 }
@@ -542,7 +625,7 @@ const handleQuickRange = (range: QuickRange) => {
   const now = new Date()
   let start: Date
   let end: Date = now
-  
+
   if (range.type === 'relative') {
     switch (range.unit) {
       case 'minutes':
@@ -568,7 +651,7 @@ const handleQuickRange = (range: QuickRange) => {
     // 绝对时间处理（今天、昨天等）
     start = new Date()
     end = new Date()
-    
+
     switch (range.key) {
       case 'today':
         start.setHours(0, 0, 0, 0)
@@ -583,12 +666,12 @@ const handleQuickRange = (range: QuickRange) => {
       // 更多绝对时间处理...
     }
   }
-  
+
   currentRange.value = {
     start: start.toISOString(),
-    end: end.toISOString()
+    end: end.toISOString(),
   }
-  
+
   addToHistory()
 }
 
@@ -604,21 +687,30 @@ const handleRelativeTimeChange = () => {
 
 const updateCurrentRange = () => {
   if (timeMode.value === 'relative') {
-    const now = relativeTime.value.endAt === 'now' ? new Date() : new Date(relativeTime.value.customEnd)
+    const now =
+      relativeTime.value.endAt === 'now'
+        ? new Date()
+        : new Date(relativeTime.value.customEnd)
     let start: Date
-    
+
     switch (relativeTime.value.unit) {
       case 'minutes':
         start = new Date(now.getTime() - relativeTime.value.value * 60 * 1000)
         break
       case 'hours':
-        start = new Date(now.getTime() - relativeTime.value.value * 60 * 60 * 1000)
+        start = new Date(
+          now.getTime() - relativeTime.value.value * 60 * 60 * 1000
+        )
         break
       case 'days':
-        start = new Date(now.getTime() - relativeTime.value.value * 24 * 60 * 60 * 1000)
+        start = new Date(
+          now.getTime() - relativeTime.value.value * 24 * 60 * 60 * 1000
+        )
         break
       case 'weeks':
-        start = new Date(now.getTime() - relativeTime.value.value * 7 * 24 * 60 * 60 * 1000)
+        start = new Date(
+          now.getTime() - relativeTime.value.value * 7 * 24 * 60 * 60 * 1000
+        )
         break
       case 'months':
         start = new Date(now)
@@ -627,10 +719,10 @@ const updateCurrentRange = () => {
       default:
         start = new Date(now.getTime() - 60 * 60 * 1000)
     }
-    
+
     currentRange.value = {
       start: start.toISOString(),
-      end: now.toISOString()
+      end: now.toISOString(),
     }
   }
 }
@@ -644,9 +736,9 @@ const handleSaveTemplate = () => {
       description: displayText.value,
       range: { ...currentRange.value },
       type: timeMode.value,
-      createTime: new Date()
+      createTime: new Date(),
     }
-    
+
     timeTemplates.value.push(template)
     ElMessage.success('模板保存成功')
   }
@@ -676,17 +768,19 @@ const clearHistory = () => {
 
 const addToHistory = () => {
   if (!hasValidRange.value) return
-  
+
   const record: TimeHistoryRecord = {
     range: { ...currentRange.value },
     description: displayText.value,
-    timestamp: new Date()
+    timestamp: new Date(),
   }
-  
+
   // 去重并添加到开头
-  timeHistory.value = timeHistory.value.filter(h => h.description !== record.description)
+  timeHistory.value = timeHistory.value.filter(
+    h => h.description !== record.description
+  )
   timeHistory.value.unshift(record)
-  
+
   // 限制历史记录数量
   if (timeHistory.value.length > 10) {
     timeHistory.value = timeHistory.value.slice(0, 10)
@@ -709,11 +803,15 @@ const handleCancel = () => {
 }
 
 // 监听
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    currentRange.value = { ...newValue }
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    if (newValue) {
+      currentRange.value = { ...newValue }
+    }
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(() => {
@@ -726,21 +824,21 @@ onMounted(() => {
 <style scoped lang="scss">
 .time-range-picker {
   display: inline-block;
-  
+
   &.time-range-picker--small {
     .time-range-trigger {
       padding: 4px 8px;
       font-size: 12px;
     }
   }
-  
+
   &.time-range-picker--large {
     .time-range-trigger {
       padding: 8px 12px;
       font-size: 16px;
     }
   }
-  
+
   &.is-disabled {
     .time-range-trigger {
       background-color: var(--el-disabled-bg-color);
@@ -761,42 +859,42 @@ onMounted(() => {
   cursor: pointer;
   transition: all 0.3s;
   min-width: 200px;
-  
+
   &:hover {
     border-color: var(--el-color-primary);
   }
-  
+
   &.is-active {
     border-color: var(--el-color-primary);
     box-shadow: 0 0 0 2px var(--el-color-primary-light-8);
   }
-  
+
   .trigger-icon {
     margin-right: 8px;
     color: var(--el-text-color-secondary);
   }
-  
+
   .trigger-content {
     flex: 1;
     min-width: 0;
-    
+
     .time-display {
       font-size: 14px;
       color: var(--el-text-color-primary);
     }
-    
+
     .duration-display {
       font-size: 12px;
       color: var(--el-text-color-secondary);
       margin-top: 2px;
     }
   }
-  
+
   .trigger-arrow {
     margin-left: 8px;
     color: var(--el-text-color-secondary);
     transition: transform 0.3s;
-    
+
     &.is-reverse {
       transform: rotate(180deg);
     }
@@ -805,17 +903,17 @@ onMounted(() => {
 
 :deep(.time-range-popover) {
   padding: 0;
-  
+
   .time-picker-panel {
     .el-tabs {
       .el-tabs__header {
         margin: 0;
-        
+
         .el-tabs__nav-wrap {
           padding: 0 16px;
         }
       }
-      
+
       .el-tabs__content {
         padding: 16px;
         min-height: 300px;
@@ -828,14 +926,14 @@ onMounted(() => {
   .range-categories {
     .category-section {
       margin-bottom: 16px;
-      
+
       .category-title {
         font-size: 13px;
         font-weight: 600;
         color: var(--el-text-color-primary);
         margin-bottom: 8px;
       }
-      
+
       .range-buttons {
         display: flex;
         flex-wrap: wrap;
@@ -849,7 +947,7 @@ onMounted(() => {
   .time-mode {
     margin-bottom: 16px;
   }
-  
+
   .absolute-time,
   .relative-time {
     .el-form-item {
@@ -865,12 +963,12 @@ onMounted(() => {
     text-align: right;
     margin-bottom: 8px;
   }
-  
+
   .template-list,
   .history-list {
     max-height: 200px;
     overflow-y: auto;
-    
+
     .template-item,
     .history-item {
       display: flex;
@@ -879,22 +977,22 @@ onMounted(() => {
       border-radius: 4px;
       cursor: pointer;
       transition: background-color 0.3s;
-      
+
       &:hover {
         background-color: var(--el-fill-color-light);
       }
-      
+
       .template-info,
       .history-info {
         flex: 1;
-        
+
         .template-name,
         .history-range {
           font-size: 14px;
           color: var(--el-text-color-primary);
           margin-bottom: 2px;
         }
-        
+
         .template-range,
         .history-time {
           font-size: 12px;
@@ -908,18 +1006,18 @@ onMounted(() => {
 .time-preview {
   border-top: 1px solid var(--el-border-color-lighter);
   padding-top: 12px;
-  
+
   .preview-content {
     .preview-item {
       display: flex;
       justify-content: space-between;
       margin-bottom: 4px;
-      
+
       label {
         font-size: 12px;
         color: var(--el-text-color-secondary);
       }
-      
+
       span {
         font-size: 12px;
         color: var(--el-text-color-primary);
@@ -940,18 +1038,18 @@ onMounted(() => {
 @media (max-width: 768px) {
   .time-range-trigger {
     min-width: 150px;
-    
+
     .trigger-content {
       .time-display {
         font-size: 12px;
       }
-      
+
       .duration-display {
         font-size: 11px;
       }
     }
   }
-  
+
   :deep(.time-range-popover) {
     max-width: 90vw;
   }

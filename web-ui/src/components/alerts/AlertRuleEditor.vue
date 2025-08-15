@@ -49,7 +49,9 @@
                   :value="level.value"
                 >
                   <div class="severity-option">
-                    <el-tag :type="level.type" size="small">{{ level.label }}</el-tag>
+                    <el-tag :type="level.type" size="small">{{
+                      level.label
+                    }}</el-tag>
                     <span class="severity-desc">{{ level.description }}</span>
                   </div>
                 </el-option>
@@ -61,9 +63,7 @@
                 <el-radio label="enabled">启用</el-radio>
                 <el-radio label="disabled">禁用</el-radio>
               </el-radio-group>
-              <div class="form-tip">
-                禁用的规则不会触发报警，但会保留配置
-              </div>
+              <div class="form-tip">禁用的规则不会触发报警，但会保留配置</div>
             </el-form-item>
           </div>
         </div>
@@ -73,7 +73,10 @@
           <h3 class="section-title">监控目标</h3>
           <div class="form-grid">
             <el-form-item label="监控范围" prop="scope" required>
-              <el-radio-group v-model="ruleForm.scope" @change="handleScopeChange">
+              <el-radio-group
+                v-model="ruleForm.scope"
+                @change="handleScopeChange"
+              >
                 <el-radio label="device">指定设备</el-radio>
                 <el-radio label="tag">指定标签</el-radio>
                 <el-radio label="group">设备分组</el-radio>
@@ -198,15 +201,16 @@
                   :max="86400"
                   placeholder="时间值"
                 />
-                <el-select v-model="ruleForm.duration.unit" style="width: 100px">
+                <el-select
+                  v-model="ruleForm.duration.unit"
+                  style="width: 100px"
+                >
                   <el-option label="秒" value="seconds" />
                   <el-option label="分钟" value="minutes" />
                   <el-option label="小时" value="hours" />
                 </el-select>
               </div>
-              <div class="form-tip">
-                条件满足且持续指定时间后才触发报警
-              </div>
+              <div class="form-tip">条件满足且持续指定时间后才触发报警</div>
             </el-form-item>
 
             <el-form-item
@@ -253,7 +257,10 @@
                   :max="168"
                   placeholder="超时值"
                 />
-                <el-select v-model="ruleForm.recoveryTimeout.unit" style="width: 100px">
+                <el-select
+                  v-model="ruleForm.recoveryTimeout.unit"
+                  style="width: 100px"
+                >
                   <el-option label="小时" value="hours" />
                   <el-option label="天" value="days" />
                 </el-select>
@@ -283,14 +290,17 @@
               </el-icon>
             </el-button>
           </h3>
-          
+
           <div v-show="showAdvanced" class="advanced-options">
             <div class="form-grid">
               <el-form-item label="报警抑制" prop="suppression">
                 <el-checkbox v-model="ruleForm.suppression.enabled">
                   启用报警抑制
                 </el-checkbox>
-                <div v-if="ruleForm.suppression.enabled" class="suppression-config">
+                <div
+                  v-if="ruleForm.suppression.enabled"
+                  class="suppression-config"
+                >
                   <div class="suppression-item">
                     <span>抑制时间:</span>
                     <el-input-number
@@ -347,8 +357,8 @@
                     />
                     <el-button
                       type="link"
-                      @click="removeTagFilter(index)"
                       :disabled="ruleForm.tagFilters.length <= 1"
+                      @click="removeTagFilter(index)"
                     >
                       <el-icon><Delete /></el-icon>
                     </el-button>
@@ -379,8 +389,8 @@
                     />
                     <el-button
                       type="link"
-                      @click="removeCustomAttribute(index)"
                       :disabled="ruleForm.customAttributes.length <= 1"
+                      @click="removeCustomAttribute(index)"
                     >
                       <el-icon><Delete /></el-icon>
                     </el-button>
@@ -414,7 +424,9 @@
           </div>
           <div class="preview-item">
             <span class="preview-label">通知方式:</span>
-            <span class="preview-value">{{ getNotificationsDescription() }}</span>
+            <span class="preview-value">{{
+              getNotificationsDescription()
+            }}</span>
           </div>
         </div>
       </div>
@@ -423,20 +435,20 @@
     <template #footer>
       <div class="dialog-footer">
         <div class="footer-left">
-          <el-button @click="testRule" :disabled="!canTest">
+          <el-button :disabled="!canTest" @click="testRule">
             <el-icon><VideoPlay /></el-icon>
             测试规则
           </el-button>
         </div>
-        
+
         <div class="footer-right">
           <el-button @click="handleClose">取消</el-button>
           <el-button @click="saveAsDraft">保存草稿</el-button>
           <el-button
             type="primary"
-            @click="saveRule"
             :loading="saving"
             :disabled="!canSave"
+            @click="saveRule"
           >
             {{ isEditMode ? '更新规则' : '创建规则' }}
           </el-button>
@@ -472,24 +484,25 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import type { FormInstance, FormRules } from 'element-plus'
 import {
   ArrowDown,
   ArrowUp,
   Plus,
   Delete,
-  VideoPlay
+  VideoPlay,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import type { FormInstance, FormRules } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // API导入
-import { devicesApi, tagsApi } from '@/api'
 
 // 组件导入
 import AlertConditionConfig from './AlertConditionConfig.vue'
 import AlertNotificationSettings from './AlertNotificationSettings.vue'
 import AlertRuleTestDialog from './AlertRuleTestDialog.vue'
+
+import { devicesApi, tagsApi } from '@/api'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -499,7 +512,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'save': [ruleData: any]
+  save: [ruleData: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -524,32 +537,28 @@ const ruleForm = ref({
   triggerMode: 'immediate',
   duration: {
     value: 5,
-    unit: 'minutes'
+    unit: 'minutes',
   },
   triggerCount: {
     timeWindow: 10,
-    count: 3
+    count: 3,
   },
   recoveryCondition: 'auto',
   recoveryTimeout: {
     value: 24,
-    unit: 'hours'
+    unit: 'hours',
   },
   notifications: [],
   suppression: {
     enabled: false,
-    duration: 30
+    duration: 30,
   },
   grouping: {
     enabled: false,
-    fields: []
+    fields: [],
   },
-  tagFilters: [
-    { key: '', operator: 'eq', value: '' }
-  ],
-  customAttributes: [
-    { key: '', value: '' }
-  ]
+  tagFilters: [{ key: '', operator: 'eq', value: '' }],
+  customAttributes: [{ key: '', value: '' }],
 })
 
 // 可用数据
@@ -563,45 +572,44 @@ const severityOptions = [
     value: 'critical',
     label: '严重',
     type: 'danger',
-    description: '需要立即处理的严重问题'
+    description: '需要立即处理的严重问题',
   },
   {
     value: 'warning',
     label: '警告',
     type: 'warning',
-    description: '需要关注的警告信息'
+    description: '需要关注的警告信息',
   },
   {
     value: 'info',
     label: '信息',
     type: 'info',
-    description: '一般性的通知信息'
-  }
+    description: '一般性的通知信息',
+  },
 ]
 
 // ===== 表单验证规则 =====
 const formRules: FormRules = {
   name: [
     { required: true, message: '请输入规则名称', trigger: 'blur' },
-    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' }
+    { min: 1, max: 100, message: '长度在 1 到 100 个字符', trigger: 'blur' },
   ],
-  severity: [
-    { required: true, message: '请选择报警级别', trigger: 'change' }
-  ],
-  scope: [
-    { required: true, message: '请选择监控范围', trigger: 'change' }
-  ],
+  severity: [{ required: true, message: '请选择报警级别', trigger: 'change' }],
+  scope: [{ required: true, message: '请选择监控范围', trigger: 'change' }],
   deviceIds: [
     {
       validator: (rule, value, callback) => {
-        if (ruleForm.value.scope === 'device' && (!value || value.length === 0)) {
+        if (
+          ruleForm.value.scope === 'device' &&
+          (!value || value.length === 0)
+        ) {
           callback(new Error('请选择要监控的设备'))
         } else {
           callback()
         }
       },
-      trigger: 'change'
-    }
+      trigger: 'change',
+    },
   ],
   tagIds: [
     {
@@ -612,21 +620,24 @@ const formRules: FormRules = {
           callback()
         }
       },
-      trigger: 'change'
-    }
+      trigger: 'change',
+    },
   ],
   groupIds: [
     {
       validator: (rule, value, callback) => {
-        if (ruleForm.value.scope === 'group' && (!value || value.length === 0)) {
+        if (
+          ruleForm.value.scope === 'group' &&
+          (!value || value.length === 0)
+        ) {
           callback(new Error('请选择设备分组'))
         } else {
           callback()
         }
       },
-      trigger: 'change'
-    }
-  ]
+      trigger: 'change',
+    },
+  ],
 }
 
 // ===== 计算属性 =====
@@ -635,10 +646,12 @@ const isEditMode = computed(() => {
 })
 
 const canSave = computed(() => {
-  return ruleForm.value.name.trim() !== '' &&
-         ruleForm.value.severity !== '' &&
-         hasValidScope.value &&
-         ruleForm.value.conditions.length > 0
+  return (
+    ruleForm.value.name.trim() !== '' &&
+    ruleForm.value.severity !== '' &&
+    hasValidScope.value &&
+    ruleForm.value.conditions.length > 0
+  )
 })
 
 const canTest = computed(() => {
@@ -671,14 +684,13 @@ async function initializeData() {
     await Promise.all([
       fetchAvailableDevices(),
       fetchAvailableTags(),
-      fetchDeviceGroups()
+      fetchDeviceGroups(),
     ])
 
     // 如果是编辑模式，填充表单数据
     if (isEditMode.value && props.ruleData) {
       Object.assign(ruleForm.value, props.ruleData)
     }
-
   } catch (error) {
     console.error('初始化规则编辑器失败:', error)
     ElMessage.error('初始化失败')
@@ -695,7 +707,7 @@ async function fetchAvailableDevices() {
       id: device.id,
       name: device.device_name,
       protocol: device.protocol,
-      status: device.enabled ? 'online' : 'offline'
+      status: device.enabled ? 'online' : 'offline',
     }))
   } catch (error) {
     console.error('获取设备列表失败:', error)
@@ -716,7 +728,7 @@ async function fetchAvailableTags() {
       deviceId: tag.device_id,
       deviceName: tag.device_name,
       dataType: tag.data_type,
-      unit: tag.unit
+      unit: tag.unit,
     }))
   } catch (error) {
     console.error('获取标签列表失败:', error)
@@ -733,7 +745,7 @@ async function fetchDeviceGroups() {
     deviceGroups.value = response.items.map(group => ({
       id: group.id,
       name: group.group_name,
-      deviceCount: group.device_count
+      deviceCount: group.device_count,
     }))
   } catch (error) {
     console.error('获取设备分组失败:', error)
@@ -773,7 +785,7 @@ function addTagFilter() {
   ruleForm.value.tagFilters.push({
     key: '',
     operator: 'eq',
-    value: ''
+    value: '',
   })
 }
 
@@ -790,7 +802,7 @@ function removeTagFilter(index: number) {
 function addCustomAttribute() {
   ruleForm.value.customAttributes.push({
     key: '',
-    value: ''
+    value: '',
   })
 }
 
@@ -832,7 +844,7 @@ function getConditionsDescription(): string {
   if (ruleForm.value.conditions.length === 0) {
     return '未设置触发条件'
   }
-  
+
   return `${ruleForm.value.conditions.length} 个条件`
 }
 
@@ -843,7 +855,7 @@ function getNotificationsDescription(): string {
   if (ruleForm.value.notifications.length === 0) {
     return '未设置通知方式'
   }
-  
+
   return `${ruleForm.value.notifications.length} 种通知方式`
 }
 
@@ -854,10 +866,9 @@ async function testRule() {
   try {
     // 验证表单
     await formRef.value?.validate()
-    
+
     // 打开测试对话框
     showTestDialog.value = true
-    
   } catch (error) {
     console.error('规则验证失败:', error)
     ElMessage.error('请先完成规则配置')
@@ -879,9 +890,9 @@ async function saveAsDraft() {
     const draftData = {
       ...ruleForm.value,
       status: 'disabled',
-      isDraft: true
+      isDraft: true,
     }
-    
+
     emit('save', draftData)
     ElMessage.success('草稿已保存')
   } catch (error) {
@@ -897,20 +908,19 @@ async function saveRule() {
   try {
     // 验证表单
     await formRef.value?.validate()
-    
+
     saving.value = true
-    
+
     const ruleData = {
       ...ruleForm.value,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     }
-    
+
     if (!isEditMode.value) {
       ruleData.createdAt = new Date().toISOString()
     }
-    
+
     emit('save', ruleData)
-    
   } catch (error) {
     console.error('保存规则失败:', error)
     ElMessage.error('保存规则失败')
@@ -925,17 +935,15 @@ async function saveRule() {
 function handleClose() {
   // 检查是否有未保存的更改
   if (hasUnsavedChanges()) {
-    ElMessageBox.confirm(
-      '你有未保存的更改，确定要关闭吗？',
-      '确认关闭',
-      {
-        type: 'warning'
-      }
-    ).then(() => {
-      dialogVisible.value = false
-    }).catch(() => {
-      // 用户取消关闭
+    ElMessageBox.confirm('你有未保存的更改，确定要关闭吗？', '确认关闭', {
+      type: 'warning',
     })
+      .then(() => {
+        dialogVisible.value = false
+      })
+      .catch(() => {
+        // 用户取消关闭
+      })
   } else {
     dialogVisible.value = false
   }
@@ -946,21 +954,26 @@ function handleClose() {
  */
 function hasUnsavedChanges(): boolean {
   // 简单的检查逻辑，实际应该比较表单数据和原始数据
-  return ruleForm.value.name.trim() !== '' || 
-         ruleForm.value.description.trim() !== ''
+  return (
+    ruleForm.value.name.trim() !== '' ||
+    ruleForm.value.description.trim() !== ''
+  )
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible) {
-    nextTick(() => {
-      initializeData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible) {
+      nextTick(() => {
+        initializeData()
+      })
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
   if (!visible) {
     // 重置表单
@@ -974,11 +987,11 @@ watch(dialogVisible, (visible) => {
 .alert-rule-editor {
   .form-section {
     margin-bottom: 32px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .section-title {
       display: flex;
       align-items: center;
@@ -990,48 +1003,48 @@ watch(dialogVisible, (visible) => {
       padding-bottom: 8px;
       border-bottom: 1px solid #ebeef5;
     }
-    
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
       gap: 16px;
-      
+
       .el-form-item {
         margin-bottom: 16px;
       }
     }
-    
+
     .form-tip {
       font-size: 12px;
       color: #909399;
       margin-top: 4px;
     }
   }
-  
+
   .severity-option {
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
-    
+
     .severity-desc {
       font-size: 12px;
       color: #909399;
     }
   }
-  
+
   .device-option,
   .tag-option {
     display: flex;
     justify-content: space-between;
     align-items: center;
     width: 100%;
-    
+
     .device-name,
     .tag-name {
       font-weight: 500;
     }
-    
+
     .device-protocol,
     .tag-device,
     .tag-address {
@@ -1040,26 +1053,26 @@ watch(dialogVisible, (visible) => {
       font-family: monospace;
     }
   }
-  
+
   .duration-input,
   .timeout-input {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  
+
   .count-input {
     display: flex;
     align-items: center;
     gap: 8px;
     flex-wrap: wrap;
-    
+
     span {
       font-size: 14px;
       color: #606266;
     }
   }
-  
+
   .advanced-options {
     .suppression-config,
     .grouping-config {
@@ -1067,20 +1080,20 @@ watch(dialogVisible, (visible) => {
       padding: 12px;
       background: #f8f9fa;
       border-radius: 4px;
-      
+
       .suppression-item {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 8px;
-        
+
         span {
           font-size: 13px;
           color: #606266;
         }
       }
     }
-    
+
     .tag-filters,
     .custom-attributes {
       .filter-item,
@@ -1092,13 +1105,13 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .rule-preview {
     margin-top: 24px;
     padding: 16px;
     background: #f8f9fa;
     border-radius: 6px;
-    
+
     .section-title {
       font-size: 14px;
       font-weight: 600;
@@ -1107,23 +1120,23 @@ watch(dialogVisible, (visible) => {
       border: none;
       padding: 0;
     }
-    
+
     .preview-content {
       .preview-item {
         display: flex;
         margin-bottom: 8px;
-        
+
         &:last-child {
           margin-bottom: 0;
         }
-        
+
         .preview-label {
           width: 100px;
           font-size: 13px;
           color: #909399;
           flex-shrink: 0;
         }
-        
+
         .preview-value {
           font-size: 13px;
           color: #303133;
@@ -1138,7 +1151,7 @@ watch(dialogVisible, (visible) => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .footer-left,
   .footer-right {
     display: flex;
@@ -1153,18 +1166,18 @@ watch(dialogVisible, (visible) => {
       grid-template-columns: 1fr;
       gap: 12px;
     }
-    
+
     .count-input {
       flex-direction: column;
       align-items: stretch;
       gap: 4px;
     }
-    
+
     .dialog-footer {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
-      
+
       .footer-left,
       .footer-right {
         justify-content: center;

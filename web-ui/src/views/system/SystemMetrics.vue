@@ -117,8 +117,12 @@
               <div class="card-header">
                 <span>CPU 性能分析</span>
                 <div class="chart-controls">
-                  <el-checkbox v-model="chartOptions.cpu.showAverage">显示平均值</el-checkbox>
-                  <el-checkbox v-model="chartOptions.cpu.showPeak">显示峰值</el-checkbox>
+                  <el-checkbox v-model="chartOptions.cpu.showAverage"
+                    >显示平均值</el-checkbox
+                  >
+                  <el-checkbox v-model="chartOptions.cpu.showPeak"
+                    >显示峰值</el-checkbox
+                  >
                 </div>
               </div>
             </template>
@@ -131,8 +135,12 @@
               <div class="card-header">
                 <span>内存使用详情</span>
                 <div class="chart-controls">
-                  <el-checkbox v-model="chartOptions.memory.showSwap">显示交换内存</el-checkbox>
-                  <el-checkbox v-model="chartOptions.memory.showBuffer">显示缓存</el-checkbox>
+                  <el-checkbox v-model="chartOptions.memory.showSwap"
+                    >显示交换内存</el-checkbox
+                  >
+                  <el-checkbox v-model="chartOptions.memory.showBuffer"
+                    >显示缓存</el-checkbox
+                  >
                 </div>
               </div>
             </template>
@@ -141,14 +149,18 @@
         </el-col>
       </el-row>
 
-      <el-row :gutter="20" style="margin-top: 20px;">
+      <el-row :gutter="20" style="margin-top: 20px">
         <el-col :span="12">
           <el-card shadow="never" class="chart-card">
             <template #header>
               <div class="card-header">
                 <span>磁盘 I/O 监控</span>
                 <div class="chart-controls">
-                  <el-select v-model="chartOptions.disk.selectedDisk" size="small" style="width: 120px;">
+                  <el-select
+                    v-model="chartOptions.disk.selectedDisk"
+                    size="small"
+                    style="width: 120px"
+                  >
                     <el-option label="系统盘" value="system" />
                     <el-option label="数据盘" value="data" />
                     <el-option label="全部" value="all" />
@@ -165,8 +177,12 @@
               <div class="card-header">
                 <span>网络流量监控</span>
                 <div class="chart-controls">
-                  <el-checkbox v-model="chartOptions.network.showInbound">入站流量</el-checkbox>
-                  <el-checkbox v-model="chartOptions.network.showOutbound">出站流量</el-checkbox>
+                  <el-checkbox v-model="chartOptions.network.showInbound"
+                    >入站流量</el-checkbox
+                  >
+                  <el-checkbox v-model="chartOptions.network.showOutbound"
+                    >出站流量</el-checkbox
+                  >
                 </div>
               </div>
             </template>
@@ -187,7 +203,7 @@
                 v-model="processFilter"
                 placeholder="筛选进程..."
                 size="small"
-                style="width: 200px;"
+                style="width: 200px"
                 clearable
               >
                 <template #prefix>
@@ -202,9 +218,23 @@
           </div>
         </template>
 
-        <el-table :data="filteredProcesses" style="width: 100%" @sort-change="handleSortChange">
-          <el-table-column prop="pid" label="PID" width="80" sortable="custom" />
-          <el-table-column prop="name" label="进程名" width="200" sortable="custom">
+        <el-table
+          :data="filteredProcesses"
+          style="width: 100%"
+          @sort-change="handleSortChange"
+        >
+          <el-table-column
+            prop="pid"
+            label="PID"
+            width="80"
+            sortable="custom"
+          />
+          <el-table-column
+            prop="name"
+            label="进程名"
+            width="200"
+            sortable="custom"
+          >
             <template #default="{ row }">
               <div class="process-name">
                 <el-icon class="process-icon">
@@ -214,7 +244,12 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="cpu" label="CPU使用" width="120" sortable="custom">
+          <el-table-column
+            prop="cpu"
+            label="CPU使用"
+            width="120"
+            sortable="custom"
+          >
             <template #default="{ row }">
               <div class="metric-progress">
                 <el-progress
@@ -227,7 +262,12 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column prop="memory" label="内存使用" width="120" sortable="custom">
+          <el-table-column
+            prop="memory"
+            label="内存使用"
+            width="120"
+            sortable="custom"
+          >
             <template #default="{ row }">
               <div class="metric-progress">
                 <el-progress
@@ -297,7 +337,7 @@
                   <span class="info-value">{{ systemInfo.totalDisk }}</span>
                 </div>
               </div>
-              
+
               <div class="info-group">
                 <h4>系统版本</h4>
                 <div class="info-item">
@@ -320,7 +360,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="12">
           <el-card shadow="never">
             <template #header>
@@ -335,7 +375,7 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item label="CPU 严重">
                   <el-input-number
@@ -344,7 +384,7 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item label="内存 警告">
                   <el-input-number
@@ -353,7 +393,7 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item label="内存 严重">
                   <el-input-number
@@ -362,7 +402,7 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item label="磁盘 警告">
                   <el-input-number
@@ -371,7 +411,7 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item label="磁盘 严重">
                   <el-input-number
@@ -380,15 +420,13 @@
                     :max="100"
                     :precision="1"
                   />
-                  <span style="margin-left: 8px;">%</span>
+                  <span style="margin-left: 8px">%</span>
                 </el-form-item>
                 <el-form-item>
                   <el-button type="primary" @click="saveThresholds">
                     保存配置
                   </el-button>
-                  <el-button @click="resetThresholds">
-                    重置默认
-                  </el-button>
+                  <el-button @click="resetThresholds"> 重置默认 </el-button>
                 </el-form-item>
               </el-form>
             </div>
@@ -404,13 +442,21 @@
           <div class="card-header">
             <span>性能趋势分析</span>
             <div class="trend-controls">
-              <el-select v-model="trendMetric" size="small" style="width: 120px;">
+              <el-select
+                v-model="trendMetric"
+                size="small"
+                style="width: 120px"
+              >
                 <el-option label="CPU" value="cpu" />
                 <el-option label="内存" value="memory" />
                 <el-option label="磁盘" value="disk" />
                 <el-option label="网络" value="network" />
               </el-select>
-              <el-select v-model="trendPeriod" size="small" style="width: 120px;">
+              <el-select
+                v-model="trendPeriod"
+                size="small"
+                style="width: 120px"
+              >
                 <el-option label="小时" value="hour" />
                 <el-option label="天" value="day" />
                 <el-option label="周" value="week" />
@@ -420,7 +466,7 @@
           </div>
         </template>
         <div ref="trendChart" class="trend-chart"></div>
-        
+
         <div class="trend-analysis">
           <el-row :gutter="20">
             <el-col :span="8">
@@ -429,11 +475,15 @@
                 <div class="analysis-content">
                   <div class="metric-item">
                     <span>当前周期:</span>
-                    <span class="metric-value">{{ trendAnalysis.currentAverage }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.currentAverage }}%</span
+                    >
                   </div>
                   <div class="metric-item">
                     <span>上个周期:</span>
-                    <span class="metric-value">{{ trendAnalysis.previousAverage }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.previousAverage }}%</span
+                    >
                   </div>
                   <div class="metric-item">
                     <span>变化幅度:</span>
@@ -450,15 +500,21 @@
                 <div class="analysis-content">
                   <div class="metric-item">
                     <span>最高峰值:</span>
-                    <span class="metric-value">{{ trendAnalysis.maxPeak }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.maxPeak }}%</span
+                    >
                   </div>
                   <div class="metric-item">
                     <span>最低值:</span>
-                    <span class="metric-value">{{ trendAnalysis.minValue }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.minValue }}%</span
+                    >
                   </div>
                   <div class="metric-item">
                     <span>波动范围:</span>
-                    <span class="metric-value">{{ trendAnalysis.volatility }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.volatility }}%</span
+                    >
                   </div>
                 </div>
               </div>
@@ -469,17 +525,23 @@
                 <div class="analysis-content">
                   <div class="metric-item">
                     <span>趋势方向:</span>
-                    <span :class="getTrendDirectionClass(trendAnalysis.direction)">
+                    <span
+                      :class="getTrendDirectionClass(trendAnalysis.direction)"
+                    >
                       {{ getTrendDirectionText(trendAnalysis.direction) }}
                     </span>
                   </div>
                   <div class="metric-item">
                     <span>预测值:</span>
-                    <span class="metric-value">{{ trendAnalysis.prediction }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.prediction }}%</span
+                    >
                   </div>
                   <div class="metric-item">
                     <span>置信度:</span>
-                    <span class="metric-value">{{ trendAnalysis.confidence }}%</span>
+                    <span class="metric-value"
+                      >{{ trendAnalysis.confidence }}%</span
+                    >
                   </div>
                 </div>
               </div>
@@ -505,11 +567,7 @@
     </el-dialog>
 
     <!-- 仪表板设置对话框 -->
-    <el-dialog
-      v-model="showSettings"
-      title="仪表板设置"
-      width="600px"
-    >
+    <el-dialog v-model="showSettings" title="仪表板设置" width="600px">
       <div class="settings-form">
         <el-form :model="dashboardSettings" label-width="120px">
           <el-form-item label="刷新间隔">
@@ -553,15 +611,26 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  TrendCharts, Refresh, Download, Setting, Search, Cpu, Memory,
-  Folder, Connection, Server, Tools, Document
+  TrendCharts,
+  Refresh,
+  Download,
+  Setting,
+  Search,
+  Cpu,
+  Memory,
+  Folder,
+  Connection,
+  Server,
+  Tools,
+  Document,
 } from '@element-plus/icons-vue'
-import MetricCard from '../../components/common/MetricCard.vue'
-import ProcessDetail from '../../components/business/ProcessDetail.vue'
 import * as echarts from 'echarts'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+
+import ProcessDetail from '../../components/business/ProcessDetail.vue'
+import MetricCard from '../../components/common/MetricCard.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -586,42 +655,42 @@ const metrics = ref({
   cpu: {
     current: 45.6,
     trend: -2.3,
-    history: [42, 45, 48, 46, 44, 47, 46]
+    history: [42, 45, 48, 46, 44, 47, 46],
   },
   memory: {
     current: 67.8,
     trend: 5.2,
-    history: [65, 66, 68, 67, 69, 68, 68]
+    history: [65, 66, 68, 67, 69, 68, 68],
   },
   disk: {
     current: 23.4,
     trend: 0.8,
-    history: [22, 23, 23, 24, 23, 23, 23]
+    history: [22, 23, 23, 24, 23, 23, 23],
   },
   network: {
     current: 125.6,
     trend: 12.4,
-    history: [120, 118, 125, 130, 128, 126, 126]
-  }
+    history: [120, 118, 125, 130, 128, 126, 126],
+  },
 })
 
 // 图表配置选项
 const chartOptions = ref({
   cpu: {
     showAverage: true,
-    showPeak: true
+    showPeak: true,
   },
   memory: {
     showSwap: true,
-    showBuffer: true
+    showBuffer: true,
   },
   disk: {
-    selectedDisk: 'all'
+    selectedDisk: 'all',
   },
   network: {
     showInbound: true,
-    showOutbound: true
-  }
+    showOutbound: true,
+  },
 })
 
 // 进程监控数据
@@ -636,7 +705,7 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 8,
     priority: 'normal',
-    critical: true
+    critical: true,
   },
   {
     pid: 1235,
@@ -648,7 +717,7 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 4,
     priority: 'normal',
-    critical: true
+    critical: true,
   },
   {
     pid: 1236,
@@ -660,7 +729,7 @@ const processes = ref([
     uptime: '2h 15m',
     threads: 12,
     priority: 'high',
-    critical: true
+    critical: true,
   },
   {
     pid: 1237,
@@ -672,7 +741,7 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 6,
     priority: 'normal',
-    critical: true
+    critical: true,
   },
   {
     pid: 1238,
@@ -684,7 +753,7 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 16,
     priority: 'high',
-    critical: true
+    critical: true,
   },
   {
     pid: 1239,
@@ -696,7 +765,7 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 2,
     priority: 'low',
-    critical: false
+    critical: false,
   },
   {
     pid: 1240,
@@ -708,8 +777,8 @@ const processes = ref([
     uptime: '15d 8h',
     threads: 1,
     priority: 'low',
-    critical: false
-  }
+    critical: false,
+  },
 ])
 
 // 系统信息
@@ -721,23 +790,23 @@ const systemInfo = ref({
   os: 'Ubuntu 20.04.3 LTS',
   kernel: '5.4.0-91-generic',
   uptime: '15天 8小时 32分钟',
-  loadAverage: '0.45, 0.52, 0.48'
+  loadAverage: '0.45, 0.52, 0.48',
 })
 
 // 告警阈值配置
 const thresholds = ref({
   cpu: {
     warning: 70.0,
-    critical: 90.0
+    critical: 90.0,
   },
   memory: {
     warning: 80.0,
-    critical: 95.0
+    critical: 95.0,
   },
   disk: {
     warning: 85.0,
-    critical: 95.0
-  }
+    critical: 95.0,
+  },
 })
 
 // 趋势分析数据
@@ -750,7 +819,7 @@ const trendAnalysis = ref({
   volatility: 76.4,
   direction: 'down',
   prediction: 42.3,
-  confidence: 85.4
+  confidence: 85.4,
 })
 
 // 仪表板设置
@@ -758,7 +827,7 @@ const dashboardSettings = ref({
   refreshInterval: 10000,
   dataPoints: 100,
   visibleModules: ['overview', 'charts', 'processes', 'resources', 'trends'],
-  autoScale: true
+  autoScale: true,
 })
 
 // 计算属性
@@ -767,9 +836,10 @@ const filteredProcesses = computed(() => {
     return processes.value
   }
   const filter = processFilter.value.toLowerCase()
-  return processes.value.filter(process =>
-    process.name.toLowerCase().includes(filter) ||
-    process.type.toLowerCase().includes(filter)
+  return processes.value.filter(
+    process =>
+      process.name.toLowerCase().includes(filter) ||
+      process.type.toLowerCase().includes(filter)
   )
 })
 
@@ -785,31 +855,39 @@ const refreshData = async () => {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 更新指标数据
     metrics.value = {
       cpu: {
         current: 30 + Math.random() * 40,
         trend: (Math.random() - 0.5) * 10,
-        history: Array.from({ length: 7 }, () => Math.floor(30 + Math.random() * 40))
+        history: Array.from({ length: 7 }, () =>
+          Math.floor(30 + Math.random() * 40)
+        ),
       },
       memory: {
         current: 50 + Math.random() * 30,
         trend: (Math.random() - 0.5) * 8,
-        history: Array.from({ length: 7 }, () => Math.floor(50 + Math.random() * 30))
+        history: Array.from({ length: 7 }, () =>
+          Math.floor(50 + Math.random() * 30)
+        ),
       },
       disk: {
         current: 20 + Math.random() * 20,
         trend: (Math.random() - 0.5) * 5,
-        history: Array.from({ length: 7 }, () => Math.floor(20 + Math.random() * 20))
+        history: Array.from({ length: 7 }, () =>
+          Math.floor(20 + Math.random() * 20)
+        ),
       },
       network: {
         current: 100 + Math.random() * 50,
         trend: (Math.random() - 0.5) * 20,
-        history: Array.from({ length: 7 }, () => Math.floor(100 + Math.random() * 50))
-      }
+        history: Array.from({ length: 7 }, () =>
+          Math.floor(100 + Math.random() * 50)
+        ),
+      },
     }
-    
+
     // 更新进程数据
     processes.value.forEach(process => {
       if (process.status === 'running') {
@@ -817,13 +895,13 @@ const refreshData = async () => {
         process.memory = 50 + Math.random() * 200
       }
     })
-    
+
     // 更新趋势分析
     updateTrendAnalysis()
-    
+
     // 更新图表
     updateCharts()
-    
+
     ElMessage.success('数据刷新成功')
   } catch (error) {
     ElMessage.error('数据刷新失败')
@@ -833,7 +911,8 @@ const refreshData = async () => {
 }
 
 const updateTrendAnalysis = () => {
-  const currentMetric = metrics.value[trendMetric.value as keyof typeof metrics.value]
+  const currentMetric =
+    metrics.value[trendMetric.value as keyof typeof metrics.value]
   trendAnalysis.value = {
     currentAverage: currentMetric.current,
     previousAverage: currentMetric.current + (Math.random() - 0.5) * 20,
@@ -843,7 +922,7 @@ const updateTrendAnalysis = () => {
     volatility: Math.random() * 30 + 20,
     direction: Math.random() > 0.5 ? 'up' : 'down',
     prediction: currentMetric.current + (Math.random() - 0.5) * 10,
-    confidence: 70 + Math.random() * 25
+    confidence: 70 + Math.random() * 25,
   }
 }
 
@@ -860,11 +939,11 @@ const refreshProcesses = async () => {
 const handleSortChange = ({ prop, order }: any) => {
   // 实现排序逻辑
   if (!prop || !order) return
-  
+
   processes.value.sort((a: any, b: any) => {
     const aVal = a[prop]
     const bVal = b[prop]
-    
+
     if (typeof aVal === 'number' && typeof bVal === 'number') {
       return order === 'ascending' ? aVal - bVal : bVal - aVal
     } else {
@@ -887,10 +966,10 @@ const terminateProcess = async (pid: number) => {
       {
         confirmButtonText: '确定终止',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     // 模拟终止进程
     const processIndex = processes.value.findIndex(p => p.pid === pid)
     if (processIndex > -1) {
@@ -898,7 +977,7 @@ const terminateProcess = async (pid: number) => {
       processes.value[processIndex].cpu = 0
       processes.value[processIndex].memory = 0
     }
-    
+
     ElMessage.success('进程已终止')
   } catch (error) {
     // 用户取消操作
@@ -913,7 +992,7 @@ const resetThresholds = () => {
   thresholds.value = {
     cpu: { warning: 70.0, critical: 90.0 },
     memory: { warning: 80.0, critical: 95.0 },
-    disk: { warning: 85.0, critical: 95.0 }
+    disk: { warning: 85.0, critical: 95.0 },
   }
   ElMessage.success('阈值已重置为默认值')
 }
@@ -933,11 +1012,11 @@ const saveSettings = () => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
-  
+
   refreshTimer.value = setInterval(() => {
     refreshData()
   }, dashboardSettings.value.refreshInterval)
-  
+
   showSettings.value = false
   ElMessage.success('设置已保存')
 }
@@ -950,7 +1029,10 @@ const initCharts = () => {
       tooltip: { trigger: 'axis' },
       legend: { data: ['CPU使用率', '平均值', '峰值'] },
       grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
-      xAxis: { type: 'category', data: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00'] },
+      xAxis: {
+        type: 'category',
+        data: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00'],
+      },
       yAxis: { type: 'value', max: 100 },
       series: [
         {
@@ -958,25 +1040,25 @@ const initCharts = () => {
           type: 'line',
           data: [45, 48, 46, 52, 49, 47, 46],
           smooth: true,
-          areaStyle: { opacity: 0.3 }
+          areaStyle: { opacity: 0.3 },
         },
         {
           name: '平均值',
           type: 'line',
           data: [47, 47, 47, 47, 47, 47, 47],
-          lineStyle: { type: 'dashed' }
+          lineStyle: { type: 'dashed' },
         },
         {
           name: '峰值',
           type: 'line',
           data: [80, 82, 78, 85, 83, 81, 80],
-          lineStyle: { type: 'dotted' }
-        }
-      ]
+          lineStyle: { type: 'dotted' },
+        },
+      ],
     }
     chart.setOption(option)
   }
-  
+
   // 初始化其他图表...
   // 这里省略其他图表的初始化代码，实际项目中会完整实现
 }
@@ -1017,7 +1099,7 @@ const getProcessIcon = (type: string) => {
     service: Server,
     driver: Connection,
     broker: Connection,
-    web: Document
+    web: Document,
   }
   return iconMap[type] || Tools
 }
@@ -1026,7 +1108,7 @@ const getStatusTagType = (status: string) => {
   const tagTypeMap: { [key: string]: string } = {
     running: 'success',
     terminated: 'danger',
-    sleeping: 'warning'
+    sleeping: 'warning',
   }
   return tagTypeMap[status] || 'info'
 }
@@ -1035,7 +1117,7 @@ const getStatusText = (status: string) => {
   const textMap: { [key: string]: string } = {
     running: '运行中',
     terminated: '已终止',
-    sleeping: '休眠'
+    sleeping: '休眠',
   }
   return textMap[status] || status
 }
@@ -1054,7 +1136,7 @@ const getTrendDirectionText = (direction: string) => {
   const textMap: { [key: string]: string } = {
     up: '上升',
     down: '下降',
-    stable: '稳定'
+    stable: '稳定',
   }
   return textMap[direction] || direction
 }
@@ -1062,12 +1144,12 @@ const getTrendDirectionText = (direction: string) => {
 // 生命周期
 onMounted(() => {
   refreshData()
-  
+
   // 初始化图表
   nextTick(() => {
     initCharts()
   })
-  
+
   // 设置自动刷新
   refreshTimer.value = setInterval(() => {
     refreshData()

@@ -6,13 +6,13 @@
         <template #header>
           <div class="config-header">
             <h4>数据挖掘配置</h4>
-            <el-button type="primary" @click="startMining" :loading="mining">
+            <el-button type="primary" :loading="mining" @click="startMining">
               <el-icon><Cpu /></el-icon>
               {{ mining ? '挖掘中...' : '开始挖掘' }}
             </el-button>
           </div>
         </template>
-        
+
         <div class="config-content">
           <el-row :gutter="20">
             <!-- 挖掘任务类型 -->
@@ -28,7 +28,7 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 算法选择 -->
             <el-col :span="6">
               <div class="config-section">
@@ -43,7 +43,7 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 数据源选择 -->
             <el-col :span="6">
               <div class="config-section">
@@ -56,12 +56,15 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 时间窗口 -->
             <el-col :span="6">
               <div class="config-section">
                 <h5>时间窗口</h5>
-                <el-select v-model="config.timeWindow" placeholder="选择时间窗口">
+                <el-select
+                  v-model="config.timeWindow"
+                  placeholder="选择时间窗口"
+                >
                   <el-option label="最近1小时" value="1h" />
                   <el-option label="最近24小时" value="24h" />
                   <el-option label="最近7天" value="7d" />
@@ -70,7 +73,7 @@
               </div>
             </el-col>
           </el-row>
-          
+
           <!-- 高级参数 -->
           <div class="advanced-params">
             <el-collapse v-model="activeCollapse">
@@ -109,7 +112,7 @@
                   </el-col>
                 </el-row>
               </el-collapse-item>
-              
+
               <el-collapse-item title="数据过滤" name="filter">
                 <el-row :gutter="16">
                   <el-col :span="12">
@@ -153,7 +156,7 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 挖掘结果区域 -->
     <div v-if="miningResults" class="mining-results">
       <!-- 结果概览 -->
@@ -161,52 +164,64 @@
         <template #header>
           <h4>挖掘结果概览</h4>
         </template>
-        
+
         <div class="overview-grid">
           <div class="overview-item">
             <div class="overview-icon">
               <el-icon><DataBoard /></el-icon>
             </div>
             <div class="overview-content">
-              <div class="overview-value">{{ miningResults.summary.patterns }}</div>
+              <div class="overview-value">
+                {{ miningResults.summary.patterns }}
+              </div>
               <div class="overview-label">发现模式</div>
             </div>
           </div>
-          
+
           <div class="overview-item">
             <div class="overview-icon">
               <el-icon><Warning /></el-icon>
             </div>
             <div class="overview-content">
-              <div class="overview-value">{{ miningResults.summary.anomalies }}</div>
+              <div class="overview-value">
+                {{ miningResults.summary.anomalies }}
+              </div>
               <div class="overview-label">异常点</div>
             </div>
           </div>
-          
+
           <div class="overview-item">
             <div class="overview-icon">
               <el-icon><Connection /></el-icon>
             </div>
             <div class="overview-content">
-              <div class="overview-value">{{ miningResults.summary.associations }}</div>
+              <div class="overview-value">
+                {{ miningResults.summary.associations }}
+              </div>
               <div class="overview-label">关联规则</div>
             </div>
           </div>
-          
+
           <div class="overview-item">
             <div class="overview-icon">
               <el-icon><PieChart /></el-icon>
             </div>
             <div class="overview-content">
-              <div class="overview-value">{{ miningResults.summary.clusters }}</div>
+              <div class="overview-value">
+                {{ miningResults.summary.clusters }}
+              </div>
               <div class="overview-label">聚类数量</div>
             </div>
           </div>
         </div>
       </el-card>
-      
+
       <!-- 模式发现结果 -->
-      <el-card v-if="config.taskType === 'pattern'" class="result-patterns" shadow="never">
+      <el-card
+        v-if="config.taskType === 'pattern'"
+        class="result-patterns"
+        shadow="never"
+      >
         <template #header>
           <div class="patterns-header">
             <h4>发现的模式</h4>
@@ -217,14 +232,18 @@
             </el-select>
           </div>
         </template>
-        
+
         <div class="patterns-content">
           <div class="patterns-visualization">
             <div ref="patternsChartRef" class="patterns-chart"></div>
           </div>
-          
+
           <div class="patterns-list">
-            <el-table :data="sortedPatterns" style="width: 100%" max-height="400">
+            <el-table
+              :data="sortedPatterns"
+              style="width: 100%"
+              max-height="400"
+            >
               <el-table-column prop="pattern" label="模式" width="300">
                 <template #default="{ row }">
                   <div class="pattern-display">
@@ -233,7 +252,7 @@
                       :key="item"
                       size="small"
                       effect="plain"
-                      style="margin-right: 4px;"
+                      style="margin-right: 4px"
                     >
                       {{ item }}
                     </el-tag>
@@ -248,7 +267,9 @@
                     :show-text="false"
                     :color="getSupportColor(row.support)"
                   />
-                  <span class="support-text">{{ (row.support * 100).toFixed(1) }}%</span>
+                  <span class="support-text"
+                    >{{ (row.support * 100).toFixed(1) }}%</span
+                  >
                 </template>
               </el-table-column>
               <el-table-column prop="confidence" label="置信度" width="100">
@@ -261,7 +282,10 @@
               <el-table-column prop="frequency" label="频率" width="80" />
               <el-table-column prop="significance" label="显著性" width="100">
                 <template #default="{ row }">
-                  <el-tag :type="getSignificanceType(row.significance)" size="small">
+                  <el-tag
+                    :type="getSignificanceType(row.significance)"
+                    size="small"
+                  >
                     {{ row.significance }}
                   </el-tag>
                 </template>
@@ -271,9 +295,13 @@
           </div>
         </div>
       </el-card>
-      
+
       <!-- 聚类分析结果 -->
-      <el-card v-if="config.taskType === 'clustering'" class="result-clustering" shadow="never">
+      <el-card
+        v-if="config.taskType === 'clustering'"
+        class="result-clustering"
+        shadow="never"
+      >
         <template #header>
           <div class="clustering-header">
             <h4>聚类分析结果</h4>
@@ -284,15 +312,18 @@
             </el-radio-group>
           </div>
         </template>
-        
+
         <div class="clustering-content">
           <div class="clustering-visualization">
             <div ref="clusteringChartRef" class="clustering-chart"></div>
           </div>
-          
+
           <div class="clustering-summary">
             <h5>聚类摘要</h5>
-            <el-table :data="miningResults.clustering.clusters" style="width: 100%">
+            <el-table
+              :data="miningResults.clustering.clusters"
+              style="width: 100%"
+            >
               <el-table-column prop="id" label="聚类ID" width="80" />
               <el-table-column prop="size" label="样本数" width="100" />
               <el-table-column prop="center" label="中心点">
@@ -310,18 +341,22 @@
           </div>
         </div>
       </el-card>
-      
+
       <!-- 关联规则结果 -->
-      <el-card v-if="config.taskType === 'association'" class="result-association" shadow="never">
+      <el-card
+        v-if="config.taskType === 'association'"
+        class="result-association"
+        shadow="never"
+      >
         <template #header>
           <h4>关联规则</h4>
         </template>
-        
+
         <div class="association-content">
           <div class="association-network">
             <div ref="associationChartRef" class="association-chart"></div>
           </div>
-          
+
           <div class="association-rules">
             <h5>强关联规则</h5>
             <div class="rules-list">
@@ -357,35 +392,39 @@
                     </el-tag>
                   </div>
                 </div>
-                
+
                 <div class="rule-metrics">
                   <div class="metric">
                     <span class="metric-label">支持度:</span>
-                    <span class="metric-value">{{ (rule.support * 100).toFixed(1) }}%</span>
+                    <span class="metric-value"
+                      >{{ (rule.support * 100).toFixed(1) }}%</span
+                    >
                   </div>
                   <div class="metric">
                     <span class="metric-label">置信度:</span>
-                    <span class="metric-value">{{ (rule.confidence * 100).toFixed(1) }}%</span>
+                    <span class="metric-value"
+                      >{{ (rule.confidence * 100).toFixed(1) }}%</span
+                    >
                   </div>
                   <div class="metric">
                     <span class="metric-label">提升度:</span>
                     <span class="metric-value">{{ rule.lift.toFixed(2) }}</span>
                   </div>
                 </div>
-                
+
                 <div class="rule-interpretation">{{ rule.interpretation }}</div>
               </div>
             </div>
           </div>
         </div>
       </el-card>
-      
+
       <!-- 挖掘洞察 -->
       <el-card class="result-insights" shadow="never">
         <template #header>
           <h4>挖掘洞察</h4>
         </template>
-        
+
         <div class="insights-content">
           <div class="insights-list">
             <div
@@ -398,7 +437,9 @@
                   <component :is="getInsightIcon(insight.type)" />
                 </el-icon>
                 <span class="insight-title">{{ insight.title }}</span>
-                <el-tag :type="insight.priority" size="small">{{ insight.priority }}</el-tag>
+                <el-tag :type="insight.priority" size="small">{{
+                  insight.priority
+                }}</el-tag>
               </div>
               <div class="insight-content">{{ insight.content }}</div>
               <div class="insight-actions">
@@ -411,11 +452,14 @@
               </div>
             </div>
           </div>
-          
+
           <div class="insights-summary">
             <h5>关键发现总结</h5>
             <ul>
-              <li v-for="finding in miningResults.keyFindings" :key="finding.id">
+              <li
+                v-for="finding in miningResults.keyFindings"
+                :key="finding.id"
+              >
                 {{ finding.text }}
               </li>
             </ul>
@@ -423,10 +467,14 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 空状态 -->
     <el-empty v-else description="配置参数并开始数据挖掘">
-      <el-button type="primary" @click="startMining" :disabled="!canStartMining">
+      <el-button
+        type="primary"
+        :disabled="!canStartMining"
+        @click="startMining"
+      >
         开始数据挖掘
       </el-button>
     </el-empty>
@@ -451,9 +499,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
 import {
   Cpu,
   DataBoard,
@@ -463,8 +508,11 @@ import {
   Right,
   InfoFilled,
   SuccessFilled,
-  WarningFilled
+  WarningFilled,
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== 响应式数据 =====
 const mining = ref(false)
@@ -481,12 +529,12 @@ const config = ref({
   params: {
     support: 0.3,
     confidence: 0.7,
-    minSupport: 10
+    minSupport: 10,
   },
   filters: {
     devices: [],
-    tags: []
-  }
+    tags: [],
+  },
 })
 
 // 图表引用
@@ -503,14 +551,14 @@ const devices = ref([
   { id: '1', name: 'PLC-01' },
   { id: '2', name: 'PLC-02' },
   { id: '3', name: 'Sensor-01' },
-  { id: '4', name: 'Sensor-02' }
+  { id: '4', name: 'Sensor-02' },
 ])
 
 const tags = ref([
   { id: '1', name: '温度' },
   { id: '2', name: '压力' },
   { id: '3', name: '流量' },
-  { id: '4', name: '功率' }
+  { id: '4', name: '功率' },
 ])
 
 // 挖掘结果
@@ -522,37 +570,39 @@ const availableAlgorithms = computed(() => {
     pattern: [
       { label: 'Apriori', value: 'apriori' },
       { label: 'FP-Growth', value: 'fpgrowth' },
-      { label: 'ECLAT', value: 'eclat' }
+      { label: 'ECLAT', value: 'eclat' },
     ],
     clustering: [
       { label: 'K-Means', value: 'kmeans' },
       { label: 'DBSCAN', value: 'dbscan' },
-      { label: '层次聚类', value: 'hierarchical' }
+      { label: '层次聚类', value: 'hierarchical' },
     ],
     association: [
       { label: 'Apriori', value: 'apriori' },
-      { label: 'FP-Growth', value: 'fpgrowth' }
+      { label: 'FP-Growth', value: 'fpgrowth' },
     ],
     anomaly: [
       { label: '孤立森林', value: 'isolation_forest' },
       { label: 'One-Class SVM', value: 'one_class_svm' },
-      { label: 'LOF', value: 'lof' }
-    ]
+      { label: 'LOF', value: 'lof' },
+    ],
   }
-  
+
   return algorithmMap[config.value.taskType] || []
 })
 
 const canStartMining = computed(() => {
-  return config.value.taskType && config.value.algorithm && config.value.dataSource
+  return (
+    config.value.taskType && config.value.algorithm && config.value.dataSource
+  )
 })
 
 const sortedPatterns = computed(() => {
   if (!miningResults.value?.patterns) return []
-  
+
   const patterns = [...miningResults.value.patterns]
   patterns.sort((a, b) => b[patternSortBy.value] - a[patternSortBy.value])
-  
+
   return patterns
 })
 
@@ -566,15 +616,15 @@ async function startMining() {
     ElMessage.warning('请完善挖掘配置')
     return
   }
-  
+
   mining.value = true
-  
+
   try {
     // 调用真实的数据挖掘API
     const response = await fetch('/api/v1/analytics/mining', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         taskType: config.value.taskType,
@@ -582,16 +632,16 @@ async function startMining() {
         parameters: config.value.parameters,
         dataSource: config.value.dataSource,
         timeRange: config.value.timeRange,
-        filters: config.value.filters
-      })
+        filters: config.value.filters,
+      }),
     })
-    
+
     if (!response.ok) {
       throw new Error('数据挖掘请求失败')
     }
-    
+
     miningResults.value = await response.json()
-    
+
     // 初始化图表
     nextTick(() => {
       if (config.value.taskType === 'pattern') {
@@ -602,9 +652,8 @@ async function startMining() {
         initAssociationChart()
       }
     })
-    
+
     ElMessage.success('数据挖掘完成')
-    
   } catch (error) {
     console.error('挖掘失败:', error)
     ElMessage.error('数据挖掘失败')
@@ -613,22 +662,21 @@ async function startMining() {
   }
 }
 
-
 /**
  * 初始化模式图表
  */
 function initPatternsChart() {
   if (!patternsChartRef.value || !miningResults.value?.patterns) return
-  
+
   patternsChart.value = echarts.init(patternsChartRef.value)
-  
+
   const data = miningResults.value.patterns.map(pattern => ({
     name: pattern.items.join(' + '),
     value: pattern.support,
     confidence: pattern.confidence,
-    frequency: pattern.frequency
+    frequency: pattern.frequency,
   }))
-  
+
   const option = {
     animation: true,
     tooltip: {
@@ -640,34 +688,38 @@ function initPatternsChart() {
           <div>置信度: ${(params.data.confidence * 100).toFixed(1)}%</div>
           <div>频率: ${params.data.frequency}</div>
         `
-      }
+      },
     },
-    series: [{
-      type: 'treemap',
-      data,
-      roam: false,
-      nodeClick: false,
-      breadcrumb: { show: false },
-      itemStyle: {
-        borderColor: '#fff',
-        borderWidth: 2,
-        borderRadius: 4
-      },
-      emphasis: {
+    series: [
+      {
+        type: 'treemap',
+        data,
+        roam: false,
+        nodeClick: false,
+        breadcrumb: { show: false },
         itemStyle: {
-          shadowBlur: 10,
-          shadowColor: 'rgba(0,0,0,0.3)'
-        }
+          borderColor: '#fff',
+          borderWidth: 2,
+          borderRadius: 4,
+        },
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowColor: 'rgba(0,0,0,0.3)',
+          },
+        },
+        levels: [
+          {
+            itemStyle: {
+              borderWidth: 3,
+              gapWidth: 3,
+            },
+          },
+        ],
       },
-      levels: [{
-        itemStyle: {
-          borderWidth: 3,
-          gapWidth: 3
-        }
-      }]
-    }]
+    ],
   }
-  
+
   patternsChart.value.setOption(option)
 }
 
@@ -676,53 +728,55 @@ function initPatternsChart() {
  */
 function initClusteringChart() {
   if (!clusteringChartRef.value || !miningResults.value?.clustering) return
-  
+
   clusteringChart.value = echarts.init(clusteringChartRef.value)
-  
+
   if (clusterView.value === 'scatter') {
     // 生成模拟散点数据
-    const series = miningResults.value.clustering.clusters.map((cluster, index) => {
-      const data = []
-      const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
-      
-      for (let i = 0; i < cluster.size / 10; i++) {
-        data.push([
-          cluster.center[0] + (Math.random() - 0.5) * 10,
-          cluster.center[1] + (Math.random() - 0.5) * 0.5,
-          cluster.center[2] + (Math.random() - 0.5) * 50
-        ])
+    const series = miningResults.value.clustering.clusters.map(
+      (cluster, index) => {
+        const data = []
+        const colors = ['#409EFF', '#67C23A', '#E6A23C', '#F56C6C', '#909399']
+
+        for (let i = 0; i < cluster.size / 10; i++) {
+          data.push([
+            cluster.center[0] + (Math.random() - 0.5) * 10,
+            cluster.center[1] + (Math.random() - 0.5) * 0.5,
+            cluster.center[2] + (Math.random() - 0.5) * 50,
+          ])
+        }
+
+        return {
+          name: `聚类 ${cluster.id}`,
+          type: 'scatter3D',
+          data,
+          itemStyle: {
+            color: colors[index % colors.length],
+          },
+          symbolSize: 6,
+        }
       }
-      
-      return {
-        name: `聚类 ${cluster.id}`,
-        type: 'scatter3D',
-        data,
-        itemStyle: {
-          color: colors[index % colors.length]
-        },
-        symbolSize: 6
-      }
-    })
-    
+    )
+
     const option = {
       animation: true,
       grid3D: {
         boxWidth: 100,
         boxDepth: 100,
-        boxHeight: 100
+        boxHeight: 100,
       },
       xAxis3D: { name: '温度' },
       yAxis3D: { name: '压力' },
       zAxis3D: { name: '流量' },
       tooltip: {
-        trigger: 'item'
+        trigger: 'item',
       },
       legend: {
-        data: series.map(s => s.name)
+        data: series.map(s => s.name),
       },
-      series
+      series,
     }
-    
+
     patternsChart.value.setOption(option)
   }
 }
@@ -732,17 +786,17 @@ function initClusteringChart() {
  */
 function initAssociationChart() {
   if (!associationChartRef.value || !miningResults.value?.association) return
-  
+
   associationChart.value = echarts.init(associationChartRef.value)
-  
+
   // 创建节点和连接
   const nodes = new Set()
   const links = []
-  
+
   miningResults.value.association.rules.forEach(rule => {
     rule.antecedent.forEach(item => nodes.add(item))
     rule.consequent.forEach(item => nodes.add(item))
-    
+
     rule.antecedent.forEach(ant => {
       rule.consequent.forEach(con => {
         links.push({
@@ -751,21 +805,21 @@ function initAssociationChart() {
           value: rule.confidence,
           lineStyle: {
             width: rule.confidence * 5,
-            color: rule.confidence > 0.8 ? '#67C23A' : '#409EFF'
-          }
+            color: rule.confidence > 0.8 ? '#67C23A' : '#409EFF',
+          },
         })
       })
     })
   })
-  
+
   const nodeData = Array.from(nodes).map(name => ({
     name,
     symbolSize: 30,
     itemStyle: {
-      color: '#409EFF'
-    }
+      color: '#409EFF',
+    },
   }))
-  
+
   const option = {
     animation: true,
     tooltip: {
@@ -775,33 +829,35 @@ function initAssociationChart() {
         } else {
           return params.data.name
         }
-      }
+      },
     },
-    series: [{
-      type: 'graph',
-      layout: 'force',
-      data: nodeData,
-      links,
-      roam: true,
-      force: {
-        repulsion: 200,
-        edgeLength: 100
+    series: [
+      {
+        type: 'graph',
+        layout: 'force',
+        data: nodeData,
+        links,
+        roam: true,
+        force: {
+          repulsion: 200,
+          edgeLength: 100,
+        },
+        label: {
+          show: true,
+          position: 'inside',
+          fontSize: 12,
+          color: '#fff',
+        },
+        emphasis: {
+          focus: 'adjacency',
+          lineStyle: {
+            width: 8,
+          },
+        },
       },
-      label: {
-        show: true,
-        position: 'inside',
-        fontSize: 12,
-        color: '#fff'
-      },
-      emphasis: {
-        focus: 'adjacency',
-        lineStyle: {
-          width: 8
-        }
-      }
-    }]
+    ],
   }
-  
+
   associationChart.value.setOption(option)
 }
 
@@ -846,7 +902,7 @@ function getInsightIcon(type: string): string {
   const iconMap = {
     info: 'InfoFilled',
     success: 'SuccessFilled',
-    warning: 'WarningFilled'
+    warning: 'WarningFilled',
   }
   return iconMap[type] || 'InfoFilled'
 }
@@ -887,42 +943,48 @@ onUnmounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => config.value.taskType, () => {
-  // 切换任务类型时重置算法
-  if (availableAlgorithms.value.length > 0) {
-    config.value.algorithm = availableAlgorithms.value[0].value
+watch(
+  () => config.value.taskType,
+  () => {
+    // 切换任务类型时重置算法
+    if (availableAlgorithms.value.length > 0) {
+      config.value.algorithm = availableAlgorithms.value[0].value
+    }
   }
-})
+)
 
-watch(() => clusterView.value, () => {
-  if (config.value.taskType === 'clustering' && clusteringChart.value) {
-    initClusteringChart()
+watch(
+  () => clusterView.value,
+  () => {
+    if (config.value.taskType === 'clustering' && clusteringChart.value) {
+      initClusteringChart()
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .data-mining-panel {
   .mining-config {
     margin-bottom: 20px;
-    
+
     .config-card {
       .config-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .config-content {
         .config-section {
           margin-bottom: 16px;
-          
+
           h5 {
             margin: 0 0 8px 0;
             color: #606266;
@@ -930,23 +992,23 @@ watch(() => clusterView.value, () => {
             font-weight: 500;
           }
         }
-        
+
         .advanced-params {
           margin-top: 20px;
         }
       }
     }
   }
-  
+
   .mining-results {
     .result-overview {
       margin-bottom: 20px;
-      
+
       .overview-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        
+
         .overview-item {
           display: flex;
           align-items: center;
@@ -954,12 +1016,12 @@ watch(() => clusterView.value, () => {
           padding: 16px;
           background: #f8f9fa;
           border-radius: 6px;
-          
+
           .overview-icon {
             font-size: 24px;
             color: #409eff;
           }
-          
+
           .overview-content {
             .overview-value {
               font-size: 20px;
@@ -967,7 +1029,7 @@ watch(() => clusterView.value, () => {
               color: #303133;
               margin-bottom: 2px;
             }
-            
+
             .overview-label {
               font-size: 12px;
               color: #909399;
@@ -976,22 +1038,22 @@ watch(() => clusterView.value, () => {
         }
       }
     }
-    
+
     .result-patterns {
       margin-bottom: 20px;
-      
+
       .patterns-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .patterns-content {
         .patterns-visualization {
           .patterns-chart {
@@ -1000,52 +1062,52 @@ watch(() => clusterView.value, () => {
             margin-bottom: 20px;
           }
         }
-        
+
         .patterns-list {
           .pattern-display {
             display: flex;
             flex-wrap: wrap;
             gap: 4px;
           }
-          
+
           .support-text {
             margin-left: 8px;
             font-size: 12px;
             color: #606266;
           }
-          
+
           .high-confidence {
             color: #67c23a;
             font-weight: 600;
           }
-          
+
           .medium-confidence {
             color: #e6a23c;
             font-weight: 500;
           }
-          
+
           .low-confidence {
             color: #f56c6c;
           }
         }
       }
     }
-    
+
     .result-clustering {
       margin-bottom: 20px;
-      
+
       .clustering-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .clustering-content {
         .clustering-visualization {
           .clustering-chart {
@@ -1054,7 +1116,7 @@ watch(() => clusterView.value, () => {
             margin-bottom: 20px;
           }
         }
-        
+
         .clustering-summary {
           h5 {
             margin: 0 0 12px 0;
@@ -1065,10 +1127,10 @@ watch(() => clusterView.value, () => {
         }
       }
     }
-    
+
     .result-association {
       margin-bottom: 20px;
-      
+
       .association-content {
         .association-network {
           .association-chart {
@@ -1077,7 +1139,7 @@ watch(() => clusterView.value, () => {
             margin-bottom: 20px;
           }
         }
-        
+
         .association-rules {
           h5 {
             margin: 0 0 16px 0;
@@ -1085,7 +1147,7 @@ watch(() => clusterView.value, () => {
             font-size: 14px;
             font-weight: 600;
           }
-          
+
           .rules-list {
             .rule-item {
               margin-bottom: 16px;
@@ -1093,47 +1155,47 @@ watch(() => clusterView.value, () => {
               background: #f8f9fa;
               border-radius: 6px;
               border-left: 4px solid #409eff;
-              
+
               .rule-expression {
                 display: flex;
                 align-items: center;
                 gap: 12px;
                 margin-bottom: 12px;
-                
+
                 .rule-antecedent,
                 .rule-consequent {
                   display: flex;
                   gap: 4px;
                   flex-wrap: wrap;
                 }
-                
+
                 .rule-arrow {
                   font-size: 16px;
                   color: #909399;
                 }
               }
-              
+
               .rule-metrics {
                 display: flex;
                 gap: 20px;
                 margin-bottom: 8px;
-                
+
                 .metric {
                   display: flex;
                   gap: 4px;
                   font-size: 13px;
-                  
+
                   .metric-label {
                     color: #606266;
                   }
-                  
+
                   .metric-value {
                     color: #303133;
                     font-weight: 500;
                   }
                 }
               }
-              
+
               .rule-interpretation {
                 font-size: 12px;
                 color: #606266;
@@ -1144,52 +1206,58 @@ watch(() => clusterView.value, () => {
         }
       }
     }
-    
+
     .result-insights {
       .insights-content {
         .insights-list {
           margin-bottom: 24px;
-          
+
           .insight-item {
             margin-bottom: 16px;
             padding: 16px;
             background: #f8f9fa;
             border-radius: 6px;
-            
+
             .insight-header {
               display: flex;
               align-items: center;
               gap: 8px;
               margin-bottom: 8px;
-              
+
               .insight-icon {
                 font-size: 16px;
-                
-                &.info { color: #409eff; }
-                &.success { color: #67c23a; }
-                &.warning { color: #e6a23c; }
+
+                &.info {
+                  color: #409eff;
+                }
+                &.success {
+                  color: #67c23a;
+                }
+                &.warning {
+                  color: #e6a23c;
+                }
               }
-              
+
               .insight-title {
                 flex: 1;
                 font-weight: 500;
                 color: #303133;
               }
             }
-            
+
             .insight-content {
               margin-bottom: 12px;
               color: #606266;
               line-height: 1.5;
             }
-            
+
             .insight-actions {
               display: flex;
               gap: 8px;
             }
           }
         }
-        
+
         .insights-summary {
           h5 {
             margin: 0 0 12px 0;
@@ -1197,11 +1265,11 @@ watch(() => clusterView.value, () => {
             font-size: 14px;
             font-weight: 600;
           }
-          
+
           ul {
             margin: 0;
             padding-left: 20px;
-            
+
             li {
               margin-bottom: 6px;
               color: #606266;
@@ -1231,26 +1299,26 @@ watch(() => clusterView.value, () => {
         gap: 12px;
       }
     }
-    
+
     .result-overview .overview-grid {
       grid-template-columns: 1fr;
       gap: 12px;
     }
-    
+
     .result-patterns .patterns-header,
     .result-clustering .clustering-header {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
     }
-    
+
     .result-association .association-rules .rules-list .rule-item {
       .rule-expression {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
       }
-      
+
       .rule-metrics {
         flex-direction: column;
         gap: 8px;

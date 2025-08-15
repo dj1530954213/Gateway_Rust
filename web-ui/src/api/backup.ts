@@ -77,7 +77,12 @@ class BackupApi {
   /**
    * 获取备份列表
    */
-  async list(params?: { search?: string; type?: string; page?: number; size?: number }) {
+  async list(params?: {
+    search?: string
+    type?: string
+    page?: number
+    size?: number
+  }) {
     return http.get('/api/v1/backup/list', { params })
   }
 
@@ -114,7 +119,7 @@ class BackupApi {
    */
   async download(id: string) {
     return http.get(`/api/v1/backup/${id}/download`, {
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 
@@ -149,7 +154,9 @@ class BackupApi {
   /**
    * 获取操作进度
    */
-  async getOperationProgress(operationId: string): Promise<{ data: BackupOperation }> {
+  async getOperationProgress(
+    operationId: string
+  ): Promise<{ data: BackupOperation }> {
     return http.get(`/api/v1/backup/operations/${operationId}`)
   }
 
@@ -220,7 +227,9 @@ class BackupApi {
    * 清理过期备份
    */
   async cleanup(olderThanDays: number) {
-    return http.post('/api/v1/backup/cleanup', { older_than_days: olderThanDays })
+    return http.post('/api/v1/backup/cleanup', {
+      older_than_days: olderThanDays,
+    })
   }
 
   /**
@@ -228,7 +237,7 @@ class BackupApi {
    */
   async exportConfig() {
     return http.get('/api/v1/backup/export-config', {
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 
@@ -240,8 +249,8 @@ class BackupApi {
     formData.append('config', file)
     return http.post('/api/v1/backup/import-config', formData, {
       headers: {
-        'Content-Type': 'multipart/form-data'
-      }
+        'Content-Type': 'multipart/form-data',
+      },
     })
   }
 

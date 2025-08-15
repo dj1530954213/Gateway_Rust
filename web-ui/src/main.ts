@@ -1,16 +1,24 @@
 import { createApp } from 'vue'
 import { createPinia } from 'pinia'
+
+// 重新排序导入，确保Vue在Element Plus之前完全初始化
+import App from './App.vue'
+import router from './router'
+
+// 样式导入放在组件库之前
+import '@/assets/styles/main.scss'
+
+// Element Plus相关导入
 import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import 'element-plus/theme-chalk/dark/css-vars.css'
 import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
-import App from './App.vue'
-import router from './router'
-import '@/assets/styles/main.scss'
-
 // Permission management
-import { createPermissionDirective, createPermissionGuard } from '@/composables/usePermission'
+import {
+  createPermissionDirective,
+  createPermissionGuard,
+} from '@/composables/usePermission'
 import { useAuthStore } from '@/stores/auth'
 
 const app = createApp(App)
@@ -20,14 +28,16 @@ const pinia = createPinia()
 app.config.errorHandler = (error, instance, info) => {
   console.error('Global error:', error)
   console.error('Error info:', info)
-  
+
   // 特别处理DOM相关错误
-  if (error.message?.includes('parentNode') || 
-      error.message?.includes('Cannot read properties of null') ||
-      error.message?.includes('Cannot read properties of undefined')) {
+  if (
+    error.message?.includes('parentNode') ||
+    error.message?.includes('Cannot read properties of null') ||
+    error.message?.includes('Cannot read properties of undefined')
+  ) {
     console.warn('DOM access error detected, component may need better cleanup')
   }
-  
+
   // 在开发模式下不中断应用
   if (import.meta.env.MODE === 'development') {
     console.warn('Error caught by global handler, continuing...')

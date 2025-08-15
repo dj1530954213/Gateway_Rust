@@ -185,9 +185,9 @@ class UsersApi {
    * 导出用户数据
    */
   async export(params?: UserQuery) {
-    return http.get('/api/v1/users/export', { 
+    return http.get('/api/v1/users/export', {
       params,
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 }

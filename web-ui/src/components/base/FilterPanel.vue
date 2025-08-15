@@ -1,25 +1,25 @@
 <template>
   <div class="filter-panel" :class="panelClass">
     <!-- 筛选头部 -->
-    <div class="filter-header" v-if="showHeader">
+    <div v-if="showHeader" class="filter-header">
       <div class="filter-title">
         <el-icon v-if="titleIcon">
           <component :is="titleIcon" />
         </el-icon>
         <span>{{ title }}</span>
       </div>
-      
+
       <div class="filter-actions">
         <el-button
           v-if="showReset"
           type="link"
           size="small"
-          @click="handleReset"
           :disabled="!hasActiveFilters"
+          @click="handleReset"
         >
           重置筛选 ({{ activeFilterCount }})
         </el-button>
-        
+
         <el-button
           v-if="collapsible"
           type="link"
@@ -29,7 +29,7 @@
         />
       </div>
     </div>
-    
+
     <!-- 筛选内容 -->
     <el-collapse-transition>
       <div v-show="!isCollapsed" class="filter-content">
@@ -47,7 +47,7 @@
                 {{ filter.label }}
               </el-divider>
             </div>
-            
+
             <!-- 筛选项 -->
             <el-form-item
               v-else
@@ -65,10 +65,12 @@
                 @input="handleFilterChange(filter.key, $event)"
                 @clear="handleFilterClear(filter.key)"
               />
-              
+
               <!-- 选择器 -->
               <el-select
-                v-else-if="filter.type === 'select' || filter.type === 'multiSelect'"
+                v-else-if="
+                  filter.type === 'select' || filter.type === 'multiSelect'
+                "
                 v-model="filterValues[filter.key]"
                 :placeholder="filter.placeholder"
                 :clearable="filter.clearable !== false"
@@ -87,7 +89,7 @@
                   :disabled="option.disabled"
                 />
               </el-select>
-              
+
               <!-- 日期范围选择器 -->
               <el-date-picker
                 v-else-if="filter.type === 'daterange'"
@@ -101,7 +103,7 @@
                 :clearable="filter.clearable !== false"
                 @change="handleFilterChange(filter.key, $event)"
               />
-              
+
               <!-- 日期时间范围选择器 -->
               <el-date-picker
                 v-else-if="filter.type === 'datetimerange'"
@@ -115,9 +117,12 @@
                 :clearable="filter.clearable !== false"
                 @change="handleFilterChange(filter.key, $event)"
               />
-              
+
               <!-- 数字范围 -->
-              <div v-else-if="filter.type === 'numberRange'" class="number-range">
+              <div
+                v-else-if="filter.type === 'numberRange'"
+                class="number-range"
+              >
                 <el-input-number
                   v-model="filterValues[filter.key + '_min']"
                   :placeholder="filter.minPlaceholder || '最小值'"
@@ -140,7 +145,7 @@
                   @change="handleRangeChange(filter.key, 'max', $event)"
                 />
               </div>
-              
+
               <!-- 开关 -->
               <el-switch
                 v-else-if="filter.type === 'switch'"
@@ -151,7 +156,7 @@
                 :inactive-value="filter.inactiveValue"
                 @change="handleFilterChange(filter.key, $event)"
               />
-              
+
               <!-- 单选框组 -->
               <el-radio-group
                 v-else-if="filter.type === 'radio'"
@@ -167,7 +172,7 @@
                   {{ option.label }}
                 </el-radio>
               </el-radio-group>
-              
+
               <!-- 复选框组 -->
               <el-checkbox-group
                 v-else-if="filter.type === 'checkbox'"
@@ -183,7 +188,7 @@
                   {{ option.label }}
                 </el-checkbox>
               </el-checkbox-group>
-              
+
               <!-- 滑块 -->
               <el-slider
                 v-else-if="filter.type === 'slider'"
@@ -197,21 +202,24 @@
                 :marks="filter.marks"
                 @change="handleFilterChange(filter.key, $event)"
               />
-              
+
               <!-- 自定义插槽 -->
               <slot
                 v-else-if="filter.type === 'slot'"
                 :name="filter.slotName || filter.key"
                 :filter="filter"
                 :value="filterValues[filter.key]"
-                :onChange="(value) => handleFilterChange(filter.key, value)"
+                :on-change="value => handleFilterChange(filter.key, value)"
               />
             </el-form-item>
           </template>
         </el-form>
-        
+
         <!-- 快速筛选标签 -->
-        <div v-if="showQuickFilters && quickFilters.length > 0" class="quick-filters">
+        <div
+          v-if="showQuickFilters && quickFilters.length > 0"
+          class="quick-filters"
+        >
           <el-divider content-position="left">快速筛选</el-divider>
           <div class="quick-filter-tags">
             <el-tag
@@ -226,29 +234,27 @@
             </el-tag>
           </div>
         </div>
-        
+
         <!-- 应用按钮 -->
         <div v-if="showApplyButton" class="filter-apply">
           <el-button
             type="primary"
             size="small"
-            @click="handleApply"
             :loading="applying"
+            @click="handleApply"
           >
             应用筛选
           </el-button>
-          <el-button
-            size="small"
-            @click="handleReset"
-          >
-            重置
-          </el-button>
+          <el-button size="small" @click="handleReset"> 重置 </el-button>
         </div>
       </div>
     </el-collapse-transition>
-    
+
     <!-- 已选筛选条件显示 -->
-    <div v-if="showActiveFilters && activeFilters.length > 0" class="active-filters">
+    <div
+      v-if="showActiveFilters && activeFilters.length > 0"
+      class="active-filters"
+    >
       <span class="active-filters-label">当前筛选：</span>
       <el-tag
         v-for="(filter, index) in activeFilters"
@@ -264,34 +270,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { ArrowDown, ArrowUp, Filter } from '@element-plus/icons-vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 
 export interface FilterItem {
   key: string
   label: string
-  type: 'text' | 'select' | 'multiSelect' | 'daterange' | 'datetimerange' | 
-        'numberRange' | 'switch' | 'radio' | 'checkbox' | 'slider' | 'slot' | 'group'
+  type:
+    | 'text'
+    | 'select'
+    | 'multiSelect'
+    | 'daterange'
+    | 'datetimerange'
+    | 'numberRange'
+    | 'switch'
+    | 'radio'
+    | 'checkbox'
+    | 'slider'
+    | 'slot'
+    | 'group'
   placeholder?: string
   clearable?: boolean
   className?: string
   labelWidth?: string
-  
+
   // 选择器选项
   options?: Array<{ label: string; value: any; disabled?: boolean }>
-  optionsLoader?: () => Promise<Array<{ label: string; value: any; disabled?: boolean }>>
-  
+  optionsLoader?: () => Promise<
+    Array<{ label: string; value: any; disabled?: boolean }>
+  >
+
   // 选择器特有属性
   collapseTags?: boolean
   collapseTagsTooltip?: boolean
   filterable?: boolean
-  
+
   // 日期选择器特有属性
   rangeSeparator?: string
   startPlaceholder?: string
   endPlaceholder?: string
   valueFormat?: string
-  
+
   // 数字范围特有属性
   min?: number
   max?: number
@@ -299,19 +318,19 @@ export interface FilterItem {
   precision?: number
   minPlaceholder?: string
   maxPlaceholder?: string
-  
+
   // 开关特有属性
   activeText?: string
   inactiveText?: string
   activeValue?: any
   inactiveValue?: any
-  
+
   // 滑块特有属性
   range?: boolean
   showStops?: boolean
   showTooltip?: boolean
   marks?: Record<number, string>
-  
+
   // 自定义插槽
   slotName?: string
 }
@@ -325,7 +344,7 @@ export interface QuickFilter {
 interface Props {
   filters: FilterItem[]
   modelValue?: Record<string, any>
-  
+
   // 外观
   title?: string
   titleIcon?: any
@@ -333,23 +352,23 @@ interface Props {
   showReset?: boolean
   collapsible?: boolean
   collapsed?: boolean
-  
+
   // 表单布局
   inline?: boolean
   labelWidth?: string
   size?: 'large' | 'default' | 'small'
-  
+
   // 功能选项
   showQuickFilters?: boolean
   quickFilters?: QuickFilter[]
   showApplyButton?: boolean
   showActiveFilters?: boolean
   applying?: boolean
-  
+
   // 实时筛选
   realtime?: boolean
   debounceDelay?: number
-  
+
   // 样式
   panelClass?: string
 }
@@ -391,30 +410,41 @@ const filterValues = reactive<Record<string, any>>({ ...props.modelValue })
 let debounceTimer: NodeJS.Timeout | null = null
 
 // 监听modelValue变化
-watch(() => props.modelValue, (newValue) => {
-  Object.assign(filterValues, newValue)
-}, { deep: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    Object.assign(filterValues, newValue)
+  },
+  { deep: true }
+)
 
 // 监听filterValues变化
-watch(filterValues, (newValue) => {
-  emit('update:modelValue', { ...newValue })
-  
-  if (props.realtime && !props.showApplyButton) {
-    handleDebouncedFilter()
-  }
-}, { deep: true })
+watch(
+  filterValues,
+  newValue => {
+    emit('update:modelValue', { ...newValue })
+
+    if (props.realtime && !props.showApplyButton) {
+      handleDebouncedFilter()
+    }
+  },
+  { deep: true }
+)
 
 // 处理后的筛选项列表
 const processedFilters = computed(() => {
   return props.filters.map(filter => {
     // 为选择器字段加载选项
-    if ((filter.type === 'select' || filter.type === 'multiSelect') && 
-        filter.optionsLoader && !filter.options) {
+    if (
+      (filter.type === 'select' || filter.type === 'multiSelect') &&
+      filter.optionsLoader &&
+      !filter.options
+    ) {
       filter.optionsLoader().then(options => {
         filter.options = options
       })
     }
-    
+
     return filter
   })
 })
@@ -433,25 +463,33 @@ const hasActiveFilters = computed(() => activeFilterCount.value > 0)
 // 已选筛选条件显示
 const activeFilters = computed(() => {
   const result = []
-  
+
   for (const [key, value] of Object.entries(filterValues)) {
-    if (value === null || value === undefined || value === '' || 
-        (Array.isArray(value) && value.length === 0)) {
+    if (
+      value === null ||
+      value === undefined ||
+      value === '' ||
+      (Array.isArray(value) && value.length === 0)
+    ) {
       continue
     }
-    
-    const filter = props.filters.find(f => f.key === key || key.startsWith(f.key))
+
+    const filter = props.filters.find(
+      f => f.key === key || key.startsWith(f.key)
+    )
     if (!filter) continue
-    
+
     let displayValue = ''
-    
+
     if (filter.type === 'select' || filter.type === 'multiSelect') {
       const options = getFilterOptions(filter)
       if (Array.isArray(value)) {
-        displayValue = value.map(v => {
-          const option = options.find(o => o.value === v)
-          return option ? option.label : v
-        }).join(', ')
+        displayValue = value
+          .map(v => {
+            const option = options.find(o => o.value === v)
+            return option ? option.label : v
+          })
+          .join(', ')
       } else {
         const option = options.find(o => o.value === value)
         displayValue = option ? option.label : value
@@ -461,8 +499,8 @@ const activeFilters = computed(() => {
         displayValue = `${value[0]} ~ ${value[1]}`
       }
     } else if (filter.type === 'numberRange') {
-      const minKey = `${key  }_min`
-      const maxKey = `${key  }_max`
+      const minKey = `${key}_min`
+      const maxKey = `${key}_max`
       const minValue = filterValues[minKey]
       const maxValue = filterValues[maxKey]
       if (minValue !== null && maxValue !== null) {
@@ -475,7 +513,7 @@ const activeFilters = computed(() => {
     } else {
       displayValue = String(value)
     }
-    
+
     if (displayValue) {
       result.push({
         key,
@@ -484,7 +522,7 @@ const activeFilters = computed(() => {
       })
     }
   }
-  
+
   return result
 })
 
@@ -508,7 +546,7 @@ const handleDebouncedFilter = () => {
   if (debounceTimer) {
     clearTimeout(debounceTimer)
   }
-  
+
   debounceTimer = setTimeout(() => {
     emit('filter', { ...filterValues })
   }, props.debounceDelay)
@@ -530,7 +568,7 @@ const handleFilterClear = (key: string) => {
 const handleRangeChange = (key: string, type: 'min' | 'max', value: any) => {
   const rangeKey = `${key}_${type}`
   filterValues[rangeKey] = value
-  
+
   // 组合范围值
   const minValue = filterValues[`${key}_min`]
   const maxValue = filterValues[`${key}_max`]
@@ -545,7 +583,7 @@ const handleQuickFilter = (quick: QuickFilter) => {
   if (!quick || !quick.filters || typeof quick.filters !== 'object') {
     return
   }
-  
+
   if (isQuickFilterActive(quick)) {
     // 取消快速筛选
     Object.keys(quick.filters).forEach(key => {
@@ -595,7 +633,7 @@ onMounted(() => {
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
-  
+
   .filter-header {
     display: flex;
     justify-content: space-between;
@@ -603,7 +641,7 @@ onMounted(() => {
     padding: 12px 16px;
     border-bottom: 1px solid var(--el-border-color-lighter);
     background: var(--el-bg-color-light);
-    
+
     .filter-title {
       display: flex;
       align-items: center;
@@ -611,44 +649,44 @@ onMounted(() => {
       font-weight: 600;
       color: var(--el-text-color-primary);
     }
-    
+
     .filter-actions {
       display: flex;
       align-items: center;
       gap: 8px;
     }
   }
-  
+
   .filter-content {
     padding: 16px;
-    
+
     .filter-form {
       .filter-group {
         margin: 16px 0 8px 0;
-        
+
         &:first-child {
           margin-top: 0;
         }
       }
-      
+
       .filter-item {
         margin-bottom: 12px;
-        
+
         .number-range {
           display: flex;
           align-items: center;
           gap: 8px;
-          
+
           .range-separator {
             color: var(--el-text-color-secondary);
           }
         }
       }
     }
-    
+
     .quick-filters {
       margin-top: 16px;
-      
+
       .quick-filter-tags {
         display: flex;
         flex-wrap: wrap;
@@ -656,18 +694,18 @@ onMounted(() => {
         margin-top: 8px;
       }
     }
-    
+
     .filter-apply {
       margin-top: 16px;
       padding-top: 16px;
       border-top: 1px solid var(--el-border-color-lighter);
-      
+
       .el-button + .el-button {
         margin-left: 8px;
       }
     }
   }
-  
+
   .active-filters {
     padding: 8px 16px;
     background: var(--el-bg-color-light);
@@ -676,7 +714,7 @@ onMounted(() => {
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    
+
     .active-filters-label {
       font-size: 12px;
       color: var(--el-text-color-secondary);
@@ -703,7 +741,7 @@ onMounted(() => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .filter-content {
       .filter-form.el-form--inline {
         .filter-item {
@@ -712,12 +750,12 @@ onMounted(() => {
           display: block;
         }
       }
-      
+
       .quick-filter-tags {
         justify-content: flex-start;
       }
     }
-    
+
     .active-filters {
       flex-direction: column;
       align-items: flex-start;

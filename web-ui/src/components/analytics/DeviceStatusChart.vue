@@ -1,19 +1,19 @@
 <template>
   <div class="device-status-chart">
-    <div 
-      ref="chartRef" 
-      class="chart-container"
-    ></div>
-    
+    <div ref="chartRef" class="chart-container"></div>
+
     <!-- 状态详情 -->
     <div class="status-details">
-      <div 
-        v-for="item in data" 
+      <div
+        v-for="item in data"
         :key="item.name"
         class="status-item"
         @click="handleStatusClick(item)"
       >
-        <div class="status-indicator" :style="{ backgroundColor: item.color }"></div>
+        <div
+          class="status-indicator"
+          :style="{ backgroundColor: item.color }"
+        ></div>
         <div class="status-info">
           <div class="status-name">{{ item.name }}</div>
           <div class="status-count">{{ item.value }} 台</div>
@@ -41,8 +41,8 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -78,7 +78,7 @@ const chartOptions = computed(() => ({
         <div>设备数量: ${params.value} 台</div>
         <div>占比: ${params.percent}%</div>
       `
-    }
+    },
   },
   series: [
     {
@@ -90,10 +90,10 @@ const chartOptions = computed(() => ({
       itemStyle: {
         borderRadius: 8,
         borderColor: '#fff',
-        borderWidth: 2
+        borderWidth: 2,
       },
       label: {
-        show: false
+        show: false,
       },
       emphasis: {
         scale: true,
@@ -101,21 +101,22 @@ const chartOptions = computed(() => ({
         itemStyle: {
           shadowBlur: 10,
           shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
+          shadowColor: 'rgba(0, 0, 0, 0.5)',
+        },
       },
       labelLine: {
-        show: false
+        show: false,
       },
-      data: props.data?.map(item => ({
-        name: item.name,
-        value: item.value,
-        itemStyle: {
-          color: item.color
-        }
-      })) || []
-    }
-  ]
+      data:
+        props.data?.map(item => ({
+          name: item.name,
+          value: item.value,
+          itemStyle: {
+            color: item.color,
+          },
+        })) || [],
+    },
+  ],
 }))
 
 // ===== 方法 =====
@@ -127,13 +128,13 @@ function initChart() {
   if (!chartRef.value) return
 
   chartInstance.value = echarts.init(chartRef.value)
-  
+
   // 设置图表选项
   chartInstance.value.setOption(chartOptions.value)
-  
+
   // 绑定点击事件
   chartInstance.value.on('click', handleChartClick)
-  
+
   // 监听窗口大小变化
   window.addEventListener('resize', handleResize)
 }
@@ -143,7 +144,7 @@ function initChart() {
  */
 function updateChart() {
   if (!chartInstance.value) return
-  
+
   chartInstance.value.setOption(chartOptions.value, false, true)
 }
 
@@ -190,16 +191,20 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  
+
   if (chartInstance.value) {
     chartInstance.value.dispose()
   }
 })
 
 // ===== 监听器 =====
-watch(() => props.data, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.data,
+  () => {
+    updateChart()
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -208,13 +213,13 @@ watch(() => props.data, () => {
     width: 100%;
     height: 250px;
   }
-  
+
   .status-details {
     margin-top: 16px;
     display: flex;
     flex-direction: column;
     gap: 8px;
-    
+
     .status-item {
       display: flex;
       align-items: center;
@@ -223,35 +228,35 @@ watch(() => props.data, () => {
       border-radius: 6px;
       cursor: pointer;
       transition: all 0.2s;
-      
+
       &:hover {
         background: #f8f9fa;
       }
-      
+
       .status-indicator {
         width: 12px;
         height: 12px;
         border-radius: 50%;
         flex-shrink: 0;
       }
-      
+
       .status-info {
         flex: 1;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         .status-name {
           font-size: 14px;
           color: #303133;
           font-weight: 500;
         }
-        
+
         .status-count {
           font-size: 14px;
           color: #606266;
         }
-        
+
         .status-percent {
           font-size: 12px;
           color: #909399;

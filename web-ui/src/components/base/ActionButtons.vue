@@ -20,7 +20,7 @@
       >
         {{ action.label }}
       </el-button>
-      
+
       <!-- 确认对话框按钮 -->
       <el-popconfirm
         v-else-if="action.confirm"
@@ -55,14 +55,14 @@
           </el-button>
         </template>
       </el-popconfirm>
-      
+
       <!-- 下拉菜单按钮 -->
       <el-dropdown
         v-else-if="action.dropdown"
         :trigger="action.dropdown.trigger || 'click'"
         :placement="action.dropdown.placement"
         :disabled="getActionDisabled(action)"
-        @command="(command) => handleDropdownCommand(action, command)"
+        @command="command => handleDropdownCommand(action, command)"
       >
         <el-button
           :type="action.type"
@@ -82,7 +82,7 @@
             <ArrowDown />
           </el-icon>
         </el-button>
-        
+
         <template #dropdown>
           <el-dropdown-menu>
             <el-dropdown-item
@@ -98,7 +98,7 @@
           </el-dropdown-menu>
         </template>
       </el-dropdown>
-      
+
       <!-- 分割线 -->
       <el-divider
         v-if="action.divider"
@@ -106,7 +106,7 @@
         class="action-divider"
       />
     </template>
-    
+
     <!-- 更多操作按钮 -->
     <el-dropdown
       v-if="hasHiddenActions"
@@ -122,7 +122,7 @@
       >
         {{ moreActionLabel }}
       </el-button>
-      
+
       <template #dropdown>
         <el-dropdown-menu>
           <el-dropdown-item
@@ -141,13 +141,20 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
 import { ArrowDown, MoreFilled } from '@element-plus/icons-vue'
+import { computed } from 'vue'
 
 export interface ActionButton {
   key: string
   label: string
-  type?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default' | 'text'
+  type?:
+    | 'primary'
+    | 'success'
+    | 'warning'
+    | 'danger'
+    | 'info'
+    | 'default'
+    | 'text'
   size?: 'large' | 'default' | 'small'
   icon?: any
   loading?: boolean | (() => boolean)
@@ -160,27 +167,51 @@ export interface ActionButton {
   bg?: boolean
   link?: boolean
   className?: string
-  
+
   // 确认对话框
   confirm?: {
     title?: string
     confirmText?: string
     cancelText?: string
-    confirmType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default'
-    cancelType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default'
+    confirmType?:
+      | 'primary'
+      | 'success'
+      | 'warning'
+      | 'danger'
+      | 'info'
+      | 'default'
+    cancelType?:
+      | 'primary'
+      | 'success'
+      | 'warning'
+      | 'danger'
+      | 'info'
+      | 'default'
     icon?: any
     iconColor?: string
     hideIcon?: boolean
     width?: string | number
   }
-  
+
   // 下拉菜单
   dropdown?: {
     trigger?: 'click' | 'hover' | 'focus' | 'contextmenu'
-    placement?: 'top' | 'top-start' | 'top-end' | 'bottom' | 'bottom-start' | 'bottom-end' | 'left' | 'left-start' | 'left-end' | 'right' | 'right-start' | 'right-end'
+    placement?:
+      | 'top'
+      | 'top-start'
+      | 'top-end'
+      | 'bottom'
+      | 'bottom-start'
+      | 'bottom-end'
+      | 'left'
+      | 'left-start'
+      | 'left-end'
+      | 'right'
+      | 'right-start'
+      | 'right-end'
     items: DropdownItem[]
   }
-  
+
   // 分割线
   divider?: boolean
 }
@@ -200,11 +231,18 @@ interface Props {
   direction?: 'horizontal' | 'vertical'
   wrap?: boolean
   spacing?: 'small' | 'default' | 'large'
-  
+
   // 更多操作按钮
   maxVisible?: number
   moreActionLabel?: string
-  moreActionType?: 'primary' | 'success' | 'warning' | 'danger' | 'info' | 'default' | 'text'
+  moreActionType?:
+    | 'primary'
+    | 'success'
+    | 'warning'
+    | 'danger'
+    | 'info'
+    | 'default'
+    | 'text'
   moreActionText?: boolean
   moreActionTrigger?: 'click' | 'hover'
 }
@@ -238,11 +276,11 @@ const visibleActions = computed(() => {
     }
     return action.visible !== false
   })
-  
+
   if (props.maxVisible >= filtered.length) {
     return filtered
   }
-  
+
   return filtered.slice(0, props.maxVisible)
 })
 
@@ -254,11 +292,11 @@ const hiddenActions = computed(() => {
     }
     return action.visible !== false
   })
-  
+
   if (props.maxVisible >= filtered.length) {
     return []
   }
-  
+
   return filtered.slice(props.maxVisible)
 })
 
@@ -268,15 +306,15 @@ const hasHiddenActions = computed(() => hiddenActions.value.length > 0)
 // 容器样式类
 const containerClass = computed(() => {
   const classes = []
-  
+
   classes.push(`action-buttons--${props.alignment}`)
   classes.push(`action-buttons--${props.direction}`)
   classes.push(`action-buttons--spacing-${props.spacing}`)
-  
+
   if (props.wrap) {
     classes.push('action-buttons--wrap')
   }
-  
+
   return classes.join(' ')
 })
 
@@ -322,48 +360,48 @@ const handleMoreActionCommand = (command: string) => {
 .action-buttons {
   display: flex;
   align-items: center;
-  
+
   // 对齐方式
   &.action-buttons--left {
     justify-content: flex-start;
   }
-  
+
   &.action-buttons--center {
     justify-content: center;
   }
-  
+
   &.action-buttons--right {
     justify-content: flex-end;
   }
-  
+
   // 方向
   &.action-buttons--horizontal {
     flex-direction: row;
   }
-  
+
   &.action-buttons--vertical {
     flex-direction: column;
     align-items: stretch;
   }
-  
+
   // 换行
   &.action-buttons--wrap {
     flex-wrap: wrap;
   }
-  
+
   // 间距
   &.action-buttons--spacing-small {
     gap: 4px;
   }
-  
+
   &.action-buttons--spacing-default {
     gap: 8px;
   }
-  
+
   &.action-buttons--spacing-large {
     gap: 12px;
   }
-  
+
   // 分割线
   .action-divider {
     height: 20px;
@@ -378,7 +416,7 @@ const handleMoreActionCommand = (command: string) => {
     height: 1px;
     margin: 4px 0;
   }
-  
+
   .el-button {
     width: 100%;
   }
@@ -391,12 +429,12 @@ const handleMoreActionCommand = (command: string) => {
       flex-wrap: wrap;
       gap: 6px;
     }
-    
+
     .el-button {
       font-size: 12px;
       padding: 6px 12px;
     }
-    
+
     .el-button--small {
       padding: 4px 8px;
     }

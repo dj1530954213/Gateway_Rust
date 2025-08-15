@@ -66,7 +66,9 @@ export const connectorApi = {
   /**
    * 创建连接器
    */
-  async createConnector(connector: ConnectorCreateReq): Promise<{ data: Connector }> {
+  async createConnector(
+    connector: ConnectorCreateReq
+  ): Promise<{ data: Connector }> {
     try {
       return await post('/api/v1/connectors', connector)
     } catch (error) {
@@ -78,7 +80,10 @@ export const connectorApi = {
   /**
    * 更新连接器
    */
-  async updateConnector(id: string, connector: Partial<Connector>): Promise<{ data: Connector }> {
+  async updateConnector(
+    id: string,
+    connector: Partial<Connector>
+  ): Promise<{ data: Connector }> {
     try {
       return await put(`/api/v1/connectors/${id}`, connector)
     } catch (error) {
@@ -126,7 +131,9 @@ export const connectorApi = {
   /**
    * 测试连接器连接
    */
-  async testConnection(connector: string | Connector): Promise<ConnectorTestResult> {
+  async testConnection(
+    connector: string | Connector
+  ): Promise<ConnectorTestResult> {
     try {
       if (typeof connector === 'string') {
         return await post(`/api/v1/connectors/${connector}/test`)
@@ -140,7 +147,7 @@ export const connectorApi = {
         success: false,
         message: 'API未实现',
         responseTime: 0,
-        details: '连接器测试API尚未实现'
+        details: '连接器测试API尚未实现',
       }
     }
   },
@@ -191,5 +198,5 @@ export const connectorApi = {
       console.warn('批量删除连接器API未实现')
       throw error
     }
-  }
+  },
 }

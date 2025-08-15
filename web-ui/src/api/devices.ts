@@ -87,7 +87,9 @@ export const devicesApi = {
   /**
    * 测试设备连接
    */
-  testConnection(data: DeviceCreateReq): Promise<{ success: boolean; message?: string }> {
+  testConnection(
+    data: DeviceCreateReq
+  ): Promise<{ success: boolean; message?: string }> {
     return post('/devices/test-connection', data)
   },
 }

@@ -7,8 +7,10 @@
             <img src="/logo.svg" alt="Edge Gateway" />
           </div>
           <h1 class="brand-title">工控物联网边缘网关</h1>
-          <p class="brand-subtitle">Industrial IoT Edge Gateway Management System</p>
-          
+          <p class="brand-subtitle">
+            Industrial IoT Edge Gateway Management System
+          </p>
+
           <div class="features-list">
             <div class="feature-item">
               <el-icon><Connection /></el-icon>
@@ -29,14 +31,14 @@
           </div>
         </div>
       </div>
-      
+
       <div class="login-right">
         <div class="login-form-container">
           <div class="login-header">
             <h2>用户登录</h2>
             <p>请输入您的账号和密码</p>
           </div>
-          
+
           <el-form
             ref="loginFormRef"
             :model="loginForm"
@@ -52,7 +54,7 @@
                 :disabled="loading"
               />
             </el-form-item>
-            
+
             <el-form-item prop="password">
               <el-input
                 v-model="loginForm.password"
@@ -63,7 +65,7 @@
                 show-password
               />
             </el-form-item>
-            
+
             <el-form-item>
               <div class="login-options">
                 <el-checkbox v-model="rememberMe">记住我</el-checkbox>
@@ -72,7 +74,7 @@
                 </el-link>
               </div>
             </el-form-item>
-            
+
             <el-form-item>
               <el-button
                 type="primary"
@@ -85,8 +87,8 @@
               </el-button>
             </el-form-item>
           </el-form>
-          
-          <div class="demo-accounts" v-if="isDevelopment">
+
+          <div v-if="isDevelopment" class="demo-accounts">
             <el-divider>演示账号</el-divider>
             <div class="demo-account-list">
               <el-button
@@ -113,25 +115,31 @@
             </div>
           </div>
         </div>
-        
+
         <div class="login-footer">
           <p>&copy; 2024 工控物联网边缘网关系统. All rights reserved.</p>
         </div>
       </div>
     </div>
-    
+
     <!-- Background Animation -->
     <div class="background-animation">
-      <div class="particle" v-for="n in 50" :key="n" :style="getParticleStyle(n)"></div>
+      <div
+        v-for="n in 50"
+        :key="n"
+        class="particle"
+        :style="getParticleStyle(n)"
+      ></div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import type { FormInstance, FormRules } from 'element-plus'
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+
 import { useAuthStore } from '@/stores/auth'
-import type { FormInstance, FormRules } from 'element-plus'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -169,27 +177,26 @@ const isDevelopment = computed(() => {
 // Methods
 const handleLogin = async () => {
   if (!loginFormRef.value) return
-  
+
   try {
     await loginFormRef.value.validate()
-    
+
     loading.value = true
-    
+
     await authStore.login({
       username: loginForm.username,
       password: loginForm.password,
     })
-    
+
     // Save remember me preference
     if (rememberMe.value) {
       localStorage.setItem('remember-username', loginForm.username)
     } else {
       localStorage.removeItem('remember-username')
     }
-    
+
     // Redirect to dashboard
     router.push('/')
-    
   } catch (error) {
     console.error('Login failed:', error)
   } finally {
@@ -207,7 +214,7 @@ const getParticleStyle = (index: number) => {
   const duration = 15 + Math.random() * 10
   const left = Math.random() * 100
   const size = 2 + Math.random() * 4
-  
+
   return {
     left: `${left}%`,
     animationDelay: `${delay}s`,
@@ -259,33 +266,33 @@ onMounted(() => {
   justify-content: center;
   padding: 40px;
   color: white;
-  
+
   .brand-section {
     text-align: center;
-    
+
     .logo {
       margin-bottom: 24px;
-      
+
       img {
         width: 80px;
         height: 80px;
         filter: brightness(0) invert(1);
       }
     }
-    
+
     .brand-title {
       font-size: 28px;
       font-weight: 600;
       margin-bottom: 8px;
       line-height: 1.2;
     }
-    
+
     .brand-subtitle {
       font-size: 14px;
       opacity: 0.9;
       margin-bottom: 40px;
     }
-    
+
     .features-list {
       .feature-item {
         display: flex;
@@ -293,7 +300,7 @@ onMounted(() => {
         gap: 12px;
         margin-bottom: 16px;
         font-size: 16px;
-        
+
         .el-icon {
           font-size: 20px;
         }
@@ -323,13 +330,13 @@ onMounted(() => {
 .login-header {
   text-align: center;
   margin-bottom: 32px;
-  
+
   h2 {
     font-size: 24px;
     color: #303133;
     margin-bottom: 8px;
   }
-  
+
   p {
     color: #909399;
     font-size: 14px;
@@ -345,12 +352,12 @@ onMounted(() => {
 
 .demo-accounts {
   margin-top: 20px;
-  
+
   .demo-account-list {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    
+
     .el-button {
       justify-content: flex-start;
       padding: 4px 0;
@@ -361,7 +368,7 @@ onMounted(() => {
 .login-footer {
   text-align: center;
   margin-top: 20px;
-  
+
   p {
     color: #909399;
     font-size: 12px;
@@ -376,7 +383,7 @@ onMounted(() => {
   height: 100%;
   pointer-events: none;
   overflow: hidden;
-  
+
   .particle {
     position: absolute;
     background: rgba(255, 255, 255, 0.1);
@@ -409,22 +416,22 @@ onMounted(() => {
     flex-direction: column;
     min-height: auto;
   }
-  
+
   .login-left {
     border-radius: 16px 16px 0 0;
     padding: 30px 20px;
-    
+
     .brand-section {
       .brand-title {
         font-size: 20px;
       }
-      
+
       .features-list {
         display: none;
       }
     }
   }
-  
+
   .login-right {
     padding: 30px 20px;
   }
@@ -434,27 +441,27 @@ onMounted(() => {
   .login-container {
     padding: 20px;
   }
-  
+
   .login-wrapper {
     width: 100%;
     max-width: none;
   }
-  
+
   .login-left {
     padding: 20px;
-    
+
     .brand-section {
       .logo img {
         width: 60px;
         height: 60px;
       }
-      
+
       .brand-title {
         font-size: 18px;
       }
     }
   }
-  
+
   .login-right {
     padding: 20px;
   }

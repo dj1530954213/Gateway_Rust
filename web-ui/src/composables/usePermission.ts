@@ -16,6 +16,7 @@
  */
 
 import { computed, ref } from 'vue'
+
 import { useAuthStore } from '@/stores/auth'
 
 export function usePermission() {
@@ -32,7 +33,9 @@ export function usePermission() {
    * 检查多个权限
    */
   const hasPermissions = (permissions: string[], requireAll = true) => {
-    return computed(() => authStore.checkMultiplePermissions(permissions, requireAll))
+    return computed(() =>
+      authStore.checkMultiplePermissions(permissions, requireAll)
+    )
   }
 
   /**
@@ -99,11 +102,11 @@ export function usePermission() {
    */
   const canAccessRoute = (routePermissions?: string | string[]) => {
     if (!routePermissions) return true
-    
+
     if (Array.isArray(routePermissions)) {
       return authStore.checkMultiplePermissions(routePermissions, false) // 有其中一个权限即可
     }
-    
+
     return authStore.checkPermission(routePermissions)
   }
 
@@ -117,7 +120,7 @@ export function usePermission() {
       alerts: ['alerts:read'],
       data: ['data:read'],
       system: ['system:config', 'system:logs'],
-      reports: ['reports:generate']
+      reports: ['reports:generate'],
     }
 
     const requiredPermissions = modulePermissions[module]
@@ -129,7 +132,10 @@ export function usePermission() {
   /**
    * 操作权限检查（CRUD）
    */
-  const canPerformAction = (resource: string, action: 'create' | 'read' | 'update' | 'delete') => {
+  const canPerformAction = (
+    resource: string,
+    action: 'create' | 'read' | 'update' | 'delete'
+  ) => {
     return authStore.checkPermission(`${resource}:${action}`)
   }
 
@@ -144,8 +150,9 @@ export function usePermission() {
   /**
    * 会话管理权限
    */
-  const canManageSessions = computed(() => 
-    authStore.checkPermission('users:update') || authStore.hasRole('admin')
+  const canManageSessions = computed(
+    () =>
+      authStore.checkPermission('users:update') || authStore.hasRole('admin')
   )
 
   /**
@@ -175,7 +182,7 @@ export function usePermission() {
     canCreateUsers: authStore.checkPermission('users:create'),
     canManageDevices: authStore.checkPermission('devices:update'),
     canConfigureSystem: authStore.checkPermission('system:config'),
-    canGenerateReports: authStore.checkPermission('reports:generate')
+    canGenerateReports: authStore.checkPermission('reports:generate'),
   }))
 
   return {
@@ -200,7 +207,7 @@ export function usePermission() {
     logUserActivity,
 
     // 权限状态
-    permissionState
+    permissionState,
   }
 }
 
@@ -212,9 +219,9 @@ export function createPermissionDirective() {
     mounted(el: HTMLElement, binding: any) {
       const authStore = useAuthStore()
       const { value, arg, modifiers } = binding
-      
+
       let hasAccess = false
-      
+
       if (arg === 'role') {
         // v-permission:role="'admin'"
         hasAccess = authStore.hasRole(value)
@@ -228,7 +235,7 @@ export function createPermissionDirective() {
         // v-permission="'single-perm'"
         hasAccess = authStore.checkPermission(value)
       }
-      
+
       if (!hasAccess) {
         if (modifiers.hide) {
           // v-permission.hide - 隐藏元素
@@ -239,11 +246,11 @@ export function createPermissionDirective() {
         }
       }
     },
-    
+
     updated(el: HTMLElement, binding: any) {
       // 权限变化时重新检查
       this.mounted(el, binding)
-    }
+    },
   }
 }
 
@@ -253,33 +260,36 @@ export function createPermissionDirective() {
 export function createPermissionGuard() {
   return (to: any, from: any, next: any) => {
     const authStore = useAuthStore()
-    
+
     // 检查是否需要登录
     if (to.meta?.requiresAuth && !authStore.isAuthenticated) {
       next('/login')
       return
     }
-    
+
     // 检查角色权限
     if (to.meta?.roles && !authStore.hasRole(to.meta.roles)) {
       next('/403') // 权限不足页面
       return
     }
-    
+
     // 检查具体权限
     if (to.meta?.permissions) {
-      const permissions = Array.isArray(to.meta.permissions) 
-        ? to.meta.permissions 
+      const permissions = Array.isArray(to.meta.permissions)
+        ? to.meta.permissions
         : [to.meta.permissions]
-      
-      const hasAccess = authStore.checkMultiplePermissions(permissions, to.meta?.requireAll !== false)
-      
+
+      const hasAccess = authStore.checkMultiplePermissions(
+        permissions,
+        to.meta?.requireAll !== false
+      )
+
       if (!hasAccess) {
         next('/403')
         return
       }
     }
-    
+
     // 记录页面访问活动
     authStore.logActivity({
       type: 'navigation',
@@ -287,10 +297,10 @@ export function createPermissionGuard() {
       target: to.path,
       details: {
         from: from.path,
-        routeName: to.name
-      }
+        routeName: to.name,
+      },
     })
-    
+
     next()
   }
 }

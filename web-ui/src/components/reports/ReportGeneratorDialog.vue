@@ -13,7 +13,7 @@
         <el-step title="配置参数" />
         <el-step title="预览生成" />
       </el-steps>
-      
+
       <!-- 步骤1: 模板选择 -->
       <div v-if="currentStep === 0" class="step-content template-selection">
         <h4>选择报表模板</h4>
@@ -21,7 +21,10 @@
           <div
             v-for="template in reportTemplates"
             :key="template.id"
-            :class="['template-card', { selected: selectedTemplate?.id === template.id }]"
+            :class="[
+              'template-card',
+              { selected: selectedTemplate?.id === template.id },
+            ]"
             @click="selectTemplate(template)"
           >
             <div class="template-icon">
@@ -34,22 +37,25 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 步骤2: 参数配置 -->
       <div v-if="currentStep === 1" class="step-content parameter-config">
         <h4>配置报表参数</h4>
-        
+
         <el-form :model="reportConfig" label-width="120px">
           <!-- 基础设置 -->
           <el-card class="config-section" shadow="never">
             <template #header>
               <span>基础设置</span>
             </template>
-            
+
             <el-form-item label="报表名称">
-              <el-input v-model="reportConfig.name" placeholder="请输入报表名称" />
+              <el-input
+                v-model="reportConfig.name"
+                placeholder="请输入报表名称"
+              />
             </el-form-item>
-            
+
             <el-form-item label="时间范围">
               <el-date-picker
                 v-model="reportConfig.dateRange"
@@ -61,9 +67,12 @@
                 value-format="YYYY-MM-DD HH:mm:ss"
               />
             </el-form-item>
-            
+
             <el-form-item label="数据粒度">
-              <el-select v-model="reportConfig.granularity" placeholder="选择数据粒度">
+              <el-select
+                v-model="reportConfig.granularity"
+                placeholder="选择数据粒度"
+              >
                 <el-option label="分钟" value="minute" />
                 <el-option label="小时" value="hour" />
                 <el-option label="天" value="day" />
@@ -71,7 +80,7 @@
                 <el-option label="月" value="month" />
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="导出格式">
               <el-checkbox-group v-model="reportConfig.formats">
                 <el-checkbox label="pdf" border>PDF</el-checkbox>
@@ -81,13 +90,13 @@
               </el-checkbox-group>
             </el-form-item>
           </el-card>
-          
+
           <!-- 数据源设置 -->
           <el-card class="config-section" shadow="never">
             <template #header>
               <span>数据源设置</span>
             </template>
-            
+
             <el-form-item label="设备筛选">
               <el-select
                 v-model="reportConfig.deviceIds"
@@ -105,7 +114,7 @@
                 />
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="标签筛选">
               <el-select
                 v-model="reportConfig.tagIds"
@@ -123,7 +132,7 @@
                 />
               </el-select>
             </el-form-item>
-            
+
             <el-form-item label="数据类型">
               <el-checkbox-group v-model="reportConfig.dataTypes">
                 <el-checkbox label="telemetry" border>遥测数据</el-checkbox>
@@ -133,13 +142,13 @@
               </el-checkbox-group>
             </el-form-item>
           </el-card>
-          
+
           <!-- 图表设置 -->
           <el-card class="config-section" shadow="never">
             <template #header>
               <span>图表设置</span>
             </template>
-            
+
             <el-form-item label="图表类型">
               <el-checkbox-group v-model="reportConfig.chartTypes">
                 <el-checkbox label="line" border>折线图</el-checkbox>
@@ -149,7 +158,7 @@
                 <el-checkbox label="heatmap" border>热力图</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
-            
+
             <el-form-item label="统计指标">
               <el-checkbox-group v-model="reportConfig.statistics">
                 <el-checkbox label="avg" border>平均值</el-checkbox>
@@ -160,9 +169,12 @@
                 <el-checkbox label="std" border>标准差</el-checkbox>
               </el-checkbox-group>
             </el-form-item>
-            
+
             <el-form-item label="分组方式">
-              <el-select v-model="reportConfig.groupBy" placeholder="选择分组方式">
+              <el-select
+                v-model="reportConfig.groupBy"
+                placeholder="选择分组方式"
+              >
                 <el-option label="按设备" value="device" />
                 <el-option label="按标签" value="tag" />
                 <el-option label="按时间" value="time" />
@@ -172,11 +184,11 @@
           </el-card>
         </el-form>
       </div>
-      
+
       <!-- 步骤3: 预览生成 -->
       <div v-if="currentStep === 2" class="step-content preview-generate">
         <h4>报表预览</h4>
-        
+
         <div class="preview-tabs">
           <el-tabs v-model="activePreviewTab">
             <el-tab-pane label="报表配置" name="config">
@@ -209,10 +221,14 @@
                 </el-descriptions>
               </div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="数据预览" name="data">
               <div class="data-preview">
-                <el-table :data="previewData" style="width: 100%" max-height="300">
+                <el-table
+                  :data="previewData"
+                  style="width: 100%"
+                  max-height="300"
+                >
                   <el-table-column prop="timestamp" label="时间" width="180" />
                   <el-table-column prop="device" label="设备" width="120" />
                   <el-table-column prop="tag" label="标签" width="120" />
@@ -226,48 +242,61 @@
                     </template>
                   </el-table-column>
                 </el-table>
-                
+
                 <div class="preview-info">
-                  <span>预览数据：前10条记录，预计总数据量：{{ estimatedDataCount }} 条</span>
+                  <span
+                    >预览数据：前10条记录，预计总数据量：{{
+                      estimatedDataCount
+                    }}
+                    条</span
+                  >
                 </div>
               </div>
             </el-tab-pane>
-            
+
             <el-tab-pane label="图表预览" name="chart">
               <div class="chart-preview">
-                <div ref="previewChartRef" class="preview-chart-container"></div>
+                <div
+                  ref="previewChartRef"
+                  class="preview-chart-container"
+                ></div>
               </div>
             </el-tab-pane>
           </el-tabs>
         </div>
-        
+
         <!-- 生成进度 -->
         <div v-if="generating" class="generation-progress">
-          <el-progress :percentage="generationProgress" :status="generationStatus">
+          <el-progress
+            :percentage="generationProgress"
+            :status="generationStatus"
+          >
             <template #default="{ percentage }">
-              <span class="progress-text">{{ generationMessage }} {{ percentage }}%</span>
+              <span class="progress-text"
+                >{{ generationMessage }} {{ percentage }}%</span
+              >
             </template>
           </el-progress>
         </div>
       </div>
     </div>
-    
+
     <!-- 对话框底部按钮 -->
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleCancel">取消</el-button>
         <el-button v-if="currentStep > 0" @click="prevStep">上一步</el-button>
-        <el-button 
-          v-if="currentStep < 2" 
-          type="primary" 
+        <el-button
+          v-if="currentStep < 2"
+          type="primary"
           @click="nextStep"
           :disabled="!canNext"
         >
           下一步
         </el-button>
-        <el-button 
-          v-if="currentStep === 2" 
-          type="primary" 
+        <el-button
+          v-if="currentStep === 2"
+          type="primary"
           @click="generateReport"
           :loading="generating"
           :disabled="!canGenerate"
@@ -444,7 +473,7 @@ const canNext = computed(() => {
     return selectedTemplate.value !== null
   }
   if (currentStep.value === 1) {
-    return reportConfig.value.name && 
+    return reportConfig.value.name &&
            reportConfig.value.dateRange?.length === 2 &&
            reportConfig.value.formats?.length > 0
   }
@@ -452,7 +481,7 @@ const canNext = computed(() => {
 })
 
 const canGenerate = computed(() => {
-  return !generating.value && 
+  return !generating.value &&
          reportConfig.value.deviceIds?.length > 0 &&
          reportConfig.value.tagIds?.length > 0
 })
@@ -464,7 +493,7 @@ const canGenerate = computed(() => {
  */
 function selectTemplate(template: any) {
   selectedTemplate.value = template
-  
+
   // 根据模板类型预设配置
   if (template.id === 'device_summary') {
     reportConfig.value.chartTypes = ['pie', 'bar']
@@ -487,7 +516,7 @@ function selectTemplate(template: any) {
 function nextStep() {
   if (canNext.value && currentStep.value < 2) {
     currentStep.value++
-    
+
     if (currentStep.value === 2) {
       // 进入预览步骤时初始化预览图表
       nextTick(() => {
@@ -508,9 +537,9 @@ function prevStep() {
  */
 function initPreviewChart() {
   if (!previewChartRef.value) return
-  
+
   previewChart.value = echarts.init(previewChartRef.value)
-  
+
   const option = {
     animation: true,
     grid: {
@@ -539,7 +568,7 @@ function initPreviewChart() {
       }
     ]
   }
-  
+
   previewChart.value.setOption(option)
 }
 
@@ -554,7 +583,7 @@ async function generatePreviewChartData() {
         'Content-Type': 'application/json'
       }
     })
-    
+
     if (response.ok) {
       return await response.json()
     } else {
@@ -574,7 +603,7 @@ async function generateReport() {
   generationProgress.value = 0
   generationStatus.value = 'active'
   generationMessage.value = '准备生成报表'
-  
+
   try {
     // 调用真实API生成报表
     const response = await fetch('/api/v1/reports/generate', {
@@ -588,17 +617,17 @@ async function generateReport() {
         config: reportConfig.value
       })
     })
-    
+
     if (response.ok) {
       const reportInfo = await response.json()
-      
+
       generationStatus.value = 'success'
       generationProgress.value = 100
       generationMessage.value = '完成'
-      
+
       emit('report-generated', reportInfo)
       ElMessage.success('报表生成成功！')
-      
+
       // 延迟关闭对话框
       setTimeout(() => {
         handleClose()
@@ -607,7 +636,7 @@ async function generateReport() {
       const errorData = await response.json()
       throw new Error(errorData.message || '生成失败')
     }
-    
+
   } catch (error) {
     console.error('生成报表失败:', error)
     generationStatus.value = 'exception'
@@ -653,14 +682,14 @@ function handleCancel() {
 
 function handleClose() {
   visible.value = false
-  
+
   // 重置状态
   currentStep.value = 0
   selectedTemplate.value = null
   generating.value = false
   generationProgress.value = 0
   activePreviewTab.value = 'config'
-  
+
   // 重置配置
   reportConfig.value = {
     name: '',
@@ -674,7 +703,7 @@ function handleClose() {
     statistics: ['avg'],
     groupBy: 'device'
   }
-  
+
   // 销毁预览图表
   if (previewChart.value) {
     previewChart.value.dispose()
@@ -687,12 +716,12 @@ onMounted(() => {
   // 设置默认日期范围为最近7天
   const now = new Date()
   const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000)
-  
+
   reportConfig.value.dateRange = [
     sevenDaysAgo.toISOString().slice(0, 19).replace('T', ' '),
     now.toISOString().slice(0, 19).replace('T', ' ')
   ]
-  
+
   // 设置默认选择
   reportConfig.value.deviceIds = ['1', '2']
   reportConfig.value.tagIds = ['1', '2']
@@ -715,24 +744,24 @@ watch(() => activePreviewTab.value, (tab) => {
   .steps {
     margin-bottom: 32px;
   }
-  
+
   .step-content {
     min-height: 400px;
-    
+
     h4 {
       margin: 0 0 20px 0;
       color: #303133;
       font-size: 16px;
     }
   }
-  
+
   // 模板选择
   .template-selection {
     .template-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
       gap: 16px;
-      
+
       .template-card {
         display: flex;
         align-items: center;
@@ -742,37 +771,37 @@ watch(() => activePreviewTab.value, (tab) => {
         border-radius: 8px;
         cursor: pointer;
         transition: all 0.3s;
-        
+
         &:hover {
           border-color: #c6e2ff;
           background: #f0f9ff;
         }
-        
+
         &.selected {
           border-color: #409eff;
           background: #f0f9ff;
-          
+
           .template-icon {
             color: #409eff;
           }
         }
-        
+
         .template-icon {
           font-size: 32px;
           color: #909399;
           flex-shrink: 0;
         }
-        
+
         .template-info {
           flex: 1;
-          
+
           .template-name {
             font-size: 16px;
             font-weight: 600;
             color: #303133;
             margin-bottom: 4px;
           }
-          
+
           .template-desc {
             font-size: 14px;
             color: #606266;
@@ -782,39 +811,39 @@ watch(() => activePreviewTab.value, (tab) => {
       }
     }
   }
-  
+
   // 参数配置
   .parameter-config {
     .config-section {
       margin-bottom: 20px;
-      
+
       :deep(.el-card__header) {
         padding: 12px 20px;
         background: #fafafa;
-        
+
         span {
           font-weight: 600;
           color: #303133;
         }
       }
-      
+
       :deep(.el-card__body) {
         padding: 20px;
       }
     }
   }
-  
+
   // 预览生成
   .preview-generate {
     .preview-tabs {
       margin-bottom: 20px;
-      
+
       .config-preview {
         :deep(.el-descriptions__label) {
           font-weight: 600;
         }
       }
-      
+
       .data-preview {
         .preview-info {
           margin-top: 12px;
@@ -823,7 +852,7 @@ watch(() => activePreviewTab.value, (tab) => {
           text-align: center;
         }
       }
-      
+
       .chart-preview {
         .preview-chart-container {
           height: 300px;
@@ -832,10 +861,10 @@ watch(() => activePreviewTab.value, (tab) => {
         }
       }
     }
-    
+
     .generation-progress {
       margin-top: 20px;
-      
+
       .progress-text {
         font-size: 14px;
         color: #606266;
@@ -856,7 +885,7 @@ watch(() => activePreviewTab.value, (tab) => {
     .template-selection .template-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .parameter-config {
       :deep(.el-form-item__label) {
         width: 100px !important;

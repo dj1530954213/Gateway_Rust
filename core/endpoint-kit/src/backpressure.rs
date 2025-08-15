@@ -309,7 +309,7 @@ impl BackpressureManager {
 
     /// 启动后台监控任务
     pub async fn start_monitoring(&self) -> tokio::task::JoinHandle<()> {
-        let manager = Arc::new(std::sync::Mutex::new(self));
+        let _manager = Arc::new(std::sync::Mutex::new(self));
         let interval = self.config.check_interval;
         
         tokio::spawn(async move {

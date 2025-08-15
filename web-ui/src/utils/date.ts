@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
-import relativeTime from 'dayjs/plugin/relativeTime'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import timezone from 'dayjs/plugin/timezone'
 import utc from 'dayjs/plugin/utc'
 import 'dayjs/locale/zh-cn'
@@ -31,7 +31,7 @@ export function formatTime(
   format: string = DATE_FORMATS.DATETIME
 ): string {
   if (!timestamp) return '-'
-  
+
   try {
     return dayjs(timestamp).format(format)
   } catch (error) {
@@ -55,7 +55,7 @@ export function formatDateTime(
  */
 export function getRelativeTime(timestamp: string | number | Date): string {
   if (!timestamp) return '-'
-  
+
   try {
     return dayjs(timestamp).fromNow()
   } catch (error) {
@@ -69,21 +69,21 @@ export function getRelativeTime(timestamp: string | number | Date): string {
  */
 export function formatDuration(seconds: number): string {
   if (!seconds || seconds < 0) return '0秒'
-  
+
   const days = Math.floor(seconds / 86400)
   const hours = Math.floor((seconds % 86400) / 3600)
   const minutes = Math.floor((seconds % 3600) / 60)
   const remainingSeconds = seconds % 60
-  
+
   const parts: string[] = []
-  
+
   if (days > 0) parts.push(`${days}天`)
   if (hours > 0) parts.push(`${hours}小时`)
   if (minutes > 0) parts.push(`${minutes}分钟`)
   if (remainingSeconds > 0 || parts.length === 0) {
     parts.push(`${Math.floor(remainingSeconds)}秒`)
   }
-  
+
   return parts.join('')
 }
 
@@ -97,9 +97,12 @@ export function formatUptime(seconds: number): string {
 /**
  * Get start and end of day for given date
  */
-export function getDayRange(date?: string | Date): { start: string; end: string } {
+export function getDayRange(date?: string | Date): {
+  start: string
+  end: string
+} {
   const day = date ? dayjs(date) : dayjs()
-  
+
   return {
     start: day.startOf('day').toISOString(),
     end: day.endOf('day').toISOString(),
@@ -109,9 +112,12 @@ export function getDayRange(date?: string | Date): { start: string; end: string 
 /**
  * Get start and end of week for given date
  */
-export function getWeekRange(date?: string | Date): { start: string; end: string } {
+export function getWeekRange(date?: string | Date): {
+  start: string
+  end: string
+} {
   const day = date ? dayjs(date) : dayjs()
-  
+
   return {
     start: day.startOf('week').toISOString(),
     end: day.endOf('week').toISOString(),
@@ -121,9 +127,12 @@ export function getWeekRange(date?: string | Date): { start: string; end: string
 /**
  * Get start and end of month for given date
  */
-export function getMonthRange(date?: string | Date): { start: string; end: string } {
+export function getMonthRange(date?: string | Date): {
+  start: string
+  end: string
+} {
   const day = date ? dayjs(date) : dayjs()
-  
+
   return {
     start: day.startOf('month').toISOString(),
     end: day.endOf('month').toISOString(),
@@ -133,13 +142,16 @@ export function getMonthRange(date?: string | Date): { start: string; end: strin
 /**
  * Get time range for specified period
  */
-export function getTimeRange(period: 'hour' | 'day' | 'week' | 'month' | 'year', count: number = 1): {
+export function getTimeRange(
+  period: 'hour' | 'day' | 'week' | 'month' | 'year',
+  count: number = 1
+): {
   start: string
   end: string
 } {
   const now = dayjs()
   const start = now.subtract(count, period)
-  
+
   return {
     start: start.toISOString(),
     end: now.toISOString(),
@@ -151,7 +163,7 @@ export function getTimeRange(period: 'hour' | 'day' | 'week' | 'month' | 'year',
  */
 export function isToday(timestamp: string | number | Date): boolean {
   if (!timestamp) return false
-  
+
   try {
     return dayjs(timestamp).isSame(dayjs(), 'day')
   } catch {
@@ -162,9 +174,12 @@ export function isToday(timestamp: string | number | Date): boolean {
 /**
  * Check if timestamp is within last N minutes
  */
-export function isWithinMinutes(timestamp: string | number | Date, minutes: number): boolean {
+export function isWithinMinutes(
+  timestamp: string | number | Date,
+  minutes: number
+): boolean {
   if (!timestamp) return false
-  
+
   try {
     const diff = dayjs().diff(dayjs(timestamp), 'minute')
     return diff <= minutes
@@ -184,10 +199,10 @@ export function generateTimeLabels(
   const startTime = dayjs(start)
   const endTime = dayjs(end)
   const labels: string[] = []
-  
+
   let current = startTime
   let format: string
-  
+
   switch (interval) {
     case 'minute':
       format = DATE_FORMATS.HOUR_MINUTE
@@ -205,12 +220,12 @@ export function generateTimeLabels(
     default:
       format = DATE_FORMATS.DATETIME_MINUTE
   }
-  
+
   while (current.isBefore(endTime) || current.isSame(endTime)) {
     labels.push(current.format(format))
     current = current.add(1, interval)
   }
-  
+
   return labels
 }
 
@@ -233,11 +248,11 @@ export function localToISO(date: Date): string {
  */
 export function formatFileTime(timestamp: string | number | Date): string {
   if (!timestamp) return '-'
-  
+
   const now = dayjs()
   const time = dayjs(timestamp)
   const diffDays = now.diff(time, 'day')
-  
+
   if (diffDays === 0) {
     return time.format('今天 HH:mm')
   } else if (diffDays === 1) {
@@ -267,16 +282,19 @@ export function isBusinessHours(): boolean {
   const { start, end } = getBusinessHours()
   const startTime = dayjs(start, 'HH:mm')
   const endTime = dayjs(end, 'HH:mm')
-  
+
   return now.isAfter(startTime) && now.isBefore(endTime)
 }
 
 /**
  * Format timestamp for export filename
  */
-export function formatFilename(prefix: string = '', extension: string = ''): string {
+export function formatFilename(
+  prefix: string = '',
+  extension: string = ''
+): string {
   const timestamp = dayjs().format('YYYYMMDD_HHmmss')
-  return `${prefix}${prefix ? '_' : ''}${timestamp}${extension ? `.${  extension}` : ''}`
+  return `${prefix}${prefix ? '_' : ''}${timestamp}${extension ? `.${extension}` : ''}`
 }
 
 /**
@@ -295,7 +313,7 @@ export function getTimezoneInfo(): {
   abbreviation: string
 } {
   const now = dayjs()
-  
+
   return {
     name: Intl.DateTimeFormat().resolvedOptions().timeZone,
     offset: now.format('Z'),

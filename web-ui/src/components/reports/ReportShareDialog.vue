@@ -21,8 +21,11 @@
                       <el-radio label="private">仅限邀请</el-radio>
                     </el-radio-group>
                   </el-form-item>
-                  
-                  <el-form-item v-if="linkConfig.permission === 'protected'" label="访问密码">
+
+                  <el-form-item
+                    v-if="linkConfig.permission === 'protected'"
+                    label="访问密码"
+                  >
                     <el-input
                       v-model="linkConfig.password"
                       type="password"
@@ -31,9 +34,12 @@
                       show-password
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="有效期">
-                    <el-select v-model="linkConfig.expiry" placeholder="选择有效期">
+                    <el-select
+                      v-model="linkConfig.expiry"
+                      placeholder="选择有效期"
+                    >
                       <el-option label="永久有效" value="never" />
                       <el-option label="1小时" value="1h" />
                       <el-option label="1天" value="1d" />
@@ -42,8 +48,11 @@
                       <el-option label="自定义" value="custom" />
                     </el-select>
                   </el-form-item>
-                  
-                  <el-form-item v-if="linkConfig.expiry === 'custom'" label="自定义时间">
+
+                  <el-form-item
+                    v-if="linkConfig.expiry === 'custom'"
+                    label="自定义时间"
+                  >
                     <el-date-picker
                       v-model="linkConfig.customExpiry"
                       type="datetime"
@@ -52,13 +61,13 @@
                       value-format="YYYY-MM-DD HH:mm:ss"
                     />
                   </el-form-item>
-                  
+
                   <el-form-item label="允许下载">
                     <el-switch v-model="linkConfig.allowDownload" />
                   </el-form-item>
                 </el-form>
               </div>
-              
+
               <div class="link-result">
                 <el-input
                   v-model="shareLink"
@@ -72,13 +81,13 @@
                     </el-button>
                   </template>
                 </el-input>
-                
+
                 <div class="link-actions">
-                  <el-button @click="copyLink" :disabled="!shareLink">
+                  <el-button :disabled="!shareLink" @click="copyLink">
                     <el-icon><CopyDocument /></el-icon>
                     复制链接
                   </el-button>
-                  <el-button @click="openQRCode" :disabled="!shareLink">
+                  <el-button :disabled="!shareLink" @click="openQRCode">
                     <el-icon><Picture /></el-icon>
                     生成二维码
                   </el-button>
@@ -86,7 +95,7 @@
               </div>
             </div>
           </el-tab-pane>
-          
+
           <el-tab-pane label="邮件发送" name="email">
             <div class="email-share">
               <el-form :model="emailConfig" label-width="80px">
@@ -107,7 +116,7 @@
                     />
                   </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="抄送">
                   <el-select
                     v-model="emailConfig.cc"
@@ -125,14 +134,14 @@
                     />
                   </el-select>
                 </el-form-item>
-                
+
                 <el-form-item label="主题">
                   <el-input
                     v-model="emailConfig.subject"
                     placeholder="邮件主题"
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="内容">
                   <el-input
                     v-model="emailConfig.message"
@@ -141,7 +150,7 @@
                     placeholder="邮件内容（可选）"
                   />
                 </el-form-item>
-                
+
                 <el-form-item label="附件格式">
                   <el-checkbox-group v-model="emailConfig.attachments">
                     <el-checkbox
@@ -156,7 +165,7 @@
               </el-form>
             </div>
           </el-tab-pane>
-          
+
           <el-tab-pane label="团队协作" name="team">
             <div class="team-share">
               <div class="team-members">
@@ -181,7 +190,7 @@
                   </div>
                 </el-checkbox-group>
               </div>
-              
+
               <div class="team-permissions">
                 <h5>权限设置</h5>
                 <el-form label-width="100px">
@@ -199,7 +208,7 @@
                   </el-form-item>
                 </el-form>
               </div>
-              
+
               <div class="notification-settings">
                 <h5>通知设置</h5>
                 <el-checkbox-group v-model="teamConfig.notifications">
@@ -212,7 +221,7 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      
+
       <!-- 分享历史 -->
       <div class="share-history">
         <h4>分享历史</h4>
@@ -232,8 +241,8 @@
               <el-button
                 size="small"
                 text
-                @click="revokeShare(row)"
                 :disabled="row.status === '已撤销'"
+                @click="revokeShare(row)"
               >
                 撤销
               </el-button>
@@ -242,17 +251,17 @@
         </el-table>
       </div>
     </div>
-    
+
     <!-- 对话框底部 -->
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleShare" :loading="sharing">
+        <el-button type="primary" :loading="sharing" @click="handleShare">
           {{ sharing ? '分享中...' : '确认分享' }}
         </el-button>
       </div>
     </template>
-    
+
     <!-- 二维码对话框 -->
     <el-dialog v-model="showQRCode" title="分享二维码" width="400px">
       <div class="qr-code-content">
@@ -288,13 +297,9 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, nextTick } from 'vue'
+import { Refresh, CopyDocument, Picture } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
-import {
-  Refresh,
-  CopyDocument,
-  Picture
-} from '@element-plus/icons-vue'
+import { ref, computed, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -310,7 +315,7 @@ const emit = defineEmits<{
 // ===== 响应式数据 =====
 const visible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const activeTab = ref('link')
@@ -324,7 +329,7 @@ const linkConfig = ref({
   password: '',
   expiry: '7d',
   customExpiry: '',
-  allowDownload: true
+  allowDownload: true,
 })
 
 const shareLink = ref('')
@@ -335,7 +340,7 @@ const emailConfig = ref({
   cc: [],
   subject: '',
   message: '',
-  attachments: ['pdf']
+  attachments: ['pdf'],
 })
 
 // 团队分享配置
@@ -345,16 +350,16 @@ const teamConfig = ref({
     view: true,
     download: true,
     comment: false,
-    share: false
+    share: false,
   },
-  notifications: ['email', 'system']
+  notifications: ['email', 'system'],
 })
 
 // 邮件联系人
 const emailContacts = ref([
   { name: '张三', email: 'zhangsan@example.com' },
   { name: '李四', email: 'lisi@example.com' },
-  { name: '王五', email: 'wangwu@example.com' }
+  { name: '王五', email: 'wangwu@example.com' },
 ])
 
 // 团队成员
@@ -363,26 +368,26 @@ const teamMembers = ref([
     id: '1',
     name: '张三',
     role: '系统管理员',
-    avatar: ''
+    avatar: '',
   },
   {
     id: '2',
     name: '李四',
     role: '数据分析师',
-    avatar: ''
+    avatar: '',
   },
   {
     id: '3',
     name: '王五',
     role: '设备工程师',
-    avatar: ''
+    avatar: '',
   },
   {
     id: '4',
     name: '赵六',
     role: '运维工程师',
-    avatar: ''
-  }
+    avatar: '',
+  },
 ])
 
 // 分享历史
@@ -392,22 +397,22 @@ const shareHistory = ref([
     method: '链接',
     target: '公开链接',
     createTime: '2025-07-27 10:30',
-    status: '有效'
+    status: '有效',
   },
   {
     id: '2',
     method: '邮件',
     target: 'zhangsan@example.com',
     createTime: '2025-07-26 15:20',
-    status: '已发送'
+    status: '已发送',
   },
   {
     id: '3',
     method: '团队',
     target: '开发团队',
     createTime: '2025-07-25 09:15',
-    status: '已撤销'
-  }
+    status: '已撤销',
+  },
 ])
 
 // ===== 方法 =====
@@ -419,9 +424,9 @@ function generateShareLink() {
   const baseUrl = window.location.origin
   const reportId = props.report?.id || 'demo'
   const token = Math.random().toString(36).substr(2, 16)
-  
+
   shareLink.value = `${baseUrl}/shared/report/${reportId}?token=${token}`
-  
+
   ElMessage.success('分享链接已生成')
 }
 
@@ -446,9 +451,9 @@ function openQRCode() {
     ElMessage.warning('请先生成分享链接')
     return
   }
-  
+
   showQRCode.value = true
-  
+
   nextTick(() => {
     generateQRCode()
   })
@@ -459,7 +464,7 @@ function openQRCode() {
  */
 function generateQRCode() {
   if (!qrCodeRef.value) return
-  
+
   // 这里使用简单的二维码模拟
   // 实际项目中可以使用 qrcode 库
   qrCodeRef.value.innerHTML = `
@@ -494,7 +499,7 @@ function downloadQRCode() {
  */
 async function handleShare() {
   sharing.value = true
-  
+
   try {
     if (activeTab.value === 'link') {
       await handleLinkShare()
@@ -503,15 +508,14 @@ async function handleShare() {
     } else if (activeTab.value === 'team') {
       await handleTeamShare()
     }
-    
+
     ElMessage.success('分享成功')
-    
+
     // 更新分享历史
     updateShareHistory()
-    
+
     // 关闭对话框
     visible.value = false
-    
   } catch (error) {
     console.error('分享失败:', error)
     ElMessage.error('分享失败')
@@ -527,10 +531,10 @@ async function handleLinkShare() {
   if (!shareLink.value) {
     throw new Error('请先生成分享链接')
   }
-  
+
   // 模拟API调用
   await new Promise(resolve => setTimeout(resolve, 1000))
-  
+
   console.log('链接分享配置:', linkConfig.value)
 }
 
@@ -541,10 +545,10 @@ async function handleEmailShare() {
   if (!emailConfig.value.recipients.length) {
     throw new Error('请至少选择一个收件人')
   }
-  
+
   // 模拟邮件发送
   await new Promise(resolve => setTimeout(resolve, 2000))
-  
+
   console.log('邮件分享配置:', emailConfig.value)
 }
 
@@ -555,10 +559,10 @@ async function handleTeamShare() {
   if (!teamConfig.value.members.length) {
     throw new Error('请至少选择一个团队成员')
   }
-  
+
   // 模拟团队分享
   await new Promise(resolve => setTimeout(resolve, 1500))
-  
+
   console.log('团队分享配置:', teamConfig.value)
 }
 
@@ -570,12 +574,13 @@ function updateShareHistory() {
   const newRecord: any = {
     id: Date.now().toString(),
     createTime: now,
-    status: '有效'
+    status: '有效',
   }
-  
+
   if (activeTab.value === 'link') {
     newRecord.method = '链接'
-    newRecord.target = linkConfig.value.permission === 'public' ? '公开链接' : '密码保护链接'
+    newRecord.target =
+      linkConfig.value.permission === 'public' ? '公开链接' : '密码保护链接'
   } else if (activeTab.value === 'email') {
     newRecord.method = '邮件'
     newRecord.target = emailConfig.value.recipients.slice(0, 2).join(', ')
@@ -584,7 +589,7 @@ function updateShareHistory() {
     newRecord.method = '团队'
     newRecord.target = `${teamConfig.value.members.length} 位成员`
   }
-  
+
   shareHistory.value.unshift(newRecord)
 }
 
@@ -625,19 +630,19 @@ if (props.report) {
 .report-share {
   .share-methods {
     margin-bottom: 24px;
-    
+
     h4 {
       margin: 0 0 16px 0;
       color: #303133;
       font-size: 16px;
     }
-    
+
     .share-tabs {
       :deep(.el-tabs__content) {
         padding-top: 16px;
       }
     }
-    
+
     .link-share {
       .share-settings {
         margin-bottom: 20px;
@@ -645,7 +650,7 @@ if (props.report) {
         background: #fafafa;
         border-radius: 6px;
       }
-      
+
       .link-result {
         .link-actions {
           margin-top: 12px;
@@ -654,34 +659,34 @@ if (props.report) {
         }
       }
     }
-    
+
     .email-share {
       :deep(.el-form-item__label) {
         font-weight: 500;
       }
     }
-    
+
     .team-share {
       .team-members {
         margin-bottom: 20px;
-        
+
         h5 {
           margin: 0 0 12px 0;
           color: #303133;
           font-size: 14px;
         }
-        
+
         .member-item {
           margin-bottom: 12px;
-          
+
           :deep(.el-checkbox) {
             width: 100%;
-            
+
             .el-checkbox__label {
               width: 100%;
             }
           }
-          
+
           .member-info {
             display: flex;
             align-items: center;
@@ -689,20 +694,20 @@ if (props.report) {
             padding: 8px;
             border-radius: 6px;
             transition: background 0.2s;
-            
+
             &:hover {
               background: #f0f9ff;
             }
-            
+
             .member-details {
               flex: 1;
-              
+
               .member-name {
                 font-size: 14px;
                 color: #303133;
                 font-weight: 500;
               }
-              
+
               .member-role {
                 font-size: 12px;
                 color: #909399;
@@ -712,11 +717,11 @@ if (props.report) {
           }
         }
       }
-      
+
       .team-permissions,
       .notification-settings {
         margin-bottom: 20px;
-        
+
         h5 {
           margin: 0 0 12px 0;
           color: #303133;
@@ -725,11 +730,11 @@ if (props.report) {
       }
     }
   }
-  
+
   .share-history {
     border-top: 1px solid #ebeef5;
     padding-top: 16px;
-    
+
     h4 {
       margin: 0 0 12px 0;
       color: #303133;
@@ -746,18 +751,18 @@ if (props.report) {
 
 .qr-code-content {
   text-align: center;
-  
+
   .qr-code {
     margin-bottom: 16px;
   }
-  
+
   .qr-info {
     margin-bottom: 20px;
-    
+
     p {
       margin: 8px 0;
       color: #606266;
-      
+
       &.qr-link {
         font-size: 12px;
         color: #909399;
@@ -765,7 +770,7 @@ if (props.report) {
       }
     }
   }
-  
+
   .qr-actions {
     display: flex;
     justify-content: center;
@@ -781,12 +786,12 @@ if (props.report) {
       text-align: center;
       gap: 8px;
     }
-    
+
     .link-share .link-result .link-actions {
       flex-direction: column;
     }
   }
-  
+
   .qr-code-content .qr-actions {
     flex-direction: column;
   }

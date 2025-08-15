@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.output/
+.nuxt/
+.cache/
+.temp/
+*.min.js
+*.min.css
+.eslintrc.cjs
+scripts/
+vite.config.ts
+vitest.config.ts
+tests/

@@ -1,15 +1,16 @@
+import { ElMessage } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
-import { ElMessage } from 'element-plus'
-import type { 
-  SystemInfo, 
-  SystemMetrics, 
-  HealthStatus, 
-  ThemeConfig, 
-  ThemeMode,
-  GatewayConfig 
-} from '@/types'
+
 import { systemApi, BackupInfo } from '@/services/api'
+import type {
+  SystemInfo,
+  SystemMetrics,
+  HealthStatus,
+  ThemeConfig,
+  ThemeMode,
+  GatewayConfig,
+} from '@/types'
 
 export const useSystemStore = defineStore('system', () => {
   // State
@@ -41,8 +42,8 @@ export const useSystemStore = defineStore('system', () => {
 
   const criticalComponents = computed(() => {
     if (!healthStatus.value) return []
-    return healthStatus.value.components.filter(
-      comp => ['critical', 'failed'].includes(comp.status)
+    return healthStatus.value.components.filter(comp =>
+      ['critical', 'failed'].includes(comp.status)
     )
   })
 
@@ -87,21 +88,21 @@ export const useSystemStore = defineStore('system', () => {
           timestamp: new Date().toISOString(),
           services: {
             database: 'healthy',
-            message_bus: 'healthy', 
+            message_bus: 'healthy',
             driver_manager: 'healthy',
-            web_server: 'healthy'
+            web_server: 'healthy',
           },
           metrics: {
             uptime: 0,
             memory_usage: 0,
             cpu_usage: 0,
-            disk_usage: 0
+            disk_usage: 0,
           },
-          components: []
+          components: [],
         }
         return
       }
-      
+
       // 如果是404错误，停止轮询
       if ((error as any)?.response?.status === 404) {
         stopMetricsPolling()
@@ -123,7 +124,9 @@ export const useSystemStore = defineStore('system', () => {
     }
   }
 
-  const updateGatewayConfig = async (config: Partial<GatewayConfig>): Promise<void> => {
+  const updateGatewayConfig = async (
+    config: Partial<GatewayConfig>
+  ): Promise<void> => {
     loading.value = true
     try {
       await systemApi.updateConfig(config)
@@ -180,13 +183,13 @@ export const useSystemStore = defineStore('system', () => {
 
   const setTheme = (newTheme: Partial<ThemeConfig>): void => {
     theme.value = { ...theme.value, ...newTheme }
-    
+
     // Save to localStorage
     localStorage.setItem('theme-mode', theme.value.mode)
     localStorage.setItem('theme-primary', theme.value.primaryColor)
     localStorage.setItem('theme-accent', theme.value.accentColor)
     localStorage.setItem('theme-font-size', theme.value.fontSize.toString())
-    
+
     // Apply theme to DOM
     applyThemeToDOM()
   }
@@ -198,14 +201,14 @@ export const useSystemStore = defineStore('system', () => {
 
   const applyThemeToDOM = (): void => {
     const root = document.documentElement
-    
+
     // Apply dark mode class
     if (isDarkMode.value) {
       root.classList.add('dark')
     } else {
       root.classList.remove('dark')
     }
-    
+
     // Apply custom CSS variables
     root.style.setProperty('--el-color-primary', theme.value.primaryColor)
     root.style.setProperty('--theme-accent-color', theme.value.accentColor)
@@ -217,7 +220,7 @@ export const useSystemStore = defineStore('system', () => {
       await fetchSystemMetrics()
       await fetchHealthStatus()
     }, interval)
-    
+
     // Store timer for cleanup
     ;(window as any).__metricsTimer = timer
   }
@@ -233,13 +236,13 @@ export const useSystemStore = defineStore('system', () => {
   const init = async (): Promise<void> => {
     // Apply saved theme
     applyThemeToDOM()
-    
+
     // Watch for system theme changes if in auto mode
     if (theme.value.mode === 'auto') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
       mediaQuery.addEventListener('change', applyThemeToDOM)
     }
-    
+
     // Fetch initial system data
     await Promise.all([
       fetchSystemInfo(),
@@ -257,12 +260,12 @@ export const useSystemStore = defineStore('system', () => {
     theme: readonly(theme),
     loading: readonly(loading),
     metricsLoading: readonly(metricsLoading),
-    
+
     // Getters
     isDarkMode,
     isSystemHealthy,
     criticalComponents,
-    
+
     // Actions
     fetchSystemInfo,
     fetchSystemMetrics,

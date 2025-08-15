@@ -1,9 +1,9 @@
+import { ElMessage } from 'element-plus'
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
-import { ElMessage } from 'element-plus'
 
-import { useAuthStore } from '@/stores/auth'
 import Layout from '@/layouts/MainLayout.vue'
+import { useAuthStore } from '@/stores/auth'
 
 const routes: RouteRecordRaw[] = [
   {
@@ -45,7 +45,7 @@ const routes: RouteRecordRaw[] = [
         path: 'drivers',
         name: 'Drivers',
         component: () => import('@/views/drivers/DriversView.vue'),
-        redirect: '/drivers/list',
+        redirect: '/drivers/configs',
         meta: {
           title: '驱动管理',
           icon: 'Cpu',
@@ -56,7 +56,16 @@ const routes: RouteRecordRaw[] = [
             name: 'DriversList',
             component: () => import('@/views/drivers/DriversList.vue'),
             meta: {
-              title: '驱动列表',
+              title: '驱动文件',
+            },
+          },
+          {
+            path: 'configs',
+            name: 'DriverConfigs',
+            component: () =>
+              import('@/views/driver-configs/DriverConfigsList.vue'),
+            meta: {
+              title: '驱动配置',
             },
           },
           {
@@ -304,33 +313,7 @@ const routes: RouteRecordRaw[] = [
       },
     ],
   },
-  {
-    path: '/diagnostic',
-    name: 'Diagnostic',
-    component: () => import('@/views/test/DiagnosticView.vue'),
-    meta: {
-      title: '系统诊断',
-      requiresAuth: false,
-    },
-  },
-  {
-    path: '/route-test',
-    name: 'RouteTest',
-    component: () => import('@/views/test/RouteTestView.vue'),
-    meta: {
-      title: '路由测试',
-      requiresAuth: false,
-    },
-  },
-  {
-    path: '/test-mode',
-    name: 'TestMode',
-    component: () => import('@/pages/TestMode.vue'),
-    meta: {
-      title: '测试模式验证',
-      requiresAuth: false,
-    },
-  },
+  // 测试路由已移除
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
@@ -356,34 +339,36 @@ const router = createRouter({
 // Route guards simplified for development
 router.beforeEach(async (to, from, next) => {
   console.log('Navigating to:', to.path)
-  
+
   // Set page title
   if (to.meta?.title) {
     document.title = `${to.meta.title} - Gateway Rust`
   }
-  
+
   // 🚫 生产级系统：严格执行认证检查，不允许任何绕过机制
-  
+
   const authStore = useAuthStore()
-  
+
   // Skip auth for specific paths
   const skipAuthPaths = ['/login', '/diagnostic', '/route-test', '/test-mode']
-  
-  if (!skipAuthPaths.includes(to.path) && 
-      to.meta?.requiresAuth !== false && 
-      !authStore.isAuthenticated) {
+
+  if (
+    !skipAuthPaths.includes(to.path) &&
+    to.meta?.requiresAuth !== false &&
+    !authStore.isAuthenticated
+  ) {
     next('/login')
     return
   }
-  
+
   next()
 })
 
 // Error handling for development
-router.onError((error) => {
+router.onError(error => {
   console.error('Router error:', error)
   console.error('Stack trace:', error.stack)
-  
+
   // 在开发模式下不自动刷新页面，只记录错误
   if (import.meta.env.MODE === 'development') {
     // 提供更友好的错误信息
@@ -395,7 +380,7 @@ router.onError((error) => {
     } else if (error.message.includes('Cannot read properties of undefined')) {
       errorMessage = '未定义值引用错误，检查数据初始化'
     }
-    
+
     ElMessage.error(`路由加载失败: ${errorMessage}`)
   }
 })

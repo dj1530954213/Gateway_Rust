@@ -11,10 +11,14 @@
           {{ getProtocolDisplayName(protocolType) }}
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
         <!-- 配置模板 -->
-        <el-dropdown v-if="showTemplates" trigger="click" @command="handleTemplate">
+        <el-dropdown
+          v-if="showTemplates"
+          trigger="click"
+          @command="handleTemplate"
+        >
           <el-button type="link" size="small">
             配置模板 <el-icon><ArrowDown /></el-icon>
           </el-button>
@@ -27,7 +31,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        
+
         <!-- 帮助按钮 -->
         <el-button
           v-if="showHelp"
@@ -38,15 +42,15 @@
         />
       </div>
     </div>
-    
+
     <!-- 协议选择 -->
     <div class="protocol-selector">
       <el-form-item label="协议类型" required>
         <el-select
           v-model="currentProtocolType"
           placeholder="请选择协议类型"
-          @change="handleProtocolChange"
           :disabled="protocolLocked"
+          @change="handleProtocolChange"
         >
           <el-option
             v-for="protocol in supportedProtocols"
@@ -66,7 +70,7 @@
           </el-option>
         </el-select>
       </el-form-item>
-      
+
       <div v-if="protocolDescription" class="protocol-description">
         <el-alert
           :title="protocolDescription.title"
@@ -78,9 +82,9 @@
         />
       </div>
     </div>
-    
+
     <!-- 动态配置表单 -->
-    <div class="config-form" v-if="currentProtocolType">
+    <div v-if="currentProtocolType" class="config-form">
       <el-tabs v-model="activeTab" type="border-card">
         <!-- 基本配置 -->
         <el-tab-pane label="基本配置" name="basic">
@@ -93,7 +97,7 @@
             @change="handleConfigChange"
           />
         </el-tab-pane>
-        
+
         <!-- 连接配置 -->
         <el-tab-pane label="连接配置" name="connection">
           <BaseForm
@@ -105,7 +109,7 @@
             @change="handleConfigChange"
           />
         </el-tab-pane>
-        
+
         <!-- 安全配置 -->
         <el-tab-pane v-if="hasSecurityConfig" label="安全配置" name="security">
           <BaseForm
@@ -117,7 +121,7 @@
             @change="handleConfigChange"
           />
         </el-tab-pane>
-        
+
         <!-- 高级配置 -->
         <el-tab-pane label="高级配置" name="advanced">
           <BaseForm
@@ -129,9 +133,13 @@
             @change="handleConfigChange"
           />
         </el-tab-pane>
-        
+
         <!-- 数据点映射 -->
-        <el-tab-pane v-if="hasDataPointMapping" label="数据点映射" name="mapping">
+        <el-tab-pane
+          v-if="hasDataPointMapping"
+          label="数据点映射"
+          name="mapping"
+        >
           <div class="mapping-config">
             <div class="mapping-header">
               <el-button type="primary" size="small" @click="handleAddMapping">
@@ -144,7 +152,7 @@
                 导出映射
               </el-button>
             </div>
-            
+
             <BaseTable
               :data="dataPointMappings"
               :columns="mappingColumns"
@@ -155,9 +163,9 @@
         </el-tab-pane>
       </el-tabs>
     </div>
-    
+
     <!-- 配置验证和测试 -->
-    <div class="config-validation" v-if="showValidation && currentProtocolType">
+    <div v-if="showValidation && currentProtocolType" class="config-validation">
       <el-card shadow="never" class="validation-card">
         <template #header>
           <div class="validation-header">
@@ -172,7 +180,7 @@
             </el-button>
           </div>
         </template>
-        
+
         <div class="validation-content">
           <!-- 验证结果 -->
           <div v-if="validationResult" class="validation-result">
@@ -184,7 +192,7 @@
               :closable="false"
             />
           </div>
-          
+
           <!-- 配置摘要 -->
           <div class="config-summary">
             <el-descriptions title="配置摘要" border column="2">
@@ -200,21 +208,21 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 操作按钮 -->
-    <div class="config-actions" v-if="showActions">
+    <div v-if="showActions" class="config-actions">
       <el-button @click="handleReset">重置</el-button>
       <el-button @click="handleCancel">取消</el-button>
       <el-button
         type="primary"
         :loading="saving"
-        @click="handleSave"
         :disabled="!isConfigValid"
+        @click="handleSave"
       >
         保存配置
       </el-button>
     </div>
-    
+
     <!-- 配置模板对话框 -->
     <el-dialog
       v-model="templateVisible"
@@ -227,10 +235,7 @@
           <el-tab-pane label="保存模板" name="save">
             <el-form label-width="80px">
               <el-form-item label="模板名称">
-                <el-input
-                  v-model="templateName"
-                  placeholder="输入模板名称"
-                />
+                <el-input v-model="templateName" placeholder="输入模板名称" />
               </el-form-item>
               <el-form-item label="模板描述">
                 <el-input
@@ -242,7 +247,7 @@
               </el-form-item>
             </el-form>
           </el-tab-pane>
-          
+
           <el-tab-pane label="加载模板" name="load">
             <BaseTable
               :data="configTemplates"
@@ -252,7 +257,7 @@
           </el-tab-pane>
         </el-tabs>
       </div>
-      
+
       <template #footer>
         <el-button @click="templateVisible = false">取消</el-button>
         <el-button
@@ -268,20 +273,27 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
-import { 
-  Setting, 
-  ArrowDown, 
+import {
+  Setting,
+  ArrowDown,
   QuestionFilled,
   Connection,
   Monitor,
   Link,
-  Lock
+  Lock,
 } from '@element-plus/icons-vue'
-import { BaseForm, BaseTable } from '../base'
 import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted } from 'vue'
 
-export type ProtocolType = 'modbus_tcp' | 'modbus_rtu' | 'opcua' | 'mqtt5' | 'ethernet_ip' | 'profinet'
+import { BaseForm, BaseTable } from '../base'
+
+export type ProtocolType =
+  | 'modbus_tcp'
+  | 'modbus_rtu'
+  | 'opcua'
+  | 'mqtt5'
+  | 'ethernet_ip'
+  | 'profinet'
 
 export interface ProtocolConfig {
   basic: Record<string, any>
@@ -304,17 +316,17 @@ interface Props {
   modelValue?: ProtocolConfig
   protocolType?: ProtocolType
   title?: string
-  
+
   // 功能控制
   showTemplates?: boolean
   showHelp?: boolean
   showValidation?: boolean
   showActions?: boolean
   protocolLocked?: boolean
-  
+
   // 外观配置
   size?: 'small' | 'default' | 'large'
-  
+
   // 自定义样式
   customClass?: string
 }
@@ -346,7 +358,7 @@ const config = ref<ProtocolConfig>({
   basic: {},
   connection: {},
   security: {},
-  advanced: {}
+  advanced: {},
 })
 
 const testing = ref(false)
@@ -373,43 +385,43 @@ const supportedProtocols = [
     label: 'Modbus TCP',
     category: '以太网',
     tagType: 'primary',
-    icon: Link
+    icon: Link,
   },
   {
     value: 'modbus_rtu',
     label: 'Modbus RTU',
     category: '串口',
     tagType: 'success',
-    icon: Connection
+    icon: Connection,
   },
   {
     value: 'opcua',
     label: 'OPC UA',
     category: '工业标准',
     tagType: 'warning',
-    icon: Monitor
+    icon: Monitor,
   },
   {
     value: 'mqtt5',
     label: 'MQTT 5.0',
     category: '物联网',
     tagType: 'info',
-    icon: Link
+    icon: Link,
   },
   {
     value: 'ethernet_ip',
     label: 'Ethernet/IP',
     category: '以太网',
     tagType: 'primary',
-    icon: Link
+    icon: Link,
   },
   {
     value: 'profinet',
     label: 'PROFINET',
     category: '工业以太网',
     tagType: 'danger',
-    icon: Link
-  }
+    icon: Link,
+  },
 ]
 
 // 配置模板
@@ -419,53 +431,57 @@ const configTemplates = ref([
     name: 'Modbus TCP 默认配置',
     protocol: 'modbus_tcp',
     description: '标准 Modbus TCP 配置模板',
-    createTime: new Date()
-  }
+    createTime: new Date(),
+  },
 ])
 
 // 计算属性
 const containerClass = computed(() => {
   const classes = []
-  
+
   classes.push(`protocol-config--${props.size}`)
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   return classes.join(' ')
 })
 
 const protocolDescription = computed(() => {
   if (!currentProtocolType.value) return null
-  
+
   const descriptions = {
     modbus_tcp: {
       title: 'Modbus TCP',
-      content: 'Modbus TCP是基于以太网的工业通信协议，支持标准的TCP/IP网络传输。'
+      content:
+        'Modbus TCP是基于以太网的工业通信协议，支持标准的TCP/IP网络传输。',
     },
     modbus_rtu: {
       title: 'Modbus RTU',
-      content: 'Modbus RTU是基于串口的工业通信协议，使用二进制传输，具有较高的传输效率。'
+      content:
+        'Modbus RTU是基于串口的工业通信协议，使用二进制传输，具有较高的传输效率。',
     },
     opcua: {
       title: 'OPC UA',
-      content: 'OPC UA是现代工业通信标准，提供安全、可靠的数据交换和互操作性。'
+      content: 'OPC UA是现代工业通信标准，提供安全、可靠的数据交换和互操作性。',
     },
     mqtt5: {
       title: 'MQTT 5.0',
-      content: 'MQTT 5.0是轻量级的物联网通信协议，支持发布/订阅模式的消息传递。'
+      content:
+        'MQTT 5.0是轻量级的物联网通信协议，支持发布/订阅模式的消息传递。',
     },
     ethernet_ip: {
       title: 'Ethernet/IP',
-      content: 'Ethernet/IP是基于标准以太网的工业通信协议，广泛应用于自动化系统。'
+      content:
+        'Ethernet/IP是基于标准以太网的工业通信协议，广泛应用于自动化系统。',
     },
     profinet: {
       title: 'PROFINET',
-      content: 'PROFINET是基于以太网的工业通信标准，提供实时数据交换能力。'
-    }
+      content: 'PROFINET是基于以太网的工业通信标准，提供实时数据交换能力。',
+    },
   }
-  
+
   return descriptions[currentProtocolType.value]
 })
 
@@ -474,28 +490,30 @@ const hasSecurityConfig = computed(() => {
 })
 
 const hasDataPointMapping = computed(() => {
-  return ['modbus_tcp', 'modbus_rtu', 'opcua'].includes(currentProtocolType.value)
+  return ['modbus_tcp', 'modbus_rtu', 'opcua'].includes(
+    currentProtocolType.value
+  )
 })
 
 const basicFields = computed(() => {
   if (!currentProtocolType.value) return []
-  
+
   const commonFields = [
     {
       key: 'name',
       label: '连接名称',
       type: 'text',
       required: true,
-      placeholder: '输入连接名称'
+      placeholder: '输入连接名称',
     },
     {
       key: 'description',
       label: '描述',
       type: 'textarea',
-      placeholder: '输入连接描述'
-    }
+      placeholder: '输入连接描述',
+    },
   ]
-  
+
   const protocolSpecificFields = {
     modbus_tcp: [
       {
@@ -505,8 +523,8 @@ const basicFields = computed(() => {
         required: true,
         min: 1,
         max: 255,
-        defaultValue: 1
-      }
+        defaultValue: 1,
+      },
     ],
     modbus_rtu: [
       {
@@ -516,7 +534,7 @@ const basicFields = computed(() => {
         required: true,
         min: 1,
         max: 255,
-        defaultValue: 1
+        defaultValue: 1,
       },
       {
         key: 'baudRate',
@@ -527,9 +545,9 @@ const basicFields = computed(() => {
           { label: '9600', value: 9600 },
           { label: '19200', value: 19200 },
           { label: '38400', value: 38400 },
-          { label: '115200', value: 115200 }
+          { label: '115200', value: 115200 },
         ],
-        defaultValue: 9600
+        defaultValue: 9600,
       },
       {
         key: 'parity',
@@ -539,10 +557,10 @@ const basicFields = computed(() => {
         options: [
           { label: '无校验', value: 'none' },
           { label: '奇校验', value: 'odd' },
-          { label: '偶校验', value: 'even' }
+          { label: '偶校验', value: 'even' },
         ],
-        defaultValue: 'none'
-      }
+        defaultValue: 'none',
+      },
     ],
     opcua: [
       {
@@ -550,8 +568,8 @@ const basicFields = computed(() => {
         label: '端点URL',
         type: 'text',
         required: true,
-        placeholder: 'opc.tcp://localhost:4840'
-      }
+        placeholder: 'opc.tcp://localhost:4840',
+      },
     ],
     mqtt5: [
       {
@@ -559,31 +577,34 @@ const basicFields = computed(() => {
         label: '客户端ID',
         type: 'text',
         required: true,
-        placeholder: '输入客户端ID'
+        placeholder: '输入客户端ID',
       },
       {
         key: 'keepAlive',
         label: '保活时间',
         type: 'number',
         unit: '秒',
-        defaultValue: 60
-      }
-    ]
+        defaultValue: 60,
+      },
+    ],
   }
-  
-  return [...commonFields, ...(protocolSpecificFields[currentProtocolType.value] || [])]
+
+  return [
+    ...commonFields,
+    ...(protocolSpecificFields[currentProtocolType.value] || []),
+  ]
 })
 
 const connectionFields = computed(() => {
   if (!currentProtocolType.value) return []
-  
+
   const tcpFields = [
     {
       key: 'host',
       label: 'IP地址',
       type: 'text',
       required: true,
-      placeholder: ''
+      placeholder: '',
     },
     {
       key: 'port',
@@ -591,10 +612,10 @@ const connectionFields = computed(() => {
       type: 'number',
       required: true,
       min: 1,
-      max: 65535
-    }
+      max: 65535,
+    },
   ]
-  
+
   const serialFields = [
     {
       key: 'port',
@@ -606,41 +627,41 @@ const connectionFields = computed(() => {
         { label: 'COM2', value: 'COM2' },
         { label: 'COM3', value: 'COM3' },
         { label: '/dev/ttyUSB0', value: '/dev/ttyUSB0' },
-        { label: '/dev/ttyS0', value: '/dev/ttyS0' }
-      ]
-    }
+        { label: '/dev/ttyS0', value: '/dev/ttyS0' },
+      ],
+    },
   ]
-  
+
   const fieldMap = {
     modbus_tcp: tcpFields,
     modbus_rtu: serialFields,
     opcua: tcpFields,
     mqtt5: tcpFields,
     ethernet_ip: tcpFields,
-    profinet: tcpFields
+    profinet: tcpFields,
   }
-  
+
   return fieldMap[currentProtocolType.value] || []
 })
 
 const securityFields = computed(() => {
   if (!hasSecurityConfig.value) return []
-  
+
   const commonFields = [
     {
       key: 'username',
       label: '用户名',
       type: 'text',
-      placeholder: '输入用户名'
+      placeholder: '输入用户名',
     },
     {
       key: 'password',
       label: '密码',
       type: 'password',
-      placeholder: '输入密码'
-    }
+      placeholder: '输入密码',
+    },
   ]
-  
+
   const protocolSpecificFields = {
     opcua: [
       {
@@ -650,22 +671,25 @@ const securityFields = computed(() => {
         options: [
           { label: '无安全', value: 'None' },
           { label: '签名', value: 'Sign' },
-          { label: '签名并加密', value: 'SignAndEncrypt' }
+          { label: '签名并加密', value: 'SignAndEncrypt' },
         ],
-        defaultValue: 'None'
-      }
+        defaultValue: 'None',
+      },
     ],
     mqtt5: [
       {
         key: 'useTLS',
         label: '启用TLS',
         type: 'switch',
-        defaultValue: false
-      }
-    ]
+        defaultValue: false,
+      },
+    ],
   }
-  
-  return [...commonFields, ...(protocolSpecificFields[currentProtocolType.value] || [])]
+
+  return [
+    ...commonFields,
+    ...(protocolSpecificFields[currentProtocolType.value] || []),
+  ]
 })
 
 const advancedFields = computed(() => [
@@ -676,7 +700,7 @@ const advancedFields = computed(() => [
     unit: '毫秒',
     defaultValue: 5000,
     min: 1000,
-    max: 30000
+    max: 30000,
   },
   {
     key: 'retryCount',
@@ -684,7 +708,7 @@ const advancedFields = computed(() => [
     type: 'number',
     defaultValue: 3,
     min: 0,
-    max: 10
+    max: 10,
   },
   {
     key: 'retryInterval',
@@ -693,14 +717,14 @@ const advancedFields = computed(() => [
     unit: '毫秒',
     defaultValue: 1000,
     min: 100,
-    max: 10000
+    max: 10000,
   },
   {
     key: 'enableLogging',
     label: '启用日志',
     type: 'switch',
-    defaultValue: true
-  }
+    defaultValue: true,
+  },
 ])
 
 const mappingColumns = [
@@ -708,7 +732,7 @@ const mappingColumns = [
   { key: 'address', label: '地址', width: 120 },
   { key: 'dataType', label: '数据类型', width: 100 },
   { key: 'unit', label: '单位', width: 80 },
-  { key: 'actions', label: '操作', width: 120, type: 'action' }
+  { key: 'actions', label: '操作', width: 120, type: 'action' },
 ]
 
 const templateColumns = [
@@ -716,21 +740,21 @@ const templateColumns = [
   { key: 'protocol', label: '协议类型' },
   { key: 'description', label: '描述' },
   { key: 'createTime', label: '创建时间', type: 'datetime' },
-  { key: 'actions', label: '操作', type: 'action' }
+  { key: 'actions', label: '操作', type: 'action' },
 ]
 
 const basicRules = computed(() => ({
-  name: [{ required: true, message: '请输入连接名称', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入连接名称', trigger: 'blur' }],
 }))
 
 const connectionRules = computed(() => {
   const rules: any = {}
-  
+
   if (['modbus_tcp', 'opcua', 'mqtt5'].includes(currentProtocolType.value)) {
     rules.host = [{ required: true, message: '请输入IP地址', trigger: 'blur' }]
     rules.port = [{ required: true, message: '请输入端口', trigger: 'blur' }]
   }
-  
+
   return rules
 })
 
@@ -740,21 +764,22 @@ const advancedRules = computed(() => ({}))
 
 const configSummary = computed(() => {
   const summary: Record<string, any> = {}
-  
+
   summary['协议类型'] = getProtocolDisplayName(currentProtocolType.value)
-  
+
   if (config.value.basic.name) {
     summary['连接名称'] = config.value.basic.name
   }
-  
+
   if (config.value.connection.host && config.value.connection.port) {
-    summary['连接地址'] = `${config.value.connection.host}:${config.value.connection.port}`
+    summary['连接地址'] =
+      `${config.value.connection.host}:${config.value.connection.port}`
   }
-  
+
   if (config.value.advanced.timeout) {
     summary['超时时间'] = `${config.value.advanced.timeout}ms`
   }
-  
+
   return summary
 })
 
@@ -777,18 +802,18 @@ const getProtocolTagType = (type: string) => {
 // 事件处理
 const handleProtocolChange = (type: ProtocolType) => {
   currentProtocolType.value = type
-  
+
   // 重置配置
   config.value = {
     basic: {},
     connection: {},
     security: {},
-    advanced: {}
+    advanced: {},
   }
-  
+
   // 设置默认值
   setDefaultValues()
-  
+
   emit('protocol-change', type)
 }
 
@@ -799,20 +824,20 @@ const setDefaultValues = () => {
       config.value.basic[field.key] = field.defaultValue
     }
   })
-  
+
   // 设置连接配置默认端口
   const defaultPorts = {
     modbus_tcp: 502,
     opcua: 4840,
     mqtt5: 1883,
     ethernet_ip: 44818,
-    profinet: 102
+    profinet: 102,
   }
-  
+
   if (defaultPorts[currentProtocolType.value]) {
     config.value.connection.port = defaultPorts[currentProtocolType.value]
   }
-  
+
   // 设置高级配置默认值
   advancedFields.value.forEach(field => {
     if (field.defaultValue !== undefined) {
@@ -827,16 +852,16 @@ const handleConfigChange = () => {
 
 const handleTest = async () => {
   testing.value = true
-  
+
   try {
     emit('test', config.value)
-    
+
     // 模拟测试结果
     setTimeout(() => {
       validationResult.value = {
         type: 'success',
         title: '连接测试成功',
-        message: '配置参数正确，连接正常'
+        message: '配置参数正确，连接正常',
       }
       testing.value = false
     }, 2000)
@@ -844,7 +869,7 @@ const handleTest = async () => {
     validationResult.value = {
       type: 'error',
       title: '连接测试失败',
-      message: '请检查配置参数'
+      message: '请检查配置参数',
     }
     testing.value = false
   }
@@ -856,12 +881,12 @@ const handleSave = async () => {
     basicFormRef.value?.validate(),
     connectionFormRef.value?.validate(),
     securityFormRef.value?.validate(),
-    advancedFormRef.value?.validate()
+    advancedFormRef.value?.validate(),
   ])
-  
+
   if (validations.every(v => v)) {
     saving.value = true
-    
+
     try {
       emit('save', config.value)
       ElMessage.success('配置保存成功')
@@ -876,7 +901,7 @@ const handleReset = () => {
     basic: {},
     connection: {},
     security: {},
-    advanced: {}
+    advanced: {},
   }
   setDefaultValues()
 }
@@ -942,18 +967,26 @@ const handleMappingAction = (action: string, row: DataPointMapping) => {
 }
 
 // 监听
-watch(() => props.modelValue, (newValue) => {
-  if (newValue) {
-    config.value = { ...newValue }
-  }
-}, { immediate: true })
+watch(
+  () => props.modelValue,
+  newValue => {
+    if (newValue) {
+      config.value = { ...newValue }
+    }
+  },
+  { immediate: true }
+)
 
-watch(() => props.protocolType, (newType) => {
-  if (newType) {
-    currentProtocolType.value = newType
-    setDefaultValues()
-  }
-}, { immediate: true })
+watch(
+  () => props.protocolType,
+  newType => {
+    if (newType) {
+      currentProtocolType.value = newType
+      setDefaultValues()
+    }
+  },
+  { immediate: true }
+)
 
 // 生命周期
 onMounted(() => {
@@ -969,13 +1002,13 @@ onMounted(() => {
   background: var(--el-bg-color);
   border: 1px solid var(--el-border-color);
   border-radius: 6px;
-  
+
   &.protocol-config--small {
     .config-header {
       padding: 8px 12px;
     }
   }
-  
+
   &.protocol-config--large {
     .config-header {
       padding: 16px 20px;
@@ -990,7 +1023,7 @@ onMounted(() => {
   padding: 12px 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .header-title {
     display: flex;
     align-items: center;
@@ -998,7 +1031,7 @@ onMounted(() => {
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
-  
+
   .header-actions {
     display: flex;
     align-items: center;
@@ -1009,13 +1042,13 @@ onMounted(() => {
 .protocol-selector {
   padding: 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
-  
+
   .protocol-option {
     display: flex;
     align-items: center;
     gap: 8px;
   }
-  
+
   .protocol-description {
     margin-top: 12px;
   }
@@ -1023,7 +1056,7 @@ onMounted(() => {
 
 .config-form {
   padding: 16px;
-  
+
   :deep(.el-tabs__content) {
     padding-top: 16px;
   }
@@ -1039,13 +1072,13 @@ onMounted(() => {
 
 .config-validation {
   margin: 16px;
-  
+
   .validation-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
   }
-  
+
   .validation-content {
     .validation-result {
       margin-bottom: 16px;
@@ -1074,10 +1107,10 @@ onMounted(() => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .config-actions {
       flex-direction: column;
-      
+
       .el-button {
         width: 100%;
       }

@@ -5,26 +5,22 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-use crate::driver::{Driver as LegacyDriver, DriverMeta as LegacyDriverMeta, DriverKind, DriverState};
+use crate::driver::{Driver as LegacyDriver, DriverMeta as LegacyDriverMeta, DriverKind};
 use async_trait::async_trait;
 use dashmap::DashMap;
 use driver_sdk::{
-    abi::{DriverMeta, DriverStatus, DriverStats, DriverLoadResult},
-    driver::ProtocolKind,
+    abi::{DriverStatus, DriverStats, DriverMeta},
     Driver,
 };
 use libloading::{Library, Symbol};
 use notify::{Config, Event, EventKind, RecommendedWatcher, RecursiveMode, Watcher};
-use parking_lot::RwLock;
 use std::{
-    collections::HashMap,
     path::{Path, PathBuf},
     sync::Arc,
     time::Duration,
 };
 use tokio::sync::broadcast;
 use tracing::{debug, error, info, warn};
-use uuid::Uuid;
 
 /// SDK驱动包装器，将新SDK驱动适配到现有系统
 pub struct SdkDriverWrapper {
@@ -177,7 +173,7 @@ impl DynamicDriverLoader {
     pub fn start_file_watcher(&mut self) -> anyhow::Result<()> {
         let (tx, rx) = std::sync::mpsc::channel();
         let event_tx = self.event_tx.clone();
-        let drivers_dir = self.drivers_dir.clone();
+        let _drivers_dir = self.drivers_dir.clone();
         
         let mut watcher = RecommendedWatcher::new(
             move |res: notify::Result<Event>| {

@@ -1,24 +1,17 @@
 <template>
   <div class="data-quality-chart">
-    <div 
-      ref="chartRef" 
-      class="chart-container"
-    ></div>
-    
+    <div ref="chartRef" class="chart-container"></div>
+
     <!-- 质量指标 -->
     <div class="quality-metrics">
-      <div 
-        v-for="(value, key) in metrics" 
-        :key="key"
-        class="metric-item"
-      >
+      <div v-for="(value, key) in metrics" :key="key" class="metric-item">
         <div class="metric-label">{{ getMetricLabel(key) }}</div>
         <div class="metric-value" :class="getMetricClass(value)">
           {{ value.toFixed(1) }}%
         </div>
         <div class="metric-bar">
-          <div 
-            class="metric-progress" 
+          <div
+            class="metric-progress"
             :class="getMetricClass(value)"
             :style="{ width: `${value}%` }"
           ></div>
@@ -44,8 +37,8 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -77,16 +70,16 @@ const chartOptions = computed(() => ({
     right: '4%',
     bottom: '8%',
     top: '10%',
-    containLabel: true
+    containLabel: true,
   },
   tooltip: {
     trigger: 'axis',
     axisPointer: {
-      type: 'cross'
+      type: 'cross',
     },
     formatter(params: any[]) {
       let tooltip = `<div style="margin-bottom: 5px;">${formatTime(params[0].axisValue)}</div>`
-      
+
       params.forEach(param => {
         tooltip += `
           <div style="display: flex; align-items: center; margin-bottom: 3px;">
@@ -96,16 +89,16 @@ const chartOptions = computed(() => ({
           </div>
         `
       })
-      
+
       return tooltip
-    }
+    },
   },
   legend: {
     data: ['完整性', '准确性', '一致性', '及时性'],
     top: 0,
     textStyle: {
-      fontSize: 12
-    }
+      fontSize: 12,
+    },
   },
   xAxis: {
     type: 'time',
@@ -113,8 +106,8 @@ const chartOptions = computed(() => ({
     axisLabel: {
       formatter(value: number) {
         return formatTime(value)
-      }
-    }
+      },
+    },
   },
   yAxis: {
     type: 'value',
@@ -122,13 +115,13 @@ const chartOptions = computed(() => ({
     min: 80,
     max: 100,
     axisLabel: {
-      formatter: '{value}%'
+      formatter: '{value}%',
     },
     splitLine: {
       lineStyle: {
-        type: 'dashed'
-      }
-    }
+        type: 'dashed',
+      },
+    },
   },
   series: [
     {
@@ -139,21 +132,22 @@ const chartOptions = computed(() => ({
       symbolSize: 4,
       lineStyle: {
         color: '#67C23A',
-        width: 2
+        width: 2,
       },
       itemStyle: {
-        color: '#67C23A'
+        color: '#67C23A',
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: '#67C23A40' },
-          { offset: 1, color: '#67C23A10' }
-        ])
+          { offset: 1, color: '#67C23A10' },
+        ]),
       },
-      data: props.data?.map(point => [
-        new Date(point.timestamp).getTime(),
-        point.completeness
-      ]) || []
+      data:
+        props.data?.map(point => [
+          new Date(point.timestamp).getTime(),
+          point.completeness,
+        ]) || [],
     },
     {
       name: '准确性',
@@ -163,21 +157,22 @@ const chartOptions = computed(() => ({
       symbolSize: 4,
       lineStyle: {
         color: '#409EFF',
-        width: 2
+        width: 2,
       },
       itemStyle: {
-        color: '#409EFF'
+        color: '#409EFF',
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: '#409EFF40' },
-          { offset: 1, color: '#409EFF10' }
-        ])
+          { offset: 1, color: '#409EFF10' },
+        ]),
       },
-      data: props.data?.map(point => [
-        new Date(point.timestamp).getTime(),
-        point.accuracy
-      ]) || []
+      data:
+        props.data?.map(point => [
+          new Date(point.timestamp).getTime(),
+          point.accuracy,
+        ]) || [],
     },
     {
       name: '一致性',
@@ -187,21 +182,22 @@ const chartOptions = computed(() => ({
       symbolSize: 4,
       lineStyle: {
         color: '#E6A23C',
-        width: 2
+        width: 2,
       },
       itemStyle: {
-        color: '#E6A23C'
+        color: '#E6A23C',
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: '#E6A23C40' },
-          { offset: 1, color: '#E6A23C10' }
-        ])
+          { offset: 1, color: '#E6A23C10' },
+        ]),
       },
-      data: props.data?.map(point => [
-        new Date(point.timestamp).getTime(),
-        point.consistency
-      ]) || []
+      data:
+        props.data?.map(point => [
+          new Date(point.timestamp).getTime(),
+          point.consistency,
+        ]) || [],
     },
     {
       name: '及时性',
@@ -211,22 +207,23 @@ const chartOptions = computed(() => ({
       symbolSize: 4,
       lineStyle: {
         color: '#F56C6C',
-        width: 2
+        width: 2,
       },
       itemStyle: {
-        color: '#F56C6C'
+        color: '#F56C6C',
       },
       areaStyle: {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
           { offset: 0, color: '#F56C6C40' },
-          { offset: 1, color: '#F56C6C10' }
-        ])
+          { offset: 1, color: '#F56C6C10' },
+        ]),
       },
-      data: props.data?.map(point => [
-        new Date(point.timestamp).getTime(),
-        point.timeliness
-      ]) || []
-    }
+      data:
+        props.data?.map(point => [
+          new Date(point.timestamp).getTime(),
+          point.timeliness,
+        ]) || [],
+    },
   ],
   // 添加质量阈值线
   markLine: {
@@ -236,25 +233,25 @@ const chartOptions = computed(() => ({
         yAxis: 90,
         lineStyle: {
           color: '#E6A23C',
-          type: 'dashed'
+          type: 'dashed',
         },
         label: {
-          formatter: '警告: 90%'
-        }
+          formatter: '警告: 90%',
+        },
       },
       {
         name: '危险阈值',
         yAxis: 85,
         lineStyle: {
           color: '#F56C6C',
-          type: 'dashed'
+          type: 'dashed',
         },
         label: {
-          formatter: '危险: 85%'
-        }
-      }
-    ]
-  }
+          formatter: '危险: 85%',
+        },
+      },
+    ],
+  },
 }))
 
 // ===== 方法 =====
@@ -266,10 +263,10 @@ function initChart() {
   if (!chartRef.value) return
 
   chartInstance.value = echarts.init(chartRef.value)
-  
+
   // 设置图表选项
   chartInstance.value.setOption(chartOptions.value)
-  
+
   // 监听窗口大小变化
   window.addEventListener('resize', handleResize)
 }
@@ -279,7 +276,7 @@ function initChart() {
  */
 function updateChart() {
   if (!chartInstance.value) return
-  
+
   chartInstance.value.setOption(chartOptions.value, false, true)
 }
 
@@ -300,7 +297,7 @@ function getMetricLabel(key: string): string {
     completeness: '完整性',
     accuracy: '准确性',
     consistency: '一致性',
-    timeliness: '及时性'
+    timeliness: '及时性',
   }
   return labels[key] || key
 }
@@ -320,9 +317,9 @@ function getMetricClass(value: number): string {
  */
 function formatTime(timestamp: string | number): string {
   const date = new Date(timestamp)
-  return date.toLocaleTimeString('zh-CN', { 
-    hour: '2-digit', 
-    minute: '2-digit' 
+  return date.toLocaleTimeString('zh-CN', {
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
@@ -335,20 +332,28 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  
+
   if (chartInstance.value) {
     chartInstance.value.dispose()
   }
 })
 
 // ===== 监听器 =====
-watch(() => props.data, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.data,
+  () => {
+    updateChart()
+  },
+  { deep: true }
+)
 
-watch(() => props.metrics, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.metrics,
+  () => {
+    updateChart()
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -357,71 +362,71 @@ watch(() => props.metrics, () => {
     width: 100%;
     height: 200px;
   }
-  
+
   .quality-metrics {
     margin-top: 16px;
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
-    
+
     .metric-item {
       padding: 8px;
       border-radius: 6px;
       background: #fafafa;
-      
+
       .metric-label {
         font-size: 12px;
         color: #606266;
         margin-bottom: 4px;
       }
-      
+
       .metric-value {
         font-size: 18px;
         font-weight: 600;
         margin-bottom: 6px;
-        
+
         &.excellent {
-          color: #67C23A;
+          color: #67c23a;
         }
-        
+
         &.good {
-          color: #409EFF;
+          color: #409eff;
         }
-        
+
         &.warning {
-          color: #E6A23C;
+          color: #e6a23c;
         }
-        
+
         &.danger {
-          color: #F56C6C;
+          color: #f56c6c;
         }
       }
-      
+
       .metric-bar {
         height: 4px;
         background: #e4e7ed;
         border-radius: 2px;
         overflow: hidden;
-        
+
         .metric-progress {
           height: 100%;
           border-radius: 2px;
           transition: width 0.3s ease;
-          
+
           &.excellent {
-            background: #67C23A;
+            background: #67c23a;
           }
-          
+
           &.good {
-            background: #409EFF;
+            background: #409eff;
           }
-          
+
           &.warning {
-            background: #E6A23C;
+            background: #e6a23c;
           }
-          
+
           &.danger {
-            background: #F56C6C;
+            background: #f56c6c;
           }
         }
       }

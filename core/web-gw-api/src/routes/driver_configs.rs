@@ -25,6 +25,10 @@ use utoipa::OpenApi;
         get_driver_config,
         update_driver_config,
         delete_driver_config,
+        start_driver_config,
+        stop_driver_config,
+        restart_driver_config,
+        get_driver_config_status,
     ),
     components(schemas(
         DriverConfigVO,
@@ -33,6 +37,9 @@ use utoipa::OpenApi;
         DriverConfigQuery,
         DriverConfigResponse,
         DriverConfigListResponse,
+        DriverLifecycleResponse,
+        DriverConfigStatusResponse,
+        DriverConfigStatusVO,
     ))
 )]
 pub struct DriverConfigsApiDoc;
@@ -45,6 +52,11 @@ pub fn scope() -> actix_web::Scope {
         .route("/{id}", web::get().to(get_driver_config))
         .route("/{id}", web::put().to(update_driver_config))
         .route("/{id}", web::delete().to(delete_driver_config))
+        // 生命周期管理API
+        .route("/{id}/start", web::post().to(start_driver_config))
+        .route("/{id}/stop", web::post().to(stop_driver_config))
+        .route("/{id}/restart", web::post().to(restart_driver_config))
+        .route("/{id}/status", web::get().to(get_driver_config_status))
 }
 
 /// 创建驱动配置
@@ -442,4 +454,341 @@ async fn delete_driver_config(
 
     info!("Successfully deleted driver config: {}", config_id);
     Ok(HttpResponse::NoContent().finish())
+}
+
+/// 启动驱动配置实例
+#[utoipa::path(
+    post,
+    path = "/api/v1/driver-configs/{id}/start",
+    params(
+        ("id" = Uuid, Path, description = "驱动配置ID")
+    ),
+    responses(
+        (status = 200, description = "启动成功", body = DriverLifecycleResponse),
+        (status = 404, description = "驱动配置不存在", body = ApiErrorResponse),
+        (status = 409, description = "驱动已在运行中", body = ApiErrorResponse),
+        (status = 500, description = "服务器内部错误", body = ApiErrorResponse)
+    ),
+    tag = "driver-configs"
+)]
+async fn start_driver_config(
+    path: Path<Uuid>,
+    app_state: Data<crate::bootstrap::AppState>,
+) -> Result<impl Responder, ApiError> {
+    let config_id = path.into_inner();
+    
+    info!("Starting driver config: {}", config_id);
+
+    // 获取驱动配置
+    let config = app_state.driver_config_repo.get_driver_config(config_id).await
+        .map_err(|e| {
+            error!("Failed to get driver config {}: {}", config_id, e);
+            ApiError::internal_error("Database query failed")
+        })?
+        .ok_or_else(|| ApiError::not_found(format!("Driver config not found: {}", config_id)))?;
+
+    if !config.enabled {
+        return Err(ApiError::bad_request("Cannot start a disabled driver config"));
+    }
+
+    // 触发驱动配置监听器进行扫描，启动这个配置的驱动
+    if let Some(monitor) = crate::services::get_driver_config_monitor() {
+        if let Err(e) = monitor.trigger_scan().await {
+            error!("Failed to trigger driver config scan: {}", e);
+            return Err(ApiError::internal_error("Failed to start driver config"));
+        }
+    } else {
+        return Err(ApiError::internal_error("Driver config monitor is not available"));
+    }
+
+    // 等待短暂时间让驱动启动
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+    // 检查驱动是否成功启动
+    let status = get_config_driver_status(&config, &app_state).await?;
+
+    let response = DriverLifecycleResponse {
+        config_id,
+        config_name: config.name,
+        operation: "start".to_string(),
+        success: status.running,
+        message: if status.running {
+            "Driver config started successfully".to_string()
+        } else {
+            "Driver config start initiated, but not yet running".to_string()
+        },
+        current_status: Some(status),
+    };
+
+    info!("Driver config {} start operation completed", config_id);
+    Ok(HttpResponse::Ok().json(response))
+}
+
+/// 停止驱动配置实例
+#[utoipa::path(
+    post,
+    path = "/api/v1/driver-configs/{id}/stop",
+    params(
+        ("id" = Uuid, Path, description = "驱动配置ID")
+    ),
+    responses(
+        (status = 200, description = "停止成功", body = DriverLifecycleResponse),
+        (status = 404, description = "驱动配置不存在", body = ApiErrorResponse),
+        (status = 500, description = "服务器内部错误", body = ApiErrorResponse)
+    ),
+    tag = "driver-configs"
+)]
+async fn stop_driver_config(
+    path: Path<Uuid>,
+    app_state: Data<crate::bootstrap::AppState>,
+) -> Result<impl Responder, ApiError> {
+    let config_id = path.into_inner();
+    
+    info!("Stopping driver config: {}", config_id);
+
+    // 获取驱动配置
+    let config = app_state.driver_config_repo.get_driver_config(config_id).await
+        .map_err(|e| {
+            error!("Failed to get driver config {}: {}", config_id, e);
+            ApiError::internal_error("Database query failed")
+        })?
+        .ok_or_else(|| ApiError::not_found(format!("Driver config not found: {}", config_id)))?;
+
+    // 临时禁用配置以触发停止
+    app_state.driver_config_repo.enable_driver_config(config_id, false).await
+        .map_err(|e| {
+            error!("Failed to disable driver config {}: {}", config_id, e);
+            ApiError::internal_error("Failed to disable driver config")
+        })?;
+
+    // 触发驱动配置监听器进行扫描，停止这个配置的驱动
+    if let Some(monitor) = crate::services::get_driver_config_monitor() {
+        if let Err(e) = monitor.trigger_scan().await {
+            error!("Failed to trigger driver config scan: {}", e);
+            // 恢复启用状态
+            let _ = app_state.driver_config_repo.enable_driver_config(config_id, config.enabled).await;
+            return Err(ApiError::internal_error("Failed to stop driver config"));
+        }
+    } else {
+        // 恢复启用状态
+        let _ = app_state.driver_config_repo.enable_driver_config(config_id, config.enabled).await;
+        return Err(ApiError::internal_error("Driver config monitor is not available"));
+    }
+
+    // 恢复原始启用状态（如果原来是启用的）
+    if config.enabled {
+        app_state.driver_config_repo.enable_driver_config(config_id, true).await
+            .map_err(|e| {
+                error!("Failed to restore driver config enabled state {}: {}", config_id, e);
+                ApiError::internal_error("Failed to restore driver config state")
+            })?;
+    }
+
+    // 等待短暂时间让驱动停止
+    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+
+    // 检查驱动是否成功停止
+    let status = get_config_driver_status(&config, &app_state).await?;
+
+    let response = DriverLifecycleResponse {
+        config_id,
+        config_name: config.name,
+        operation: "stop".to_string(),
+        success: !status.running,
+        message: if !status.running {
+            "Driver config stopped successfully".to_string()
+        } else {
+            "Driver config stop initiated, but still running".to_string()
+        },
+        current_status: Some(status),
+    };
+
+    info!("Driver config {} stop operation completed", config_id);
+    Ok(HttpResponse::Ok().json(response))
+}
+
+/// 重启驱动配置实例
+#[utoipa::path(
+    post,
+    path = "/api/v1/driver-configs/{id}/restart",
+    params(
+        ("id" = Uuid, Path, description = "驱动配置ID")
+    ),
+    responses(
+        (status = 200, description = "重启成功", body = DriverLifecycleResponse),
+        (status = 404, description = "驱动配置不存在", body = ApiErrorResponse),
+        (status = 500, description = "服务器内部错误", body = ApiErrorResponse)
+    ),
+    tag = "driver-configs"
+)]
+async fn restart_driver_config(
+    path: Path<Uuid>,
+    app_state: Data<crate::bootstrap::AppState>,
+) -> Result<impl Responder, ApiError> {
+    let config_id = path.into_inner();
+    
+    info!("Restarting driver config: {}", config_id);
+
+    // 获取驱动配置
+    let config = app_state.driver_config_repo.get_driver_config(config_id).await
+        .map_err(|e| {
+            error!("Failed to get driver config {}: {}", config_id, e);
+            ApiError::internal_error("Database query failed")
+        })?
+        .ok_or_else(|| ApiError::not_found(format!("Driver config not found: {}", config_id)))?;
+
+    if !config.enabled {
+        return Err(ApiError::bad_request("Cannot restart a disabled driver config"));
+    }
+
+    // 通过更新updated_at时间戳来触发重启
+    let update = pg_repo::DriverConfigUpdate {
+        name: None,
+        description: None,
+        protocol: None,
+        connection_type: None,
+        enabled: None,
+        config: None,
+        scan_interval: None,
+        timeout: None,
+        max_concurrent: None,
+        batch_size: None,
+        max_retries: None,
+        retry_interval: None,
+        exponential_backoff: None,
+        max_retry_interval: None,
+        log_level: None,
+        enable_request_log: None,
+        enable_response_log: None,
+        max_log_size: None,
+        enable_ssl: None,
+        verify_certificate: None,
+        client_cert_path: None,
+        client_key_path: None,
+    };
+
+    // 触发更新（这会更新updated_at字段）
+    app_state.driver_config_repo.update_driver_config(config_id, update).await
+        .map_err(|e| {
+            error!("Failed to update driver config {}: {}", config_id, e);
+            ApiError::internal_error("Failed to trigger driver config restart")
+        })?;
+
+    // 触发驱动配置监听器进行扫描，重启这个配置的驱动
+    if let Some(monitor) = crate::services::get_driver_config_monitor() {
+        if let Err(e) = monitor.trigger_scan().await {
+            error!("Failed to trigger driver config scan: {}", e);
+            return Err(ApiError::internal_error("Failed to restart driver config"));
+        }
+    } else {
+        return Err(ApiError::internal_error("Driver config monitor is not available"));
+    }
+
+    // 等待时间让驱动重启
+    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+
+    // 检查驱动状态
+    let status = get_config_driver_status(&config, &app_state).await?;
+
+    let response = DriverLifecycleResponse {
+        config_id,
+        config_name: config.name,
+        operation: "restart".to_string(),
+        success: status.running,
+        message: if status.running {
+            "Driver config restarted successfully".to_string()
+        } else {
+            "Driver config restart initiated, but not yet running".to_string()
+        },
+        current_status: Some(status),
+    };
+
+    info!("Driver config {} restart operation completed", config_id);
+    Ok(HttpResponse::Ok().json(response))
+}
+
+/// 获取驱动配置状态
+#[utoipa::path(
+    get,
+    path = "/api/v1/driver-configs/{id}/status",
+    params(
+        ("id" = Uuid, Path, description = "驱动配置ID")
+    ),
+    responses(
+        (status = 200, description = "获取成功", body = DriverConfigStatusResponse),
+        (status = 404, description = "驱动配置不存在", body = ApiErrorResponse),
+        (status = 500, description = "服务器内部错误", body = ApiErrorResponse)
+    ),
+    tag = "driver-configs"
+)]
+async fn get_driver_config_status(
+    path: Path<Uuid>,
+    app_state: Data<crate::bootstrap::AppState>,
+) -> Result<impl Responder, ApiError> {
+    let config_id = path.into_inner();
+    
+    // 获取驱动配置
+    let config = app_state.driver_config_repo.get_driver_config(config_id).await
+        .map_err(|e| {
+            error!("Failed to get driver config {}: {}", config_id, e);
+            ApiError::internal_error("Database query failed")
+        })?
+        .ok_or_else(|| ApiError::not_found(format!("Driver config not found: {}", config_id)))?;
+
+    let status = get_config_driver_status(&config, &app_state).await?;
+
+    let response = DriverConfigStatusResponse {
+        config_id,
+        config_name: config.name,
+        status,
+    };
+
+    Ok(HttpResponse::Ok().json(response))
+}
+
+/// 获取驱动配置的运行状态
+async fn get_config_driver_status(
+    config: &pg_repo::DriverConfig,
+    app_state: &Data<crate::bootstrap::AppState>,
+) -> Result<DriverConfigStatusVO, ApiError> {
+    use crate::services::get_driver_config_monitor;
+
+    // 生成管理器驱动ID（与监听服务中的格式一致）
+    let expected_driver_id = format!("config_{}_{}", config.name, config.id);
+
+    // 从驱动管理器获取状态
+    let driver_state = app_state.driver_manager.get_driver_state(&expected_driver_id).await;
+
+    // 从监听服务获取管理状态
+    let managed_instances = if let Some(monitor) = get_driver_config_monitor() {
+        monitor.get_managed_instances().await
+    } else {
+        vec![]
+    };
+
+    let managed_instance = managed_instances
+        .iter()
+        .find(|instance| instance.config_id == config.id);
+
+    let running = driver_state.is_some() && 
+                  matches!(driver_state, Some(driver_manager::DriverState::Active));
+
+    let status_message = if !config.enabled {
+        "Disabled".to_string()
+    } else if running {
+        "Running".to_string()
+    } else if managed_instance.is_some() {
+        format!("Managed but not running (state: {:?})", driver_state)
+    } else {
+        "Not managed".to_string()
+    };
+
+    Ok(DriverConfigStatusVO {
+        running,
+        enabled: config.enabled,
+        managed_driver_id: managed_instance.map(|i| i.manager_driver_id.clone()),
+        driver_state: driver_state.map(|s| format!("{:?}", s)),
+        status_message,
+        last_checked: chrono::Utc::now(),
+    })
 }

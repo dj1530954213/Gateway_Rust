@@ -196,27 +196,8 @@ impl FrameEnvelope {
     }
 }
 
-/// 便捷的Value构造方法
+/// Value类型转换方法（构造方法在generated.rs中定义）
 impl Value {
-    pub fn bool(v: bool) -> Self {
-        Self { value: Some(value::Value::BoolV(v)) }
-    }
-
-    pub fn int(v: i64) -> Self {
-        Self { value: Some(value::Value::IntV(v)) }
-    }
-
-    pub fn float(v: f64) -> Self {
-        Self { value: Some(value::Value::FloatV(v)) }
-    }
-
-    pub fn string<S: Into<String>>(v: S) -> Self {
-        Self { value: Some(value::Value::StrV(v.into())) }
-    }
-
-    pub fn bytes(v: Vec<u8>) -> Self {
-        Self { value: Some(value::Value::BinV(v)) }
-    }
 
     /// 尝试转换为f64
     pub fn to_f64(&self) -> Option<f64> {

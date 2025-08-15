@@ -54,7 +54,7 @@ enum Commands {
 
 /// Gateway application
 struct Gateway {
-    frame_sender: FrameSender,
+    _frame_sender: FrameSender,
     _frame_receiver: FrameReceiver,
     dynamic_registry: DynamicDriverRegistry,
     rest_api: ApiServer,
@@ -62,7 +62,7 @@ struct Gateway {
     metrics_collector: MetricsCollector,
     health_monitor: HealthMonitor,
     alert_manager: AlertManager,
-    config_manager: ProductionConfigManager,
+    _config_manager: ProductionConfigManager,
     // advanced_features: AdvancedFeaturesManager,  // 暂时禁用
 }
 
@@ -81,9 +81,39 @@ impl Gateway {
         config_manager.validate_config()
             .context("Configuration validation failed")?;
 
-        // Initialize frame bus
-        let (frame_sender, frame_receiver) = init_frame_bus(1024, "data/wal")
-            .context("Failed to initialize frame bus")?;
+        // Initialize frame bus with proper WAL directory handling
+        let wal_dir = std::env::var("WAL_DIR")
+            .unwrap_or_else(|_| {
+                // WSL2兼容性：优先使用Linux原生路径
+                if cfg!(target_os = "linux") && std::path::Path::new("/tmp").exists() {
+                    "/tmp/gateway_wal".to_string()
+                } else {
+                    "data/wal".to_string()
+                }
+            });
+        
+        info!("Using WAL directory: {}", wal_dir);
+        
+        // 确保WAL目录存在
+        if let Err(e) = std::fs::create_dir_all(&wal_dir) {
+            warn!("Failed to create WAL directory {}: {}", wal_dir, e);
+            info!("Attempting to use in-memory Frame Bus as fallback");
+        }
+
+        let (frame_sender, frame_receiver) = match init_frame_bus(1024, &wal_dir) {
+            Ok((tx, rx)) => {
+                info!("Frame Bus initialized successfully with persistent WAL");
+                (tx, rx)
+            },
+            Err(e) => {
+                warn!("Failed to initialize persistent Frame Bus: {}", e);
+                info!("Falling back to high-performance memory-only Frame Bus");
+                
+                // 使用内存优化配置作为降级方案
+                frame_bus::init_high_performance(1024, &wal_dir, Some(frame_bus::PerformancePresets::memory_optimized()))
+                    .context("Failed to initialize fallback Frame Bus")?
+            }
+        };
 
         // Initialize dynamic driver registry
         let dynamic_registry = DynamicDriverRegistry::new()
@@ -95,7 +125,7 @@ impl Gateway {
         use std::net::SocketAddr;
         
         // 使用50000+端口范围（开发调试环境）
-        let bind_addr: SocketAddr = "127.0.0.1:50010".parse()
+        let bind_addr: SocketAddr = "127.0.0.1:50013".parse()
             .context("Invalid REST API bind address")?;
             
         let server_config = ServerConfig {
@@ -139,7 +169,7 @@ impl Gateway {
         //     .context("Failed to initialize advanced features")?;
 
         Ok(Self {
-            frame_sender,
+            _frame_sender: frame_sender,
             _frame_receiver: frame_receiver,
             dynamic_registry,
             rest_api,
@@ -147,7 +177,7 @@ impl Gateway {
             metrics_collector,
             health_monitor,
             alert_manager,
-            config_manager,
+            _config_manager: config_manager,
             // advanced_features,  // 暂时禁用
         })
     }

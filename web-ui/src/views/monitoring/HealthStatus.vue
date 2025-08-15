@@ -9,23 +9,30 @@
           {{ overallHealthText }}
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
-        <el-button 
+        <el-button
           :type="autoRefresh ? 'primary' : 'default'"
-          @click="toggleAutoRefresh"
           size="small"
+          @click="toggleAutoRefresh"
         >
-          <el-icon><VideoPlay v-if="!autoRefresh" /><VideoPause v-else /></el-icon>
+          <el-icon
+            ><VideoPlay v-if="!autoRefresh" /><VideoPause v-else
+          /></el-icon>
           {{ autoRefresh ? '停止监控' : '开始监控' }}
         </el-button>
-        
-        <el-button @click="refreshHealthStatus" :loading="loading" size="small">
+
+        <el-button :loading="loading" size="small" @click="refreshHealthStatus">
           <el-icon><Refresh /></el-icon>
           刷新状态
         </el-button>
-        
-        <el-button @click="runHealthCheck" :loading="checkingHealth" size="small" type="primary">
+
+        <el-button
+          :loading="checkingHealth"
+          size="small"
+          type="primary"
+          @click="runHealthCheck"
+        >
           <el-icon><Monitor /></el-icon>
           运行健康检查
         </el-button>
@@ -54,7 +61,10 @@
                 </div>
                 <div class="score-info">
                   <div class="score-label">整体健康评分</div>
-                  <div class="score-status" :class="getScoreStatusClass(healthScore)">
+                  <div
+                    class="score-status"
+                    :class="getScoreStatusClass(healthScore)"
+                  >
                     {{ getScoreStatusText(healthScore) }}
                   </div>
                 </div>
@@ -62,7 +72,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="8">
           <el-card shadow="never" class="health-card">
             <div class="health-stats">
@@ -81,7 +91,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="8">
           <el-card shadow="never" class="health-card">
             <div class="uptime-info">
@@ -109,56 +119,66 @@
     <div class="components-health">
       <el-card header="服务组件健康状态">
         <el-row :gutter="16">
-          <el-col 
-            v-for="component in healthComponents" 
+          <el-col
+            v-for="component in healthComponents"
             :key="component.name"
             :span="6"
           >
-            <div class="component-card" :class="`component-${component.status}`">
+            <div
+              class="component-card"
+              :class="`component-${component.status}`"
+            >
               <div class="component-header">
                 <el-icon :size="20">
                   <component :is="component.icon" />
                 </el-icon>
                 <span class="component-name">{{ component.name }}</span>
-                <el-tag 
-                  :type="getHealthTagType(component.status)" 
+                <el-tag
+                  :type="getHealthTagType(component.status)"
                   size="small"
                   effect="light"
                 >
                   {{ getHealthStatusText(component.status) }}
                 </el-tag>
               </div>
-              
+
               <div class="component-metrics">
                 <div class="metric">
                   <span class="metric-label">响应时间:</span>
-                  <span class="metric-value" :class="getResponseTimeClass(component.responseTime)">
+                  <span
+                    class="metric-value"
+                    :class="getResponseTimeClass(component.responseTime)"
+                  >
                     {{ component.responseTime }}ms
                   </span>
                 </div>
                 <div class="metric">
                   <span class="metric-label">可用性:</span>
-                  <span class="metric-value">{{ component.availability }}%</span>
+                  <span class="metric-value"
+                    >{{ component.availability }}%</span
+                  >
                 </div>
                 <div class="metric">
                   <span class="metric-label">最后检查:</span>
-                  <span class="metric-value">{{ formatTime(component.lastCheck) }}</span>
+                  <span class="metric-value">{{
+                    formatTime(component.lastCheck)
+                  }}</span>
                 </div>
               </div>
-              
+
               <div class="component-actions">
-                <el-button 
-                  size="small" 
-                  @click="checkComponent(component)"
+                <el-button
+                  size="small"
                   :loading="component.checking"
+                  @click="checkComponent(component)"
                 >
                   检查
                 </el-button>
-                <el-button 
-                  size="small" 
-                  type="primary" 
-                  @click="restartComponent(component)"
+                <el-button
+                  size="small"
+                  type="primary"
                   :disabled="component.status === 'healthy'"
+                  @click="restartComponent(component)"
                 >
                   重启
                 </el-button>
@@ -175,7 +195,7 @@
         <el-col :span="12">
           <el-card header="健康评分趋势" class="chart-card">
             <div class="chart-container">
-              <v-chart
+              <VChart
                 class="chart"
                 :option="healthScoreChartOption"
                 autoresize
@@ -183,11 +203,11 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="12">
           <el-card header="服务可用性" class="chart-card">
             <div class="chart-container">
-              <v-chart
+              <VChart
                 class="chart"
                 :option="availabilityChartOption"
                 autoresize
@@ -201,15 +221,15 @@
     <!-- 健康检查日志 -->
     <el-card header="健康检查日志" class="health-logs">
       <template #extra>
-        <el-button 
-          size="small" 
-          @click="clearLogs"
+        <el-button
+          size="small"
           :disabled="healthLogs.length === 0"
+          @click="clearLogs"
         >
           清空日志
         </el-button>
       </template>
-      
+
       <el-table :data="healthLogs" stripe max-height="300">
         <el-table-column prop="timestamp" label="时间" width="180">
           <template #default="{ row }">
@@ -226,9 +246,7 @@
         </el-table-column>
         <el-table-column prop="message" label="消息" show-overflow-tooltip />
         <el-table-column prop="duration" label="耗时" width="100">
-          <template #default="{ row }">
-            {{ row.duration }}ms
-          </template>
+          <template #default="{ row }"> {{ row.duration }}ms </template>
         </el-table-column>
       </el-table>
     </el-card>
@@ -249,7 +267,7 @@
             :closable="false"
           />
         </div>
-        
+
         <div class="diagnostic-details">
           <el-collapse v-model="activeCollapse">
             <el-collapse-item
@@ -259,7 +277,7 @@
               :name="item.category"
             >
               <div class="diagnostic-category">
-                <div 
+                <div
                   v-for="check in item.checks"
                   :key="check.name"
                   class="diagnostic-check"
@@ -286,7 +304,7 @@
           </el-collapse>
         </div>
       </div>
-      
+
       <template #footer>
         <el-button @click="showDiagnostic = false">关闭</el-button>
         <el-button type="primary" @click="exportDiagnostic">导出报告</el-button>
@@ -296,11 +314,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { useSystemStore } from '@/stores/system'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart, PieChart } from 'echarts/charts'
 import {
   TitleComponent,
@@ -308,7 +321,13 @@ import {
   LegendComponent,
   GridComponent,
 } from 'echarts/components'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import VChart from 'vue-echarts'
+
+import { useSystemStore } from '@/stores/system'
 import { formatTime } from '@/utils/date'
 
 // 注册 ECharts 组件
@@ -338,7 +357,7 @@ const availability = ref(0)
 const healthStats = ref({
   healthy: 0,
   warning: 0,
-  critical: 0
+  critical: 0,
 })
 
 // 组件健康状态 - 从API获取
@@ -351,13 +370,13 @@ const healthLogs = ref([])
 const diagnosticResult = ref({
   summary: '',
   type: 'success' as 'success' | 'warning' | 'error',
-  details: [] as any[]
+  details: [] as any[],
 })
 
 // 计算属性
 const overallHealthType = computed(() => {
   if (healthScore.value >= 80) return 'success'
-  if (healthScore.value >= 60) return 'warning'  
+  if (healthScore.value >= 60) return 'warning'
   return 'danger'
 })
 
@@ -372,25 +391,25 @@ const healthScoreData = ref([])
 const healthScoreChartOption = computed(() => ({
   tooltip: {
     trigger: 'axis',
-    formatter: '{b}: {c}%'
+    formatter: '{b}: {c}%',
   },
   grid: {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    containLabel: true
+    containLabel: true,
   },
   xAxis: {
     type: 'category',
-    data: healthScoreData.value.map(item => item.time) || []
+    data: healthScoreData.value.map(item => item.time) || [],
   },
   yAxis: {
     type: 'value',
     min: 0,
     max: 100,
     axisLabel: {
-      formatter: '{value}%'
-    }
+      formatter: '{value}%',
+    },
   },
   series: [
     {
@@ -398,9 +417,9 @@ const healthScoreChartOption = computed(() => ({
       type: 'line',
       smooth: true,
       data: healthScoreData.value.map(item => item.score) || [],
-      lineStyle: { 
+      lineStyle: {
         color: '#67c23a',
-        width: 3
+        width: 3,
       },
       areaStyle: {
         color: {
@@ -411,22 +430,22 @@ const healthScoreChartOption = computed(() => ({
           y2: 1,
           colorStops: [
             { offset: 0, color: 'rgba(103, 194, 58, 0.3)' },
-            { offset: 1, color: 'rgba(103, 194, 58, 0.1)' }
-          ]
-        }
-      }
-    }
-  ]
+            { offset: 1, color: 'rgba(103, 194, 58, 0.1)' },
+          ],
+        },
+      },
+    },
+  ],
 }))
 
 const availabilityChartOption = computed(() => ({
   tooltip: {
     trigger: 'item',
-    formatter: '{a} <br/>{b}: {c}% ({d}%)'
+    formatter: '{a} <br/>{b}: {c}% ({d}%)',
   },
   legend: {
     orient: 'vertical',
-    left: 'left'
+    left: 'left',
   },
   series: [
     {
@@ -434,19 +453,31 @@ const availabilityChartOption = computed(() => ({
       type: 'pie',
       radius: '70%',
       data: [
-        { value: healthStats.value.healthy, name: '健康服务', itemStyle: { color: '#67c23a' } },
-        { value: healthStats.value.warning, name: '警告服务', itemStyle: { color: '#e6a23c' } },
-        { value: healthStats.value.critical, name: '异常服务', itemStyle: { color: '#f56c6c' } }
+        {
+          value: healthStats.value.healthy,
+          name: '健康服务',
+          itemStyle: { color: '#67c23a' },
+        },
+        {
+          value: healthStats.value.warning,
+          name: '警告服务',
+          itemStyle: { color: '#e6a23c' },
+        },
+        {
+          value: healthStats.value.critical,
+          name: '异常服务',
+          itemStyle: { color: '#f56c6c' },
+        },
       ],
       emphasis: {
         itemStyle: {
           shadowBlur: 10,
           shadowOffsetX: 0,
-          shadowColor: 'rgba(0, 0, 0, 0.5)'
-        }
-      }
-    }
-  ]
+          shadowColor: 'rgba(0, 0, 0, 0.5)',
+        },
+      },
+    },
+  ],
 }))
 
 // 方法
@@ -474,7 +505,7 @@ const getHealthTagType = (status: string) => {
     pass: 'success',
     warning: 'warning',
     critical: 'danger',
-    fail: 'danger'
+    fail: 'danger',
   }
   return types[status] || 'info'
 }
@@ -485,7 +516,7 @@ const getHealthStatusText = (status: string) => {
     pass: '通过',
     warning: '警告',
     critical: '异常',
-    fail: '失败'
+    fail: '失败',
   }
   return texts[status] || status
 }
@@ -507,27 +538,29 @@ const refreshHealthStatus = async () => {
     // 获取健康状态数据
     const systemStore = useSystemStore()
     await systemStore.fetchHealthStatus()
-    
+
     // 更新本地状态
     if (systemStore.healthStatus) {
       const health = systemStore.healthStatus
       healthScore.value = health.metrics?.cpu_usage || 0
       systemUptime.value = `运行时间: ${health.metrics?.uptime || 0}秒`
       availability.value = 99.0
-      
+
       // 更新统计数据
       const services = health.services || {}
-      let healthy = 0, warning = 0, critical = 0
-      
+      let healthy = 0,
+        warning = 0,
+        critical = 0
+
       Object.values(services).forEach(status => {
         if (status === 'healthy') healthy++
         else if (status === 'warning') warning++
         else critical++
       })
-      
+
       healthStats.value = { healthy, warning, critical }
     }
-    
+
     ElMessage.success('健康状态已刷新')
   } catch (error) {
     console.error('获取健康状态失败:', error)
@@ -539,41 +572,47 @@ const refreshHealthStatus = async () => {
 
 const runHealthCheck = async () => {
   checkingHealth.value = true
-  
+
   try {
     // 执行真实的健康检查API调用
     const systemStore = useSystemStore()
     await systemStore.fetchHealthStatus()
-    
+
     // 基于实际健康状态生成诊断结果
     const health = systemStore.healthStatus
     if (health) {
       const services = health.services || {}
       const metrics = health.metrics || {}
-      
+
       let passCount = 0
       let warningCount = 0
       let criticalCount = 0
-      
+
       const checks = Object.entries(services).map(([name, status]) => {
         if (status === 'healthy') passCount++
         else if (status === 'warning') warningCount++
         else criticalCount++
-        
+
         return {
           name: `${name}服务`,
           status: status === 'healthy' ? 'pass' : status,
-          message: status === 'healthy' ? '服务运行正常' : `服务状态: ${status}`
+          message:
+            status === 'healthy' ? '服务运行正常' : `服务状态: ${status}`,
         }
       })
-      
+
       diagnosticResult.value = {
         summary: `系统检查完成，发现 ${passCount} 个正常服务，${warningCount} 个警告，${criticalCount} 个异常`,
-        type: criticalCount > 0 ? 'error' : warningCount > 0 ? 'warning' : 'success',
+        type:
+          criticalCount > 0
+            ? 'error'
+            : warningCount > 0
+              ? 'warning'
+              : 'success',
         details: [
           {
             category: '服务状态',
-            checks
+            checks,
           },
           {
             category: '系统资源',
@@ -581,28 +620,28 @@ const runHealthCheck = async () => {
               {
                 name: 'CPU使用率',
                 status: (metrics.cpu_usage || 0) > 80 ? 'warning' : 'pass',
-                message: `当前CPU使用率: ${metrics.cpu_usage || 0}%`
+                message: `当前CPU使用率: ${metrics.cpu_usage || 0}%`,
               },
               {
                 name: '内存使用',
                 status: (metrics.memory_usage || 0) > 80 ? 'warning' : 'pass',
-                message: `当前内存使用率: ${metrics.memory_usage || 0}%`
-              }
-            ]
-          }
-        ]
+                message: `当前内存使用率: ${metrics.memory_usage || 0}%`,
+              },
+            ],
+          },
+        ],
       }
     } else {
       diagnosticResult.value = {
         summary: '无法获取系统健康状态',
         type: 'error',
-        details: []
+        details: [],
       }
     }
-    
+
     showDiagnostic.value = true
     activeCollapse.value = ['服务状态', '系统资源']
-    
+
     ElMessage.success('健康检查完成')
   } catch (error) {
     console.error('健康检查失败:', error)
@@ -614,24 +653,24 @@ const runHealthCheck = async () => {
 
 const checkComponent = async (component: any) => {
   component.checking = true
-  
+
   try {
     // 执行实际的组件健康检查
     const systemStore = useSystemStore()
     await systemStore.fetchHealthStatus()
-    
+
     // 更新组件状态
     component.lastCheck = new Date()
-    
+
     // 添加检查日志
     healthLogs.value.unshift({
       timestamp: new Date(),
       component: component.name,
       status: component.status,
       message: `组件检查完成: ${getHealthStatusText(component.status)}`,
-      duration: component.responseTime
+      duration: component.responseTime,
     })
-    
+
     ElMessage.success(`${component.name} 检查完成`)
   } catch (error) {
     console.error(`${component.name} 检查失败:`, error)
@@ -649,30 +688,30 @@ const restartComponent = async (component: any) => {
       {
         confirmButtonText: '确认',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     ElMessage.info(`正在重启 ${component.name}...`)
-    
+
     // 调用系统重启API（需要后端实现）
     const systemStore = useSystemStore()
     await systemStore.restartSystem()
-    
+
     // 重新获取状态
     await systemStore.fetchHealthStatus()
-    
+
     component.lastCheck = new Date()
-    
+
     // 添加日志
     healthLogs.value.unshift({
       timestamp: new Date(),
       component: component.name,
       status: 'healthy',
       message: '服务重启成功',
-      duration: component.responseTime
+      duration: component.responseTime,
     })
-    
+
     ElMessage.success(`${component.name} 重启成功`)
   } catch (error) {
     if (error !== 'cancel') {
@@ -693,19 +732,19 @@ const exportDiagnostic = () => {
     timestamp: new Date().toISOString(),
     healthScore: healthScore.value,
     summary: diagnosticResult.value.summary,
-    details: diagnosticResult.value.details
+    details: diagnosticResult.value.details,
   }
-  
+
   const dataStr = JSON.stringify(report, null, 2)
-  const dataUri = `data:application/json;charset=utf-8,${ encodeURIComponent(dataStr)}`
-  
+  const dataUri = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`
+
   const exportFileDefaultName = `health-diagnostic-${new Date().toISOString().split('T')[0]}.json`
-  
+
   const linkElement = document.createElement('a')
   linkElement.setAttribute('href', dataUri)
   linkElement.setAttribute('download', exportFileDefaultName)
   linkElement.click()
-  
+
   ElMessage.success('诊断报告已导出')
 }
 
@@ -714,14 +753,14 @@ let refreshTimer: number | null = null
 
 const startAutoRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer)
-  
+
   refreshTimer = setInterval(async () => {
     if (autoRefresh.value) {
       // 静默获取最新健康状态
       try {
         const systemStore = useSystemStore()
         await systemStore.fetchHealthStatus()
-        
+
         // 更新组件的最后检查时间
         healthComponents.value.forEach(component => {
           component.lastCheck = new Date()
@@ -754,71 +793,71 @@ onUnmounted(() => {
     justify-content: space-between;
     align-items: center;
     padding: 0 0 20px 0;
-    
+
     .header-title {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       h1 {
         margin: 0;
         font-size: 20px;
         font-weight: 600;
       }
     }
-    
+
     .header-actions {
       display: flex;
       align-items: center;
       gap: 12px;
     }
   }
-  
+
   .health-overview {
     margin-bottom: 20px;
-    
+
     .health-card {
       border: none;
       height: 180px;
       display: flex;
       align-items: center;
-      
+
       .health-summary {
         width: 100%;
-        
+
         .health-score {
           display: flex;
           align-items: center;
           gap: 20px;
-          
+
           .score-circle {
             flex-shrink: 0;
           }
-          
+
           .score-text {
             font-size: 18px;
             font-weight: 600;
           }
-          
+
           .score-info {
             .score-label {
               font-size: 16px;
               color: var(--el-text-color-primary);
               margin-bottom: 8px;
             }
-            
+
             .score-status {
               font-size: 14px;
               font-weight: 500;
-              
+
               &.status-healthy {
                 color: var(--el-color-success);
               }
-              
+
               &.status-warning {
                 color: var(--el-color-warning);
               }
-              
+
               &.status-critical {
                 color: var(--el-color-danger);
               }
@@ -826,71 +865,71 @@ onUnmounted(() => {
           }
         }
       }
-      
+
       .health-stats {
         display: flex;
         justify-content: space-around;
         width: 100%;
-        
+
         .stat-item {
           text-align: center;
-          
+
           .stat-value {
             font-size: 32px;
             font-weight: 600;
             margin-bottom: 8px;
-            
+
             &.success {
               color: var(--el-color-success);
             }
-            
+
             &.warning {
               color: var(--el-color-warning);
             }
-            
+
             &.danger {
               color: var(--el-color-danger);
             }
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: var(--el-text-color-secondary);
           }
         }
       }
-      
+
       .uptime-info {
         width: 100%;
-        
+
         .uptime-main {
           text-align: center;
           margin-bottom: 20px;
-          
+
           .uptime-value {
             font-size: 24px;
             font-weight: 600;
             color: var(--el-color-primary);
             margin-bottom: 8px;
           }
-          
+
           .uptime-label {
             font-size: 14px;
             color: var(--el-text-color-secondary);
           }
         }
-        
+
         .uptime-details {
           .detail-item {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            
+
             .detail-label {
               font-size: 13px;
               color: var(--el-text-color-secondary);
             }
-            
+
             .detail-value {
               font-size: 13px;
               color: var(--el-text-color-primary);
@@ -901,90 +940,90 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .components-health {
     margin-bottom: 20px;
-    
+
     .component-card {
       border: 1px solid var(--el-border-color);
       border-radius: 8px;
       padding: 16px;
       margin-bottom: 16px;
       transition: all 0.3s;
-      
+
       &:hover {
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
       }
-      
+
       &.component-healthy {
         border-left: 4px solid var(--el-color-success);
       }
-      
+
       &.component-warning {
         border-left: 4px solid var(--el-color-warning);
       }
-      
+
       &.component-critical {
         border-left: 4px solid var(--el-color-danger);
       }
-      
+
       .component-header {
         display: flex;
         align-items: center;
         gap: 8px;
         margin-bottom: 12px;
-        
+
         .component-name {
           font-weight: 600;
           flex: 1;
         }
       }
-      
+
       .component-metrics {
         margin-bottom: 12px;
-        
+
         .metric {
           display: flex;
           justify-content: space-between;
           margin-bottom: 6px;
           font-size: 13px;
-          
+
           .metric-label {
             color: var(--el-text-color-secondary);
           }
-          
+
           .metric-value {
             font-weight: 500;
-            
+
             &.response-good {
               color: var(--el-color-success);
             }
-            
+
             &.response-normal {
               color: var(--el-color-warning);
             }
-            
+
             &.response-slow {
               color: var(--el-color-danger);
             }
           }
         }
       }
-      
+
       .component-actions {
         display: flex;
         gap: 8px;
       }
     }
   }
-  
+
   .health-trends {
     margin-bottom: 20px;
-    
+
     .chart-card {
       .chart-container {
         height: 300px;
-        
+
         .chart {
           height: 100%;
           width: 100%;
@@ -992,18 +1031,18 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .health-logs {
     .el-table {
       font-size: 13px;
     }
   }
-  
+
   .diagnostic-results {
     .diagnostic-summary {
       margin-bottom: 20px;
     }
-    
+
     .diagnostic-details {
       .diagnostic-category {
         .diagnostic-check {
@@ -1011,37 +1050,37 @@ onUnmounted(() => {
           border: 1px solid var(--el-border-color);
           border-radius: 6px;
           margin-bottom: 8px;
-          
+
           &.check-pass {
             border-left: 4px solid var(--el-color-success);
           }
-          
+
           &.check-warning {
             border-left: 4px solid var(--el-color-warning);
           }
-          
+
           &.check-fail {
             border-left: 4px solid var(--el-color-danger);
           }
-          
+
           .check-header {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
-            
+
             .check-name {
               font-weight: 500;
               flex: 1;
             }
           }
-          
+
           .check-message {
             font-size: 14px;
             color: var(--el-text-color-primary);
             margin-bottom: 8px;
           }
-          
+
           .check-suggestion {
             font-size: 13px;
             color: var(--el-color-warning);

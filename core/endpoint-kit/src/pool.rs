@@ -109,6 +109,12 @@ pub struct EndpointFactory {
     pools: DashMap<NormalizedUrl, Arc<EndpointHandle>>,
 }
 
+impl Default for EndpointFactory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl EndpointFactory {
     pub fn new() -> Self {
         Self {

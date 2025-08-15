@@ -35,6 +35,7 @@ components/
 ### 安装依赖
 
 组件库基于以下技术栈：
+
 - Vue 3 + TypeScript
 - Element Plus UI 库
 - Pinia 状态管理
@@ -75,20 +76,20 @@ import type { TableColumn } from '@/components/base'
 
 const tableData = ref([
   { id: 1, name: '设备1', status: 'online' },
-  { id: 2, name: '设备2', status: 'offline' }
+  { id: 2, name: '设备2', status: 'offline' },
 ])
 
 const columns: TableColumn[] = [
   { key: 'id', label: 'ID', width: 80 },
   { key: 'name', label: '设备名称' },
   { key: 'status', label: '状态', type: 'tag' },
-  { key: 'actions', label: '操作', type: 'action' }
+  { key: 'actions', label: '操作', type: 'action' },
 ]
 
 const paginationConfig = {
   pageSize: 10,
   showSizeChanger: true,
-  showQuickJumper: true
+  showQuickJumper: true,
 }
 
 const handleAction = (action: string, row: any) => {
@@ -123,7 +124,7 @@ const formFields: FormField[] = [
     label: '设备名称',
     type: 'text',
     required: true,
-    placeholder: '请输入设备名称'
+    placeholder: '请输入设备名称',
   },
   {
     key: 'type',
@@ -131,13 +132,13 @@ const formFields: FormField[] = [
     type: 'select',
     options: [
       { label: 'Modbus', value: 'modbus' },
-      { label: 'OPC UA', value: 'opcua' }
-    ]
-  }
+      { label: 'OPC UA', value: 'opcua' },
+    ],
+  },
 ]
 
 const formRules = {
-  name: [{ required: true, message: '请输入设备名称' }]
+  name: [{ required: true, message: '请输入设备名称' }],
 }
 
 const handleSubmit = (data: any) => {
@@ -168,10 +169,7 @@ const deviceStatus = ref('connected')
 
 ```vue
 <template>
-  <ActionButtons
-    :actions="actions"
-    @actionClick="handleActionClick"
-  />
+  <ActionButtons :actions="actions" @actionClick="handleActionClick" />
 </template>
 
 <script setup lang="ts">
@@ -183,7 +181,7 @@ const actions: ActionButton[] = [
     key: 'edit',
     label: '编辑',
     type: 'primary',
-    icon: 'Edit'
+    icon: 'Edit',
   },
   {
     key: 'delete',
@@ -192,9 +190,9 @@ const actions: ActionButton[] = [
     confirm: {
       title: '确定要删除吗？',
       confirmText: '删除',
-      cancelText: '取消'
-    }
-  }
+      cancelText: '取消',
+    },
+  },
 ]
 
 const handleActionClick = (action: ActionButton) => {
@@ -233,8 +231,8 @@ const connectionInfo: ConnectionInfo = {
   metrics: {
     latency: 25,
     packetLoss: 0.1,
-    throughput: 1024
-  }
+    throughput: 1024,
+  },
 }
 
 const handleReconnect = (connection: ConnectionInfo) => {
@@ -275,8 +273,8 @@ const dataPoints: DataPoint[] = [
     dataType: 'number',
     address: '40001',
     unit: '°C',
-    quality: 'good'
-  }
+    quality: 'good',
+  },
 ]
 
 const handleSelectionChange = (selectedDataPoints: DataPoint[]) => {
@@ -307,7 +305,7 @@ const protocolConfig = ref<ConfigType>({
   basic: {},
   connection: {},
   security: {},
-  advanced: {}
+  advanced: {},
 })
 
 const handleSave = (config: ConfigType) => {
@@ -344,22 +342,22 @@ const chartData: ChartData = {
   series: [
     {
       name: '温度',
-      data: [20, 22, 21, 25, 23, 24, 26]
-    }
-  ]
+      data: [20, 22, 21, 25, 23, 24, 26],
+    },
+  ],
 }
 
 const chartConfig: ChartConfig = {
   basic: {
     title: '温度趋势',
-    type: 'line'
+    type: 'line',
   },
   style: {
-    height: '400px'
+    height: '400px',
   },
   data: {
-    refreshInterval: 5000
-  }
+    refreshInterval: 5000,
+  },
 }
 
 const handleRefresh = () => {
@@ -392,8 +390,8 @@ const logEntries: LogEntry[] = [
     timestamp: new Date(),
     level: 'info',
     source: 'Gateway',
-    message: 'System started successfully'
-  }
+    message: 'System started successfully',
+  },
 ]
 
 const handleExport = (logs: LogEntry[]) => {
@@ -426,8 +424,8 @@ const uploadTypes: UploadType[] = [
     label: '配置文件',
     accept: '.json,.xml,.yaml',
     maxSize: 10 * 1024 * 1024,
-    description: '支持JSON、XML、YAML格式'
-  }
+    description: '支持JSON、XML、YAML格式',
+  },
 ]
 
 const handleUploadSuccess = (file: FileItem, response: any) => {
@@ -458,11 +456,7 @@ const handleUploadSuccess = (file: FileItem, response: any) => {
 
 ```vue
 <template>
-  <BaseTable
-    :data="data"
-    :columns="columns"
-    custom-class="my-custom-table"
-  />
+  <BaseTable :data="data" :columns="columns" custom-class="my-custom-table" />
 </template>
 
 <style scoped>
@@ -477,7 +471,7 @@ const handleUploadSuccess = (file: FileItem, response: any) => {
 组件库内置响应式支持，自动适配不同屏幕尺寸：
 
 - **桌面端**: > 1200px
-- **平板端**: 768px - 1200px  
+- **平板端**: 768px - 1200px
 - **移动端**: < 768px
 
 ## 🔧 最佳实践
@@ -492,14 +486,10 @@ const handleUploadSuccess = (file: FileItem, response: any) => {
     <template #header>
       <SearchBox v-model="searchKeyword" @search="handleSearch" />
     </template>
-    
+
     <FilterPanel :filters="filters" @filter="handleFilter" />
-    
-    <BaseTable
-      :data="filteredData"
-      :columns="columns"
-      :loading="loading"
-    />
+
+    <BaseTable :data="filteredData" :columns="columns" :loading="loading" />
   </el-card>
 </template>
 ```
@@ -555,11 +545,11 @@ import type { ConnectionInfo } from '@/components/business'
 
 export const useDevicesStore = defineStore('devices', () => {
   const devices = ref<ConnectionInfo[]>([])
-  
+
   const addDevice = (device: ConnectionInfo) => {
     devices.value.push(device)
   }
-  
+
   return { devices, addDevice }
 })
 ```
@@ -583,11 +573,11 @@ describe('BaseTable', () => {
         data: [{ id: 1, name: 'Test' }],
         columns: [
           { key: 'id', label: 'ID' },
-          { key: 'name', label: 'Name' }
-        ]
-      }
+          { key: 'name', label: 'Name' },
+        ],
+      },
     })
-    
+
     expect(wrapper.find('.base-table').exists()).toBe(true)
   })
 })

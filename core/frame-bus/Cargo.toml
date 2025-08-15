@@ -20,6 +20,9 @@ once_cell = { workspace = true }
 uuid = { workspace = true }
 regex = "1.8"
 
+# Local dependencies
+common-errors = { path = "../common-errors" }
+
 [dev-dependencies]
 tempfile = { workspace = true }
 

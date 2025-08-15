@@ -11,7 +11,7 @@
           {{ systemStatusText }}
         </el-tag>
       </div>
-      
+
       <div class="header-actions">
         <el-date-picker
           v-model="timeRange"
@@ -24,15 +24,17 @@
           value-format="YYYY-MM-DD HH:mm:ss"
           size="small"
         />
-        
+
         <el-button
           :type="isAutoRefresh ? 'primary' : 'default'"
           @click="handleToggleAutoRefresh"
         >
-          <el-icon><VideoPlay v-if="!isAutoRefresh" /><VideoPause v-else /></el-icon>
+          <el-icon
+            ><VideoPlay v-if="!isAutoRefresh" /><VideoPause v-else
+          /></el-icon>
           {{ isAutoRefresh ? '停止刷新' : '自动刷新' }}
         </el-button>
-        
+
         <el-dropdown trigger="click" @command="handleHeaderAction">
           <el-button>
             <el-icon><Setting /></el-icon>
@@ -56,7 +58,7 @@
         </el-dropdown>
       </div>
     </div>
-    
+
     <!-- 系统状态概览 -->
     <div class="system-overview">
       <el-row :gutter="16">
@@ -67,13 +69,15 @@
                 <el-icon><DataLine /></el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-number">{{ systemStats.activeDataPoints }}</div>
+                <div class="stat-number">
+                  {{ systemStats.activeDataPoints }}
+                </div>
                 <div class="stat-label">活跃数据点</div>
               </div>
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--success">
             <div class="stat-content">
@@ -81,13 +85,15 @@
                 <el-icon><Connection /></el-icon>
               </div>
               <div class="stat-info">
-                <div class="stat-number">{{ systemStats.connectedDrivers }}</div>
+                <div class="stat-number">
+                  {{ systemStats.connectedDrivers }}
+                </div>
                 <div class="stat-label">在线驱动</div>
               </div>
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--warning">
             <div class="stat-content">
@@ -101,7 +107,7 @@
             </div>
           </el-card>
         </el-col>
-        
+
         <el-col :span="6">
           <el-card shadow="never" class="stat-card stat-card--info">
             <div class="stat-content">
@@ -136,8 +142,13 @@
                   <el-icon><Search /></el-icon>
                 </template>
               </el-input>
-              
-              <el-select v-model="qualityFilter" placeholder="质量过滤" size="small" style="margin-top: 8px;">
+
+              <el-select
+                v-model="qualityFilter"
+                placeholder="质量过滤"
+                size="small"
+                style="margin-top: 8px"
+              >
                 <el-option label="全部" value="" />
                 <el-option label="良好" value="good" />
                 <el-option label="不确定" value="uncertain" />
@@ -151,7 +162,7 @@
                 v-for="datapoint in filteredDataPoints"
                 :key="datapoint.id"
                 class="datapoint-item"
-                :class="{ 'selected': selectedDataPoints.includes(datapoint.id) }"
+                :class="{ selected: selectedDataPoints.includes(datapoint.id) }"
                 @click="toggleDataPointSelection(datapoint.id)"
               >
                 <div class="datapoint-header">
@@ -164,23 +175,39 @@
                     {{ datapoint.quality }}
                   </el-tag>
                 </div>
-                
+
                 <div class="datapoint-value">
                   <span class="current-value">
-                    {{ formatValue(datapoint.currentValue, datapoint.dataType) }}
-                    <span v-if="datapoint.unit" class="unit">{{ datapoint.unit }}</span>
+                    {{
+                      formatValue(datapoint.currentValue, datapoint.dataType)
+                    }}
+                    <span v-if="datapoint.unit" class="unit">{{
+                      datapoint.unit
+                    }}</span>
                   </span>
-                  
-                  <div class="trend-indicator" v-if="datapoint.trend">
-                    <el-icon v-if="datapoint.trend === 'up'" class="trend-up"><Top /></el-icon>
-                    <el-icon v-if="datapoint.trend === 'down'" class="trend-down"><Bottom /></el-icon>
-                    <span v-if="datapoint.trend === 'stable'" class="trend-stable">—</span>
+
+                  <div v-if="datapoint.trend" class="trend-indicator">
+                    <el-icon v-if="datapoint.trend === 'up'" class="trend-up"
+                      ><Top
+                    /></el-icon>
+                    <el-icon
+                      v-if="datapoint.trend === 'down'"
+                      class="trend-down"
+                      ><Bottom
+                    /></el-icon>
+                    <span
+                      v-if="datapoint.trend === 'stable'"
+                      class="trend-stable"
+                      >—</span
+                    >
                   </div>
                 </div>
-                
+
                 <div class="datapoint-meta">
                   <span class="address">{{ datapoint.address }}</span>
-                  <span class="last-read">{{ formatTime(datapoint.lastReadTime) }}</span>
+                  <span class="last-read">{{
+                    formatTime(datapoint.lastReadTime)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -200,7 +227,7 @@
             </template>
 
             <div class="chart-container">
-              <v-chart
+              <VChart
                 v-if="chartData.series.length > 0"
                 class="chart"
                 :option="chartOption"
@@ -211,7 +238,11 @@
           </el-card>
 
           <!-- 驱动状态 -->
-          <el-card header="驱动状态" class="drivers-status" style="margin-top: 20px;">
+          <el-card
+            header="驱动状态"
+            class="drivers-status"
+            style="margin-top: 20px"
+          >
             <el-row :gutter="16">
               <el-col
                 v-for="driver in driverStatuses"
@@ -228,15 +259,19 @@
                       {{ getDriverStatusText(driver.status) }}
                     </el-tag>
                   </div>
-                  
+
                   <div class="driver-metrics">
                     <div class="metric-item">
                       <span class="metric-label">消息速率</span>
-                      <span class="metric-value">{{ driver.messageRate || 0 }}/s</span>
+                      <span class="metric-value"
+                        >{{ driver.messageRate || 0 }}/s</span
+                      >
                     </div>
                     <div class="metric-item">
                       <span class="metric-label">平均延迟</span>
-                      <span class="metric-value">{{ driver.avgLatency || 0 }}ms</span>
+                      <span class="metric-value"
+                        >{{ driver.avgLatency || 0 }}ms</span
+                      >
                     </div>
                   </div>
                 </div>
@@ -259,11 +294,22 @@
         <div class="detail-section">
           <h4>基本信息</h4>
           <el-descriptions :column="1" border>
-            <el-descriptions-item label="名称">{{ viewingDatapoint.name }}</el-descriptions-item>
-            <el-descriptions-item label="地址">{{ viewingDatapoint.address }}</el-descriptions-item>
-            <el-descriptions-item label="数据类型">{{ viewingDatapoint.dataType }}</el-descriptions-item>
+            <el-descriptions-item label="名称">{{
+              viewingDatapoint.name
+            }}</el-descriptions-item>
+            <el-descriptions-item label="地址">{{
+              viewingDatapoint.address
+            }}</el-descriptions-item>
+            <el-descriptions-item label="数据类型">{{
+              viewingDatapoint.dataType
+            }}</el-descriptions-item>
             <el-descriptions-item label="当前值">
-              {{ formatValue(viewingDatapoint.currentValue, viewingDatapoint.dataType) }}
+              {{
+                formatValue(
+                  viewingDatapoint.currentValue,
+                  viewingDatapoint.dataType
+                )
+              }}
             </el-descriptions-item>
             <el-descriptions-item label="质量">
               <el-tag :type="getQualityTagType(viewingDatapoint.quality)">
@@ -281,10 +327,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
 import { LineChart } from 'echarts/charts'
 import {
   TitleComponent,
@@ -292,9 +334,14 @@ import {
   LegendComponent,
   GridComponent,
 } from 'echarts/components'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { ElMessage } from 'element-plus'
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
 import VChart from 'vue-echarts'
-import { formatTime } from '@/utils/date'
+
 import { realtimeApi, driversApi } from '@/services/api'
+import { formatTime } from '@/utils/date'
 
 // 注册 ECharts 组件
 use([
@@ -339,7 +386,7 @@ interface DriverStatus {
 // 响应式状态
 const timeRange = ref([
   new Date(Date.now() - 60 * 60 * 1000).toISOString(),
-  new Date().toISOString()
+  new Date().toISOString(),
 ])
 
 const isAutoRefresh = ref(true)
@@ -354,7 +401,7 @@ const systemStats = reactive<SystemStats>({
   activeDataPoints: 0,
   connectedDrivers: 0,
   activeAlarms: 0,
-  messageRate: 0
+  messageRate: 0,
 })
 
 // 数据点列表（从API获取真实数据）
@@ -365,7 +412,7 @@ const driverStatuses = ref<DriverStatus[]>([])
 
 const chartData = ref({
   series: [] as any[],
-  xAxisData: [] as string[]
+  xAxisData: [] as string[],
 })
 
 // 时间快捷选项
@@ -377,7 +424,7 @@ const shortcuts = [
       const start = new Date()
       start.setTime(start.getTime() - 30 * 60 * 1000)
       return [start, end]
-    }
+    },
   },
   {
     text: '最近1小时',
@@ -386,7 +433,7 @@ const shortcuts = [
       const start = new Date()
       start.setTime(start.getTime() - 60 * 60 * 1000)
       return [start, end]
-    }
+    },
   },
   {
     text: '最近6小时',
@@ -395,8 +442,8 @@ const shortcuts = [
       const start = new Date()
       start.setTime(start.getTime() - 6 * 60 * 60 * 1000)
       return [start, end]
-    }
-  }
+    },
+  },
 ]
 
 // 计算属性
@@ -414,9 +461,11 @@ const systemStatusText = computed(() => {
 
 const filteredDataPoints = computed(() => {
   return dataPoints.value.filter(dp => {
-    const matchesSearch = !searchKeyword.value || 
+    const matchesSearch =
+      !searchKeyword.value ||
       dp.name.toLowerCase().includes(searchKeyword.value.toLowerCase())
-    const matchesQuality = !qualityFilter.value || dp.quality === qualityFilter.value
+    const matchesQuality =
+      !qualityFilter.value || dp.quality === qualityFilter.value
     return matchesSearch && matchesQuality
   })
 })
@@ -424,28 +473,28 @@ const filteredDataPoints = computed(() => {
 const chartOption = computed(() => ({
   title: {
     text: '实时数据趋势',
-    left: 'center'
+    left: 'center',
   },
   tooltip: {
-    trigger: 'axis'
+    trigger: 'axis',
   },
   legend: {
-    top: 30
+    top: 30,
   },
   grid: {
     left: '3%',
     right: '4%',
     bottom: '3%',
-    containLabel: true
+    containLabel: true,
   },
   xAxis: {
     type: 'category',
-    data: chartData.value.xAxisData
+    data: chartData.value.xAxisData,
   },
   yAxis: {
-    type: 'value'
+    type: 'value',
   },
-  series: chartData.value.series
+  series: chartData.value.series,
 }))
 
 // 方法
@@ -454,7 +503,7 @@ const getQualityTagType = (quality: string) => {
     good: 'success',
     uncertain: 'warning',
     bad: 'danger',
-    invalid: 'info'
+    invalid: 'info',
   }
   return types[quality] || 'info'
 }
@@ -463,7 +512,7 @@ const getDriverStatusType = (status: string) => {
   const types: Record<string, any> = {
     running: 'success',
     stopped: 'warning',
-    error: 'danger'
+    error: 'danger',
   }
   return types[status] || 'info'
 }
@@ -472,14 +521,14 @@ const getDriverStatusText = (status: string) => {
   const texts: Record<string, string> = {
     running: '运行中',
     stopped: '已停止',
-    error: '错误'
+    error: '错误',
   }
   return texts[status] || status
 }
 
 const formatValue = (value: any, dataType: string) => {
   if (value === null || value === undefined) return '--'
-  
+
   switch (dataType) {
     case 'float':
       return Number(value).toFixed(2)
@@ -503,23 +552,23 @@ const toggleDataPointSelection = (id: string) => {
 }
 
 const updateChartData = () => {
-  const selectedPoints = dataPoints.value.filter(dp => 
+  const selectedPoints = dataPoints.value.filter(dp =>
     selectedDataPoints.value.includes(dp.id)
   )
-  
+
   const timeLabels = Array.from({ length: 20 }, (_, i) => {
     const time = new Date(Date.now() - (19 - i) * 60000)
     return time.toLocaleTimeString()
   })
-  
+
   chartData.value = {
     xAxisData: timeLabels,
     series: selectedPoints.map((dp, index) => ({
       name: dp.name,
       type: 'line',
       smooth: true,
-      data: [] // 从真实历史数据API获取
-    }))
+      data: [], // 从真实历史数据API获取
+    })),
   }
 }
 
@@ -541,12 +590,12 @@ let refreshTimer: number | null = null
 
 const startAutoRefresh = () => {
   if (refreshTimer) clearInterval(refreshTimer)
-  
+
   refreshTimer = setInterval(async () => {
     if (isAutoRefresh.value) {
       // 从API获取最新的实时数据
       await loadRealtimeData()
-      
+
       // 更新图表
       updateChartData()
     }
@@ -556,7 +605,7 @@ const startAutoRefresh = () => {
 // 生命周期
 onMounted(async () => {
   startAutoRefresh()
-  
+
   try {
     await loadRealtimeData()
     updateChartData()
@@ -579,20 +628,21 @@ const loadRealtimeData = async () => {
       dataPoints.value = dataResponse.data
       systemStats.activeDataPoints = dataResponse.data.length
     }
-    
+
     // 获取驱动状态
     const driverResponse = await realtimeApi.getDriverStatuses()
     if (driverResponse.success && driverResponse.data) {
       driverStatuses.value = driverResponse.data
-      systemStats.connectedDrivers = driverResponse.data.filter(d => d.status === 'running').length
+      systemStats.connectedDrivers = driverResponse.data.filter(
+        d => d.status === 'running'
+      ).length
     }
-    
+
     // 获取系统统计
     const statsResponse = await realtimeApi.getSystemStats()
     if (statsResponse.success && statsResponse.data) {
       Object.assign(systemStats, statsResponse.data)
     }
-    
   } catch (error) {
     console.error('Failed to load realtime data:', error)
   }
@@ -602,7 +652,7 @@ const loadRealtimeData = async () => {
 <style scoped lang="scss">
 .realtime-monitoring-page {
   padding: 0;
-  
+
   .page-header {
     display: flex;
     justify-content: space-between;
@@ -610,37 +660,37 @@ const loadRealtimeData = async () => {
     padding: 16px 20px;
     background: var(--el-bg-color);
     border-bottom: 1px solid var(--el-border-color);
-    
+
     .header-title {
       display: flex;
       align-items: center;
       gap: 12px;
-      
+
       h1 {
         margin: 0;
         font-size: 20px;
         font-weight: 600;
       }
     }
-    
+
     .header-actions {
       display: flex;
       align-items: center;
       gap: 12px;
     }
   }
-  
+
   .system-overview {
     padding: 20px;
-    
+
     .stat-card {
       border: none;
-      
+
       .stat-content {
         display: flex;
         align-items: center;
         gap: 16px;
-        
+
         .stat-icon {
           width: 48px;
           height: 48px;
@@ -650,14 +700,14 @@ const loadRealtimeData = async () => {
           justify-content: center;
           font-size: 24px;
         }
-        
+
         .stat-info {
           .stat-number {
             font-size: 24px;
             font-weight: 600;
             color: var(--el-text-color-primary);
           }
-          
+
           .stat-label {
             font-size: 14px;
             color: var(--el-text-color-secondary);
@@ -665,43 +715,43 @@ const loadRealtimeData = async () => {
           }
         }
       }
-      
+
       &.stat-card--primary .stat-icon {
         background: var(--el-color-primary-light-9);
         color: var(--el-color-primary);
       }
-      
+
       &.stat-card--success .stat-icon {
         background: var(--el-color-success-light-9);
         color: var(--el-color-success);
       }
-      
+
       &.stat-card--warning .stat-icon {
         background: var(--el-color-warning-light-9);
         color: var(--el-color-warning);
       }
-      
+
       &.stat-card--info .stat-icon {
         background: var(--el-color-info-light-9);
         color: var(--el-color-info);
       }
     }
   }
-  
+
   .main-content {
     padding: 0 20px 20px;
-    
+
     .datapoints-panel {
       height: 600px;
-      
+
       .datapoint-filters {
         margin-bottom: 16px;
       }
-      
+
       .datapoints-list {
         height: 480px;
         overflow-y: auto;
-        
+
         .datapoint-item {
           padding: 12px;
           border: 1px solid var(--el-border-color);
@@ -709,52 +759,58 @@ const loadRealtimeData = async () => {
           margin-bottom: 8px;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: var(--el-color-primary);
           }
-          
+
           &.selected {
             border-color: var(--el-color-primary);
             background: var(--el-color-primary-light-9);
           }
-          
+
           .datapoint-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
-            
+
             .datapoint-name {
               font-weight: 600;
             }
           }
-          
+
           .datapoint-value {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 8px;
-            
+
             .current-value {
               font-size: 18px;
               font-weight: 600;
               color: var(--el-color-primary);
-              
+
               .unit {
                 font-size: 12px;
                 color: var(--el-text-color-secondary);
                 margin-left: 4px;
               }
             }
-            
+
             .trend-indicator {
-              .trend-up { color: var(--el-color-success); }
-              .trend-down { color: var(--el-color-danger); }
-              .trend-stable { color: var(--el-text-color-secondary); }
+              .trend-up {
+                color: var(--el-color-success);
+              }
+              .trend-down {
+                color: var(--el-color-danger);
+              }
+              .trend-stable {
+                color: var(--el-text-color-secondary);
+              }
             }
           }
-          
+
           .datapoint-meta {
             display: flex;
             justify-content: space-between;
@@ -764,49 +820,49 @@ const loadRealtimeData = async () => {
         }
       }
     }
-    
+
     .chart-panel {
       height: 400px;
-      
+
       .chart-container {
         height: 300px;
-        
+
         .chart {
           height: 100%;
           width: 100%;
         }
       }
     }
-    
+
     .drivers-status {
       .driver-card {
         padding: 16px;
         border: 1px solid var(--el-border-color);
         border-radius: 8px;
         background: var(--el-bg-color-light);
-        
+
         .driver-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
           margin-bottom: 12px;
-          
+
           .driver-name {
             font-weight: 600;
           }
         }
-        
+
         .driver-metrics {
           .metric-item {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            
+
             .metric-label {
               font-size: 12px;
               color: var(--el-text-color-secondary);
             }
-            
+
             .metric-value {
               font-size: 12px;
               font-weight: 500;
@@ -816,11 +872,11 @@ const loadRealtimeData = async () => {
       }
     }
   }
-  
+
   .datapoint-detail {
     .detail-section {
       margin-bottom: 24px;
-      
+
       h4 {
         margin: 0 0 16px 0;
         color: var(--el-text-color-primary);

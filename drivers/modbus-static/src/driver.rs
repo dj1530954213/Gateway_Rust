@@ -84,41 +84,53 @@ impl ModbusDriver {
         Ok(regs?)
     }
 
-    /// 解码并发布帧
+    /// 解码并发布帧（批量优化版本）
     async fn decode_and_publish(
         &self,
         regs: Vec<u16>,
         batch: &PollBatch,
         _tx: &FrameSender,
     ) -> anyhow::Result<()> {
+        let mut frames = Vec::with_capacity(batch.points.len());
+        
+        // 批量解码所有点位
         for point in &batch.points {
-            match decode_registers(&regs, point, batch.start, &self.cfg.endian) {
+            let frame = match decode_registers(&regs, point, batch.start, &self.cfg.endian) {
                 Ok(value) => {
                     // 应用缩放
                     let scaled_value = apply_scale(value, point.scale.as_deref())?;
                     
                     // 创建DataFrame
-                    let frame = DataFrame::new(&point.tag, scaled_value)
+                    DataFrame::new(&point.tag, scaled_value)
                         .with_qos(2) // Good quality
                         .with_meta("driver", "modbus-tcp")
-                        .with_meta("unit_id", self.cfg.unit_id.to_string());
-
-                    // 发布到总线
-                    frame_bus::publish_data(frame)?;
-                    METRICS.point_total.inc();
+                        .with_meta("unit_id", self.cfg.unit_id.to_string())
+                        .with_meta("batch_id", format!("{:?}_{}", batch.func, batch.start))
                 }
                 Err(e) => {
                     tracing::warn!("Failed to decode point {}: {}", point.tag, e);
                     
-                    // 发布错误质量的帧
-                    let frame = DataFrame::new(&point.tag, frame_bus::Value::int(0))
+                    // 创建错误质量的帧
+                    DataFrame::new(&point.tag, frame_bus::Value::int(0))
                         .with_qos(0) // Bad quality
-                        .with_meta("error", e.to_string());
-                    
-                    frame_bus::publish_data(frame)?;
+                        .with_meta("error", e.to_string())
+                        .with_meta("driver", "modbus-tcp")
                 }
-            }
+            };
+            
+            frames.push(frame);
         }
+
+        // 批量发布所有帧（使用高性能批量API）
+        if !frames.is_empty() {
+            frame_bus::publish_data_batch(frames)?;
+            METRICS.point_total.inc_by(batch.points.len() as f64);
+            
+            // 记录批量发布指标
+            tracing::debug!("Published batch with {} frames from addr {} func {:?}", 
+                           batch.points.len(), batch.start, batch.func);
+        }
+        
         Ok(())
     }
 

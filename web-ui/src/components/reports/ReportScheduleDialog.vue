@@ -11,7 +11,7 @@
         <template #header>
           <span>基础设置</span>
         </template>
-        
+
         <el-form :model="scheduleConfig" label-width="120px">
           <el-form-item label="任务名称">
             <el-input
@@ -21,7 +21,7 @@
               show-word-limit
             />
           </el-form-item>
-          
+
           <el-form-item label="任务状态">
             <el-switch
               v-model="scheduleConfig.enabled"
@@ -29,7 +29,7 @@
               inactive-text="禁用"
             />
           </el-form-item>
-          
+
           <el-form-item label="报表描述">
             <el-input
               v-model="scheduleConfig.description"
@@ -42,16 +42,19 @@
           </el-form-item>
         </el-form>
       </el-card>
-      
+
       <!-- 时间调度 -->
       <el-card class="schedule-section" shadow="never">
         <template #header>
           <span>时间调度</span>
         </template>
-        
+
         <el-form :model="scheduleConfig" label-width="120px">
           <el-form-item label="调度频率">
-            <el-radio-group v-model="scheduleConfig.frequency" @change="handleFrequencyChange">
+            <el-radio-group
+              v-model="scheduleConfig.frequency"
+              @change="handleFrequencyChange"
+            >
               <el-radio label="once">一次性</el-radio>
               <el-radio label="daily">每日</el-radio>
               <el-radio label="weekly">每周</el-radio>
@@ -59,9 +62,12 @@
               <el-radio label="custom">自定义</el-radio>
             </el-radio-group>
           </el-form-item>
-          
+
           <!-- 一次性任务 -->
-          <el-form-item v-if="scheduleConfig.frequency === 'once'" label="执行时间">
+          <el-form-item
+            v-if="scheduleConfig.frequency === 'once'"
+            label="执行时间"
+          >
             <el-date-picker
               v-model="scheduleConfig.executeTime"
               type="datetime"
@@ -70,9 +76,12 @@
               value-format="YYYY-MM-DD HH:mm:ss"
             />
           </el-form-item>
-          
+
           <!-- 每日任务 -->
-          <el-form-item v-if="scheduleConfig.frequency === 'daily'" label="执行时间">
+          <el-form-item
+            v-if="scheduleConfig.frequency === 'daily'"
+            label="执行时间"
+          >
             <el-time-picker
               v-model="scheduleConfig.dailyTime"
               placeholder="选择时间"
@@ -80,7 +89,7 @@
               value-format="HH:mm"
             />
           </el-form-item>
-          
+
           <!-- 每周任务 -->
           <template v-if="scheduleConfig.frequency === 'weekly'">
             <el-form-item label="星期">
@@ -103,7 +112,7 @@
               />
             </el-form-item>
           </template>
-          
+
           <!-- 每月任务 -->
           <template v-if="scheduleConfig.frequency === 'monthly'">
             <el-form-item label="执行日期">
@@ -112,8 +121,14 @@
                 <el-radio label="last">月末</el-radio>
               </el-radio-group>
             </el-form-item>
-            <el-form-item v-if="scheduleConfig.monthlyType === 'date'" label="日期">
-              <el-select v-model="scheduleConfig.monthlyDate" placeholder="选择日期">
+            <el-form-item
+              v-if="scheduleConfig.monthlyType === 'date'"
+              label="日期"
+            >
+              <el-select
+                v-model="scheduleConfig.monthlyDate"
+                placeholder="选择日期"
+              >
                 <el-option
                   v-for="day in 31"
                   :key="day"
@@ -131,9 +146,12 @@
               />
             </el-form-item>
           </template>
-          
+
           <!-- 自定义Cron表达式 -->
-          <el-form-item v-if="scheduleConfig.frequency === 'custom'" label="Cron表达式">
+          <el-form-item
+            v-if="scheduleConfig.frequency === 'custom'"
+            label="Cron表达式"
+          >
             <el-input
               v-model="scheduleConfig.cronExpression"
               placeholder="例如: 0 9 * * 1-5 (工作日每天9点)"
@@ -143,10 +161,12 @@
               </template>
             </el-input>
             <div class="cron-preview">
-              <span class="cron-text">{{ getCronDescription(scheduleConfig.cronExpression) }}</span>
+              <span class="cron-text">{{
+                getCronDescription(scheduleConfig.cronExpression)
+              }}</span>
             </div>
           </el-form-item>
-          
+
           <!-- 有效期设置 -->
           <el-form-item label="有效期">
             <el-radio-group v-model="scheduleConfig.validityType">
@@ -155,8 +175,11 @@
               <el-radio label="count">指定次数</el-radio>
             </el-radio-group>
           </el-form-item>
-          
-          <el-form-item v-if="scheduleConfig.validityType === 'until'" label="失效时间">
+
+          <el-form-item
+            v-if="scheduleConfig.validityType === 'until'"
+            label="失效时间"
+          >
             <el-date-picker
               v-model="scheduleConfig.validUntil"
               type="datetime"
@@ -165,8 +188,11 @@
               value-format="YYYY-MM-DD HH:mm:ss"
             />
           </el-form-item>
-          
-          <el-form-item v-if="scheduleConfig.validityType === 'count'" label="执行次数">
+
+          <el-form-item
+            v-if="scheduleConfig.validityType === 'count'"
+            label="执行次数"
+          >
             <el-input-number
               v-model="scheduleConfig.maxExecutions"
               :min="1"
@@ -176,16 +202,19 @@
           </el-form-item>
         </el-form>
       </el-card>
-      
+
       <!-- 报表配置 -->
       <el-card class="schedule-section" shadow="never">
         <template #header>
           <span>报表配置</span>
         </template>
-        
+
         <el-form :model="scheduleConfig" label-width="120px">
           <el-form-item label="数据范围">
-            <el-select v-model="scheduleConfig.dataRange" placeholder="选择数据范围">
+            <el-select
+              v-model="scheduleConfig.dataRange"
+              placeholder="选择数据范围"
+            >
               <el-option label="最近1小时" value="1h" />
               <el-option label="最近24小时" value="24h" />
               <el-option label="最近7天" value="7d" />
@@ -194,7 +223,7 @@
               <el-option label="自定义" value="custom" />
             </el-select>
           </el-form-item>
-          
+
           <el-form-item label="导出格式">
             <el-checkbox-group v-model="scheduleConfig.formats">
               <el-checkbox label="pdf" border>PDF</el-checkbox>
@@ -202,11 +231,11 @@
               <el-checkbox label="csv" border>CSV</el-checkbox>
             </el-checkbox-group>
           </el-form-item>
-          
+
           <el-form-item label="自动发送">
             <el-switch v-model="scheduleConfig.autoSend" />
           </el-form-item>
-          
+
           <el-form-item v-if="scheduleConfig.autoSend" label="收件人">
             <el-select
               v-model="scheduleConfig.recipients"
@@ -226,13 +255,13 @@
           </el-form-item>
         </el-form>
       </el-card>
-      
+
       <!-- 任务列表 -->
       <el-card class="schedule-section" shadow="never">
         <template #header>
           <span>已创建的定时任务</span>
         </template>
-        
+
         <el-table :data="existingTasks" style="width: 100%">
           <el-table-column prop="name" label="任务名称" />
           <el-table-column prop="frequency" label="频率" width="100" />
@@ -246,7 +275,9 @@
           </el-table-column>
           <el-table-column label="操作" width="150">
             <template #default="{ row }">
-              <el-button size="small" text @click="editTask(row)">编辑</el-button>
+              <el-button size="small" text @click="editTask(row)"
+                >编辑</el-button
+              >
               <el-button
                 size="small"
                 text
@@ -255,7 +286,12 @@
               >
                 {{ row.status === '已启用' ? '禁用' : '启用' }}
               </el-button>
-              <el-button size="small" text type="danger" @click="deleteTask(row)">
+              <el-button
+                size="small"
+                text
+                type="danger"
+                @click="deleteTask(row)"
+              >
                 删除
               </el-button>
             </template>
@@ -263,23 +299,23 @@
         </el-table>
       </el-card>
     </div>
-    
+
     <!-- 对话框底部 -->
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleCancel">取消</el-button>
-        <el-button type="primary" @click="handleSave" :loading="saving">
+        <el-button type="primary" :loading="saving" @click="handleSave">
           {{ saving ? '保存中...' : '保存任务' }}
         </el-button>
       </div>
     </template>
-    
+
     <!-- Cron帮助对话框 -->
     <el-dialog v-model="showCronHelper" title="Cron表达式帮助" width="600px">
       <div class="cron-help">
         <h4>格式说明</h4>
         <p>Cron表达式由5个字段组成：分钟 小时 日 月 星期</p>
-        
+
         <h4>特殊字符</h4>
         <ul>
           <li><code>*</code> - 匹配任意值</li>
@@ -288,14 +324,18 @@
           <li><code>,</code> - 列表，如 1,3,5</li>
           <li><code>/</code> - 间隔，如 */5 表示每5分钟</li>
         </ul>
-        
+
         <h4>常用示例</h4>
         <el-table :data="cronExamples" style="width: 100%">
           <el-table-column prop="expression" label="表达式" width="150" />
           <el-table-column prop="description" label="说明" />
           <el-table-column label="操作" width="80">
             <template #default="{ row }">
-              <el-button size="small" text @click="useCronExample(row.expression)">
+              <el-button
+                size="small"
+                text
+                @click="useCronExample(row.expression)"
+              >
                 使用
               </el-button>
             </template>
@@ -324,8 +364,8 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -341,7 +381,7 @@ const emit = defineEmits<{
 // ===== 响应式数据 =====
 const visible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const saving = ref(false)
@@ -367,14 +407,14 @@ const scheduleConfig = ref({
   dataRange: '24h',
   formats: ['pdf'],
   autoSend: false,
-  recipients: []
+  recipients: [],
 })
 
 // 邮件联系人
 const emailContacts = ref([
   { name: '张三', email: 'zhangsan@example.com' },
   { name: '李四', email: 'lisi@example.com' },
-  { name: '王五', email: 'wangwu@example.com' }
+  { name: '王五', email: 'wangwu@example.com' },
 ])
 
 // 现有任务
@@ -384,22 +424,22 @@ const existingTasks = ref([
     name: '设备状态日报',
     frequency: '每日',
     nextRun: '2025-07-28 09:00',
-    status: '已启用'
+    status: '已启用',
   },
   {
     id: '2',
     name: '性能分析周报',
     frequency: '每周',
     nextRun: '2025-07-29 10:00',
-    status: '已启用'
+    status: '已启用',
   },
   {
     id: '3',
     name: '数据质量月报',
     frequency: '每月',
     nextRun: '2025-08-01 08:00',
-    status: '已禁用'
-  }
+    status: '已禁用',
+  },
 ])
 
 // Cron示例
@@ -409,7 +449,7 @@ const cronExamples = ref([
   { expression: '0 0 1 * *', description: '每月1号零点' },
   { expression: '0 0 * * 0', description: '每周日零点' },
   { expression: '30 8 * * 1-5', description: '工作日每天8:30' },
-  { expression: '0 12 1,15 * *', description: '每月1号和15号中午12点' }
+  { expression: '0 12 1,15 * *', description: '每月1号和15号中午12点' },
 ])
 
 // ===== 方法 =====
@@ -422,9 +462,9 @@ function handleFrequencyChange(frequency: string) {
   const cronMap: { [key: string]: string } = {
     daily: '0 9 * * *',
     weekly: '0 9 * * 1',
-    monthly: '0 9 1 * *'
+    monthly: '0 9 1 * *',
   }
-  
+
   if (cronMap[frequency]) {
     scheduleConfig.value.cronExpression = cronMap[frequency]
   }
@@ -435,7 +475,7 @@ function handleFrequencyChange(frequency: string) {
  */
 function getCronDescription(cron: string): string {
   if (!cron) return '无效的表达式'
-  
+
   // 简单的cron表达式解析（实际项目中可使用专门的库）
   const descriptions: { [key: string]: string } = {
     '0 9 * * *': '每天上午9点',
@@ -444,9 +484,9 @@ function getCronDescription(cron: string): string {
     '0 0 1 * *': '每月1号零点',
     '0 0 * * 0': '每周日零点',
     '30 8 * * 1-5': '工作日每天上午8:30',
-    '0 12 1,15 * *': '每月1号和15号中午12点'
+    '0 12 1,15 * *': '每月1号和15号中午12点',
   }
-  
+
   return descriptions[cron] || '自定义表达式'
 }
 
@@ -497,17 +537,19 @@ function deleteTask(task: any) {
     {
       confirmButtonText: '删除',
       cancelButtonText: '取消',
-      type: 'warning'
+      type: 'warning',
     }
-  ).then(() => {
-    const index = existingTasks.value.findIndex(t => t.id === task.id)
-    if (index !== -1) {
-      existingTasks.value.splice(index, 1)
-      ElMessage.success('任务已删除')
-    }
-  }).catch(() => {
-    // 取消操作
-  })
+  )
+    .then(() => {
+      const index = existingTasks.value.findIndex(t => t.id === task.id)
+      if (index !== -1) {
+        existingTasks.value.splice(index, 1)
+        ElMessage.success('任务已删除')
+      }
+    })
+    .catch(() => {
+      // 取消操作
+    })
 }
 
 /**
@@ -519,42 +561,50 @@ async function handleSave() {
     ElMessage.warning('请输入任务名称')
     return
   }
-  
-  if (scheduleConfig.value.frequency === 'once' && !scheduleConfig.value.executeTime) {
+
+  if (
+    scheduleConfig.value.frequency === 'once' &&
+    !scheduleConfig.value.executeTime
+  ) {
     ElMessage.warning('请选择执行时间')
     return
   }
-  
-  if (scheduleConfig.value.frequency === 'weekly' && !scheduleConfig.value.weekDays.length) {
+
+  if (
+    scheduleConfig.value.frequency === 'weekly' &&
+    !scheduleConfig.value.weekDays.length
+  ) {
     ElMessage.warning('请选择星期')
     return
   }
-  
-  if (scheduleConfig.value.autoSend && !scheduleConfig.value.recipients.length) {
+
+  if (
+    scheduleConfig.value.autoSend &&
+    !scheduleConfig.value.recipients.length
+  ) {
     ElMessage.warning('启用自动发送时请至少选择一个收件人')
     return
   }
-  
+
   saving.value = true
-  
+
   try {
     // 模拟保存
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     // 添加到任务列表
     const newTask = {
       id: Date.now().toString(),
       name: scheduleConfig.value.name,
       frequency: getFrequencyText(scheduleConfig.value.frequency),
       nextRun: calculateNextRun(),
-      status: scheduleConfig.value.enabled ? '已启用' : '已禁用'
+      status: scheduleConfig.value.enabled ? '已启用' : '已禁用',
     }
-    
+
     existingTasks.value.unshift(newTask)
-    
+
     ElMessage.success('定时任务创建成功')
     visible.value = false
-    
   } catch (error) {
     console.error('保存失败:', error)
     ElMessage.error('保存失败')
@@ -572,7 +622,7 @@ function getFrequencyText(frequency: string): string {
     daily: '每日',
     weekly: '每周',
     monthly: '每月',
-    custom: '自定义'
+    custom: '自定义',
   }
   return textMap[frequency] || frequency
 }
@@ -583,11 +633,11 @@ function getFrequencyText(frequency: string): string {
 function calculateNextRun(): string {
   const now = new Date()
   const nextRun = new Date(now)
-  
+
   if (scheduleConfig.value.frequency === 'daily') {
     const [hour, minute] = scheduleConfig.value.dailyTime.split(':')
     nextRun.setHours(parseInt(hour), parseInt(minute), 0, 0)
-    
+
     if (nextRun <= now) {
       nextRun.setDate(nextRun.getDate() + 1)
     }
@@ -601,7 +651,7 @@ function calculateNextRun(): string {
     nextRun.setDate(nextRun.getDate() + 1)
     nextRun.setHours(9, 0, 0, 0)
   }
-  
+
   return nextRun.toLocaleString('zh-CN').slice(0, 16)
 }
 
@@ -623,25 +673,25 @@ if (props.report) {
 .report-schedule {
   .schedule-section {
     margin-bottom: 20px;
-    
+
     :deep(.el-card__header) {
       padding: 12px 20px;
       background: #fafafa;
-      
+
       span {
         font-weight: 600;
         color: #303133;
       }
     }
-    
+
     :deep(.el-card__body) {
       padding: 20px;
     }
   }
-  
+
   .cron-preview {
     margin-top: 8px;
-    
+
     .cron-text {
       font-size: 12px;
       color: #67c23a;
@@ -662,22 +712,22 @@ if (props.report) {
     color: #303133;
     font-size: 14px;
   }
-  
+
   p {
     margin: 8px 0;
     color: #606266;
     line-height: 1.5;
   }
-  
+
   ul {
     margin: 8px 0;
     padding-left: 20px;
-    
+
     li {
       margin-bottom: 4px;
       color: #606266;
       line-height: 1.5;
-      
+
       code {
         background: #f4f4f5;
         padding: 2px 4px;

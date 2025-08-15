@@ -10,7 +10,7 @@
           </el-tag>
         </div>
       </div>
-      
+
       <div class="toolbar-right">
         <div class="chart-controls">
           <!-- 图表类型选择 -->
@@ -55,13 +55,13 @@
                 <el-icon><RefreshLeft /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <el-tooltip content="保存图片">
               <el-button type="text" size="small" @click="saveAsImage">
                 <el-icon><Picture /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <el-tooltip content="全屏显示">
               <el-button type="text" size="small" @click="toggleFullscreen">
                 <el-icon><FullScreen /></el-icon>
@@ -73,35 +73,38 @@
     </div>
 
     <!-- 图表容器 -->
-    <div 
-      class="chart-container" 
-      :class="{ 'fullscreen': isFullscreen }"
+    <div
       ref="chartContainer"
+      class="chart-container"
+      :class="{ fullscreen: isFullscreen }"
     >
       <div v-if="loading" class="chart-loading">
         <el-skeleton animated>
           <template #template>
             <div class="loading-content">
-              <el-skeleton-item variant="text" style="width: 60%; height: 20px;" />
-              <el-skeleton-item variant="rect" style="width: 100%; height: 400px; margin-top: 16px;" />
+              <el-skeleton-item
+                variant="text"
+                style="width: 60%; height: 20px"
+              />
+              <el-skeleton-item
+                variant="rect"
+                style="width: 100%; height: 400px; margin-top: 16px"
+              />
             </div>
           </template>
         </el-skeleton>
       </div>
-      
+
       <div v-else-if="!hasData" class="chart-empty">
-        <el-empty
-          description="暂无图表数据"
-          :image-size="120"
-        >
+        <el-empty description="暂无图表数据" :image-size="120">
           <template #description>
             <p>请先查询历史数据以显示趋势图表</p>
           </template>
         </el-empty>
       </div>
-      
+
       <div v-else class="chart-wrapper">
-        <v-chart
+        <VChart
           ref="chartRef"
           class="chart"
           :option="chartOption"
@@ -111,20 +114,26 @@
           @brush="handleBrushSelect"
           @datazoom="handleDataZoom"
         />
-        
+
         <!-- 数据点信息面板 -->
         <div v-if="selectedDataPoint" class="data-point-panel">
           <div class="panel-header">
             <span>数据点详情</span>
-            <el-button type="text" size="small" @click="selectedDataPoint = null">
+            <el-button
+              type="text"
+              size="small"
+              @click="selectedDataPoint = null"
+            >
               <el-icon><Close /></el-icon>
             </el-button>
           </div>
-          
+
           <div class="panel-content">
             <div class="info-item">
               <span class="label">时间:</span>
-              <span class="value">{{ formatDateTime(selectedDataPoint.time) }}</span>
+              <span class="value">{{
+                formatDateTime(selectedDataPoint.time)
+              }}</span>
             </div>
             <div class="info-item">
               <span class="label">数值:</span>
@@ -140,9 +149,9 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 图表统计信息 -->
-        <div class="chart-stats" v-if="dataStats.totalPoints > 0">
+        <div v-if="dataStats.totalPoints > 0" class="chart-stats">
           <div class="stats-item">
             <span class="stats-label">数据点:</span>
             <span class="stats-value">{{ dataStats.totalPoints }}</span>
@@ -180,10 +189,12 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import { use } from 'echarts/core'
-import { CanvasRenderer } from 'echarts/renderers'
+import {
+  RefreshLeft,
+  Picture,
+  FullScreen,
+  Close,
+} from '@element-plus/icons-vue'
 import { LineChart, BarChart, ScatterChart } from 'echarts/charts'
 import {
   TitleComponent,
@@ -192,15 +203,13 @@ import {
   GridComponent,
   DataZoomComponent,
   ToolboxComponent,
-  BrushComponent
+  BrushComponent,
 } from 'echarts/components'
+import { use } from 'echarts/core'
+import { CanvasRenderer } from 'echarts/renderers'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import VChart from 'vue-echarts'
-import {
-  RefreshLeft,
-  Picture,
-  FullScreen,
-  Close
-} from '@element-plus/icons-vue'
 
 import { formatDateTime } from '@/utils/date'
 import { formatNumber } from '@/utils/format'
@@ -217,7 +226,7 @@ use([
   GridComponent,
   DataZoomComponent,
   ToolboxComponent,
-  BrushComponent
+  BrushComponent,
 ])
 
 // ===== Props & Emits =====
@@ -254,114 +263,117 @@ const dataStats = computed(() => {
     return {
       totalPoints: 0,
       timeSpan: '',
-      tagCount: 0
+      tagCount: 0,
     }
   }
-  
+
   const data = props.data
   const totalPoints = data.length
-  
+
   // 计算时间跨度
-  const times = data.map(item => new Date(item.timestamp).getTime()).sort((a, b) => a - b)
-  const timeSpan = times.length > 1 ? 
-    formatTimeSpan(new Date(times[0]), new Date(times[times.length - 1])) : '1分钟内'
-  
+  const times = data
+    .map(item => new Date(item.timestamp).getTime())
+    .sort((a, b) => a - b)
+  const timeSpan =
+    times.length > 1
+      ? formatTimeSpan(new Date(times[0]), new Date(times[times.length - 1]))
+      : '1分钟内'
+
   // 计算标签数量
   const uniqueTags = new Set(data.map(item => item.tagId || item.tagName))
   const tagCount = uniqueTags.size
-  
+
   return {
     totalPoints,
     timeSpan,
-    tagCount
+    tagCount,
   }
 })
 
 const chartOption = computed(() => {
   if (!hasData.value) return {}
-  
+
   // 处理数据，按标签分组
   const tagGroups = groupDataByTag(props.data)
-  
+
   // 生成系列数据
-  const series = Object.entries(tagGroups).map(([tagName, dataPoints], index) => {
-    const seriesData = dataPoints.map(point => [
-      point.timestamp,
-      point.value
-    ])
-    
-    const baseConfig = {
-      name: tagName,
-      data: seriesData,
-      itemStyle: {
-        color: getChartColor(index)
+  const series = Object.entries(tagGroups).map(
+    ([tagName, dataPoints], index) => {
+      const seriesData = dataPoints.map(point => [point.timestamp, point.value])
+
+      const baseConfig = {
+        name: tagName,
+        data: seriesData,
+        itemStyle: {
+          color: getChartColor(index),
+        },
+      }
+
+      switch (chartType.value) {
+        case 'line':
+          return {
+            ...baseConfig,
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 6,
+            lineStyle: {
+              width: 2,
+            },
+          }
+        case 'area':
+          return {
+            ...baseConfig,
+            type: 'line',
+            smooth: true,
+            symbol: 'circle',
+            symbolSize: 4,
+            areaStyle: {
+              opacity: 0.3,
+            },
+            lineStyle: {
+              width: 2,
+            },
+          }
+        case 'bar':
+          return {
+            ...baseConfig,
+            type: 'bar',
+            barWidth: '60%',
+          }
+        case 'scatter':
+          return {
+            ...baseConfig,
+            type: 'scatter',
+            symbolSize: 8,
+          }
+        default:
+          return {
+            ...baseConfig,
+            type: 'line',
+          }
       }
     }
-    
-    switch (chartType.value) {
-      case 'line':
-        return {
-          ...baseConfig,
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 6,
-          lineStyle: {
-            width: 2
-          }
-        }
-      case 'area':
-        return {
-          ...baseConfig,
-          type: 'line',
-          smooth: true,
-          symbol: 'circle',
-          symbolSize: 4,
-          areaStyle: {
-            opacity: 0.3
-          },
-          lineStyle: {
-            width: 2
-          }
-        }
-      case 'bar':
-        return {
-          ...baseConfig,
-          type: 'bar',
-          barWidth: '60%'
-        }
-      case 'scatter':
-        return {
-          ...baseConfig,
-          type: 'scatter',
-          symbolSize: 8
-        }
-      default:
-        return {
-          ...baseConfig,
-          type: 'line'
-        }
-    }
-  })
-  
+  )
+
   return {
     title: {
-      show: false
+      show: false,
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
         type: 'cross',
         label: {
-          backgroundColor: '#6a7985'
-        }
+          backgroundColor: '#6a7985',
+        },
       },
       formatter: (params: any[]) => {
         if (!params || params.length === 0) return ''
-        
+
         const time = formatDateTime(params[0].value[0])
         let content = `<div><strong>${time}</strong></div>`
-        
+
         params.forEach(param => {
           const value = formatNumber(param.value[1], 2)
           content += `
@@ -371,14 +383,14 @@ const chartOption = computed(() => {
             </div>
           `
         })
-        
+
         return content
-      }
+      },
     },
     legend: {
       show: showLegend.value,
       top: 10,
-      type: 'scroll'
+      type: 'scroll',
     },
     grid: {
       show: showGrid.value,
@@ -386,7 +398,7 @@ const chartOption = computed(() => {
       right: '4%',
       bottom: showDataZoom.value ? '15%' : '3%',
       top: showLegend.value ? '15%' : '3%',
-      containLabel: true
+      containLabel: true,
     },
     xAxis: {
       type: 'time',
@@ -394,49 +406,51 @@ const chartOption = computed(() => {
       axisLabel: {
         formatter: (value: number) => {
           return formatDateTime(value, 'HH:mm')
-        }
-      }
+        },
+      },
     },
     yAxis: {
       type: 'value',
       scale: true,
       axisLabel: {
-        formatter: (value: number) => formatNumber(value, 1)
-      }
-    },
-    dataZoom: showDataZoom.value ? [
-      {
-        type: 'inside',
-        start: 0,
-        end: 100
+        formatter: (value: number) => formatNumber(value, 1),
       },
-      {
-        type: 'slider',
-        start: 0,
-        end: 100,
-        height: 30,
-        bottom: 10
-      }
-    ] : [],
+    },
+    dataZoom: showDataZoom.value
+      ? [
+          {
+            type: 'inside',
+            start: 0,
+            end: 100,
+          },
+          {
+            type: 'slider',
+            start: 0,
+            end: 100,
+            height: 30,
+            bottom: 10,
+          },
+        ]
+      : [],
     toolbox: {
       feature: {
         saveAsImage: {
           title: '保存图片',
-          name: `历史数据_${formatDateTime(new Date(), 'YYYYMMDD_HHmmss')}`
+          name: `历史数据_${formatDateTime(new Date(), 'YYYYMMDD_HHmmss')}`,
         },
         restore: {
-          title: '重置'
-        }
+          title: '重置',
+        },
       },
       right: 20,
-      top: 10
+      top: 10,
     },
     brush: {
       toolbox: ['rect', 'polygon', 'clear'],
       throttleType: 'debounce',
-      throttleDelay: 300
+      throttleDelay: 300,
     },
-    series
+    series,
   }
 })
 
@@ -447,7 +461,7 @@ const chartOption = computed(() => {
  */
 function groupDataByTag(data: any[]): Record<string, any[]> {
   const groups: Record<string, any[]> = {}
-  
+
   data.forEach(item => {
     const tagKey = item.tagName || item.tagId || 'Unknown'
     if (!groups[tagKey]) {
@@ -455,12 +469,15 @@ function groupDataByTag(data: any[]): Record<string, any[]> {
     }
     groups[tagKey].push(item)
   })
-  
+
   // 按时间排序每个组的数据
   Object.values(groups).forEach(group => {
-    group.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime())
+    group.sort(
+      (a, b) =>
+        new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+    )
   })
-  
+
   return groups
 }
 
@@ -469,9 +486,18 @@ function groupDataByTag(data: any[]): Record<string, any[]> {
  */
 function getChartColor(index: number): string {
   const colors = [
-    '#409eff', '#67c23a', '#e6a23c', '#f56c6c',
-    '#909399', '#c471ed', '#36cfc9', '#f759ab',
-    '#ff9800', '#795548', '#607d8b', '#9c27b0'
+    '#409eff',
+    '#67c23a',
+    '#e6a23c',
+    '#f56c6c',
+    '#909399',
+    '#c471ed',
+    '#36cfc9',
+    '#f759ab',
+    '#ff9800',
+    '#795548',
+    '#607d8b',
+    '#9c27b0',
   ]
   return colors[index % colors.length]
 }
@@ -484,7 +510,7 @@ function formatTimeSpan(start: Date, end: Date): string {
   const diffMinutes = Math.floor(diffMs / 60000)
   const diffHours = Math.floor(diffMinutes / 60)
   const diffDays = Math.floor(diffHours / 24)
-  
+
   if (diffDays > 0) {
     return `${diffDays}天${diffHours % 24}小时`
   } else if (diffHours > 0) {
@@ -532,7 +558,7 @@ function resetZoom() {
     chartRef.value.dispatchAction({
       type: 'dataZoom',
       start: 0,
-      end: 100
+      end: 100,
     })
   }
   ElMessage.success('缩放已重置')
@@ -546,14 +572,14 @@ function saveAsImage() {
     const url = chartRef.value.getDataURL({
       type: 'png',
       pixelRatio: 2,
-      backgroundColor: '#fff'
+      backgroundColor: '#fff',
     })
-    
+
     const link = document.createElement('a')
     link.href = url
     link.download = `历史数据图表_${formatDateTime(new Date(), 'YYYYMMDD_HHmmss')}.png`
     link.click()
-    
+
     ElMessage.success('图表已保存')
   }
 }
@@ -563,7 +589,7 @@ function saveAsImage() {
  */
 function toggleFullscreen() {
   isFullscreen.value = !isFullscreen.value
-  
+
   nextTick(() => {
     chartRef.value?.resize()
     window.dispatchEvent(new Event('resize'))
@@ -581,9 +607,9 @@ function handleChartClick(params: any) {
       tagName: params.seriesName,
       deviceName: 'Unknown', // 需要从原始数据中获取
       seriesIndex: params.seriesIndex,
-      dataIndex: params.dataIndex
+      dataIndex: params.dataIndex,
     }
-    
+
     selectedDataPoint.value = dataPoint
     emit('point-click', dataPoint)
   }
@@ -613,21 +639,25 @@ onMounted(() => {
       toggleFullscreen()
     }
   }
-  
+
   document.addEventListener('keydown', handleKeydown)
-  
+
   return () => {
     document.removeEventListener('keydown', handleKeydown)
   }
 })
 
 // ===== 监听器 =====
-watch(() => props.data, () => {
-  // 数据变化时重置选中的数据点
-  selectedDataPoint.value = null
-}, { deep: true })
+watch(
+  () => props.data,
+  () => {
+    // 数据变化时重置选中的数据点
+    selectedDataPoint.value = null
+  },
+  { deep: true }
+)
 
-watch(isFullscreen, (fullscreen) => {
+watch(isFullscreen, fullscreen => {
   if (fullscreen) {
     document.body.style.overflow = 'hidden'
   } else {
@@ -643,13 +673,13 @@ watch(isFullscreen, (fullscreen) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    
+
     .toolbar-left {
       .chart-title {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         span {
           font-size: 16px;
           font-weight: 600;
@@ -657,13 +687,13 @@ watch(isFullscreen, (fullscreen) => {
         }
       }
     }
-    
+
     .toolbar-right {
       .chart-controls {
         display: flex;
         align-items: center;
         gap: 12px;
-        
+
         .action-buttons {
           display: flex;
           gap: 4px;
@@ -678,7 +708,7 @@ watch(isFullscreen, (fullscreen) => {
     border: 1px solid #ebeef5;
     border-radius: 6px;
     background: white;
-    
+
     &.fullscreen {
       position: fixed;
       top: 0;
@@ -690,33 +720,33 @@ watch(isFullscreen, (fullscreen) => {
       border: none;
       border-radius: 0;
     }
-    
+
     .chart-loading {
       padding: 20px;
-      
+
       .loading-content {
         display: flex;
         flex-direction: column;
         gap: 16px;
       }
     }
-    
+
     .chart-empty {
       display: flex;
       align-items: center;
       justify-content: center;
       height: 100%;
     }
-    
+
     .chart-wrapper {
       position: relative;
       height: 100%;
-      
+
       .chart {
         height: 100%;
         width: 100%;
       }
-      
+
       .data-point-panel {
         position: absolute;
         top: 20px;
@@ -727,7 +757,7 @@ watch(isFullscreen, (fullscreen) => {
         border-radius: 6px;
         box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
         z-index: 10;
-        
+
         .panel-header {
           display: flex;
           justify-content: space-between;
@@ -736,30 +766,30 @@ watch(isFullscreen, (fullscreen) => {
           border-bottom: 1px solid #ebeef5;
           background: #f5f7fa;
           border-radius: 6px 6px 0 0;
-          
+
           span {
             font-weight: 600;
             color: #303133;
           }
         }
-        
+
         .panel-content {
           padding: 16px;
-          
+
           .info-item {
             display: flex;
             justify-content: space-between;
             margin-bottom: 8px;
-            
+
             &:last-child {
               margin-bottom: 0;
             }
-            
+
             .label {
               color: #909399;
               font-size: 13px;
             }
-            
+
             .value {
               color: #303133;
               font-weight: 500;
@@ -770,7 +800,7 @@ watch(isFullscreen, (fullscreen) => {
           }
         }
       }
-      
+
       .chart-stats {
         position: absolute;
         bottom: 20px;
@@ -781,17 +811,17 @@ watch(isFullscreen, (fullscreen) => {
         background: rgba(255, 255, 255, 0.9);
         border-radius: 4px;
         backdrop-filter: blur(4px);
-        
+
         .stats-item {
           display: flex;
           align-items: center;
           gap: 4px;
-          
+
           .stats-label {
             font-size: 12px;
             color: #909399;
           }
-          
+
           .stats-value {
             font-size: 12px;
             color: #303133;
@@ -810,7 +840,7 @@ watch(isFullscreen, (fullscreen) => {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
-      
+
       .toolbar-left,
       .toolbar-right {
         justify-content: center;
@@ -825,10 +855,10 @@ watch(isFullscreen, (fullscreen) => {
       flex-direction: column;
       gap: 8px;
     }
-    
+
     .chart-container {
       height: 400px;
-      
+
       .chart-wrapper {
         .data-point-panel {
           position: relative;
@@ -837,7 +867,7 @@ watch(isFullscreen, (fullscreen) => {
           width: 100%;
           margin-top: 12px;
         }
-        
+
         .chart-stats {
           position: relative;
           bottom: auto;

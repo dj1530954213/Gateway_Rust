@@ -6,20 +6,27 @@
         <template #header>
           <div class="config-header">
             <h4>对比设置</h4>
-            <el-button type="primary" @click="executeComparison" :loading="comparing">
+            <el-button
+              type="primary"
+              :loading="comparing"
+              @click="executeComparison"
+            >
               <el-icon><TrendCharts /></el-icon>
               {{ comparing ? '分析中...' : '开始对比' }}
             </el-button>
           </div>
         </template>
-        
+
         <div class="config-content">
           <el-row :gutter="20">
             <!-- 对比维度 -->
             <el-col :span="6">
               <div class="config-section">
                 <h5>对比维度</h5>
-                <el-select v-model="config.dimension" placeholder="选择对比维度">
+                <el-select
+                  v-model="config.dimension"
+                  placeholder="选择对比维度"
+                >
                   <el-option label="时间对比" value="time" />
                   <el-option label="设备对比" value="device" />
                   <el-option label="标签对比" value="tag" />
@@ -27,7 +34,7 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 对比类型 -->
             <el-col :span="6">
               <div class="config-section">
@@ -40,7 +47,7 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 统计方法 -->
             <el-col :span="6">
               <div class="config-section">
@@ -54,12 +61,15 @@
                 </el-select>
               </div>
             </el-col>
-            
+
             <!-- 时间粒度 -->
             <el-col :span="6">
               <div class="config-section">
                 <h5>时间粒度</h5>
-                <el-select v-model="config.granularity" placeholder="选择时间粒度">
+                <el-select
+                  v-model="config.granularity"
+                  placeholder="选择时间粒度"
+                >
                   <el-option label="分钟" value="minute" />
                   <el-option label="小时" value="hour" />
                   <el-option label="天" value="day" />
@@ -69,7 +79,7 @@
               </div>
             </el-col>
           </el-row>
-          
+
           <!-- 对比目标选择 -->
           <div class="comparison-targets">
             <h5>对比目标</h5>
@@ -91,7 +101,7 @@
                     <el-icon><Close /></el-icon>
                   </el-button>
                 </div>
-                
+
                 <el-row :gutter="12">
                   <el-col :span="8">
                     <el-select
@@ -107,7 +117,7 @@
                       />
                     </el-select>
                   </el-col>
-                  
+
                   <el-col :span="8">
                     <el-select
                       v-model="target.tagId"
@@ -122,7 +132,7 @@
                       />
                     </el-select>
                   </el-col>
-                  
+
                   <el-col :span="8">
                     <el-date-picker
                       v-model="target.dateRange"
@@ -137,7 +147,7 @@
                   </el-col>
                 </el-row>
               </div>
-              
+
               <el-button
                 v-if="config.targets.length < 5"
                 class="add-target-btn"
@@ -152,7 +162,7 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 对比结果区域 -->
     <div v-if="comparisonResults" class="comparison-results">
       <!-- 结果概览 -->
@@ -160,50 +170,58 @@
         <template #header>
           <h4>对比结果概览</h4>
         </template>
-        
+
         <div class="summary-grid">
           <div class="summary-item">
             <div class="summary-icon">
               <el-icon><DataAnalysis /></el-icon>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ comparisonResults.summary.dataPoints }}</div>
+              <div class="summary-value">
+                {{ comparisonResults.summary.dataPoints }}
+              </div>
               <div class="summary-label">对比数据点</div>
             </div>
           </div>
-          
+
           <div class="summary-item">
             <div class="summary-icon">
               <el-icon><TrendCharts /></el-icon>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ comparisonResults.summary.variance }}%</div>
+              <div class="summary-value">
+                {{ comparisonResults.summary.variance }}%
+              </div>
               <div class="summary-label">变异系数</div>
             </div>
           </div>
-          
+
           <div class="summary-item">
             <div class="summary-icon">
               <el-icon><Warning /></el-icon>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ comparisonResults.summary.anomalies }}</div>
+              <div class="summary-value">
+                {{ comparisonResults.summary.anomalies }}
+              </div>
               <div class="summary-label">异常点</div>
             </div>
           </div>
-          
+
           <div class="summary-item">
             <div class="summary-icon">
               <el-icon><CircleCheck /></el-icon>
             </div>
             <div class="summary-content">
-              <div class="summary-value">{{ comparisonResults.summary.correlation }}%</div>
+              <div class="summary-value">
+                {{ comparisonResults.summary.correlation }}%
+              </div>
               <div class="summary-label">相关性</div>
             </div>
           </div>
         </div>
       </el-card>
-      
+
       <!-- 对比图表 -->
       <el-card class="result-charts" shadow="never">
         <template #header>
@@ -216,24 +234,28 @@
             </el-radio-group>
           </div>
         </template>
-        
+
         <div class="chart-container">
           <div ref="comparisonChartRef" class="comparison-chart"></div>
         </div>
       </el-card>
-      
+
       <!-- 统计分析 -->
       <el-card class="result-statistics" shadow="never">
         <template #header>
           <h4>统计分析</h4>
         </template>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <!-- 描述性统计 -->
             <div class="stats-section">
               <h5>描述性统计</h5>
-              <el-table :data="comparisonResults.statistics" stripe style="width: 100%">
+              <el-table
+                :data="comparisonResults.statistics"
+                stripe
+                style="width: 100%"
+              >
                 <el-table-column prop="target" label="对比目标" width="120" />
                 <el-table-column prop="mean" label="均值" width="80" />
                 <el-table-column prop="median" label="中位数" width="80" />
@@ -243,7 +265,7 @@
               </el-table>
             </div>
           </el-col>
-          
+
           <el-col :span="12">
             <!-- 假设检验 -->
             <div class="stats-section">
@@ -252,32 +274,81 @@
                 <div class="test-item">
                   <div class="test-name">T检验 (均值比较)</div>
                   <div class="test-result">
-                    <span class="test-statistic">t = {{ comparisonResults.tests.tTest.statistic }}</span>
-                    <span class="test-pvalue">p = {{ comparisonResults.tests.tTest.pValue }}</span>
-                    <el-tag :type="comparisonResults.tests.tTest.significant ? 'success' : 'info'" size="small">
-                      {{ comparisonResults.tests.tTest.significant ? '显著差异' : '无显著差异' }}
+                    <span class="test-statistic"
+                      >t = {{ comparisonResults.tests.tTest.statistic }}</span
+                    >
+                    <span class="test-pvalue"
+                      >p = {{ comparisonResults.tests.tTest.pValue }}</span
+                    >
+                    <el-tag
+                      :type="
+                        comparisonResults.tests.tTest.significant
+                          ? 'success'
+                          : 'info'
+                      "
+                      size="small"
+                    >
+                      {{
+                        comparisonResults.tests.tTest.significant
+                          ? '显著差异'
+                          : '无显著差异'
+                      }}
                     </el-tag>
                   </div>
                 </div>
-                
+
                 <div class="test-item">
                   <div class="test-name">F检验 (方差比较)</div>
                   <div class="test-result">
-                    <span class="test-statistic">F = {{ comparisonResults.tests.fTest.statistic }}</span>
-                    <span class="test-pvalue">p = {{ comparisonResults.tests.fTest.pValue }}</span>
-                    <el-tag :type="comparisonResults.tests.fTest.significant ? 'success' : 'info'" size="small">
-                      {{ comparisonResults.tests.fTest.significant ? '显著差异' : '无显著差异' }}
+                    <span class="test-statistic"
+                      >F = {{ comparisonResults.tests.fTest.statistic }}</span
+                    >
+                    <span class="test-pvalue"
+                      >p = {{ comparisonResults.tests.fTest.pValue }}</span
+                    >
+                    <el-tag
+                      :type="
+                        comparisonResults.tests.fTest.significant
+                          ? 'success'
+                          : 'info'
+                      "
+                      size="small"
+                    >
+                      {{
+                        comparisonResults.tests.fTest.significant
+                          ? '显著差异'
+                          : '无显著差异'
+                      }}
                     </el-tag>
                   </div>
                 </div>
-                
+
                 <div class="test-item">
                   <div class="test-name">相关性检验</div>
                   <div class="test-result">
-                    <span class="test-statistic">r = {{ comparisonResults.tests.correlation.coefficient }}</span>
-                    <span class="test-pvalue">p = {{ comparisonResults.tests.correlation.pValue }}</span>
-                    <el-tag :type="getCorrelationLevel(comparisonResults.tests.correlation.coefficient)" size="small">
-                      {{ getCorrelationText(comparisonResults.tests.correlation.coefficient) }}
+                    <span class="test-statistic"
+                      >r =
+                      {{
+                        comparisonResults.tests.correlation.coefficient
+                      }}</span
+                    >
+                    <span class="test-pvalue"
+                      >p =
+                      {{ comparisonResults.tests.correlation.pValue }}</span
+                    >
+                    <el-tag
+                      :type="
+                        getCorrelationLevel(
+                          comparisonResults.tests.correlation.coefficient
+                        )
+                      "
+                      size="small"
+                    >
+                      {{
+                        getCorrelationText(
+                          comparisonResults.tests.correlation.coefficient
+                        )
+                      }}
                     </el-tag>
                   </div>
                 </div>
@@ -286,28 +357,36 @@
           </el-col>
         </el-row>
       </el-card>
-      
+
       <!-- 异常检测 -->
       <el-card class="result-anomalies" shadow="never">
         <template #header>
           <div class="anomaly-header">
             <h4>异常点检测</h4>
-            <el-select v-model="anomalyMethod" size="small" style="width: 150px">
+            <el-select
+              v-model="anomalyMethod"
+              size="small"
+              style="width: 150px"
+            >
               <el-option label="Z-Score" value="zscore" />
               <el-option label="IQR方法" value="iqr" />
               <el-option label="孤立森林" value="isolation" />
             </el-select>
           </div>
         </template>
-        
+
         <div class="anomaly-content">
           <div class="anomaly-chart">
             <div ref="anomalyChartRef" class="anomaly-chart-container"></div>
           </div>
-          
+
           <div class="anomaly-list">
             <h5>检测到的异常点</h5>
-            <el-table :data="comparisonResults.anomalies" max-height="300" style="width: 100%">
+            <el-table
+              :data="comparisonResults.anomalies"
+              max-height="300"
+              style="width: 100%"
+            >
               <el-table-column prop="timestamp" label="时间" width="150" />
               <el-table-column prop="target" label="目标" width="100" />
               <el-table-column prop="value" label="数值" width="100" />
@@ -324,27 +403,33 @@
           </div>
         </div>
       </el-card>
-      
+
       <!-- 对比结论 -->
       <el-card class="result-conclusion" shadow="never">
         <template #header>
           <h4>分析结论</h4>
         </template>
-        
+
         <div class="conclusion-content">
           <div class="conclusion-insights">
             <h5>主要发现</h5>
             <ul>
-              <li v-for="insight in comparisonResults.insights" :key="insight.id" class="insight-item">
+              <li
+                v-for="insight in comparisonResults.insights"
+                :key="insight.id"
+                class="insight-item"
+              >
                 <el-icon class="insight-icon" :class="insight.type">
                   <component :is="getInsightIcon(insight.type)" />
                 </el-icon>
                 <span class="insight-text">{{ insight.text }}</span>
-                <el-tag :type="insight.priority" size="small">{{ insight.priority }}</el-tag>
+                <el-tag :type="insight.priority" size="small">{{
+                  insight.priority
+                }}</el-tag>
               </li>
             </ul>
           </div>
-          
+
           <div class="conclusion-recommendations">
             <h5>建议措施</h5>
             <div class="recommendations-list">
@@ -354,7 +439,9 @@
                 class="recommendation-item"
               >
                 <div class="rec-priority">
-                  <el-tag :type="rec.priority" size="small">{{ rec.priority }}</el-tag>
+                  <el-tag :type="rec.priority" size="small">{{
+                    rec.priority
+                  }}</el-tag>
                 </div>
                 <div class="rec-content">
                   <div class="rec-title">{{ rec.title }}</div>
@@ -371,10 +458,14 @@
         </div>
       </el-card>
     </div>
-    
+
     <!-- 空状态 -->
     <el-empty v-else description="配置对比参数并开始分析" class="empty-state">
-      <el-button type="primary" @click="executeComparison" :disabled="!canCompare">
+      <el-button
+        type="primary"
+        :disabled="!canCompare"
+        @click="executeComparison"
+      >
         开始数据对比分析
       </el-button>
     </el-empty>
@@ -399,9 +490,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
 import {
   TrendCharts,
   Close,
@@ -411,8 +499,11 @@ import {
   CircleCheck,
   InfoFilled,
   SuccessFilled,
-  WarningFilled
+  WarningFilled,
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== 响应式数据 =====
 const comparing = ref(false)
@@ -429,14 +520,14 @@ const config = ref({
     {
       deviceId: '',
       tagId: '',
-      dateRange: []
+      dateRange: [],
     },
     {
       deviceId: '',
       tagId: '',
-      dateRange: []
-    }
-  ]
+      dateRange: [],
+    },
+  ],
 })
 
 // 图表引用
@@ -450,14 +541,14 @@ const devices = ref([
   { id: '1', name: 'PLC-01' },
   { id: '2', name: 'PLC-02' },
   { id: '3', name: 'Sensor-01' },
-  { id: '4', name: 'Sensor-02' }
+  { id: '4', name: 'Sensor-02' },
 ])
 
 const tags = ref([
   { id: '1', name: '温度' },
   { id: '2', name: '压力' },
   { id: '3', name: '流量' },
-  { id: '4', name: '功率' }
+  { id: '4', name: '功率' },
 ])
 
 // 对比结果
@@ -465,10 +556,13 @@ const comparisonResults = ref(null)
 
 // ===== 计算属性 =====
 const canCompare = computed(() => {
-  return config.value.targets.length >= 2 &&
-         config.value.targets.every(target => 
-           target.deviceId && target.tagId && target.dateRange?.length === 2
-         )
+  return (
+    config.value.targets.length >= 2 &&
+    config.value.targets.every(
+      target =>
+        target.deviceId && target.tagId && target.dateRange?.length === 2
+    )
+  )
 })
 
 // ===== 方法 =====
@@ -480,7 +574,7 @@ function addTarget() {
   config.value.targets.push({
     deviceId: '',
     tagId: '',
-    dateRange: []
+    dateRange: [],
   })
 }
 
@@ -499,15 +593,15 @@ async function executeComparison() {
     ElMessage.warning('请完整配置对比目标')
     return
   }
-  
+
   comparing.value = true
-  
+
   try {
     // 调用真实的对比分析API
     const response = await fetch('/api/v1/analytics/comparison', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         dimension: config.value.dimension,
@@ -515,24 +609,23 @@ async function executeComparison() {
         method: config.value.method,
         targets: config.value.targets,
         timeRange: config.value.timeRange,
-        filters: config.value.filters
-      })
+        filters: config.value.filters,
+      }),
     })
-    
+
     if (!response.ok) {
       throw new Error('对比分析请求失败')
     }
-    
+
     comparisonResults.value = await response.json()
-    
+
     // 初始化图表
     nextTick(() => {
       initComparisonChart()
       initAnomalyChart()
     })
-    
+
     ElMessage.success('对比分析完成')
-    
   } catch (error) {
     console.error('对比分析失败:', error)
     ElMessage.error('对比分析失败')
@@ -541,13 +634,12 @@ async function executeComparison() {
   }
 }
 
-
 /**
  * 初始化对比图表
  */
 function initComparisonChart() {
   if (!comparisonChartRef.value) return
-  
+
   comparisonChart.value = echarts.init(comparisonChartRef.value)
   updateComparisonChart()
 }
@@ -557,23 +649,23 @@ function initComparisonChart() {
  */
 function updateComparisonChart() {
   if (!comparisonChart.value) return
-  
+
   // 生成模拟时间序列数据
   const times = []
   const data1 = []
   const data2 = []
-  
+
   for (let i = 0; i < 24; i++) {
     const time = new Date()
     time.setHours(i, 0, 0, 0)
     times.push(time)
-    
+
     data1.push(25 + Math.random() * 10 + Math.sin(i / 4) * 3)
     data2.push(28 + Math.random() * 8 + Math.cos(i / 4) * 2)
   }
-  
+
   let option = {}
-  
+
   if (activeChartType.value === 'overlay') {
     // 叠加图
     option = {
@@ -583,23 +675,23 @@ function updateComparisonChart() {
         right: '4%',
         bottom: '3%',
         top: '10%',
-        containLabel: true
+        containLabel: true,
       },
       tooltip: {
         trigger: 'axis',
         axisPointer: {
-          type: 'cross'
-        }
+          type: 'cross',
+        },
       },
       legend: {
-        data: ['目标1', '目标2']
+        data: ['目标1', '目标2'],
       },
       xAxis: {
         type: 'time',
-        data: times
+        data: times,
       },
       yAxis: {
-        type: 'value'
+        type: 'value',
       },
       series: [
         {
@@ -611,9 +703,9 @@ function updateComparisonChart() {
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#409EFF40' },
-              { offset: 1, color: '#409EFF10' }
-            ])
-          }
+              { offset: 1, color: '#409EFF10' },
+            ]),
+          },
         },
         {
           name: '目标2',
@@ -624,11 +716,11 @@ function updateComparisonChart() {
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#67C23A40' },
-              { offset: 1, color: '#67C23A10' }
-            ])
-          }
-        }
-      ]
+              { offset: 1, color: '#67C23A10' },
+            ]),
+          },
+        },
+      ],
     }
   } else if (activeChartType.value === 'parallel') {
     // 平行图
@@ -636,18 +728,18 @@ function updateComparisonChart() {
       animation: true,
       grid: [
         { left: '7%', right: '52%', top: '10%', bottom: '10%' },
-        { left: '55%', right: '7%', top: '10%', bottom: '10%' }
+        { left: '55%', right: '7%', top: '10%', bottom: '10%' },
       ],
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
       },
       xAxis: [
         { type: 'time', gridIndex: 0 },
-        { type: 'time', gridIndex: 1 }
+        { type: 'time', gridIndex: 1 },
       ],
       yAxis: [
         { type: 'value', gridIndex: 0, name: '目标1' },
-        { type: 'value', gridIndex: 1, name: '目标2' }
+        { type: 'value', gridIndex: 1, name: '目标2' },
       ],
       series: [
         {
@@ -657,7 +749,7 @@ function updateComparisonChart() {
           yAxisIndex: 0,
           data: data1.map((value, index) => [times[index], value]),
           smooth: true,
-          lineStyle: { color: '#409EFF' }
+          lineStyle: { color: '#409EFF' },
         },
         {
           name: '目标2',
@@ -666,14 +758,14 @@ function updateComparisonChart() {
           yAxisIndex: 1,
           data: data2.map((value, index) => [times[index], value]),
           smooth: true,
-          lineStyle: { color: '#67C23A' }
-        }
-      ]
+          lineStyle: { color: '#67C23A' },
+        },
+      ],
     }
   } else {
     // 差值图
     const differences = data1.map((v1, index) => v1 - data2[index])
-    
+
     option = {
       animation: true,
       grid: {
@@ -681,18 +773,18 @@ function updateComparisonChart() {
         right: '4%',
         bottom: '3%',
         top: '10%',
-        containLabel: true
+        containLabel: true,
       },
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
       },
       xAxis: {
         type: 'time',
-        data: times
+        data: times,
       },
       yAxis: {
         type: 'value',
-        name: '差值 (目标1 - 目标2)'
+        name: '差值 (目标1 - 目标2)',
       },
       series: [
         {
@@ -704,19 +796,19 @@ function updateComparisonChart() {
           areaStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
               { offset: 0, color: '#E6A23C40' },
-              { offset: 1, color: '#E6A23C10' }
-            ])
+              { offset: 1, color: '#E6A23C10' },
+            ]),
           },
           markLine: {
             data: [
-              { yAxis: 0, lineStyle: { color: '#F56C6C', type: 'dashed' } }
-            ]
-          }
-        }
-      ]
+              { yAxis: 0, lineStyle: { color: '#F56C6C', type: 'dashed' } },
+            ],
+          },
+        },
+      ],
     }
   }
-  
+
   comparisonChart.value.setOption(option)
 }
 
@@ -725,21 +817,21 @@ function updateComparisonChart() {
  */
 function initAnomalyChart() {
   if (!anomalyChartRef.value) return
-  
+
   anomalyChart.value = echarts.init(anomalyChartRef.value)
-  
+
   // 生成包含异常点的数据
   const times = []
   const normalData = []
   const anomalyData = []
-  
+
   for (let i = 0; i < 24; i++) {
     const time = new Date()
     time.setHours(i, 0, 0, 0)
     times.push(time)
-    
+
     let value = 25 + Math.random() * 10 + Math.sin(i / 4) * 3
-    
+
     // 人为加入一些异常点
     if (i === 10 || i === 14) {
       value += Math.random() > 0.5 ? 15 : -15
@@ -750,7 +842,7 @@ function initAnomalyChart() {
       anomalyData.push([time, null])
     }
   }
-  
+
   const option = {
     animation: true,
     grid: {
@@ -758,19 +850,19 @@ function initAnomalyChart() {
       right: '4%',
       bottom: '3%',
       top: '10%',
-      containLabel: true
+      containLabel: true,
     },
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
     },
     legend: {
-      data: ['正常数据', '异常点']
+      data: ['正常数据', '异常点'],
     },
     xAxis: {
-      type: 'time'
+      type: 'time',
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
     },
     series: [
       {
@@ -779,7 +871,7 @@ function initAnomalyChart() {
         data: normalData,
         smooth: true,
         lineStyle: { color: '#409EFF' },
-        symbol: 'none'
+        symbol: 'none',
       },
       {
         name: '异常点',
@@ -789,12 +881,12 @@ function initAnomalyChart() {
         itemStyle: { color: '#F56C6C' },
         emphasis: {
           scale: true,
-          scaleSize: 15
-        }
-      }
-    ]
+          scaleSize: 15,
+        },
+      },
+    ],
   }
-  
+
   anomalyChart.value.setOption(option)
 }
 
@@ -835,7 +927,7 @@ function getInsightIcon(type: string): string {
   const iconMap: { [key: string]: string } = {
     info: 'InfoFilled',
     success: 'SuccessFilled',
-    warning: 'WarningFilled'
+    warning: 'WarningFilled',
   }
   return iconMap[type] || 'InfoFilled'
 }
@@ -858,16 +950,16 @@ function handleResize() {
 // ===== 生命周期 =====
 onMounted(() => {
   window.addEventListener('resize', handleResize)
-  
+
   // 设置默认日期范围
   const now = new Date()
   const yesterday = new Date(now.getTime() - 24 * 60 * 60 * 1000)
-  
+
   const defaultRange = [
     yesterday.toISOString().slice(0, 19).replace('T', ' '),
-    now.toISOString().slice(0, 19).replace('T', ' ')
+    now.toISOString().slice(0, 19).replace('T', ' '),
   ]
-  
+
   config.value.targets.forEach(target => {
     target.dateRange = [...defaultRange]
   })
@@ -880,38 +972,44 @@ onUnmounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => activeChartType.value, () => {
-  updateComparisonChart()
-})
+watch(
+  () => activeChartType.value,
+  () => {
+    updateComparisonChart()
+  }
+)
 
-watch(() => anomalyMethod.value, () => {
-  // 重新计算异常检测
-  ElMessage.info(`切换到${anomalyMethod.value}异常检测方法`)
-})
+watch(
+  () => anomalyMethod.value,
+  () => {
+    // 重新计算异常检测
+    ElMessage.info(`切换到${anomalyMethod.value}异常检测方法`)
+  }
+)
 </script>
 
 <style scoped lang="scss">
 .data-comparison-panel {
   .comparison-config {
     margin-bottom: 20px;
-    
+
     .config-card {
       .config-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .config-content {
         .config-section {
           margin-bottom: 20px;
-          
+
           h5 {
             margin: 0 0 8px 0;
             color: #606266;
@@ -919,17 +1017,17 @@ watch(() => anomalyMethod.value, () => {
             font-weight: 500;
           }
         }
-        
+
         .comparison-targets {
           margin-top: 24px;
-          
+
           h5 {
             margin: 0 0 16px 0;
             color: #303133;
             font-size: 14px;
             font-weight: 600;
           }
-          
+
           .targets-container {
             .target-item {
               margin-bottom: 16px;
@@ -937,13 +1035,13 @@ watch(() => anomalyMethod.value, () => {
               background: #fafafa;
               border-radius: 6px;
               border: 1px solid #ebeef5;
-              
+
               .target-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
                 margin-bottom: 12px;
-                
+
                 .target-label {
                   font-size: 14px;
                   font-weight: 500;
@@ -951,12 +1049,12 @@ watch(() => anomalyMethod.value, () => {
                 }
               }
             }
-            
+
             .add-target-btn {
               width: 100%;
               border-style: dashed;
               color: #909399;
-              
+
               &:hover {
                 border-color: #409eff;
                 color: #409eff;
@@ -967,16 +1065,16 @@ watch(() => anomalyMethod.value, () => {
       }
     }
   }
-  
+
   .comparison-results {
     .result-summary {
       margin-bottom: 20px;
-      
+
       .summary-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        
+
         .summary-item {
           display: flex;
           align-items: center;
@@ -984,12 +1082,12 @@ watch(() => anomalyMethod.value, () => {
           padding: 16px;
           background: #f8f9fa;
           border-radius: 6px;
-          
+
           .summary-icon {
             font-size: 24px;
             color: #409eff;
           }
-          
+
           .summary-content {
             .summary-value {
               font-size: 20px;
@@ -997,7 +1095,7 @@ watch(() => anomalyMethod.value, () => {
               color: #303133;
               margin-bottom: 2px;
             }
-            
+
             .summary-label {
               font-size: 12px;
               color: #909399;
@@ -1006,22 +1104,22 @@ watch(() => anomalyMethod.value, () => {
         }
       }
     }
-    
+
     .result-charts {
       margin-bottom: 20px;
-      
+
       .chart-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .chart-container {
         .comparison-chart {
           height: 400px;
@@ -1029,10 +1127,10 @@ watch(() => anomalyMethod.value, () => {
         }
       }
     }
-    
+
     .result-statistics {
       margin-bottom: 20px;
-      
+
       .stats-section {
         h5 {
           margin: 0 0 16px 0;
@@ -1040,26 +1138,26 @@ watch(() => anomalyMethod.value, () => {
           font-size: 14px;
           font-weight: 600;
         }
-        
+
         .hypothesis-tests {
           .test-item {
             margin-bottom: 16px;
             padding: 12px;
             background: #f8f9fa;
             border-radius: 6px;
-            
+
             .test-name {
               font-size: 14px;
               font-weight: 500;
               color: #303133;
               margin-bottom: 8px;
             }
-            
+
             .test-result {
               display: flex;
               align-items: center;
               gap: 12px;
-              
+
               .test-statistic,
               .test-pvalue {
                 font-size: 12px;
@@ -1071,22 +1169,22 @@ watch(() => anomalyMethod.value, () => {
         }
       }
     }
-    
+
     .result-anomalies {
       margin-bottom: 20px;
-      
+
       .anomaly-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         h4 {
           margin: 0;
           color: #303133;
           font-size: 16px;
         }
       }
-      
+
       .anomaly-content {
         .anomaly-chart {
           .anomaly-chart-container {
@@ -1095,7 +1193,7 @@ watch(() => anomalyMethod.value, () => {
             margin-bottom: 20px;
           }
         }
-        
+
         .anomaly-list {
           h5 {
             margin: 0 0 12px 0;
@@ -1106,41 +1204,47 @@ watch(() => anomalyMethod.value, () => {
         }
       }
     }
-    
+
     .result-conclusion {
       .conclusion-content {
         .conclusion-insights {
           margin-bottom: 24px;
-          
+
           h5 {
             margin: 0 0 16px 0;
             color: #303133;
             font-size: 14px;
             font-weight: 600;
           }
-          
+
           .insight-item {
             display: flex;
             align-items: center;
             gap: 8px;
             margin-bottom: 8px;
             line-height: 1.5;
-            
+
             .insight-icon {
               font-size: 16px;
-              
-              &.info { color: #409eff; }
-              &.success { color: #67c23a; }
-              &.warning { color: #e6a23c; }
+
+              &.info {
+                color: #409eff;
+              }
+              &.success {
+                color: #67c23a;
+              }
+              &.warning {
+                color: #e6a23c;
+              }
             }
-            
+
             .insight-text {
               flex: 1;
               color: #606266;
             }
           }
         }
-        
+
         .conclusion-recommendations {
           h5 {
             margin: 0 0 16px 0;
@@ -1148,7 +1252,7 @@ watch(() => anomalyMethod.value, () => {
             font-size: 14px;
             font-weight: 600;
           }
-          
+
           .recommendations-list {
             .recommendation-item {
               display: flex;
@@ -1158,28 +1262,28 @@ watch(() => anomalyMethod.value, () => {
               background: #f8f9fa;
               border-radius: 6px;
               margin-bottom: 8px;
-              
+
               .rec-priority {
                 flex-shrink: 0;
               }
-              
+
               .rec-content {
                 flex: 1;
-                
+
                 .rec-title {
                   font-size: 14px;
                   font-weight: 500;
                   color: #303133;
                   margin-bottom: 2px;
                 }
-                
+
                 .rec-description {
                   font-size: 12px;
                   color: #606266;
                   line-height: 1.4;
                 }
               }
-              
+
               .rec-action {
                 flex-shrink: 0;
               }
@@ -1189,7 +1293,7 @@ watch(() => anomalyMethod.value, () => {
       }
     }
   }
-  
+
   .empty-state {
     margin: 60px 0;
   }
@@ -1206,25 +1310,29 @@ watch(() => anomalyMethod.value, () => {
 
 @media (max-width: 768px) {
   .data-comparison-panel {
-    .comparison-config .config-content .comparison-targets .targets-container .target-item {
+    .comparison-config
+      .config-content
+      .comparison-targets
+      .targets-container
+      .target-item {
       .target-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 8px;
       }
     }
-    
+
     .result-summary .summary-grid {
       grid-template-columns: 1fr;
       gap: 12px;
     }
-    
+
     .result-charts .chart-header {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
     }
-    
+
     .result-anomalies .anomaly-header {
       flex-direction: column;
       gap: 12px;

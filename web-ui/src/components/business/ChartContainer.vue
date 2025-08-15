@@ -1,5 +1,5 @@
 <template>
-  <div class="chart-container" :class="containerClass" ref="containerRef">
+  <div ref="containerRef" class="chart-container" :class="containerClass">
     <!-- 图表头部 -->
     <div v-if="showHeader" class="chart-header">
       <div class="header-left">
@@ -9,15 +9,19 @@
           </el-icon>
           <span>{{ title }}</span>
         </div>
-        
+
         <div v-if="subtitle" class="chart-subtitle">
           {{ subtitle }}
         </div>
       </div>
-      
+
       <div class="header-right">
         <!-- 图表类型切换 -->
-        <el-dropdown v-if="showTypeSwitch" trigger="click" @command="handleTypeChange">
+        <el-dropdown
+          v-if="showTypeSwitch"
+          trigger="click"
+          @command="handleTypeChange"
+        >
           <el-button type="text" size="small">
             <el-icon><TrendCharts /></el-icon>
           </el-button>
@@ -34,7 +38,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        
+
         <!-- 刷新按钮 -->
         <el-button
           v-if="showRefresh"
@@ -44,7 +48,7 @@
           :loading="refreshing"
           @click="handleRefresh"
         />
-        
+
         <!-- 设置按钮 -->
         <el-button
           v-if="showSettings"
@@ -53,7 +57,7 @@
           :icon="Setting"
           @click="handleSettings"
         />
-        
+
         <!-- 更多操作 -->
         <el-dropdown v-if="showActions" trigger="click" @command="handleAction">
           <el-button type="text" size="small" :icon="MoreFilled" />
@@ -76,7 +80,7 @@
         </el-dropdown>
       </div>
     </div>
-    
+
     <!-- 图表内容区域 -->
     <div class="chart-content" :style="contentStyle">
       <!-- 加载状态 -->
@@ -89,7 +93,7 @@
         :animation-type="loadingAnimation"
         :min-height="chartHeight"
       />
-      
+
       <!-- 错误状态 -->
       <LoadingCard
         v-else-if="error"
@@ -99,7 +103,7 @@
         :min-height="chartHeight"
         @retry="handleRetry"
       />
-      
+
       <!-- 空数据状态 -->
       <LoadingCard
         v-else-if="!hasData"
@@ -107,7 +111,7 @@
         :empty-message="emptyMessage"
         :min-height="chartHeight"
       />
-      
+
       <!-- 图表渲染区域 -->
       <div
         v-else
@@ -126,7 +130,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 图表工具栏 -->
     <div v-if="showToolbar && !loading && !error" class="chart-toolbar">
       <!-- 时间范围选择 -->
@@ -137,14 +141,14 @@
           @change="handleTimeRangeChange"
         />
       </div>
-      
+
       <!-- 数据点选择 -->
       <div v-if="showDataPointSelector" class="toolbar-item">
         <el-button size="small" @click="showDataPointDialog = true">
           选择数据点 ({{ selectedDataPoints.length }})
         </el-button>
       </div>
-      
+
       <!-- 图表选项 -->
       <div class="toolbar-item">
         <el-checkbox-group v-model="chartOptions" size="small">
@@ -154,7 +158,7 @@
           <el-checkbox v-if="supportZoom" label="zoom">缩放</el-checkbox>
         </el-checkbox-group>
       </div>
-      
+
       <!-- 实时更新控制 -->
       <div v-if="supportRealtime" class="toolbar-item">
         <el-switch
@@ -163,7 +167,7 @@
           size="small"
           @change="handleRealtimeToggle"
         />
-        
+
         <el-select
           v-if="realtimeEnabled"
           v-model="realtimeInterval"
@@ -179,7 +183,7 @@
         </el-select>
       </div>
     </div>
-    
+
     <!-- 图表配置对话框 -->
     <el-dialog
       v-model="settingsVisible"
@@ -196,7 +200,7 @@
             label-width="100px"
           />
         </el-tab-pane>
-        
+
         <!-- 样式配置 -->
         <el-tab-pane label="样式配置" name="style">
           <BaseForm
@@ -205,7 +209,7 @@
             label-width="100px"
           />
         </el-tab-pane>
-        
+
         <!-- 数据配置 -->
         <el-tab-pane label="数据配置" name="data">
           <BaseForm
@@ -215,7 +219,7 @@
           />
         </el-tab-pane>
       </el-tabs>
-      
+
       <template #footer>
         <el-button @click="settingsVisible = false">取消</el-button>
         <el-button type="primary" @click="handleConfigSave">
@@ -223,7 +227,7 @@
         </el-button>
       </template>
     </el-dialog>
-    
+
     <!-- 数据点选择对话框 -->
     <el-dialog
       v-model="showDataPointDialog"
@@ -237,7 +241,7 @@
         multiple
         @change="handleDataPointsChange"
       />
-      
+
       <template #footer>
         <el-button @click="showDataPointDialog = false">取消</el-button>
         <el-button type="primary" @click="handleDataPointsConfirm">
@@ -245,7 +249,7 @@
         </el-button>
       </template>
     </el-dialog>
-    
+
     <!-- 全屏显示 -->
     <el-dialog
       v-model="fullscreenVisible"
@@ -258,12 +262,14 @@
     >
       <div class="fullscreen-chart" :style="{ height: '70vh' }">
         <!-- 全屏图表内容 -->
-        <div ref="fullscreenChartRef" style="width: 100%; height: 100%;">
+        <div ref="fullscreenChartRef" style="width: 100%; height: 100%">
           <div class="chart-placeholder">
             <el-icon :size="64" style="color: var(--el-text-color-placeholder)">
               <TrendCharts />
             </el-icon>
-            <div style="margin-top: 12px; color: var(--el-text-color-secondary)">
+            <div
+              style="margin-top: 12px; color: var(--el-text-color-secondary)"
+            >
               全屏模式 - {{ `${chartType}图表` }}
             </div>
           </div>
@@ -274,7 +280,6 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import {
   TrendCharts,
   Refresh,
@@ -288,11 +293,21 @@ import {
   // BarChart,     // 这些图表图标不存在，先移除
   // Histogram     // 这些图表图标不存在，先移除
 } from '@element-plus/icons-vue'
-import { LoadingCard, BaseForm } from '../base'
-import { TimeRangePicker, DataPointSelector } from './'
 import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
-export type ChartType = 'line' | 'bar' | 'pie' | 'gauge' | 'scatter' | 'heatmap' | 'radar'
+import { LoadingCard, BaseForm } from '../base'
+
+import { TimeRangePicker, DataPointSelector } from './'
+
+export type ChartType =
+  | 'line'
+  | 'bar'
+  | 'pie'
+  | 'gauge'
+  | 'scatter'
+  | 'heatmap'
+  | 'radar'
 
 export interface ChartData {
   xAxis?: any[]
@@ -328,7 +343,7 @@ interface Props {
   chartType?: ChartType
   data?: ChartData
   config?: ChartConfig
-  
+
   // 状态控制
   loading?: boolean
   error?: string
@@ -337,7 +352,7 @@ interface Props {
   showProgress?: boolean
   loadingProgress?: number
   loadingAnimation?: 'spinner' | 'dots' | 'wave' | 'pulse'
-  
+
   // 功能控制
   showHeader?: boolean
   showToolbar?: boolean
@@ -352,12 +367,12 @@ interface Props {
   supportGrid?: boolean
   supportTooltip?: boolean
   supportZoom?: boolean
-  
+
   // 外观配置
   width?: string
   height?: string
   titleIcon?: any
-  
+
   // 自定义样式
   customClass?: string
 }
@@ -414,24 +429,24 @@ const chartConfig = ref<ChartConfig>({
   basic: {
     title: props.title,
     type: props.chartType,
-    theme: 'default'
+    theme: 'default',
   },
   style: {
     width: props.width,
     height: props.height,
     backgroundColor: 'transparent',
-    color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de']
+    color: ['#5470c6', '#91cc75', '#fac858', '#ee6666', '#73c0de'],
   },
   data: {
     refreshInterval: 5000,
-    maxDataPoints: 1000
-  }
+    maxDataPoints: 1000,
+  },
 })
 
 // 工具栏状态
 const timeRange = ref({
   start: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-  end: new Date().toISOString()
+  end: new Date().toISOString(),
 })
 
 const selectedDataPoints = ref<string[]>([])
@@ -450,7 +465,7 @@ const availableTypes = [
   { value: 'gauge', label: '仪表盘', icon: Histogram },
   { value: 'scatter', label: '散点图', icon: TrendCharts },
   { value: 'heatmap', label: '热力图', icon: TrendCharts },
-  { value: 'radar', label: '雷达图', icon: TrendCharts }
+  { value: 'radar', label: '雷达图', icon: TrendCharts },
 ]
 
 // 模拟数据点
@@ -462,7 +477,7 @@ const availableDataPoints = ref([
     dataType: 'number',
     address: '40001',
     unit: '°C',
-    quality: 'good'
+    quality: 'good',
   },
   {
     id: '2',
@@ -471,7 +486,7 @@ const availableDataPoints = ref([
     dataType: 'number',
     address: '40002',
     unit: 'Pa',
-    quality: 'good'
+    quality: 'good',
   },
   {
     id: '3',
@@ -480,8 +495,8 @@ const availableDataPoints = ref([
     dataType: 'number',
     address: '40003',
     unit: 'L/min',
-    quality: 'good'
-  }
+    quality: 'good',
+  },
 ])
 
 // 配置表单字段
@@ -490,13 +505,13 @@ const basicConfigFields = [
     key: 'title',
     label: '图表标题',
     type: 'text',
-    placeholder: '输入图表标题'
+    placeholder: '输入图表标题',
   },
   {
     key: 'type',
     label: '图表类型',
     type: 'select',
-    options: availableTypes.map(t => ({ label: t.label, value: t.value }))
+    options: availableTypes.map(t => ({ label: t.label, value: t.value })),
   },
   {
     key: 'theme',
@@ -505,29 +520,29 @@ const basicConfigFields = [
     options: [
       { label: '默认', value: 'default' },
       { label: '深色', value: 'dark' },
-      { label: '浅色', value: 'light' }
-    ]
-  }
+      { label: '浅色', value: 'light' },
+    ],
+  },
 ]
 
 const styleConfigFields = [
   {
     key: 'backgroundColor',
     label: '背景色',
-    type: 'color'
+    type: 'color',
   },
   {
     key: 'width',
     label: '宽度',
     type: 'text',
-    placeholder: '如: 100%, 500px'
+    placeholder: '如: 100%, 500px',
   },
   {
     key: 'height',
     label: '高度',
     type: 'text',
-    placeholder: '如: 400px, 50vh'
-  }
+    placeholder: '如: 400px, 50vh',
+  },
 ]
 
 const dataConfigFields = [
@@ -536,32 +551,32 @@ const dataConfigFields = [
     label: '刷新间隔',
     type: 'number',
     unit: '毫秒',
-    min: 1000
+    min: 1000,
   },
   {
     key: 'maxDataPoints',
     label: '最大数据点',
     type: 'number',
     min: 100,
-    max: 10000
-  }
+    max: 10000,
+  },
 ]
 
 // 计算属性
 const containerClass = computed(() => {
   const classes = ['chart-container']
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   return classes.join(' ')
 })
 
 const contentStyle = computed(() => {
   return {
     width: props.width,
-    minHeight: props.height
+    minHeight: props.height,
   }
 })
 
@@ -575,7 +590,10 @@ const hasData = computed(() => {
 
 const dataPoints = computed(() => {
   if (!props.data || !props.data.series) return 0
-  return props.data.series.reduce((sum, series) => sum + (series.data?.length || 0), 0)
+  return props.data.series.reduce(
+    (sum, series) => sum + (series.data?.length || 0),
+    0
+  )
 })
 
 // 方法
@@ -669,19 +687,19 @@ const handleDataPointDialogClose = () => {
 
 const handleRealtimeToggle = (enabled: boolean) => {
   realtimeEnabled.value = enabled
-  
+
   if (enabled) {
     startRealtimeUpdate()
   } else {
     stopRealtimeUpdate()
   }
-  
+
   emit('realtime-toggle', enabled)
 }
 
 const handleIntervalChange = (interval: number) => {
   realtimeInterval.value = interval
-  
+
   if (realtimeEnabled.value) {
     stopRealtimeUpdate()
     startRealtimeUpdate()
@@ -692,7 +710,7 @@ const startRealtimeUpdate = () => {
   if (realtimeTimer) {
     clearInterval(realtimeTimer)
   }
-  
+
   realtimeTimer = setInterval(() => {
     if (!props.loading) {
       handleRefresh()
@@ -718,11 +736,15 @@ const handleConfigSave = () => {
 }
 
 // 监听
-watch(() => props.config, (newConfig) => {
-  if (newConfig) {
-    chartConfig.value = { ...chartConfig.value, ...newConfig }
-  }
-}, { deep: true })
+watch(
+  () => props.config,
+  newConfig => {
+    if (newConfig) {
+      chartConfig.value = { ...chartConfig.value, ...newConfig }
+    }
+  },
+  { deep: true }
+)
 
 // 生命周期
 onMounted(() => {
@@ -753,7 +775,7 @@ onUnmounted(() => {
   padding: 12px 16px;
   border-bottom: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
-  
+
   .header-left {
     .chart-title {
       display: flex;
@@ -763,14 +785,14 @@ onUnmounted(() => {
       font-weight: 600;
       color: var(--el-text-color-primary);
     }
-    
+
     .chart-subtitle {
       font-size: 12px;
       color: var(--el-text-color-secondary);
       margin-top: 4px;
     }
   }
-  
+
   .header-right {
     display: flex;
     align-items: center;
@@ -780,10 +802,10 @@ onUnmounted(() => {
 
 .chart-content {
   position: relative;
-  
+
   .chart-wrapper {
     width: 100%;
-    
+
     .chart-placeholder {
       display: flex;
       flex-direction: column;
@@ -803,12 +825,12 @@ onUnmounted(() => {
   border-top: 1px solid var(--el-border-color-lighter);
   background: var(--el-bg-color-light);
   flex-wrap: wrap;
-  
+
   .toolbar-item {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     &:not(:last-child) {
       border-right: 1px solid var(--el-border-color-lighter);
       padding-right: 16px;
@@ -820,7 +842,7 @@ onUnmounted(() => {
   .el-dialog__body {
     padding: 0;
   }
-  
+
   .fullscreen-chart {
     .chart-placeholder {
       display: flex;
@@ -841,17 +863,17 @@ onUnmounted(() => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .chart-toolbar {
       flex-direction: column;
       align-items: flex-start;
       gap: 8px;
-      
+
       .toolbar-item {
         border-right: none;
         padding-right: 0;
         width: 100%;
-        
+
         &:not(:last-child) {
           border-bottom: 1px solid var(--el-border-color-lighter);
           padding-bottom: 8px;

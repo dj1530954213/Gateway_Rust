@@ -1,16 +1,16 @@
 <template>
   <div class="tags-table">
     <el-table
-      :data="tags"
       v-loading="loading"
-      @selection-change="handleSelectionChange"
+      :data="tags"
       empty-text="暂无点位数据"
       stripe
       style="width: 100%"
+      @selection-change="handleSelectionChange"
     >
       <!-- 选择列 -->
       <el-table-column type="selection" width="50" />
-      
+
       <!-- 点位名称 -->
       <el-table-column prop="name" label="点位名称" min-width="180">
         <template #default="{ row }">
@@ -20,12 +20,14 @@
             </el-icon>
             <div class="name-content">
               <div class="name-text">{{ row.name }}</div>
-              <div v-if="row.description" class="description-text">{{ row.description }}</div>
+              <div v-if="row.description" class="description-text">
+                {{ row.description }}
+              </div>
             </div>
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 所属设备 -->
       <el-table-column label="所属设备" width="160">
         <template #default="{ row }">
@@ -36,7 +38,7 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 数据类型 -->
       <el-table-column prop="data_type" label="数据类型" width="100">
         <template #default="{ row }">
@@ -45,7 +47,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <!-- 访问模式 -->
       <el-table-column prop="access_mode" label="访问模式" width="100">
         <template #default="{ row }">
@@ -54,7 +56,7 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <!-- 地址配置 -->
       <el-table-column label="地址配置" min-width="150">
         <template #default="{ row }">
@@ -70,7 +72,7 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 当前值 -->
       <el-table-column label="当前值" width="120">
         <template #default="{ row }">
@@ -82,7 +84,7 @@
           </div>
         </template>
       </el-table-column>
-      
+
       <!-- 状态 -->
       <el-table-column prop="enabled" label="状态" width="80">
         <template #default="{ row }">
@@ -91,14 +93,14 @@
           </el-tag>
         </template>
       </el-table-column>
-      
+
       <!-- 最后更新 -->
       <el-table-column prop="updated_at" label="最后更新" width="160">
         <template #default="{ row }">
           {{ formatDateTime(row.updated_at) }}
         </template>
       </el-table-column>
-      
+
       <!-- 操作列 -->
       <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
@@ -115,7 +117,7 @@
                 <el-icon><View /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 测试写入 -->
             <el-tooltip content="测试写入" placement="top">
               <el-button
@@ -128,9 +130,12 @@
                 <el-icon><EditPen /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 启用/禁用 -->
-            <el-tooltip :content="row.enabled ? '禁用点位' : '启用点位'" placement="top">
+            <el-tooltip
+              :content="row.enabled ? '禁用点位' : '启用点位'"
+              placement="top"
+            >
               <el-button
                 :type="row.enabled ? 'warning' : 'success'"
                 link
@@ -141,7 +146,7 @@
                 <el-icon v-else><VideoPause /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 编辑 -->
             <el-tooltip content="编辑点位" placement="top">
               <el-button
@@ -153,7 +158,7 @@
                 <el-icon><Edit /></el-icon>
               </el-button>
             </el-tooltip>
-            
+
             <!-- 删除 -->
             <el-tooltip content="删除点位" placement="top">
               <el-button
@@ -190,20 +195,21 @@
  *  - 2025-07-27  初始创建
  */
 
-import { computed } from 'vue'
-import type { TagVO } from '@/api/tags'
-import type { DeviceVO } from '@/api/devices'
-import { 
-  DataLine, 
-  View, 
-  EditPen, 
-  VideoPlay, 
-  VideoPause, 
-  Edit, 
-  Delete 
+import {
+  DataLine,
+  View,
+  EditPen,
+  VideoPlay,
+  VideoPause,
+  Edit,
+  Delete,
 } from '@element-plus/icons-vue'
-import { formatDateTime } from '@/utils/date'
+import { computed } from 'vue'
+
+import type { DeviceVO } from '@/api/devices'
+import type { TagVO } from '@/api/tags'
 import { useDevicesStore } from '@/stores'
+import { formatDateTime } from '@/utils/date'
 
 // ===== Props =====
 defineProps<{
@@ -255,10 +261,10 @@ function getDeviceName(deviceId: string): string {
  */
 function getDataTypeTagType(dataType: string): string {
   const typeMap: Record<string, string> = {
-    'Bool': 'success',
-    'Int32': 'primary',
-    'Float32': 'warning',
-    'String': 'info',
+    Bool: 'success',
+    Int32: 'primary',
+    Float32: 'warning',
+    String: 'info',
   }
   return typeMap[dataType] || 'default'
 }
@@ -268,10 +274,10 @@ function getDataTypeTagType(dataType: string): string {
  */
 function getDataTypeDisplayName(dataType: string): string {
   const nameMap: Record<string, string> = {
-    'Bool': '布尔',
-    'Int32': '整数',
-    'Float32': '浮点',
-    'String': '字符串',
+    Bool: '布尔',
+    Int32: '整数',
+    Float32: '浮点',
+    String: '字符串',
   }
   return nameMap[dataType] || dataType
 }
@@ -281,9 +287,9 @@ function getDataTypeDisplayName(dataType: string): string {
  */
 function getAccessModeTagType(accessMode: string): string {
   const typeMap: Record<string, string> = {
-    'ReadOnly': 'info',
-    'WriteOnly': 'warning',
-    'ReadWrite': 'success',
+    ReadOnly: 'info',
+    WriteOnly: 'warning',
+    ReadWrite: 'success',
   }
   return typeMap[accessMode] || 'default'
 }
@@ -293,9 +299,9 @@ function getAccessModeTagType(accessMode: string): string {
  */
 function getAccessModeDisplayName(accessMode: string): string {
   const nameMap: Record<string, string> = {
-    'ReadOnly': '只读',
-    'WriteOnly': '只写',
-    'ReadWrite': '读写',
+    ReadOnly: '只读',
+    WriteOnly: '只写',
+    ReadWrite: '读写',
   }
   return nameMap[accessMode] || accessMode
 }
@@ -307,7 +313,7 @@ function formatTagValue(value: any, dataType: string): string {
   if (value === null || value === undefined) {
     return '--'
   }
-  
+
   switch (dataType) {
     case 'Bool':
       return value ? '真' : '假'
@@ -343,23 +349,23 @@ function canWrite(accessMode: string): boolean {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .tag-icon {
       color: #67c23a;
       font-size: 16px;
       flex-shrink: 0;
     }
-    
+
     .name-content {
       min-width: 0;
       flex: 1;
-      
+
       .name-text {
         font-weight: 500;
         color: #303133;
         margin-bottom: 2px;
       }
-      
+
       .description-text {
         font-size: 12px;
         color: #909399;
@@ -370,7 +376,7 @@ function canWrite(accessMode: string): boolean {
       }
     }
   }
-  
+
   .device-info {
     .el-tag {
       max-width: 100%;
@@ -378,22 +384,22 @@ function canWrite(accessMode: string): boolean {
       text-overflow: ellipsis;
     }
   }
-  
+
   .address-config {
     .address-item {
       margin-bottom: 4px;
       font-size: 13px;
       line-height: 1.4;
-      
+
       &:last-child {
         margin-bottom: 0;
       }
-      
+
       .address-label {
         color: #909399;
         margin-right: 4px;
       }
-      
+
       .address-value {
         color: #303133;
         font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
@@ -404,32 +410,32 @@ function canWrite(accessMode: string): boolean {
       }
     }
   }
-  
+
   .current-value {
     .value {
       font-weight: 500;
       color: #409eff;
       font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
     }
-    
+
     .no-value {
       color: #c0c4cc;
       font-style: italic;
     }
   }
-  
+
   .action-buttons {
     display: flex;
     align-items: center;
     gap: 4px;
-    
+
     .el-button {
       padding: 4px;
-      
+
       &.is-disabled {
         opacity: 0.3;
       }
-      
+
       .el-icon {
         font-size: 14px;
       }
@@ -444,7 +450,7 @@ function canWrite(accessMode: string): boolean {
       th {
         background-color: #fafafa;
         border-bottom: 1px solid #ebeef5;
-        
+
         .cell {
           font-weight: 600;
           color: #303133;
@@ -452,17 +458,17 @@ function canWrite(accessMode: string): boolean {
       }
     }
   }
-  
+
   .el-table__body-wrapper {
     .el-table__body {
       tr {
         &:hover {
           background-color: #f5f7fa;
         }
-        
+
         td {
           border-bottom: 1px solid #f0f0f0;
-          
+
           .cell {
             padding: 8px 0;
           }
@@ -479,19 +485,19 @@ function canWrite(accessMode: string): boolean {
     border-color: #c6f6d5;
     color: #22543d;
   }
-  
+
   &.el-tag--primary {
     background-color: #eff6ff;
     border-color: #bfdbfe;
     color: #1e3a8a;
   }
-  
+
   &.el-tag--warning {
     background-color: #fffbeb;
     border-color: #fed7aa;
     color: #92400e;
   }
-  
+
   &.el-tag--info {
     background-color: #f8fafc;
     border-color: #cbd5e1;
@@ -507,7 +513,7 @@ function canWrite(accessMode: string): boolean {
         overflow-x: auto;
       }
     }
-    
+
     .tag-name {
       .name-content {
         .description-text {
@@ -515,21 +521,21 @@ function canWrite(accessMode: string): boolean {
         }
       }
     }
-    
+
     .address-config {
       .address-item {
         font-size: 12px;
-        
+
         .address-value {
           font-size: 11px;
         }
       }
     }
-    
+
     .action-buttons {
       flex-direction: column;
       gap: 2px;
-      
+
       .el-button {
         width: 100%;
         justify-content: center;

@@ -12,26 +12,30 @@
           </span>
         </div>
       </div>
-      
+
       <div class="toolbar-right">
         <div class="table-actions">
           <el-tooltip content="列设置">
-            <el-button type="text" size="small" @click="showColumnSettings = true">
+            <el-button
+              type="text"
+              size="small"
+              @click="showColumnSettings = true"
+            >
               <el-icon><Setting /></el-icon>
             </el-button>
           </el-tooltip>
-          
+
           <el-tooltip content="导出选中">
-            <el-button 
-              type="text" 
-              size="small" 
-              @click="exportSelected"
+            <el-button
+              type="text"
+              size="small"
               :disabled="selectedRows.length === 0"
+              @click="exportSelected"
             >
               <el-icon><Download /></el-icon>
             </el-button>
           </el-tooltip>
-          
+
           <el-tooltip content="刷新数据">
             <el-button type="text" size="small" @click="handleRefresh">
               <el-icon><Refresh /></el-icon>
@@ -59,7 +63,7 @@
 
     <!-- 数据表格 -->
     <div class="table-container">
-      <el-table
+      <ElTable
         ref="tableRef"
         :data="tableData"
         :loading="loading"
@@ -97,19 +101,23 @@
         >
           <template #default="{ row }">
             <div class="timestamp-cell">
-              <span class="timestamp-main">{{ formatDateTime(row.timestamp, 'MM-DD HH:mm:ss') }}</span>
-              <span class="timestamp-sub">{{ formatDateTime(row.timestamp, 'YYYY') }}</span>
+              <span class="timestamp-main">{{
+                formatDateTime(row.timestamp, 'MM-DD HH:mm:ss')
+              }}</span>
+              <span class="timestamp-sub">{{
+                formatDateTime(row.timestamp, 'YYYY')
+              }}</span>
             </div>
           </template>
         </el-table-column>
 
         <!-- 设备名称列 -->
         <el-table-column
+          v-if="visibleColumns.includes('deviceName')"
           prop="deviceName"
           label="设备名称"
           width="150"
           sortable="custom"
-          v-if="visibleColumns.includes('deviceName')"
         >
           <template #default="{ row }">
             <div class="device-cell">
@@ -142,8 +150,8 @@
         >
           <template #default="{ row }">
             <div class="value-cell">
-              <span 
-                class="value-number" 
+              <span
+                class="value-number"
                 :class="getValueClass(row.value, row.dataType)"
               >
                 {{ formatValue(row.value, row.dataType, row.unit) }}
@@ -154,10 +162,10 @@
 
         <!-- 单位列 -->
         <el-table-column
+          v-if="visibleColumns.includes('unit')"
           prop="unit"
           label="单位"
           width="80"
-          v-if="visibleColumns.includes('unit')"
         >
           <template #default="{ row }">
             <span class="unit-text">{{ row.unit || '-' }}</span>
@@ -166,16 +174,13 @@
 
         <!-- 数据类型列 -->
         <el-table-column
+          v-if="visibleColumns.includes('dataType')"
           prop="dataType"
           label="类型"
           width="80"
-          v-if="visibleColumns.includes('dataType')"
         >
           <template #default="{ row }">
-            <el-tag 
-              size="small" 
-              :type="getDataTypeTagType(row.dataType)"
-            >
+            <el-tag size="small" :type="getDataTypeTagType(row.dataType)">
               {{ getDataTypeText(row.dataType) }}
             </el-tag>
           </template>
@@ -183,29 +188,31 @@
 
         <!-- 数据质量列 -->
         <el-table-column
+          v-if="visibleColumns.includes('quality')"
           prop="quality"
           label="质量"
           width="80"
-          v-if="visibleColumns.includes('quality')"
         >
           <template #default="{ row }">
             <div class="quality-cell">
-              <div 
-                class="quality-indicator" 
-                :class="`quality-${row.quality}`" 
+              <div
+                class="quality-indicator"
+                :class="`quality-${row.quality}`"
                 :title="getQualityText(row.quality)"
               ></div>
-              <span class="quality-text">{{ getQualityText(row.quality) }}</span>
+              <span class="quality-text">{{
+                getQualityText(row.quality)
+              }}</span>
             </div>
           </template>
         </el-table-column>
 
         <!-- 原始值列 -->
         <el-table-column
+          v-if="visibleColumns.includes('rawValue')"
           prop="rawValue"
           label="原始值"
           width="120"
-          v-if="visibleColumns.includes('rawValue')"
         >
           <template #default="{ row }">
             <span class="raw-value">{{ row.rawValue || '-' }}</span>
@@ -213,28 +220,32 @@
         </el-table-column>
 
         <!-- 操作列 -->
-        <el-table-column
-          label="操作"
-          width="100"
-          fixed="right"
-        >
+        <el-table-column label="操作" width="100" fixed="right">
           <template #default="{ row }">
             <div class="action-buttons">
               <el-tooltip content="查看详情">
-                <el-button type="text" size="small" @click="viewRowDetails(row)">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="viewRowDetails(row)"
+                >
                   <el-icon><View /></el-icon>
                 </el-button>
               </el-tooltip>
-              
+
               <el-tooltip content="复制数值">
-                <el-button type="text" size="small" @click="copyValue(row.value)">
+                <el-button
+                  type="text"
+                  size="small"
+                  @click="copyValue(row.value)"
+                >
                   <el-icon><CopyDocument /></el-icon>
                 </el-button>
               </el-tooltip>
             </div>
           </template>
         </el-table-column>
-      </el-table>
+      </ElTable>
     </div>
 
     <!-- 分页器 -->
@@ -262,11 +273,15 @@
         <div class="settings-header">
           <span>选择要显示的列</span>
           <div class="settings-actions">
-            <el-button type="text" size="small" @click="selectAllColumns">全选</el-button>
-            <el-button type="text" size="small" @click="resetColumns">重置</el-button>
+            <el-button type="text" size="small" @click="selectAllColumns"
+              >全选</el-button
+            >
+            <el-button type="text" size="small" @click="resetColumns"
+              >重置</el-button
+            >
           </div>
         </div>
-        
+
         <div class="column-list">
           <el-checkbox-group v-model="visibleColumns">
             <div
@@ -281,11 +296,13 @@
           </el-checkbox-group>
         </div>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="showColumnSettings = false">取消</el-button>
-          <el-button type="primary" @click="applyColumnSettings">确定</el-button>
+          <el-button type="primary" @click="applyColumnSettings"
+            >确定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -301,54 +318,70 @@
         <div class="details-grid">
           <div class="detail-item">
             <label class="detail-label">时间戳</label>
-            <span class="detail-value">{{ formatDateTime(currentRowData.timestamp) }}</span>
+            <span class="detail-value">{{
+              formatDateTime(currentRowData.timestamp)
+            }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">设备名称</label>
             <span class="detail-value">{{ currentRowData.deviceName }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">数据点位</label>
             <span class="detail-value">{{ currentRowData.tagName }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">点位地址</label>
             <span class="detail-value">{{ currentRowData.tagAddress }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">数值</label>
-            <span class="detail-value">{{ formatValue(currentRowData.value, currentRowData.dataType, currentRowData.unit) }}</span>
+            <span class="detail-value">{{
+              formatValue(
+                currentRowData.value,
+                currentRowData.dataType,
+                currentRowData.unit
+              )
+            }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">原始值</label>
-            <span class="detail-value">{{ currentRowData.rawValue || '-' }}</span>
+            <span class="detail-value">{{
+              currentRowData.rawValue || '-'
+            }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">数据类型</label>
-            <span class="detail-value">{{ getDataTypeText(currentRowData.dataType) }}</span>
+            <span class="detail-value">{{
+              getDataTypeText(currentRowData.dataType)
+            }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">数据质量</label>
-            <span class="detail-value">{{ getQualityText(currentRowData.quality) }}</span>
+            <span class="detail-value">{{
+              getQualityText(currentRowData.quality)
+            }}</span>
           </div>
-          
+
           <div class="detail-item">
             <label class="detail-label">单位</label>
             <span class="detail-value">{{ currentRowData.unit || '-' }}</span>
           </div>
         </div>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
-          <el-button type="primary" @click="showRowDetails = false">关闭</el-button>
+          <el-button type="primary" @click="showRowDetails = false"
+            >关闭</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -374,15 +407,15 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElTable } from 'element-plus'
 import {
   Setting,
   Download,
   Refresh,
   View,
-  CopyDocument
+  CopyDocument,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElTable } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 import { formatDateTime, formatNumber } from '@/utils/format'
 
@@ -401,7 +434,7 @@ const emit = defineEmits<{
   'page-change': [page: number]
   'size-change': [size: number]
   'sort-change': [sort: { prop: string; order: string }]
-  'refresh': []
+  refresh: []
 }>()
 
 // ===== 响应式数据 =====
@@ -424,7 +457,7 @@ const availableColumns = [
   { prop: 'unit', label: '单位' },
   { prop: 'dataType', label: '数据类型' },
   { prop: 'quality', label: '数据质量' },
-  { prop: 'rawValue', label: '原始值' }
+  { prop: 'rawValue', label: '原始值' },
 ]
 
 // ===== 计算属性 =====
@@ -453,7 +486,7 @@ function isRowSelectable(row: any): boolean {
  */
 function formatValue(value: any, dataType: string, unit?: string): string {
   if (value === null || value === undefined) return '-'
-  
+
   switch (dataType) {
     case 'boolean':
       return value ? '真' : '假'
@@ -473,7 +506,7 @@ function formatValue(value: any, dataType: string, unit?: string): string {
  */
 function getValueClass(value: any, dataType: string): string {
   if (value === null || value === undefined) return 'value-null'
-  
+
   switch (dataType) {
     case 'boolean':
       return value ? 'value-true' : 'value-false'
@@ -495,10 +528,10 @@ function getValueClass(value: any, dataType: string): string {
  */
 function getDataTypeTagType(dataType: string): string {
   const typeMap: Record<string, string> = {
-    'boolean': 'success',
-    'string': 'info',
-    'integer': 'warning',
-    'float': 'danger'
+    boolean: 'success',
+    string: 'info',
+    integer: 'warning',
+    float: 'danger',
   }
   return typeMap[dataType] || 'info'
 }
@@ -508,10 +541,10 @@ function getDataTypeTagType(dataType: string): string {
  */
 function getDataTypeText(dataType: string): string {
   const textMap: Record<string, string> = {
-    'boolean': '布尔',
-    'string': '字符串',
-    'integer': '整数',
-    'float': '浮点'
+    boolean: '布尔',
+    string: '字符串',
+    integer: '整数',
+    float: '浮点',
   }
   return textMap[dataType] || dataType
 }
@@ -521,9 +554,9 @@ function getDataTypeText(dataType: string): string {
  */
 function getQualityText(quality: string): string {
   const textMap: Record<string, string> = {
-    'good': '良好',
-    'uncertain': '可疑',
-    'bad': '错误'
+    good: '良好',
+    uncertain: '可疑',
+    bad: '错误',
   }
   return textMap[quality] || quality
 }
@@ -541,7 +574,7 @@ function handleSelectionChange(selection: any[]) {
 function handleSortChange(sort: any) {
   emit('sort-change', {
     prop: sort.prop,
-    order: sort.order
+    order: sort.order,
   })
 }
 
@@ -604,7 +637,7 @@ function exportSelected() {
     ElMessage.warning('请先选择要导出的数据')
     return
   }
-  
+
   ElMessage.info('导出功能开发中...')
 }
 
@@ -628,7 +661,7 @@ function resetColumns() {
 function applyColumnSettings() {
   showColumnSettings.value = false
   ElMessage.success('列设置已应用')
-  
+
   // 触发表格重新渲染
   nextTick(() => {
     tableRef.value?.doLayout()
@@ -636,10 +669,14 @@ function applyColumnSettings() {
 }
 
 // ===== 监听器 =====
-watch(() => props.pagination, (newPagination) => {
-  currentPage.value = newPagination.currentPage
-  currentPageSize.value = newPagination.pageSize
-}, { deep: true })
+watch(
+  () => props.pagination,
+  newPagination => {
+    currentPage.value = newPagination.currentPage
+    currentPageSize.value = newPagination.pageSize
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -650,7 +687,7 @@ watch(() => props.pagination, (newPagination) => {
     align-items: center;
     margin-bottom: 16px;
     padding: 0 4px;
-    
+
     .toolbar-left {
       .table-info {
         .info-text {
@@ -659,22 +696,22 @@ watch(() => props.pagination, (newPagination) => {
         }
       }
     }
-    
+
     .toolbar-right {
       display: flex;
       align-items: center;
       gap: 16px;
-      
+
       .table-actions {
         display: flex;
         gap: 4px;
       }
-      
+
       .page-size-selector {
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .size-label {
           font-size: 13px;
           color: #606266;
@@ -686,7 +723,7 @@ watch(() => props.pagination, (newPagination) => {
   .table-container {
     border-radius: 6px;
     overflow: hidden;
-    
+
     :deep(.el-table) {
       .timestamp-cell {
         .timestamp-main {
@@ -694,7 +731,7 @@ watch(() => props.pagination, (newPagination) => {
           font-weight: 500;
           color: #303133;
         }
-        
+
         .timestamp-sub {
           display: block;
           font-size: 11px;
@@ -702,74 +739,96 @@ watch(() => props.pagination, (newPagination) => {
           margin-top: 2px;
         }
       }
-      
+
       .device-cell {
         .el-tag {
           font-size: 12px;
         }
       }
-      
+
       .tag-cell {
         .tag-name {
           font-weight: 500;
           color: #303133;
           margin-bottom: 2px;
         }
-        
+
         .tag-address {
           font-size: 11px;
           color: #909399;
           font-family: monospace;
         }
       }
-      
+
       .value-cell {
         .value-number {
           font-weight: 600;
           font-family: monospace;
-          
-          &.value-null { color: #909399; }
-          &.value-true { color: #67c23a; }
-          &.value-false { color: #f56c6c; }
-          &.value-string { color: #409eff; }
-          &.value-positive { color: #67c23a; }
-          &.value-negative { color: #f56c6c; }
-          &.value-zero { color: #606266; }
-          &.value-default { color: #303133; }
+
+          &.value-null {
+            color: #909399;
+          }
+          &.value-true {
+            color: #67c23a;
+          }
+          &.value-false {
+            color: #f56c6c;
+          }
+          &.value-string {
+            color: #409eff;
+          }
+          &.value-positive {
+            color: #67c23a;
+          }
+          &.value-negative {
+            color: #f56c6c;
+          }
+          &.value-zero {
+            color: #606266;
+          }
+          &.value-default {
+            color: #303133;
+          }
         }
       }
-      
+
       .unit-text {
         font-size: 12px;
         color: #67c23a;
       }
-      
+
       .quality-cell {
         display: flex;
         align-items: center;
         gap: 6px;
-        
+
         .quality-indicator {
           width: 8px;
           height: 8px;
           border-radius: 50%;
-          
-          &.quality-good { background: #67c23a; }
-          &.quality-uncertain { background: #e6a23c; }
-          &.quality-bad { background: #f56c6c; }
+
+          &.quality-good {
+            background: #67c23a;
+          }
+          &.quality-uncertain {
+            background: #e6a23c;
+          }
+          &.quality-bad {
+            background: #f56c6c;
+          }
         }
-        
+
         .quality-text {
           font-size: 12px;
         }
       }
-      
+
       .raw-value {
         font-family: monospace;
         font-size: 12px;
         color: #606266;
       }
-      
+
       .action-buttons {
         display: flex;
         gap: 4px;
@@ -790,13 +849,13 @@ watch(() => props.pagination, (newPagination) => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 16px;
-    
+
     .settings-actions {
       display: flex;
       gap: 8px;
     }
   }
-  
+
   .column-list {
     .column-item {
       margin-bottom: 12px;
@@ -809,18 +868,18 @@ watch(() => props.pagination, (newPagination) => {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
     gap: 16px;
-    
+
     .detail-item {
       display: flex;
       flex-direction: column;
       gap: 4px;
-      
+
       .detail-label {
         font-size: 13px;
         color: #909399;
         font-weight: 500;
       }
-      
+
       .detail-value {
         font-size: 14px;
         color: #303133;
@@ -837,7 +896,7 @@ watch(() => props.pagination, (newPagination) => {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
-      
+
       .toolbar-left,
       .toolbar-right {
         justify-content: center;
@@ -851,14 +910,14 @@ watch(() => props.pagination, (newPagination) => {
     .table-container {
       :deep(.el-table) {
         font-size: 12px;
-        
+
         .el-table__cell {
           padding: 8px 4px;
         }
       }
     }
   }
-  
+
   .row-details {
     .details-grid {
       grid-template-columns: 1fr;

@@ -7,12 +7,14 @@
 ### 前提条件
 
 1. 确保 Gateway Rust 后端服务正在运行：
+
 ```bash
 # 在项目根目录执行
 cargo run -p web-gw-api
 ```
 
 2. 确认 API 文档可访问：
+
 ```bash
 curl http://localhost:8080/docs/openapi.json
 ```
@@ -37,7 +39,7 @@ import { GatewayRustApi } from '@/api/generated'
 // 使用生成的服务
 const devices = await GatewayRustApi.listDevices({
   page: 1,
-  size: 20
+  size: 20,
 })
 
 console.log('设备列表:', devices)

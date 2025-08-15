@@ -1,11 +1,20 @@
 # 开发环境配置覆盖
 
 # HTTP服务端口配置
-http_addr: "0.0.0.0:18080"
+http_addr: "0.0.0.0:50013"
 
-# 开发环境特定的CORS配置 - 测试期间允许所有来源
+# Metrics端口配置（修复端口冲突）
+metrics_addr: "0.0.0.0:50015"
+
+# 数据库配置（使用容器IP）
+pg_dsn: "postgres://postgres:postgres@172.20.0.5:5432/iot"
+
+# 开发环境CORS配置 - 限制到已知的开发端口
 cors_allowed:
-  - "*"
+  - "http://localhost:50020"
+  - "http://127.0.0.1:50020"
+  - "http://localhost:3000"
+  - "http://127.0.0.1:3000"
 
 # 开发环境日志级别
 log_level: "debug"
@@ -13,5 +22,12 @@ log_level: "debug"
 # 开发环境数据库（如果需要覆盖）
 # pg_dsn: "postgres://postgres:postgres@127.0.0.1:5432/iot_dev"
 
+# 开发环境连接池配置覆盖（适合开发环境）
+database_pool:
+  max_connections: 20
+  min_connections: 2
+  health_check_interval_secs: 60
+  slow_query_threshold_ms: 2000  # 开发环境放宽阈值
+
 # 开发环境InfluxDB配置
-influx_token: "dev-token"
+influx_token: "${INFLUX_TOKEN:-CHANGE_ME_DEV_TOKEN}"

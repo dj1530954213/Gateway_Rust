@@ -2,16 +2,51 @@
 # 所有环境共用基线配置，不包含敏感信息
 
 # HTTP服务配置
-http_addr: "0.0.0.0:50010"
-metrics_addr: "0.0.0.0:50011" 
+http_addr: "0.0.0.0:50013"
+metrics_addr: "0.0.0.0:50015" 
 ws_path: "/ws"
 
-# CORS跨域配置 - 测试期间允许所有来源
+# CORS跨域配置 - 安全限制
 cors_allowed:
-  - "*"
+  - "http://localhost:50020"
+  - "http://127.0.0.1:50020"
+  - "${CORS_ADDITIONAL_ORIGINS:-}"
 
-# 数据库配置（使用默认值）
-pg_dsn: "postgres://postgres:postgres@localhost:5432/iot"
+# 数据库配置（从环境变量读取）
+pg_dsn: "postgres://postgres:postgres@127.0.0.1:5432/iot"
+
+# 数据库连接池配置
+database_pool:
+  # 最大连接数（生产环境推荐值）
+  max_connections: 50
+  # 最小连接数（保持的最少连接）
+  min_connections: 5
+  # 获取连接超时时间（秒）
+  acquire_timeout_secs: 10
+  # 连接空闲超时时间（秒，10分钟）
+  idle_timeout_secs: 600
+  # 连接最大生存时间（秒，1小时）
+  max_lifetime_secs: 3600
+  # 获取连接前进行健康检查
+  test_before_acquire: true
+  # 连接池健康检查间隔（秒）
+  health_check_interval_secs: 30
+  # 启用连接池监控指标
+  enable_metrics: true
+  # 慢查询阈值（毫秒，1秒）
+  slow_query_threshold_ms: 1000
+  # 连接重试配置
+  retry_config:
+    # 最大重试次数
+    max_retries: 3
+    # 初始重试间隔（毫秒）
+    initial_retry_delay_ms: 100
+    # 重试间隔递增因子
+    backoff_multiplier: 2.0
+    # 最大重试间隔（毫秒）
+    max_retry_delay_ms: 5000
+    # 启用抖动
+    enable_jitter: true
 
 # InfluxDB配置
 influx_url: "http://localhost:8086"
@@ -31,3 +66,11 @@ log_level: "info"
 # 请求配置
 request_timeout: 30
 max_request_size: 10
+
+# WebSocket配置
+ws_max_connections: 1000
+ws_heartbeat_timeout: 60
+ws_cleanup_interval: 30
+
+# Alert Engine服务地址
+alert_engine_url: "http://localhost:9500"

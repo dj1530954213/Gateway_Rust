@@ -6,35 +6,46 @@
         <el-button :icon="ArrowLeft" @click="handleGoBack">
           返回列表
         </el-button>
-        
+
         <div class="header-title">
           <el-icon :size="32" :class="getStatusIconClass()">
             <component :is="getStatusIcon()" />
           </el-icon>
           <div class="title-info">
             <h1>{{ driverData.name }}</h1>
-            <p class="driver-type">{{ driverData.protocol }} - {{ driverData.connectionType }}</p>
+            <p class="driver-type">
+              {{ driverData.protocol }} - {{ driverData.connectionType }}
+            </p>
           </div>
         </div>
       </div>
-      
+
       <div class="header-actions">
         <el-dropdown @command="handleCommand">
           <el-button :icon="Operation">
             操作
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            <el-icon class="el-icon--right"><ArrowDown /></el-icon>
           </el-button>
           <template #dropdown>
             <el-dropdown-menu>
-              <el-dropdown-item command="start" :disabled="driverData.status === 'running'">
+              <el-dropdown-item
+                command="start"
+                :disabled="driverData.status === 'running'"
+              >
                 <el-icon><VideoPlay /></el-icon>
                 启动驱动
               </el-dropdown-item>
-              <el-dropdown-item command="stop" :disabled="driverData.status !== 'running'">
+              <el-dropdown-item
+                command="stop"
+                :disabled="driverData.status !== 'running'"
+              >
                 <el-icon><VideoPause /></el-icon>
                 停止驱动
               </el-dropdown-item>
-              <el-dropdown-item command="restart" :disabled="driverData.status === 'stopped'">
+              <el-dropdown-item
+                command="restart"
+                :disabled="driverData.status === 'stopped'"
+              >
                 <el-icon><Refresh /></el-icon>
                 重启驱动
               </el-dropdown-item>
@@ -53,7 +64,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        
+
         <el-button type="primary" :icon="Edit" @click="handleEditDriver">
           编辑配置
         </el-button>
@@ -70,14 +81,11 @@
               <span>驱动状态</span>
             </div>
             <div class="card-content">
-              <StatusTag
-                :status="driverData.status"
-                size="large"
-              />
+              <StatusTag :status="driverData.status" size="large" />
             </div>
           </div>
         </el-col>
-        
+
         <el-col :span="6">
           <div class="status-card">
             <div class="card-header">
@@ -90,7 +98,7 @@
             </div>
           </div>
         </el-col>
-        
+
         <el-col :span="6">
           <div class="status-card">
             <div class="card-header">
@@ -103,7 +111,7 @@
             </div>
           </div>
         </el-col>
-        
+
         <el-col :span="6">
           <div class="status-card">
             <div class="card-header">
@@ -111,7 +119,10 @@
               <span>错误统计</span>
             </div>
             <div class="card-content">
-              <div class="metric-value" :class="{ error: driverData.errorCount > 0 }">
+              <div
+                class="metric-value"
+                :class="{ error: driverData.errorCount > 0 }"
+              >
                 {{ driverData.errorCount }}
               </div>
               <div class="metric-label">通信错误</div>
@@ -144,7 +155,11 @@
                     <el-icon><Search /></el-icon>
                   </template>
                 </el-input>
-                <el-select v-model="qualityFilter" placeholder="质量等级" style="width: 120px">
+                <el-select
+                  v-model="qualityFilter"
+                  placeholder="质量等级"
+                  style="width: 120px"
+                >
                   <el-option label="全部" value="" />
                   <el-option label="好" value="good" />
                   <el-option label="不确定" value="uncertain" />
@@ -155,7 +170,7 @@
                 </el-button>
               </div>
             </div>
-            
+
             <div class="datapoints-table">
               <el-table
                 :data="filteredDataPoints"
@@ -180,7 +195,10 @@
                 </el-table-column>
                 <el-table-column prop="value" label="当前值" width="120">
                   <template #default="{ row }">
-                    <span class="point-value" :class="getValueClass(row.quality)">
+                    <span
+                      class="point-value"
+                      :class="getValueClass(row.quality)"
+                    >
                       {{ formatPointValue(row.value, row.type) }}
                     </span>
                   </template>
@@ -194,20 +212,25 @@
                 </el-table-column>
                 <el-table-column prop="updateTime" label="更新时间" width="160">
                   <template #default="{ row }">
-                    <span class="update-time">{{ formatTime(row.updateTime) }}</span>
+                    <span class="update-time">{{
+                      formatTime(row.updateTime)
+                    }}</span>
                   </template>
                 </el-table-column>
                 <el-table-column label="操作" width="120">
                   <template #default="{ row }">
                     <el-button-group size="small">
                       <el-button :icon="View" @click="showPointDetail(row)" />
-                      <el-button :icon="TrendCharts" @click="showPointTrend(row)" />
+                      <el-button
+                        :icon="TrendCharts"
+                        @click="showPointTrend(row)"
+                      />
                     </el-button-group>
                   </template>
                 </el-table-column>
               </el-table>
-              
-              <div class="table-pagination" v-if="dataPoints.length > 10">
+
+              <div v-if="dataPoints.length > 10" class="table-pagination">
                 <el-pagination
                   v-model:current-page="currentPage"
                   :page-size="pageSize"
@@ -217,7 +240,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- 性能监控 -->
           <div class="content-section">
             <div class="section-header">
@@ -227,8 +250,8 @@
               </h3>
               <div class="header-actions">
                 <el-button-group size="small">
-                  <el-button 
-                    v-for="period in timePeriods" 
+                  <el-button
+                    v-for="period in timePeriods"
                     :key="period.value"
                     :type="selectedPeriod === period.value ? 'primary' : ''"
                     @click="selectedPeriod = period.value"
@@ -238,7 +261,7 @@
                 </el-button-group>
               </div>
             </div>
-            
+
             <div class="charts-container">
               <el-row :gutter="16">
                 <el-col :span="12">
@@ -264,7 +287,7 @@
                   </div>
                 </el-col>
               </el-row>
-              
+
               <el-row :gutter="16" style="margin-top: 16px">
                 <el-col :span="12">
                   <div class="chart-card">
@@ -291,7 +314,7 @@
               </el-row>
             </div>
           </div>
-          
+
           <!-- 驱动日志 -->
           <div class="content-section">
             <div class="section-header">
@@ -310,7 +333,11 @@
                     <el-icon><Search /></el-icon>
                   </template>
                 </el-input>
-                <el-select v-model="logLevel" placeholder="日志级别" style="width: 120px">
+                <el-select
+                  v-model="logLevel"
+                  placeholder="日志级别"
+                  style="width: 120px"
+                >
                   <el-option label="全部" value="" />
                   <el-option label="错误" value="error" />
                   <el-option label="警告" value="warn" />
@@ -322,7 +349,7 @@
                 </el-button>
               </div>
             </div>
-            
+
             <div class="logs-container">
               <el-table
                 :data="filteredLogs"
@@ -332,7 +359,9 @@
               >
                 <el-table-column prop="timestamp" label="时间" width="180">
                   <template #default="{ row }">
-                    <span class="log-time">{{ formatTime(row.timestamp) }}</span>
+                    <span class="log-time">{{
+                      formatTime(row.timestamp)
+                    }}</span>
                   </template>
                 </el-table-column>
                 <el-table-column prop="level" label="级别" width="80">
@@ -342,7 +371,11 @@
                     </el-tag>
                   </template>
                 </el-table-column>
-                <el-table-column prop="message" label="消息" show-overflow-tooltip>
+                <el-table-column
+                  prop="message"
+                  label="消息"
+                  show-overflow-tooltip
+                >
                   <template #default="{ row }">
                     <span class="log-message">{{ row.message }}</span>
                   </template>
@@ -356,7 +389,7 @@
             </div>
           </div>
         </el-col>
-        
+
         <!-- 右侧列 -->
         <el-col :span="8">
           <!-- 基本信息 -->
@@ -371,7 +404,7 @@
                 编辑
               </el-button>
             </div>
-            
+
             <div class="info-container">
               <el-descriptions :column="1" border>
                 <el-descriptions-item label="驱动名称">
@@ -381,23 +414,29 @@
                   <el-tag type="primary">{{ driverData.protocol }}</el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="连接类型">
-                  <el-tag type="success">{{ driverData.connectionType }}</el-tag>
+                  <el-tag type="success">{{
+                    driverData.connectionType
+                  }}</el-tag>
                 </el-descriptions-item>
                 <el-descriptions-item label="设备地址">
-                  {{ driverData.config?.host || driverData.config?.serialPort || 'N/A' }}
+                  {{
+                    driverData.config?.host ||
+                    driverData.config?.serialPort ||
+                    'N/A'
+                  }}
                 </el-descriptions-item>
                 <el-descriptions-item label="启用状态">
-                  <el-switch 
-                    v-model="driverData.enabled" 
-                    @change="handleToggleEnabled"
+                  <el-switch
+                    v-model="driverData.enabled"
                     :disabled="loading"
+                    @change="handleToggleEnabled"
                   />
                 </el-descriptions-item>
                 <el-descriptions-item label="自动扫描">
-                  <el-switch 
-                    v-model="driverData.autoScan" 
-                    @change="handleToggleAutoScan"
+                  <el-switch
+                    v-model="driverData.autoScan"
                     :disabled="loading"
+                    @change="handleToggleAutoScan"
                   />
                 </el-descriptions-item>
                 <el-descriptions-item label="扫描间隔">
@@ -409,7 +448,7 @@
               </el-descriptions>
             </div>
           </div>
-          
+
           <!-- 驱动配置 -->
           <div class="content-section">
             <div class="section-header">
@@ -422,18 +461,22 @@
                 查看详情
               </el-button>
             </div>
-            
+
             <div class="config-summary">
-              <div class="config-item" v-for="(value, key) in driverData.config" :key="key">
+              <div
+                v-for="(value, key) in driverData.config"
+                :key="key"
+                class="config-item"
+              >
                 <span class="config-label">{{ formatConfigLabel(key) }}:</span>
                 <span class="config-value">{{ value }}</span>
               </div>
             </div>
-            
+
             <div class="section-header" style="margin-top: 20px">
               <h4>性能设置</h4>
             </div>
-            
+
             <el-descriptions :column="1" size="small">
               <el-descriptions-item label="最大并发">
                 {{ driverData.performance?.maxConcurrentRequests || 10 }}
@@ -446,7 +489,7 @@
               </el-descriptions-item>
             </el-descriptions>
           </div>
-          
+
           <!-- 通信状态 -->
           <div class="content-section">
             <div class="section-header">
@@ -455,30 +498,38 @@
                 通信状态
               </h3>
             </div>
-            
+
             <div class="comm-stats">
               <div class="stat-item">
                 <div class="stat-label">成功率</div>
-                <el-progress 
-                  :percentage="driverData.stats?.successRate || 0" 
+                <el-progress
+                  :percentage="driverData.stats?.successRate || 0"
                   :color="getSuccessRateColor()"
                   :show-text="true"
                   :stroke-width="12"
                 />
               </div>
-              
+
               <div class="stat-item">
                 <div class="stat-label">平均响应时间</div>
-                <div class="stat-value">{{ driverData.stats?.avgResponseTime || 0 }}ms</div>
+                <div class="stat-value">
+                  {{ driverData.stats?.avgResponseTime || 0 }}ms
+                </div>
               </div>
-              
+
               <div class="stat-item">
                 <div class="stat-label">最后通信时间</div>
-                <div class="stat-value">{{ formatTime(driverData.stats?.lastCommunication || new Date()) }}</div>
+                <div class="stat-value">
+                  {{
+                    formatTime(
+                      driverData.stats?.lastCommunication || new Date()
+                    )
+                  }}
+                </div>
               </div>
             </div>
           </div>
-          
+
           <!-- 最近事件 -->
           <div class="content-section">
             <div class="section-header">
@@ -487,7 +538,7 @@
                 最近事件
               </h3>
             </div>
-            
+
             <div class="events-timeline">
               <el-timeline>
                 <el-timeline-item
@@ -563,14 +614,16 @@
     </el-dialog>
 
     <!-- 加载遮罩 -->
-    <div v-loading="loading" element-loading-text="正在加载..." class="loading-overlay" v-if="loading"></div>
+    <div
+      v-if="loading"
+      v-loading="loading"
+      element-loading-text="正在加载..."
+      class="loading-overlay"
+    ></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   ArrowLeft,
   Operation,
@@ -592,8 +645,11 @@ import {
   InfoFilled,
   View,
   Connection,
-  Clock
+  Clock,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, reactive, onMounted, onUnmounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 
 // 导入业务组件
 import { StatusTag } from '../../components/base'
@@ -689,7 +745,7 @@ const timePeriods = [
   { label: '1小时', value: '1h' },
   { label: '6小时', value: '6h' },
   { label: '24小时', value: '24h' },
-  { label: '7天', value: '7d' }
+  { label: '7天', value: '7d' },
 ]
 
 // 驱动数据
@@ -708,7 +764,7 @@ const driverData = ref<DriverData>({
   errorCount: 0,
   config: {},
   createdAt: new Date(),
-  updatedAt: new Date()
+  updatedAt: new Date(),
 })
 
 // 数据点数据
@@ -729,12 +785,14 @@ const qualityDistribution = ref<ChartData[]>([])
 // 计算属性
 const filteredDataPoints = computed(() => {
   const filtered = dataPoints.value.filter(point => {
-    const matchesFilter = !pointFilter.value || 
+    const matchesFilter =
+      !pointFilter.value ||
       point.name.toLowerCase().includes(pointFilter.value.toLowerCase())
-    const matchesQuality = !qualityFilter.value || point.quality === qualityFilter.value
+    const matchesQuality =
+      !qualityFilter.value || point.quality === qualityFilter.value
     return matchesFilter && matchesQuality
   })
-  
+
   const start = (currentPage.value - 1) * pageSize.value
   const end = start + pageSize.value
   return filtered.slice(start, end)
@@ -742,7 +800,8 @@ const filteredDataPoints = computed(() => {
 
 const filteredLogs = computed(() => {
   return logs.value.filter(log => {
-    const matchesFilter = !logFilter.value || 
+    const matchesFilter =
+      !logFilter.value ||
       log.message.toLowerCase().includes(logFilter.value.toLowerCase())
     const matchesLevel = !logLevel.value || log.level === logLevel.value
     return matchesFilter && matchesLevel
@@ -755,7 +814,7 @@ const getStatusIcon = () => {
     running: 'VideoPlay',
     starting: 'Loading',
     stopped: 'VideoPause',
-    error: 'Warning'
+    error: 'Warning',
   }
   return iconMap[driverData.value.status] || 'Setting'
 }
@@ -765,7 +824,7 @@ const getStatusIconClass = () => {
     running: 'status-icon running',
     starting: 'status-icon starting',
     stopped: 'status-icon stopped',
-    error: 'status-icon error'
+    error: 'status-icon error',
   }
   return classMap[driverData.value.status] || 'status-icon'
 }
@@ -776,7 +835,7 @@ const getDataPointIcon = (type: string) => {
     int16: 'Odometer',
     int32: 'Odometer',
     float: 'TrendCharts',
-    string: 'Document'
+    string: 'Document',
   }
   return iconMap[type] || 'DataBoard'
 }
@@ -785,7 +844,7 @@ const getQualityType = (quality: string) => {
   const typeMap: Record<string, string> = {
     good: 'success',
     uncertain: 'warning',
-    bad: 'danger'
+    bad: 'danger',
   }
   return typeMap[quality] || 'info'
 }
@@ -794,7 +853,7 @@ const getQualityText = (quality: string) => {
   const textMap: Record<string, string> = {
     good: '好',
     uncertain: '不确定',
-    bad: '坏'
+    bad: '坏',
   }
   return textMap[quality] || quality
 }
@@ -803,7 +862,7 @@ const getValueClass = (quality: string) => {
   return {
     'value-good': quality === 'good',
     'value-uncertain': quality === 'uncertain',
-    'value-bad': quality === 'bad'
+    'value-bad': quality === 'bad',
   }
 }
 
@@ -812,7 +871,7 @@ const getLogLevelType = (level: string) => {
     error: 'danger',
     warn: 'warning',
     info: 'info',
-    debug: 'success'
+    debug: 'success',
   }
   return typeMap[level] || 'info'
 }
@@ -822,7 +881,7 @@ const getEventType = (type: string) => {
     error: 'danger',
     warning: 'warning',
     success: 'success',
-    info: 'primary'
+    info: 'primary',
   }
   return typeMap[type] || 'primary'
 }
@@ -840,7 +899,7 @@ const formatTime = (time: Date) => {
 
 const formatPointValue = (value: any, type: string) => {
   if (value === null || value === undefined) return 'N/A'
-  
+
   switch (type) {
     case 'bool':
       return value ? '真' : '假'
@@ -860,7 +919,7 @@ const formatConfigLabel = (key: string) => {
     baudRate: '波特率',
     unitId: '单元ID',
     endpoint: '端点URL',
-    scanInterval: '扫描间隔'
+    scanInterval: '扫描间隔',
   }
   return labelMap[key] || key
 }
@@ -877,11 +936,15 @@ const formatConfigYaml = () => {
   try {
     const obj = driverData.value
     let yaml = ''
-    
+
     const toYaml = (obj: any, indent = 0) => {
       const spaces = '  '.repeat(indent)
       for (const [key, value] of Object.entries(obj)) {
-        if (typeof value === 'object' && value !== null && !(value instanceof Date)) {
+        if (
+          typeof value === 'object' &&
+          value !== null &&
+          !(value instanceof Date)
+        ) {
           yaml += `${spaces}${key}:\n`
           toYaml(value, indent + 1)
         } else {
@@ -889,7 +952,7 @@ const formatConfigYaml = () => {
         }
       }
     }
-    
+
     toYaml(obj)
     return yaml
   } catch (error) {
@@ -908,7 +971,7 @@ const handleEditDriver = () => {
 
 const handleCommand = async (command: string) => {
   loading.value = true
-  
+
   try {
     switch (command) {
       case 'start':
@@ -984,26 +1047,26 @@ const handleExportConfig = () => {
     driver: driverData.value,
     dataPoints: dataPoints.value,
     exportTime: new Date().toISOString(),
-    version: '1.0'
+    version: '1.0',
   }
-  
+
   const blob = new Blob([JSON.stringify(exportData, null, 2)], {
-    type: 'application/json'
+    type: 'application/json',
   })
-  
+
   const url = URL.createObjectURL(blob)
   const a = document.createElement('a')
   a.href = url
   a.download = `driver_${driverData.value.name}_${new Date().toISOString().split('T')[0]}.json`
   a.click()
-  
+
   URL.revokeObjectURL(url)
   ElMessage.success('配置已导出')
 }
 
 const handleToggleEnabled = async (enabled: boolean) => {
   loading.value = true
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 500))
     ElMessage.success(`驱动已${enabled ? '启用' : '禁用'}`)
@@ -1018,7 +1081,7 @@ const handleToggleEnabled = async (enabled: boolean) => {
 
 const handleToggleAutoScan = async (enabled: boolean) => {
   loading.value = true
-  
+
   try {
     await new Promise(resolve => setTimeout(resolve, 500))
     ElMessage.success(`自动扫描已${enabled ? '启用' : '禁用'}`)
@@ -1057,7 +1120,7 @@ const addEvent = (type: string, title: string, description: string) => {
     timestamp: new Date(),
     type: type as any,
     title,
-    description
+    description,
   }
   recentEvents.value.unshift(event)
   if (recentEvents.value.length > 10) {
@@ -1068,7 +1131,7 @@ const addEvent = (type: string, title: string, description: string) => {
 // 数据初始化
 const initializeData = () => {
   const driverId = route.params.id as string
-  
+
   // 模拟驱动数据
   driverData.value = {
     id: driverId,
@@ -1087,26 +1150,26 @@ const initializeData = () => {
       host: '',
       port: 502,
       unitId: 1,
-      timeout: 5000
+      timeout: 5000,
     },
     performance: {
       maxConcurrentRequests: 10,
       timeout: 5000,
-      scanInterval: 1000
+      scanInterval: 1000,
     },
     retry: {
       maxRetries: 3,
-      retryInterval: 1000
+      retryInterval: 1000,
     },
     stats: {
       successRate: 95.6,
       avgResponseTime: 45,
-      lastCommunication: new Date()
+      lastCommunication: new Date(),
     },
     createdAt: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000), // 14 days ago
-    updatedAt: new Date(Date.now() - 30 * 60 * 1000) // 30 minutes ago
+    updatedAt: new Date(Date.now() - 30 * 60 * 1000), // 30 minutes ago
   }
-  
+
   generateMockDataPoints()
   generateMockLogs()
   generateMockEvents()
@@ -1117,15 +1180,27 @@ const generateMockDataPoints = () => {
   const types = ['bool', 'int16', 'int32', 'float', 'string'] as const
   const qualities = ['good', 'uncertain', 'bad'] as const
   const addresses = [
-    '40001', '40002', '40003', '40004', '40005',
-    '30001', '30002', '30003', '30004', '30005',
-    '10001', '10002', '10003', '10004', '10005'
+    '40001',
+    '40002',
+    '40003',
+    '40004',
+    '40005',
+    '30001',
+    '30002',
+    '30003',
+    '30004',
+    '30005',
+    '10001',
+    '10002',
+    '10003',
+    '10004',
+    '10005',
   ]
-  
+
   dataPoints.value = Array.from({ length: 48 }, (_, i) => {
     const type = types[Math.floor(Math.random() * types.length)]
     let value: any
-    
+
     switch (type) {
       case 'bool':
         value = Math.random() > 0.5
@@ -1143,7 +1218,7 @@ const generateMockDataPoints = () => {
         value = `设备状态${i + 1}`
         break
     }
-    
+
     return {
       id: (i + 1).toString(),
       name: `数据点${i + 1}`,
@@ -1151,7 +1226,7 @@ const generateMockDataPoints = () => {
       type,
       value,
       quality: qualities[Math.floor(Math.random() * qualities.length)],
-      updateTime: new Date(Date.now() - Math.random() * 60000) // Last minute
+      updateTime: new Date(Date.now() - Math.random() * 60000), // Last minute
     }
   })
 }
@@ -1167,15 +1242,15 @@ const generateMockLogs = () => {
     '数据质量异常',
     '通信超时重试',
     '配置更新完成',
-    '数据点更新'
+    '数据点更新',
   ]
-  
+
   logs.value = Array.from({ length: 80 }, (_, i) => ({
     id: (i + 1).toString(),
     timestamp: new Date(Date.now() - i * 30000), // Every 30 seconds
     level: levels[Math.floor(Math.random() * levels.length)],
     message: messages[Math.floor(Math.random() * messages.length)],
-    source: sources[Math.floor(Math.random() * sources.length)]
+    source: sources[Math.floor(Math.random() * sources.length)],
   }))
 }
 
@@ -1186,38 +1261,38 @@ const generateMockEvents = () => {
       timestamp: new Date(Date.now() - 5 * 60000),
       type: 'success',
       title: '数据采集正常',
-      description: '驱动正在正常采集数据，所有数据点状态良好'
+      description: '驱动正在正常采集数据，所有数据点状态良好',
     },
     {
       id: '2',
       timestamp: new Date(Date.now() - 15 * 60000),
       type: 'warning',
       title: '通信延迟',
-      description: '检测到与设备的通信延迟较高，平均响应时间超过100ms'
+      description: '检测到与设备的通信延迟较高，平均响应时间超过100ms',
     },
     {
       id: '3',
       timestamp: new Date(Date.now() - 45 * 60000),
       type: 'info',
       title: '配置更新',
-      description: '驱动配置已更新，扫描间隔调整为1000ms'
+      description: '驱动配置已更新，扫描间隔调整为1000ms',
     },
     {
       id: '4',
       timestamp: new Date(Date.now() - 2 * 60 * 60000),
       type: 'error',
       title: '连接失败',
-      description: '与设备的连接中断，正在尝试重连'
+      description: '与设备的连接中断，正在尝试重连',
     },
     {
       id: '5',
       timestamp: new Date(Date.now() - 6 * 60 * 60000),
       type: 'success',
       title: '驱动重启',
-      description: '驱动重启成功，恢复正常数据采集'
-    }
+      description: '驱动重启成功，恢复正常数据采集',
+    },
   ]
-  
+
   recentEvents.value = events
 }
 
@@ -1225,42 +1300,51 @@ const generateMockChartData = () => {
   const now = Date.now()
   const points = 24
   const interval = 60 * 60 * 1000 // 1 hour
-  
+
   // 扫描率数据
   scanRateData.value = Array.from({ length: points }, (_, i) => {
     const time = now - (points - 1 - i) * interval
     return {
-      name: new Date(time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      name: new Date(time).toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       value: Math.floor(Math.random() * 20) + 25, // 25-45 points/sec
-      time: new Date(time).toISOString()
+      time: new Date(time).toISOString(),
     }
   })
-  
+
   // 响应时间数据
   responseTimeData.value = Array.from({ length: points }, (_, i) => {
     const time = now - (points - 1 - i) * interval
     return {
-      name: new Date(time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      name: new Date(time).toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       value: Math.floor(Math.random() * 80) + 20, // 20-100ms
-      time: new Date(time).toISOString()
+      time: new Date(time).toISOString(),
     }
   })
-  
+
   // 成功率数据
   successRateData.value = Array.from({ length: points }, (_, i) => {
     const time = now - (points - 1 - i) * interval
     return {
-      name: new Date(time).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' }),
+      name: new Date(time).toLocaleTimeString('zh-CN', {
+        hour: '2-digit',
+        minute: '2-digit',
+      }),
       value: Math.random() * 10 + 90, // 90-100%
-      time: new Date(time).toISOString()
+      time: new Date(time).toISOString(),
     }
   })
-  
+
   // 数据质量分布
   qualityDistribution.value = [
     { name: '好', value: 85, time: '' },
     { name: '不确定', value: 12, time: '' },
-    { name: '坏', value: 3, time: '' }
+    { name: '坏', value: 3, time: '' },
   ]
 }
 
@@ -1272,10 +1356,11 @@ const startAutoRefresh = () => {
     // 更新实时数据
     if (driverData.value.status === 'running') {
       driverData.value.scanRate = Math.floor(Math.random() * 15) + 30 // 30-45
-      
+
       // 更新数据点值
       dataPoints.value.forEach(point => {
-        if (Math.random() > 0.7) { // 30% chance to update
+        if (Math.random() > 0.7) {
+          // 30% chance to update
           point.updateTime = new Date()
           switch (point.type) {
             case 'bool':
@@ -1291,7 +1376,7 @@ const startAutoRefresh = () => {
         }
       })
     }
-    
+
     // 更新图表数据
     if (Math.random() > 0.6) {
       generateMockChartData()
@@ -1326,17 +1411,17 @@ onUnmounted(() => {
   margin-bottom: 24px;
   padding: 20px 0;
   border-bottom: 1px solid var(--el-border-color-light);
-  
+
   .header-left {
     display: flex;
     align-items: center;
     gap: 20px;
-    
+
     .header-title {
       display: flex;
       align-items: center;
       gap: 16px;
-      
+
       .status-icon {
         &.running {
           color: var(--el-color-success);
@@ -1352,14 +1437,14 @@ onUnmounted(() => {
           color: var(--el-color-danger);
         }
       }
-      
+
       .title-info {
         h1 {
           margin: 0 0 4px 0;
           font-size: 28px;
           color: var(--el-text-color-primary);
         }
-        
+
         .driver-type {
           margin: 0;
           color: var(--el-text-color-secondary);
@@ -1368,7 +1453,7 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .header-actions {
     display: flex;
     gap: 12px;
@@ -1377,14 +1462,14 @@ onUnmounted(() => {
 
 .status-overview {
   margin-bottom: 24px;
-  
+
   .status-card {
     background: white;
     border-radius: 12px;
     padding: 20px;
     border: 1px solid var(--el-border-color-light);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    
+
     .card-header {
       display: flex;
       align-items: center;
@@ -1393,25 +1478,25 @@ onUnmounted(() => {
       color: var(--el-text-color-regular);
       font-size: 14px;
       font-weight: 500;
-      
+
       .el-icon {
         font-size: 16px;
         color: var(--el-color-primary);
       }
     }
-    
+
     .card-content {
       .metric-value {
         font-size: 24px;
         font-weight: 600;
         color: var(--el-text-color-primary);
         margin-bottom: 4px;
-        
+
         &.error {
           color: var(--el-color-danger);
         }
       }
-      
+
       .metric-label {
         font-size: 12px;
         color: var(--el-text-color-secondary);
@@ -1428,30 +1513,31 @@ onUnmounted(() => {
     margin-bottom: 20px;
     border: 1px solid var(--el-border-color-light);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
-    
+
     .section-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 20px;
-      
-      h3, h4 {
+
+      h3,
+      h4 {
         margin: 0;
         font-size: 18px;
         color: var(--el-text-color-primary);
         display: flex;
         align-items: center;
         gap: 8px;
-        
+
         .el-icon {
           color: var(--el-color-primary);
         }
       }
-      
+
       h4 {
         font-size: 16px;
       }
-      
+
       .header-actions {
         display: flex;
         align-items: center;
@@ -1466,13 +1552,13 @@ onUnmounted(() => {
     display: flex;
     align-items: center;
     gap: 8px;
-    
+
     .point-icon {
       color: var(--el-color-primary);
       font-size: 16px;
     }
   }
-  
+
   .address-code {
     font-family: 'Courier New', monospace;
     background: var(--el-fill-color-light);
@@ -1480,10 +1566,10 @@ onUnmounted(() => {
     border-radius: 3px;
     font-size: 12px;
   }
-  
+
   .point-value {
     font-weight: 500;
-    
+
     &.value-good {
       color: var(--el-color-success);
     }
@@ -1494,12 +1580,12 @@ onUnmounted(() => {
       color: var(--el-color-danger);
     }
   }
-  
+
   .update-time {
     font-size: 12px;
     color: var(--el-text-color-secondary);
   }
-  
+
   .table-pagination {
     margin-top: 16px;
     display: flex;
@@ -1512,7 +1598,7 @@ onUnmounted(() => {
     background: var(--el-fill-color-extra-light);
     border-radius: 8px;
     padding: 16px;
-    
+
     h4 {
       margin: 0 0 12px 0;
       font-size: 14px;
@@ -1527,7 +1613,7 @@ onUnmounted(() => {
     font-family: 'Courier New', monospace;
     font-size: 12px;
   }
-  
+
   .log-message {
     font-size: 13px;
   }
@@ -1546,16 +1632,16 @@ onUnmounted(() => {
     align-items: center;
     padding: 8px 0;
     border-bottom: 1px solid var(--el-border-color-lighter);
-    
+
     &:last-child {
       border-bottom: none;
     }
-    
+
     .config-label {
       font-weight: 500;
       color: var(--el-text-color-regular);
     }
-    
+
     .config-value {
       color: var(--el-text-color-primary);
       font-family: 'Courier New', monospace;
@@ -1567,13 +1653,13 @@ onUnmounted(() => {
 .comm-stats {
   .stat-item {
     margin-bottom: 16px;
-    
+
     .stat-label {
       font-size: 14px;
       color: var(--el-text-color-regular);
       margin-bottom: 8px;
     }
-    
+
     .stat-value {
       font-size: 16px;
       font-weight: 500;
@@ -1589,7 +1675,7 @@ onUnmounted(() => {
       color: var(--el-text-color-primary);
       margin-bottom: 4px;
     }
-    
+
     .event-description {
       font-size: 13px;
       color: var(--el-text-color-secondary);
@@ -1604,7 +1690,8 @@ onUnmounted(() => {
   }
 }
 
-.config-json, .config-yaml {
+.config-json,
+.config-yaml {
   pre {
     background: var(--el-fill-color-light);
     padding: 16px;
@@ -1613,7 +1700,7 @@ onUnmounted(() => {
     max-height: 400px;
     overflow-y: auto;
     font-family: 'Courier New', monospace;
-    
+
     code {
       color: var(--el-text-color-primary);
     }
@@ -1634,8 +1721,12 @@ onUnmounted(() => {
 }
 
 @keyframes pulse {
-  from { opacity: 1; }
-  to { opacity: 0.4; }
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0.4;
+  }
 }
 
 // 响应式设计
@@ -1643,18 +1734,18 @@ onUnmounted(() => {
   .main-content {
     .el-row {
       flex-direction: column;
-      
+
       .el-col {
         width: 100% !important;
         max-width: none !important;
       }
     }
   }
-  
+
   .status-overview {
     .el-row {
       flex-direction: column;
-      
+
       .el-col {
         width: 100% !important;
         margin-bottom: 16px;
@@ -1668,16 +1759,16 @@ onUnmounted(() => {
     flex-direction: column;
     align-items: flex-start;
     gap: 16px;
-    
+
     .header-actions {
       flex-wrap: wrap;
     }
   }
-  
+
   .charts-container {
     .el-row {
       flex-direction: column;
-      
+
       .el-col {
         width: 100% !important;
         margin-bottom: 16px;

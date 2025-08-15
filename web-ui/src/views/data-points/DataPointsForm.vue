@@ -5,11 +5,13 @@
       <div class="header-content">
         <div class="title-section">
           <h1>{{ isEditMode ? '编辑数据点' : '新建数据点' }}</h1>
-          <p class="description">配置工业数据采集点，设置数据源连接和采集参数</p>
+          <p class="description">
+            配置工业数据采集点，设置数据源连接和采集参数
+          </p>
         </div>
         <div class="header-actions">
           <el-button @click="handleCancel">取消</el-button>
-          <el-button type="primary" @click="handleSave" :loading="saving">
+          <el-button type="primary" :loading="saving" @click="handleSave">
             {{ isEditMode ? '保存修改' : '创建数据点' }}
           </el-button>
         </div>
@@ -116,7 +118,10 @@
               </el-form-item>
 
               <el-form-item label="访问权限" prop="accessLevel">
-                <el-select v-model="formData.accessLevel" placeholder="选择访问权限">
+                <el-select
+                  v-model="formData.accessLevel"
+                  placeholder="选择访问权限"
+                >
                   <el-option label="只读" value="read" />
                   <el-option label="读写" value="readWrite" />
                   <el-option label="只写" value="write" />
@@ -216,9 +221,15 @@
               </el-form-item>
 
               <el-form-item label="字节序" prop="byteOrder">
-                <el-select v-model="formData.byteOrder" placeholder="选择字节序">
+                <el-select
+                  v-model="formData.byteOrder"
+                  placeholder="选择字节序"
+                >
                   <el-option label="大端序 (Big Endian)" value="bigEndian" />
-                  <el-option label="小端序 (Little Endian)" value="littleEndian" />
+                  <el-option
+                    label="小端序 (Little Endian)"
+                    value="littleEndian"
+                  />
                 </el-select>
               </el-form-item>
 
@@ -303,12 +314,16 @@
               </el-form-item>
 
               <el-form-item label="数据映射">
-                <el-button @click="openMappingDialog" type="primary" text>
+                <el-button type="primary" text @click="openMappingDialog">
                   <el-icon><Edit /></el-icon>
                   配置映射规则
                 </el-button>
                 <div class="form-hint">
-                  {{ formData.mappingRules.length > 0 ? `已配置 ${formData.mappingRules.length} 条映射规则` : '未配置映射规则' }}
+                  {{
+                    formData.mappingRules.length > 0
+                      ? `已配置 ${formData.mappingRules.length} 条映射规则`
+                      : '未配置映射规则'
+                  }}
                 </div>
               </el-form-item>
 
@@ -410,7 +425,10 @@
               </el-form-item>
 
               <el-form-item v-if="formData.enableHistory" label="存储频率">
-                <el-select v-model="formData.historyConfig.frequency" placeholder="选择存储频率">
+                <el-select
+                  v-model="formData.historyConfig.frequency"
+                  placeholder="选择存储频率"
+                >
                   <el-option label="每次变化" value="onChange" />
                   <el-option label="每秒" value="1s" />
                   <el-option label="每10秒" value="10s" />
@@ -473,15 +491,22 @@
 
           <div class="test-section">
             <div class="test-controls">
-              <el-button type="primary" @click="testConnection" :loading="testing">
+              <el-button
+                type="primary"
+                :loading="testing"
+                @click="testConnection"
+              >
                 <el-icon><Connection /></el-icon>
                 测试连接
               </el-button>
-              <el-button @click="readValue" :loading="reading">
+              <el-button :loading="reading" @click="readValue">
                 <el-icon><View /></el-icon>
                 读取数值
               </el-button>
-              <el-button v-if="formData.accessLevel !== 'read'" @click="openWriteDialog">
+              <el-button
+                v-if="formData.accessLevel !== 'read'"
+                @click="openWriteDialog"
+              >
                 <el-icon><Edit /></el-icon>
                 写入测试
               </el-button>
@@ -496,7 +521,9 @@
               </div>
               <div v-if="testResult.value !== undefined" class="result-item">
                 <label>读取数值:</label>
-                <span class="value">{{ testResult.value }} {{ formData.unit }}</span>
+                <span class="value"
+                  >{{ testResult.value }} {{ formData.unit }}</span
+                >
               </div>
               <div v-if="testResult.timestamp" class="result-item">
                 <label>读取时间:</label>
@@ -581,11 +608,7 @@
     </el-dialog>
 
     <!-- 写入测试对话框 -->
-    <el-dialog
-      v-model="writeDialogVisible"
-      title="写入测试"
-      width="400px"
-    >
+    <el-dialog v-model="writeDialogVisible" title="写入测试" width="400px">
       <el-form label-width="80px">
         <el-form-item label="写入值">
           <el-input-number
@@ -598,7 +621,7 @@
 
       <template #footer>
         <el-button @click="writeDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="writeTestValue" :loading="writing">
+        <el-button type="primary" :loading="writing" @click="writeTestValue">
           写入
         </el-button>
       </template>
@@ -607,14 +630,20 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import {
+  Setting,
+  Connection,
+  Operation,
+  Warning,
+  Monitor,
+  Plus,
+  Edit,
+  View,
+} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import {
-  Setting, Connection, Operation, Warning, Monitor,
-  Plus, Edit, View
-} from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 
 interface DataPoint {
   id?: string
@@ -722,16 +751,16 @@ const formData = reactive<DataPoint>({
   mappingRules: [],
   enableAlarm: false,
   alarmConfig: {
-    delay: 5
+    delay: 5,
   },
   enableHistory: true,
   historyConfig: {
     frequency: 'onChange',
     changeThreshold: 0.1,
     retentionDays: 30,
-    compression: true
+    compression: true,
   },
-  enableCache: true
+  enableCache: true,
 })
 
 // 驱动列表
@@ -746,7 +775,7 @@ const dataPointGroups = ref<string[]>([
   '控制阀',
   '泵站',
   '风机',
-  '其他'
+  '其他',
 ])
 
 // 测试结果
@@ -754,30 +783,42 @@ const testResult = ref<TestResult | null>(null)
 
 // 表单验证规则
 const formRules: FormRules = {
-  name: [
-    { required: true, message: '请输入数据点名称', trigger: 'blur' }
-  ],
+  name: [{ required: true, message: '请输入数据点名称', trigger: 'blur' }],
   identifier: [
     { required: true, message: '请输入数据点标识', trigger: 'blur' },
-    { pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/, message: '标识符必须以字母开头，只能包含字母、数字和下划线', trigger: 'blur' }
+    {
+      pattern: /^[a-zA-Z][a-zA-Z0-9_]*$/,
+      message: '标识符必须以字母开头，只能包含字母、数字和下划线',
+      trigger: 'blur',
+    },
   ],
-  dataType: [
-    { required: true, message: '请选择数据类型', trigger: 'change' }
-  ],
+  dataType: [{ required: true, message: '请选择数据类型', trigger: 'change' }],
   scanRate: [
     { required: true, message: '请设置采集频率', trigger: 'blur' },
-    { type: 'number', min: 100, max: 60000, message: '采集频率必须在100-60000毫秒之间', trigger: 'blur' }
+    {
+      type: 'number',
+      min: 100,
+      max: 60000,
+      message: '采集频率必须在100-60000毫秒之间',
+      trigger: 'blur',
+    },
   ],
   driverId: [
-    { required: true, message: '请选择驱动连接器', trigger: 'change' }
+    { required: true, message: '请选择驱动连接器', trigger: 'change' },
   ],
   registerAddress: [
     { required: true, message: '请输入寄存器地址', trigger: 'blur' },
-    { type: 'number', min: 0, max: 65535, message: '寄存器地址必须在0-65535之间', trigger: 'blur' }
+    {
+      type: 'number',
+      min: 0,
+      max: 65535,
+      message: '寄存器地址必须在0-65535之间',
+      trigger: 'blur',
+    },
   ],
   functionCode: [
-    { required: true, message: '请选择功能码', trigger: 'change' }
-  ]
+    { required: true, message: '请选择功能码', trigger: 'change' },
+  ],
 }
 
 // 工具函数
@@ -787,18 +828,18 @@ const formatDate = (dateString: string): string => {
 
 const getQualityType = (quality: string) => {
   const types = {
-    'good': 'success',
-    'uncertain': 'warning',
-    'bad': 'danger'
+    good: 'success',
+    uncertain: 'warning',
+    bad: 'danger',
   }
   return types[quality as keyof typeof types] || 'info'
 }
 
 const getQualityLabel = (quality: string): string => {
   const labels = {
-    'good': '良好',
-    'uncertain': '不确定',
-    'bad': '错误'
+    good: '良好',
+    uncertain: '不确定',
+    bad: '错误',
   }
   return labels[quality as keyof typeof labels] || quality
 }
@@ -820,7 +861,7 @@ const handleSave = async () => {
 
     const action = isEditMode.value ? '更新' : '创建'
     ElMessage.success(`数据点${action}成功`)
-    
+
     // 返回列表页
     router.push('/data-points')
   } catch (error) {
@@ -890,7 +931,7 @@ const testConnection = async () => {
     testResult.value = {
       connected: success,
       timestamp: new Date().toISOString(),
-      error: success ? undefined : '连接超时或设备无响应'
+      error: success ? undefined : '连接超时或设备无响应',
     }
 
     if (success) {
@@ -902,7 +943,7 @@ const testConnection = async () => {
     console.error('测试连接失败:', error)
     testResult.value = {
       connected: false,
-      error: '测试连接时发生错误'
+      error: '测试连接时发生错误',
     }
   } finally {
     testing.value = false
@@ -946,14 +987,14 @@ const readValue = async () => {
         connected: true,
         value,
         timestamp: new Date().toISOString(),
-        quality: Math.random() > 0.1 ? 'good' : 'uncertain'
+        quality: Math.random() > 0.1 ? 'good' : 'uncertain',
       }
 
       ElMessage.success('数值读取成功')
     } else {
       testResult.value = {
         connected: false,
-        error: '读取失败：设备无响应或地址错误'
+        error: '读取失败：设备无响应或地址错误',
       }
       ElMessage.error('数值读取失败')
     }
@@ -1001,7 +1042,7 @@ const addMappingRule = () => {
   formData.mappingRules.push({
     input: 0,
     output: 0,
-    description: ''
+    description: '',
   })
 }
 
@@ -1017,20 +1058,20 @@ const loadMockData = () => {
       id: 'driver_1',
       name: 'PLC_01',
       type: 'ModbusTCP',
-      status: 'connected'
+      status: 'connected',
     },
     {
       id: 'driver_2',
       name: 'RTU_Device',
       type: 'ModbusRTU',
-      status: 'connected'
+      status: 'connected',
     },
     {
       id: 'driver_3',
       name: 'OPC_Server',
       type: 'OPC_UA',
-      status: 'connected'
-    }
+      status: 'connected',
+    },
   ]
 
   // 如果是编辑模式，加载现有数据
@@ -1068,16 +1109,16 @@ const loadMockData = () => {
         high: 160,
         low: 10,
         lowLow: 0,
-        delay: 5
+        delay: 5,
       },
       enableHistory: true,
       historyConfig: {
         frequency: 'onChange',
         changeThreshold: 0.5,
         retentionDays: 90,
-        compression: true
+        compression: true,
       },
-      enableCache: true
+      enableCache: true,
     })
   }
 }
@@ -1094,17 +1135,17 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background: #f5f7fa;
-  
+
   .page-header {
     background: white;
     padding: 24px;
     border-bottom: 1px solid #e4e7ed;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .title-section {
         h1 {
           margin: 0;
@@ -1112,29 +1153,29 @@ onMounted(() => {
           font-weight: 600;
           color: #303133;
         }
-        
+
         .description {
           margin: 8px 0 0 0;
           color: #909399;
           font-size: 14px;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
       }
     }
   }
-  
+
   .form-content {
     flex: 1;
     padding: 20px;
     overflow-y: auto;
-    
+
     .form-section {
       margin-bottom: 20px;
-      
+
       .section-header {
         display: flex;
         align-items: center;
@@ -1143,42 +1184,42 @@ onMounted(() => {
         color: #303133;
       }
     }
-    
+
     .form-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 30px;
-      
+
       @media (max-width: 1200px) {
         grid-template-columns: 1fr;
         gap: 0;
       }
     }
-    
+
     .form-hint {
       font-size: 12px;
       color: #909399;
       margin-top: 4px;
       line-height: 1.4;
     }
-    
+
     .alarm-config {
       .alarm-rules {
         margin-top: 16px;
-        
+
         .alarm-rule-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 20px;
           margin-bottom: 16px;
-          
+
           @media (max-width: 768px) {
             grid-template-columns: 1fr;
           }
         }
       }
     }
-    
+
     .test-section {
       .test-controls {
         display: flex;
@@ -1186,35 +1227,35 @@ onMounted(() => {
         margin-bottom: 16px;
         flex-wrap: wrap;
       }
-      
+
       .test-result {
         background: #f8f9fa;
         border: 1px solid #e9ecef;
         border-radius: 4px;
         padding: 16px;
-        
+
         .result-item {
           display: flex;
           align-items: center;
           margin-bottom: 8px;
-          
+
           &:last-child {
             margin-bottom: 0;
           }
-          
+
           label {
             min-width: 80px;
             font-weight: 500;
             color: #606266;
           }
-          
+
           .value {
             font-family: monospace;
             font-size: 16px;
             font-weight: bold;
             color: #409eff;
           }
-          
+
           &.error {
             color: #f56c6c;
           }
@@ -1222,7 +1263,7 @@ onMounted(() => {
       }
     }
   }
-  
+
   .mapping-config {
     .mapping-toolbar {
       margin-bottom: 16px;
@@ -1238,7 +1279,7 @@ onMounted(() => {
 .el-card {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  
+
   :deep(.el-card__header) {
     background: #f8f9fa;
     border-bottom: 1px solid #e9ecef;
@@ -1258,21 +1299,21 @@ onMounted(() => {
   .data-points-form {
     .page-header {
       padding: 16px;
-      
+
       .header-content {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
       }
     }
-    
+
     .form-content {
       padding: 16px;
     }
-    
+
     .test-section .test-controls {
       flex-direction: column;
-      
+
       .el-button {
         width: 100%;
       }

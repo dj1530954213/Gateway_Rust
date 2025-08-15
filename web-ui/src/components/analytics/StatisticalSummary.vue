@@ -7,7 +7,7 @@
         <span>置信度: 95%</span>
       </div>
     </div>
-    
+
     <!-- 基础统计指标 -->
     <div class="basic-stats">
       <div class="stats-grid">
@@ -15,86 +15,95 @@
           <div class="stat-label">均值</div>
           <div class="stat-value">{{ formatNumber(data?.mean) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">中位数</div>
           <div class="stat-value">{{ formatNumber(data?.median) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">标准差</div>
           <div class="stat-value">{{ formatNumber(data?.std) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">变异系数</div>
           <div class="stat-value">{{ formatPercent(data?.cv) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">最小值</div>
           <div class="stat-value">{{ formatNumber(data?.min) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">最大值</div>
           <div class="stat-value">{{ formatNumber(data?.max) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">第一四分位数</div>
           <div class="stat-value">{{ formatNumber(data?.q1) }}</div>
         </div>
-        
+
         <div class="stat-item">
           <div class="stat-label">第三四分位数</div>
           <div class="stat-value">{{ formatNumber(data?.q3) }}</div>
         </div>
       </div>
     </div>
-    
+
     <!-- 分布图表 -->
     <div class="distribution-chart">
       <h5>数据分布</h5>
       <div ref="histogramRef" class="histogram-container"></div>
     </div>
-    
+
     <!-- 箱线图 -->
     <div class="boxplot-chart">
       <h5>箱线图</h5>
       <div ref="boxplotRef" class="boxplot-container"></div>
     </div>
-    
+
     <!-- 正态性检验 -->
     <div class="normality-test">
       <h5>正态性检验</h5>
       <div class="test-results">
         <div class="test-item">
           <span class="test-name">Shapiro-Wilk 检验:</span>
-          <span class="test-value">p = {{ formatNumber(normalityTest?.shapiro_p) }}</span>
-          <el-tag :type="normalityTest?.shapiro_p > 0.05 ? 'success' : 'danger'" size="small">
+          <span class="test-value"
+            >p = {{ formatNumber(normalityTest?.shapiro_p) }}</span
+          >
+          <el-tag
+            :type="normalityTest?.shapiro_p > 0.05 ? 'success' : 'danger'"
+            size="small"
+          >
             {{ normalityTest?.shapiro_p > 0.05 ? '正态分布' : '非正态分布' }}
           </el-tag>
         </div>
-        
+
         <div class="test-item">
           <span class="test-name">偏度系数:</span>
-          <span class="test-value">{{ formatNumber(normalityTest?.skewness) }}</span>
+          <span class="test-value">{{
+            formatNumber(normalityTest?.skewness)
+          }}</span>
           <el-tag :type="getSkewnessType(normalityTest?.skewness)" size="small">
             {{ getSkewnessText(normalityTest?.skewness) }}
           </el-tag>
         </div>
-        
+
         <div class="test-item">
           <span class="test-name">峰度系数:</span>
-          <span class="test-value">{{ formatNumber(normalityTest?.kurtosis) }}</span>
+          <span class="test-value">{{
+            formatNumber(normalityTest?.kurtosis)
+          }}</span>
           <el-tag :type="getKurtosisType(normalityTest?.kurtosis)" size="small">
             {{ getKurtosisText(normalityTest?.kurtosis) }}
           </el-tag>
         </div>
       </div>
     </div>
-    
+
     <!-- 异常值检测 -->
     <div class="outlier-detection">
       <h5>异常值检测</h5>
@@ -103,26 +112,44 @@
           <span>检测到 {{ outliers?.length || 0 }} 个异常值</span>
           <span>占比: {{ formatPercent(outlierRatio) }}</span>
         </div>
-        
-        <el-button v-if="outliers?.length > 0" size="small" @click="showOutlierDetails = true">
+
+        <el-button
+          v-if="outliers?.length > 0"
+          size="small"
+          @click="showOutlierDetails = true"
+        >
           查看详情
         </el-button>
       </div>
-      
+
       <!-- 异常值列表 -->
-      <el-dialog
-        v-model="showOutlierDetails"
-        title="异常值详情"
-        width="600px"
-      >
+      <el-dialog v-model="showOutlierDetails" title="异常值详情" width="600px">
         <el-table :data="outliers" height="300">
           <el-table-column prop="index" label="索引" width="80" />
-          <el-table-column prop="value" label="数值" width="100" :formatter="formatTableValue" />
-          <el-table-column prop="z_score" label="Z分数" width="100" :formatter="formatTableValue" />
-          <el-table-column prop="distance" label="距离" width="100" :formatter="formatTableValue" />
+          <el-table-column
+            prop="value"
+            label="数值"
+            width="100"
+            :formatter="formatTableValue"
+          />
+          <el-table-column
+            prop="z_score"
+            label="Z分数"
+            width="100"
+            :formatter="formatTableValue"
+          />
+          <el-table-column
+            prop="distance"
+            label="距离"
+            width="100"
+            :formatter="formatTableValue"
+          />
           <el-table-column prop="type" label="类型" width="100">
             <template #default="{ row }">
-              <el-tag :type="row.type === 'extreme' ? 'danger' : 'warning'" size="small">
+              <el-tag
+                :type="row.type === 'extreme' ? 'danger' : 'warning'"
+                size="small"
+              >
                 {{ row.type === 'extreme' ? '极端值' : '离群值' }}
               </el-tag>
             </template>
@@ -151,8 +178,8 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import * as echarts from 'echarts'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -183,14 +210,14 @@ const showOutlierDetails = ref(false)
 const normalityTest = computed(() => ({
   shapiro_p: 0.15, // p值
   skewness: -0.23, // 偏度
-  kurtosis: 0.89   // 峰度
+  kurtosis: 0.89, // 峰度
 }))
 
 // 模拟异常值数据
 const outliers = computed(() => [
   { index: 15, value: 95.7, z_score: 3.2, distance: 2.1, type: 'extreme' },
   { index: 42, value: 12.3, z_score: -2.8, distance: 1.9, type: 'outlier' },
-  { index: 78, value: 88.9, z_score: 2.6, distance: 1.7, type: 'outlier' }
+  { index: 78, value: 88.9, z_score: 2.6, distance: 1.7, type: 'outlier' },
 ])
 
 const outlierRatio = computed(() => {
@@ -217,17 +244,17 @@ function initHistogram() {
   if (!histogramRef.value) return
 
   histogramChart.value = echarts.init(histogramRef.value)
-  
+
   // 生成直方图数据
   const histogramData = generateHistogramData()
-  
+
   const option = {
     animation: true,
     grid: {
       left: '8%',
       right: '8%',
       bottom: '15%',
-      top: '10%'
+      top: '10%',
     },
     tooltip: {
       trigger: 'axis',
@@ -238,22 +265,22 @@ function initHistogram() {
           <div>频数: ${param.value}</div>
           <div>频率: ${((param.value / (props.data?.count || 1)) * 100).toFixed(1)}%</div>
         `
-      }
+      },
     },
     xAxis: {
       type: 'category',
       data: histogramData.bins,
       axisLabel: {
         rotate: 45,
-        fontSize: 10
-      }
+        fontSize: 10,
+      },
     },
     yAxis: {
       type: 'value',
       name: '频数',
       nameTextStyle: {
-        fontSize: 10
-      }
+        fontSize: 10,
+      },
     },
     series: [
       {
@@ -262,17 +289,17 @@ function initHistogram() {
         data: histogramData.frequencies,
         itemStyle: {
           color: '#409EFF',
-          borderRadius: [2, 2, 0, 0]
+          borderRadius: [2, 2, 0, 0],
         },
         emphasis: {
           itemStyle: {
-            color: '#66B1FF'
-          }
-        }
-      }
-    ]
+            color: '#66B1FF',
+          },
+        },
+      },
+    ],
   }
-  
+
   histogramChart.value.setOption(option)
 }
 
@@ -283,14 +310,14 @@ function initBoxplot() {
   if (!boxplotRef.value || !props.data) return
 
   boxplotChart.value = echarts.init(boxplotRef.value)
-  
+
   const option = {
     animation: true,
     grid: {
       left: '10%',
       right: '10%',
       bottom: '15%',
-      top: '10%'
+      top: '10%',
     },
     tooltip: {
       trigger: 'item',
@@ -303,46 +330,48 @@ function initBoxplot() {
           <div>Q3: ${data[3].toFixed(2)}</div>
           <div>最大值: ${data[4].toFixed(2)}</div>
         `
-      }
+      },
     },
     xAxis: {
       type: 'category',
       data: ['数据分布'],
       axisLabel: {
-        fontSize: 10
-      }
+        fontSize: 10,
+      },
     },
     yAxis: {
       type: 'value',
       name: '数值',
       nameTextStyle: {
-        fontSize: 10
-      }
+        fontSize: 10,
+      },
     },
     series: [
       {
         name: '箱线图',
         type: 'boxplot',
-        data: [[
-          props.data.min,
-          props.data.q1,
-          props.data.median,
-          props.data.q3,
-          props.data.max
-        ]],
+        data: [
+          [
+            props.data.min,
+            props.data.q1,
+            props.data.median,
+            props.data.q3,
+            props.data.max,
+          ],
+        ],
         itemStyle: {
           color: '#67C23A',
-          borderColor: '#5DAF34'
+          borderColor: '#5DAF34',
         },
         emphasis: {
           itemStyle: {
-            color: '#85CE61'
-          }
-        }
-      }
-    ]
+            color: '#85CE61',
+          },
+        },
+      },
+    ],
   }
-  
+
   boxplotChart.value.setOption(option)
 }
 
@@ -353,28 +382,31 @@ function generateHistogramData() {
   if (!props.data) {
     return { bins: [], frequencies: [] }
   }
-  
+
   const { min, max } = props.data
   const binCount = Math.min(Math.ceil(Math.sqrt(props.data.count)), 20)
   const binWidth = (max - min) / binCount
-  
+
   const bins = []
   const frequencies = []
-  
+
   for (let i = 0; i < binCount; i++) {
     const binStart = min + i * binWidth
     const binEnd = min + (i + 1) * binWidth
     bins.push(`${binStart.toFixed(1)}-${binEnd.toFixed(1)}`)
-    
+
     // 模拟频数（正态分布）
     const binCenter = (binStart + binEnd) / 2
-    const normalizedDistance = Math.abs(binCenter - props.data.mean) / props.data.std
+    const normalizedDistance =
+      Math.abs(binCenter - props.data.mean) / props.data.std
     const frequency = Math.round(
-      props.data.count * 0.1 * Math.exp(-0.5 * normalizedDistance * normalizedDistance)
+      props.data.count *
+        0.1 *
+        Math.exp(-0.5 * normalizedDistance * normalizedDistance)
     )
     frequencies.push(frequency)
   }
-  
+
   return { bins, frequencies }
 }
 
@@ -464,9 +496,13 @@ onUnmounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => props.data, () => {
-  initCharts()
-}, { deep: true })
+watch(
+  () => props.data,
+  () => {
+    initCharts()
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -476,13 +512,13 @@ watch(() => props.data, () => {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 20px;
-    
+
     h4 {
       margin: 0;
       font-size: 16px;
       color: #303133;
     }
-    
+
     .summary-info {
       display: flex;
       gap: 16px;
@@ -490,27 +526,27 @@ watch(() => props.data, () => {
       color: #909399;
     }
   }
-  
+
   .basic-stats {
     margin-bottom: 24px;
-    
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 16px;
-      
+
       .stat-item {
         padding: 12px;
         background: #f8f9fa;
         border-radius: 6px;
         text-align: center;
-        
+
         .stat-label {
           font-size: 12px;
           color: #606266;
           margin-bottom: 4px;
         }
-        
+
         .stat-value {
           font-size: 18px;
           font-weight: 600;
@@ -519,17 +555,17 @@ watch(() => props.data, () => {
       }
     }
   }
-  
+
   .distribution-chart,
   .boxplot-chart {
     margin-bottom: 24px;
-    
+
     h5 {
       margin: 0 0 12px 0;
       font-size: 14px;
       color: #303133;
     }
-    
+
     .histogram-container,
     .boxplot-container {
       height: 200px;
@@ -537,22 +573,22 @@ watch(() => props.data, () => {
       border-radius: 6px;
     }
   }
-  
+
   .normality-test,
   .outlier-detection {
     margin-bottom: 24px;
-    
+
     h5 {
       margin: 0 0 12px 0;
       font-size: 14px;
       color: #303133;
     }
-    
+
     .test-results {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      
+
       .test-item {
         display: flex;
         align-items: center;
@@ -560,13 +596,13 @@ watch(() => props.data, () => {
         padding: 8px;
         background: #f8f9fa;
         border-radius: 6px;
-        
+
         .test-name {
           font-size: 13px;
           color: #606266;
           min-width: 120px;
         }
-        
+
         .test-value {
           font-size: 13px;
           color: #303133;
@@ -575,7 +611,7 @@ watch(() => props.data, () => {
         }
       }
     }
-    
+
     .outlier-info {
       display: flex;
       justify-content: space-between;
@@ -583,7 +619,7 @@ watch(() => props.data, () => {
       padding: 12px;
       background: #f8f9fa;
       border-radius: 6px;
-      
+
       .outlier-stats {
         display: flex;
         gap: 16px;
@@ -602,18 +638,18 @@ watch(() => props.data, () => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .basic-stats .stats-grid {
       grid-template-columns: repeat(2, 1fr);
       gap: 8px;
     }
-    
+
     .normality-test .test-results .test-item {
       flex-direction: column;
       align-items: flex-start;
       gap: 4px;
     }
-    
+
     .outlier-detection .outlier-info {
       flex-direction: column;
       align-items: flex-start;

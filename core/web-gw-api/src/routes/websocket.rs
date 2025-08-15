@@ -33,6 +33,12 @@ pub struct WsConnectionManager {
     config: ConnectionManagerConfig,
     /// 全局统计信息
     global_stats: Arc<tokio::sync::RwLock<GlobalStats>>,
+    /// 断线重连管理
+    reconnection_manager: Arc<ReconnectionManager>,
+    /// 消息队列（离线消息）
+    message_queue: Arc<RwLock<HashMap<String, Vec<QueuedMessage>>>>,
+    /// 连接健康检查
+    health_checker: Arc<ConnectionHealthChecker>,
 }
 
 /// 连接管理器配置
@@ -437,7 +443,7 @@ impl ClientSubscription {
         }
 
         // 如果报警关联设备，检查是否在订阅列表中
-        if let Some(device_name) = &alert.device_name {
+        if let Some(_device_name) = &alert.device_name {
             // 这里需要从设备名称查找device_id，简化实现先返回true
             true
         } else {
@@ -628,7 +634,7 @@ impl StreamHandler<Result<ws::Message, ws::ProtocolError>> for WsConnection {
                 debug!("Received text from {}: {}", self.client_id, text);
                 self.handle_text_message(text.to_string(), ctx);
             }
-            Ok(ws::Message::Binary(bin)) => {
+            Ok(ws::Message::Binary(_bin)) => {
                 warn!("Received unexpected binary message from {}", self.client_id);
                 ctx.text(serde_json::to_string(&WsMessage::Error(WsErrorMsg {
                     code: "BINARY_NOT_SUPPORTED".to_string(),
@@ -668,7 +674,7 @@ impl WsConnection {
     /// 处理客户端消息
     fn handle_client_message(&mut self, msg: ClientMessage, ctx: &mut ws::WebsocketContext<Self>) {
         match msg {
-            ClientMessage::Subscribe(mut subscription) => {
+            ClientMessage::Subscribe(subscription) => {
                 let manager = self.manager.clone();
                 let client_id = self.client_id.clone();
 

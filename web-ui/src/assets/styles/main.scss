@@ -6,9 +6,12 @@
   box-sizing: border-box;
 }
 
-html, body {
+html,
+body {
   height: 100%;
-  font-family: 'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
+  font-family:
+    'Helvetica Neue', Helvetica, 'PingFang SC', 'Hiragino Sans GB',
+    'Microsoft YaHei', '微软雅黑', Arial, sans-serif;
 }
 
 // Element Plus customizations
@@ -20,7 +23,7 @@ html, body {
   --el-color-primary-light-8: #d9ecff;
   --el-color-primary-light-9: #ecf5ff;
   --el-color-primary-dark-2: #337ecc;
-  
+
   --el-border-radius-base: 6px;
   --el-border-radius-small: 4px;
   --el-border-radius-round: 20px;
@@ -95,7 +98,7 @@ html, body {
   border-radius: 8px;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
   transition: box-shadow 0.3s;
-  
+
   &:hover {
     box-shadow: 0 4px 20px 0 rgba(0, 0, 0, 0.15);
   }
@@ -116,9 +119,15 @@ html, body {
 
 // Loading animations
 @keyframes pulse {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
 .pulse {
@@ -139,7 +148,7 @@ html, body {
 ::-webkit-scrollbar-thumb {
   background: #c1c1c1;
   border-radius: 3px;
-  
+
   &:hover {
     background: #a8a8a8;
   }
@@ -150,7 +159,7 @@ html.dark {
   .main-content {
     background-color: #1a1a1a;
   }
-  
+
   .info-card {
     background-color: #2d2d2d;
     border-color: #3d3d3d;
@@ -162,7 +171,7 @@ html.dark {
   .content-wrapper {
     padding: 15px;
   }
-  
+
   .flex-mobile-column {
     flex-direction: column;
     gap: 10px;
@@ -199,7 +208,7 @@ html.dark {
   .el-table__header {
     font-weight: 600;
   }
-  
+
   .el-table__row:hover {
     background-color: #f5f7fa;
   }
@@ -209,7 +218,7 @@ html.dark {
 .button-group {
   display: flex;
   gap: 8px;
-  
+
   &.vertical {
     flex-direction: column;
   }

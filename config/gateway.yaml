@@ -1,0 +1,33 @@
+# Gateway Rust 主配置文件
+# 基于default.yaml和dev.yaml的合并配置
+
+# HTTP服务配置
+http_addr: "0.0.0.0:50013"
+metrics_addr: "0.0.0.0:50015" 
+ws_path: "/ws"
+
+# CORS跨域配置 - 测试期间允许所有来源
+cors_allowed:
+  - "*"
+
+# 数据库配置（使用默认值）
+pg_dsn: "postgres://postgres:postgres@localhost:5432/iot"
+
+# InfluxDB配置
+influx_url: "http://localhost:8086"
+influx_token: "dev-token"
+influx_org: "iot"
+influx_bucket: "telemetry"
+
+# Frame Bus配置
+bus_url: "nats://localhost:4222"
+
+# 驱动管理配置
+drivers_dir: "./drivers"
+
+# 日志配置
+log_level: "info"
+
+# 请求配置
+request_timeout: 30
+max_request_size: 10

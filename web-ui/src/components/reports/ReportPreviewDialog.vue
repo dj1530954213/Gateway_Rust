@@ -12,37 +12,37 @@
       <div class="preview-toolbar">
         <div class="toolbar-left">
           <el-button-group>
-            <el-button 
-              :type="viewMode === 'desktop' ? 'primary' : ''" 
+            <el-button
+              :type="viewMode === 'desktop' ? 'primary' : ''"
               @click="viewMode = 'desktop'"
             >
               <el-icon><Monitor /></el-icon>
               桌面视图
             </el-button>
-            <el-button 
-              :type="viewMode === 'mobile' ? 'primary' : ''" 
+            <el-button
+              :type="viewMode === 'mobile' ? 'primary' : ''"
               @click="viewMode = 'mobile'"
             >
               <el-icon><Iphone /></el-icon>
               移动视图
             </el-button>
           </el-button-group>
-          
+
           <el-divider direction="vertical" />
-          
+
           <el-button-group>
-            <el-button @click="zoomOut" :disabled="zoomLevel <= 0.5">
+            <el-button :disabled="zoomLevel <= 0.5" @click="zoomOut">
               <el-icon><ZoomOut /></el-icon>
             </el-button>
             <el-button @click="resetZoom">
               {{ Math.round(zoomLevel * 100) }}%
             </el-button>
-            <el-button @click="zoomIn" :disabled="zoomLevel >= 2">
+            <el-button :disabled="zoomLevel >= 2" @click="zoomIn">
               <el-icon><ZoomIn /></el-icon>
             </el-button>
           </el-button-group>
         </div>
-        
+
         <div class="toolbar-right">
           <el-dropdown @command="handlePrint">
             <el-button>
@@ -56,7 +56,7 @@
               </el-dropdown-menu>
             </template>
           </el-dropdown>
-          
+
           <el-dropdown @command="handleExport">
             <el-button type="primary">
               <el-icon><Download /></el-icon>
@@ -76,9 +76,9 @@
           </el-dropdown>
         </div>
       </div>
-      
+
       <!-- 预览内容 -->
-      <div 
+      <div
         :class="['preview-content', viewMode]"
         :style="{ transform: `scale(${zoomLevel})` }"
       >
@@ -93,27 +93,35 @@
               <div class="report-meta">
                 <div class="meta-item">
                   <span class="label">生成时间:</span>
-                  <span class="value">{{ formatDateTime(report.generatedAt) }}</span>
+                  <span class="value">{{
+                    formatDateTime(report.generatedAt)
+                  }}</span>
                 </div>
                 <div class="meta-item">
                   <span class="label">报表类型:</span>
-                  <span class="value">{{ getTemplateName(report.template) }}</span>
+                  <span class="value">{{
+                    getTemplateName(report.template)
+                  }}</span>
                 </div>
                 <div class="meta-item">
                   <span class="label">时间范围:</span>
-                  <span class="value">{{ report.config?.dateRange?.join(' 至 ') || '--' }}</span>
+                  <span class="value">{{
+                    report.config?.dateRange?.join(' 至 ') || '--'
+                  }}</span>
                 </div>
               </div>
             </div>
           </div>
-          
+
           <!-- 报表摘要 -->
           <div class="report-summary">
             <h2>报表摘要</h2>
             <div class="summary-grid">
               <div class="summary-item">
                 <div class="summary-label">设备数量</div>
-                <div class="summary-value">{{ report.config?.deviceIds?.length || 0 }}</div>
+                <div class="summary-value">
+                  {{ report.config?.deviceIds?.length || 0 }}
+                </div>
                 <div class="summary-unit">台</div>
               </div>
               <div class="summary-item">
@@ -123,27 +131,31 @@
               </div>
               <div class="summary-item">
                 <div class="summary-label">异常事件</div>
-                <div class="summary-value">{{ Math.floor(Math.random() * 50) }}</div>
+                <div class="summary-value">
+                  {{ Math.floor(Math.random() * 50) }}
+                </div>
                 <div class="summary-unit">次</div>
               </div>
               <div class="summary-item">
                 <div class="summary-label">可用率</div>
-                <div class="summary-value">{{ (95 + Math.random() * 5).toFixed(1) }}</div>
+                <div class="summary-value">
+                  {{ (95 + Math.random() * 5).toFixed(1) }}
+                </div>
                 <div class="summary-unit">%</div>
               </div>
             </div>
           </div>
-          
+
           <!-- 图表区域 -->
           <div class="report-charts">
             <h2>数据分析</h2>
-            
+
             <!-- 趋势图表 -->
             <div class="chart-section">
               <h3>数据趋势分析</h3>
               <div ref="trendChartRef" class="chart-container"></div>
             </div>
-            
+
             <!-- 分布图表 -->
             <div class="chart-section">
               <h3>设备状态分布</h3>
@@ -152,14 +164,14 @@
                 <div ref="barChartRef" class="chart-container small"></div>
               </div>
             </div>
-            
+
             <!-- 性能指标 -->
             <div class="chart-section">
               <h3>关键性能指标</h3>
               <div ref="performanceChartRef" class="chart-container"></div>
             </div>
           </div>
-          
+
           <!-- 数据表格 -->
           <div class="report-table">
             <h2>详细数据</h2>
@@ -179,21 +191,28 @@
               <el-table-column prop="lastUpdate" label="最后更新" />
             </el-table>
           </div>
-          
+
           <!-- 报表结论 -->
           <div class="report-conclusion">
             <h2>分析结论</h2>
             <div class="conclusion-content">
               <ul>
-                <li>系统整体运行稳定，设备可用率达到 {{ (95 + Math.random() * 5).toFixed(1) }}%</li>
+                <li>
+                  系统整体运行稳定，设备可用率达到
+                  {{ (95 + Math.random() * 5).toFixed(1) }}%
+                </li>
                 <li>温度传感器数据波动在正常范围内，平均温度为 25.6°C</li>
-                <li>检测到 {{ Math.floor(Math.random() * 10) + 1 }} 次轻微异常，均已自动处理</li>
+                <li>
+                  检测到
+                  {{ Math.floor(Math.random() * 10) + 1 }}
+                  次轻微异常，均已自动处理
+                </li>
                 <li>建议加强对设备 PLC-02 的监控，其数据波动相对较大</li>
                 <li>数据质量良好，完整性达到 98.5%，准确性达到 99.2%</li>
               </ul>
             </div>
           </div>
-          
+
           <!-- 报表页脚 -->
           <div class="report-footer">
             <div class="footer-info">
@@ -204,7 +223,7 @@
           </div>
         </div>
       </div>
-      
+
       <!-- 页面导航 -->
       <div class="page-navigation">
         <el-pagination
@@ -236,17 +255,17 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
 import {
   Monitor,
   Iphone,
   ZoomIn,
   ZoomOut,
   Printer,
-  Download
+  Download,
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -262,7 +281,7 @@ const emit = defineEmits<{
 // ===== 响应式数据 =====
 const visible = computed({
   get: () => props.modelValue,
-  set: (value) => emit('update:modelValue', value)
+  set: value => emit('update:modelValue', value),
 })
 
 const viewMode = ref('desktop')
@@ -290,7 +309,7 @@ const sampleTableData = ref([
     maxValue: 28.2,
     minValue: 22.1,
     status: '正常',
-    lastUpdate: '2025-07-27 11:30:00'
+    lastUpdate: '2025-07-27 11:30:00',
   },
   {
     device: 'PLC-02',
@@ -299,7 +318,7 @@ const sampleTableData = ref([
     maxValue: 1.45,
     minValue: 1.05,
     status: '正常',
-    lastUpdate: '2025-07-27 11:29:00'
+    lastUpdate: '2025-07-27 11:29:00',
   },
   {
     device: 'Sensor-01',
@@ -308,7 +327,7 @@ const sampleTableData = ref([
     maxValue: 165.8,
     minValue: 138.7,
     status: '警告',
-    lastUpdate: '2025-07-27 11:28:00'
+    lastUpdate: '2025-07-27 11:28:00',
   },
   {
     device: 'Sensor-02',
@@ -317,8 +336,8 @@ const sampleTableData = ref([
     maxValue: 920.5,
     minValue: 780.1,
     status: '正常',
-    lastUpdate: '2025-07-27 11:27:00'
-  }
+    lastUpdate: '2025-07-27 11:27:00',
+  },
 ])
 
 // ===== 方法 =====
@@ -356,9 +375,9 @@ function initCharts() {
 
 function initTrendChart() {
   if (!trendChartRef.value) return
-  
+
   trendChart.value = echarts.init(trendChartRef.value)
-  
+
   const option = {
     animation: false,
     grid: {
@@ -366,60 +385,60 @@ function initTrendChart() {
       right: '4%',
       bottom: '3%',
       top: '10%',
-      containLabel: true
+      containLabel: true,
     },
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
     },
     legend: {
-      data: ['温度', '压力', '流量']
+      data: ['温度', '压力', '流量'],
     },
     xAxis: {
       type: 'category',
-      data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00']
+      data: ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00', '24:00'],
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
     },
     series: [
       {
         name: '温度',
         type: 'line',
         data: [22, 24, 26, 28, 26, 24, 23],
-        smooth: true
+        smooth: true,
       },
       {
         name: '压力',
         type: 'line',
         data: [1.1, 1.2, 1.3, 1.4, 1.3, 1.2, 1.1],
         smooth: true,
-        yAxisIndex: 0
+        yAxisIndex: 0,
       },
       {
         name: '流量',
         type: 'line',
         data: [140, 150, 160, 165, 155, 145, 142],
-        smooth: true
-      }
-    ]
+        smooth: true,
+      },
+    ],
   }
-  
+
   trendChart.value.setOption(option)
 }
 
 function initPieChart() {
   if (!pieChartRef.value) return
-  
+
   pieChart.value = echarts.init(pieChartRef.value)
-  
+
   const option = {
     animation: false,
     tooltip: {
-      trigger: 'item'
+      trigger: 'item',
     },
     legend: {
       orient: 'vertical',
-      left: 'left'
+      left: 'left',
     },
     series: [
       {
@@ -429,53 +448,53 @@ function initPieChart() {
         data: [
           { value: 8, name: '正常' },
           { value: 2, name: '警告' },
-          { value: 1, name: '异常' }
-        ]
-      }
-    ]
+          { value: 1, name: '异常' },
+        ],
+      },
+    ],
   }
-  
+
   pieChart.value.setOption(option)
 }
 
 function initBarChart() {
   if (!barChartRef.value) return
-  
+
   barChart.value = echarts.init(barChartRef.value)
-  
+
   const option = {
     animation: false,
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
     },
     xAxis: {
       type: 'category',
-      data: ['PLC-01', 'PLC-02', 'Sensor-01', 'Sensor-02']
+      data: ['PLC-01', 'PLC-02', 'Sensor-01', 'Sensor-02'],
     },
     yAxis: {
-      type: 'value'
+      type: 'value',
     },
     series: [
       {
         name: '数据量',
         type: 'bar',
-        data: [1200, 1100, 800, 950]
-      }
-    ]
+        data: [1200, 1100, 800, 950],
+      },
+    ],
   }
-  
+
   barChart.value.setOption(option)
 }
 
 function initPerformanceChart() {
   if (!performanceChartRef.value) return
-  
+
   performanceChart.value = echarts.init(performanceChartRef.value)
-  
+
   const option = {
     animation: false,
     tooltip: {
-      trigger: 'axis'
+      trigger: 'axis',
     },
     radar: {
       indicator: [
@@ -483,8 +502,8 @@ function initPerformanceChart() {
         { name: '响应时间', max: 100 },
         { name: '数据质量', max: 100 },
         { name: '稳定性', max: 100 },
-        { name: '准确性', max: 100 }
-      ]
+        { name: '准确性', max: 100 },
+      ],
     },
     series: [
       {
@@ -493,13 +512,13 @@ function initPerformanceChart() {
         data: [
           {
             value: [95, 88, 92, 90, 94],
-            name: '系统性能'
-          }
-        ]
-      }
-    ]
+            name: '系统性能',
+          },
+        ],
+      },
+    ],
   }
-  
+
   performanceChart.value.setOption(option)
 }
 
@@ -532,7 +551,7 @@ function getTemplateName(template: string): string {
     trend_report: '趋势分析报表',
     status_report: '状态分布报表',
     performance_report: '性能评估报表',
-    custom_report: '自定义报表'
+    custom_report: '自定义报表',
   }
   return templateMap[template] || template
 }
@@ -548,7 +567,7 @@ function formatDateTime(dateStr: string): string {
     day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
   })
 }
 
@@ -579,7 +598,7 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
-  
+
   trendChart.value?.dispose()
   pieChart.value?.dispose()
   barChart.value?.dispose()
@@ -587,19 +606,25 @@ onUnmounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => props.modelValue, (visible) => {
-  if (visible && props.report) {
+watch(
+  () => props.modelValue,
+  visible => {
+    if (visible && props.report) {
+      nextTick(() => {
+        initCharts()
+      })
+    }
+  }
+)
+
+watch(
+  () => viewMode.value,
+  () => {
     nextTick(() => {
-      initCharts()
+      handleResize()
     })
   }
-})
-
-watch(() => viewMode.value, () => {
-  nextTick(() => {
-    handleResize()
-  })
-})
+)
 </script>
 
 <style scoped lang="scss">
@@ -617,7 +642,7 @@ watch(() => viewMode.value, () => {
     padding: 16px;
     border-bottom: 1px solid #ebeef5;
     background: #fafafa;
-    
+
     .toolbar-left,
     .toolbar-right {
       display: flex;
@@ -625,7 +650,7 @@ watch(() => viewMode.value, () => {
       gap: 12px;
     }
   }
-  
+
   .preview-content {
     height: 70vh;
     overflow: auto;
@@ -633,26 +658,26 @@ watch(() => viewMode.value, () => {
     background: #f5f5f5;
     transform-origin: top center;
     transition: transform 0.3s ease;
-    
+
     &.mobile {
       max-width: 480px;
       margin: 0 auto;
     }
-    
+
     .report-document {
       background: white;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
       margin: 0 auto;
       min-height: 297mm; // A4 高度
       padding: 20mm;
-      
+
       // 打印样式
       @media print {
         box-shadow: none;
         margin: 0;
         padding: 10mm;
       }
-      
+
       .report-header {
         display: flex;
         align-items: flex-start;
@@ -660,37 +685,37 @@ watch(() => viewMode.value, () => {
         margin-bottom: 30px;
         padding-bottom: 20px;
         border-bottom: 2px solid #409eff;
-        
+
         .header-logo {
           .logo {
             height: 60px;
             width: auto;
           }
         }
-        
+
         .header-info {
           flex: 1;
-          
+
           .report-title {
             font-size: 24px;
             color: #303133;
             margin: 0 0 12px 0;
           }
-          
+
           .report-meta {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
-            
+
             .meta-item {
               display: flex;
               gap: 8px;
-              
+
               .label {
                 color: #606266;
                 font-weight: 500;
               }
-              
+
               .value {
                 color: #303133;
               }
@@ -698,10 +723,10 @@ watch(() => viewMode.value, () => {
           }
         }
       }
-      
+
       .report-summary {
         margin-bottom: 30px;
-        
+
         h2 {
           font-size: 18px;
           color: #303133;
@@ -709,31 +734,31 @@ watch(() => viewMode.value, () => {
           border-left: 4px solid #409eff;
           padding-left: 12px;
         }
-        
+
         .summary-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr);
           gap: 20px;
-          
+
           .summary-item {
             text-align: center;
             padding: 20px;
             background: #f8f9fa;
             border-radius: 8px;
-            
+
             .summary-label {
               font-size: 14px;
               color: #606266;
               margin-bottom: 8px;
             }
-            
+
             .summary-value {
               font-size: 24px;
               font-weight: 700;
               color: #409eff;
               margin-bottom: 4px;
             }
-            
+
             .summary-unit {
               font-size: 12px;
               color: #909399;
@@ -741,10 +766,10 @@ watch(() => viewMode.value, () => {
           }
         }
       }
-      
+
       .report-charts {
         margin-bottom: 30px;
-        
+
         h2 {
           font-size: 18px;
           color: #303133;
@@ -752,26 +777,26 @@ watch(() => viewMode.value, () => {
           border-left: 4px solid #409eff;
           padding-left: 12px;
         }
-        
+
         .chart-section {
           margin-bottom: 30px;
-          
+
           h3 {
             font-size: 16px;
             color: #303133;
             margin-bottom: 16px;
           }
-          
+
           .chart-container {
             height: 300px;
             border: 1px solid #ebeef5;
             border-radius: 6px;
-            
+
             &.small {
               height: 250px;
             }
           }
-          
+
           .chart-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -779,10 +804,10 @@ watch(() => viewMode.value, () => {
           }
         }
       }
-      
+
       .report-table {
         margin-bottom: 30px;
-        
+
         h2 {
           font-size: 18px;
           color: #303133;
@@ -791,10 +816,10 @@ watch(() => viewMode.value, () => {
           padding-left: 12px;
         }
       }
-      
+
       .report-conclusion {
         margin-bottom: 30px;
-        
+
         h2 {
           font-size: 18px;
           color: #303133;
@@ -802,12 +827,12 @@ watch(() => viewMode.value, () => {
           border-left: 4px solid #409eff;
           padding-left: 12px;
         }
-        
+
         .conclusion-content {
           ul {
             margin: 0;
             padding-left: 20px;
-            
+
             li {
               margin-bottom: 8px;
               line-height: 1.6;
@@ -816,12 +841,12 @@ watch(() => viewMode.value, () => {
           }
         }
       }
-      
+
       .report-footer {
         margin-top: 40px;
         padding-top: 20px;
         border-top: 1px solid #ebeef5;
-        
+
         .footer-info {
           text-align: center;
           font-size: 12px;
@@ -831,7 +856,7 @@ watch(() => viewMode.value, () => {
       }
     }
   }
-  
+
   .page-navigation {
     padding: 16px;
     border-top: 1px solid #ebeef5;
@@ -847,33 +872,33 @@ watch(() => viewMode.value, () => {
     .preview-toolbar {
       flex-direction: column;
       gap: 12px;
-      
+
       .toolbar-left,
       .toolbar-right {
         justify-content: center;
         flex-wrap: wrap;
       }
     }
-    
+
     .preview-content .report-document {
       padding: 10mm;
-      
+
       .report-header {
         flex-direction: column;
         text-align: center;
-        
+
         .header-info .report-meta {
           justify-content: center;
           flex-direction: column;
           gap: 8px;
         }
       }
-      
+
       .report-summary .summary-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: 12px;
       }
-      
+
       .report-charts .chart-section .chart-row {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -888,7 +913,7 @@ watch(() => viewMode.value, () => {
   .page-navigation {
     display: none !important;
   }
-  
+
   .preview-content {
     height: auto !important;
     overflow: visible !important;

@@ -1,43 +1,44 @@
 /**
  * 点位管理 Pinia Store
- * 
+ *
  * 管理数据点位列表、CRUD操作、搜索过滤、导入导出等状态
  */
 
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { defineStore } from 'pinia'
 import { ref, computed, readonly } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
+
 import { tagsApi } from '@/api'
-import type { 
-  TagVO, 
-  TagCreateReq, 
-  TagPatchReq, 
-  TagQuery, 
+import type {
+  TagVO,
+  TagCreateReq,
+  TagPatchReq,
+  TagQuery,
   TagDataType,
-  PaginatedResponse 
+  PaginatedResponse,
 } from '@/api/tags'
 
 export interface TagState {
   // 点位列表数据
   tags: TagVO[]
   total: number
-  
+
   // 分页信息
   currentPage: number
   pageSize: number
-  
+
   // 加载状态
   loading: boolean
-  
+
   // 查询条件
   query: TagQuery
-  
+
   // 选中的点位
   selectedTags: TagVO[]
-  
+
   // 当前编辑的点位
   currentTag: TagVO | null
-  
+
   // 批量导入状态
   importing: boolean
   importProgress: number
@@ -116,22 +117,21 @@ export const useTagsStore = defineStore('tags', () => {
   async function fetchTags(params?: Partial<TagQuery>) {
     try {
       state.value.loading = true
-      
+
       const query = {
         ...state.value.query,
         ...params,
       }
 
       const response: PaginatedResponse<TagVO> = await tagsApi.list(query)
-      
+
       state.value.tags = response.items
       state.value.total = response.total
       state.value.currentPage = response.page
       state.value.pageSize = response.size
-      
+
       // 更新查询条件
       state.value.query = { ...query }
-      
     } catch (error) {
       console.error('获取点位列表失败:', error)
       ElMessage.error('获取点位列表失败')
@@ -161,16 +161,15 @@ export const useTagsStore = defineStore('tags', () => {
   async function createTag(data: TagCreateReq): Promise<TagVO | null> {
     try {
       state.value.loading = true
-      
+
       const tag = await tagsApi.create(data)
-      
+
       // 添加到列表开头
       state.value.tags.unshift(tag)
       state.value.total += 1
-      
+
       ElMessage.success('点位创建成功')
       return tag
-      
     } catch (error) {
       console.error('创建点位失败:', error)
       ElMessage.error('创建点位失败')
@@ -183,26 +182,28 @@ export const useTagsStore = defineStore('tags', () => {
   /**
    * 更新点位
    */
-  async function updateTag(id: string, data: TagPatchReq): Promise<TagVO | null> {
+  async function updateTag(
+    id: string,
+    data: TagPatchReq
+  ): Promise<TagVO | null> {
     try {
       state.value.loading = true
-      
+
       const updatedTag = await tagsApi.update(id, data)
-      
+
       // 更新列表中的点位
       const index = state.value.tags.findIndex(t => t.id === id)
       if (index !== -1) {
         state.value.tags[index] = updatedTag
       }
-      
+
       // 更新当前点位
       if (state.value.currentTag?.id === id) {
         state.value.currentTag = updatedTag
       }
-      
+
       ElMessage.success('点位更新成功')
       return updatedTag
-      
     } catch (error) {
       console.error('更新点位失败:', error)
       ElMessage.error('更新点位失败')
@@ -229,24 +230,25 @@ export const useTagsStore = defineStore('tags', () => {
       )
 
       state.value.loading = true
-      
+
       await tagsApi.delete(id)
-      
+
       // 从列表中移除
       state.value.tags = state.value.tags.filter(t => t.id !== id)
       state.value.total -= 1
-      
+
       // 清除当前点位
       if (state.value.currentTag?.id === id) {
         state.value.currentTag = null
       }
-      
+
       // 从选中列表中移除
-      state.value.selectedTags = state.value.selectedTags.filter(t => t.id !== id)
-      
+      state.value.selectedTags = state.value.selectedTags.filter(
+        t => t.id !== id
+      )
+
       ElMessage.success('点位删除成功')
       return true
-      
     } catch (error) {
       if (error !== 'cancel') {
         console.error('删除点位失败:', error)
@@ -275,32 +277,35 @@ export const useTagsStore = defineStore('tags', () => {
       )
 
       state.value.loading = true
-      
+
       // 并行删除所有点位
       const results = await Promise.allSettled(
         ids.map(id => tagsApi.delete(id))
       )
-      
+
       // 统计成功和失败的数量
       const successCount = results.filter(r => r.status === 'fulfilled').length
       const failedCount = results.filter(r => r.status === 'rejected').length
-      
+
       // 从列表中移除成功删除的点位
       const successIds = ids.slice(0, successCount)
-      state.value.tags = state.value.tags.filter(t => !successIds.includes(t.id))
+      state.value.tags = state.value.tags.filter(
+        t => !successIds.includes(t.id)
+      )
       state.value.total -= successCount
-      
+
       // 清空选中列表
       state.value.selectedTags = []
-      
+
       if (failedCount === 0) {
         ElMessage.success(`成功删除 ${successCount} 个点位`)
       } else {
-        ElMessage.warning(`删除完成：成功 ${successCount} 个，失败 ${failedCount} 个`)
+        ElMessage.warning(
+          `删除完成：成功 ${successCount} 个，失败 ${failedCount} 个`
+        )
       }
-      
+
       return failedCount === 0
-      
     } catch (error) {
       if (error !== 'cancel') {
         console.error('批量删除点位失败:', error)
@@ -319,11 +324,11 @@ export const useTagsStore = defineStore('tags', () => {
     try {
       state.value.importing = true
       state.value.importProgress = 0
-      
-      const result = await tagsApi.importTags(file, (progress) => {
+
+      const result = await tagsApi.importTags(file, progress => {
         state.value.importProgress = progress
       })
-      
+
       if (result.success) {
         ElMessage.success(`成功导入 ${result.imported_count} 个点位`)
         // 刷新列表
@@ -333,7 +338,6 @@ export const useTagsStore = defineStore('tags', () => {
         ElMessage.error(result.message || '导入失败')
         return false
       }
-      
     } catch (error) {
       console.error('导入点位失败:', error)
       ElMessage.error('导入点位失败')
@@ -350,9 +354,9 @@ export const useTagsStore = defineStore('tags', () => {
   async function exportTags(format: 'csv' | 'excel' = 'csv'): Promise<boolean> {
     try {
       state.value.loading = true
-      
+
       const blob = await tagsApi.exportTags(format, state.value.query)
-      
+
       // 创建下载链接
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -362,10 +366,9 @@ export const useTagsStore = defineStore('tags', () => {
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
-      
+
       ElMessage.success('导出成功')
       return true
-      
     } catch (error) {
       console.error('导出点位失败:', error)
       ElMessage.error('导出点位失败')
@@ -411,7 +414,9 @@ export const useTagsStore = defineStore('tags', () => {
   /**
    * 按访问模式筛选
    */
-  async function filterByAccessMode(accessMode: 'ReadOnly' | 'WriteOnly' | 'ReadWrite' | undefined) {
+  async function filterByAccessMode(
+    accessMode: 'ReadOnly' | 'WriteOnly' | 'ReadWrite' | undefined
+  ) {
     await fetchTags({
       ...state.value.query,
       access_mode: accessMode,
@@ -522,7 +527,7 @@ export const useTagsStore = defineStore('tags', () => {
   return {
     // 状态
     state: readonly(state),
-    
+
     // 计算属性
     totalPages,
     hasTags,
@@ -532,7 +537,7 @@ export const useTagsStore = defineStore('tags', () => {
     readOnlyTags,
     writeOnlyTags,
     readWriteTags,
-    
+
     // 方法
     fetchTags,
     fetchTag,

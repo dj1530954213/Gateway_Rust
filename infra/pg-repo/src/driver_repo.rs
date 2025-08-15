@@ -8,14 +8,13 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-use crate::error::{RepoError, RepoResult};
+use crate::error::RepoResult;
 use crate::models::{
     DbProtocolKind, DriverLoadHistory, DriverRegistry, 
     NewDriverLoadHistory, NewDriverRegistry
 };
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
-use uuid::Uuid;
 
 /// 驱动仓储接口
 #[async_trait]

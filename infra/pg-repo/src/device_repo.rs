@@ -8,11 +8,12 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-use crate::error::{RepoError, RepoResult};
+use crate::error::RepoResult;
 use crate::models::{Device, DeviceFilter, DeviceUpdate, NewDevice};
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
 use uuid::Uuid;
+use tracing::{debug, warn};
 
 /// 设备仓储接口
 #[async_trait]
@@ -54,44 +55,69 @@ impl DeviceRepoImpl {
     pub fn new(pool: Pool<Postgres>) -> Self {
         Self { pool }
     }
+    
+    /// 执行带监控的查询
+    #[inline]
+    async fn execute_monitored<T, F, Fut>(&self, 
+        query_name: &'static str,
+        query_fn: F
+    ) -> RepoResult<T>
+    where
+        F: FnOnce(&Pool<Postgres>) -> Fut,
+        Fut: std::future::Future<Output = Result<T, sqlx::Error>>,
+    {
+        let start = std::time::Instant::now();
+        let result = query_fn(&self.pool).await;
+        let elapsed = start.elapsed();
+        
+        // 记录性能指标
+        tracing::debug!("Query {} executed in {:?}", query_name, elapsed);
+        
+        // 记录慢查询
+        if elapsed.as_millis() > 1000 {
+            tracing::warn!("Slow query detected: {} took {:?}", query_name, elapsed);
+        }
+        
+        result.map_err(Into::into)
+    }
 }
 
 #[async_trait]
 impl DeviceRepo for DeviceRepoImpl {
     async fn create(&self, device: NewDevice) -> RepoResult<Device> {
-        let result = sqlx::query_as::<_, Device>(
-            r#"
-            INSERT INTO devices (id, name, protocol, location, endpoint, config, enabled)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            RETURNING id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-            "#
-        )
-        .bind(device.id)
-        .bind(device.name)
-        .bind(device.protocol)
-        .bind(device.location)
-        .bind(device.endpoint)
-        .bind(device.config)
-        .bind(device.enabled)
-        .fetch_one(&self.pool)
-        .await?;
-        
-        Ok(result)
+        self.execute_monitored("device_create", |pool| async move {
+            sqlx::query_as::<_, Device>(
+                r#"
+                INSERT INTO devices (id, name, protocol, location, endpoint, config, enabled)
+                VALUES ($1, $2, $3, $4, $5, $6, $7)
+                RETURNING id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+                "#
+            )
+            .bind(device.id)
+            .bind(device.name)
+            .bind(device.protocol)
+            .bind(device.location)
+            .bind(device.endpoint)
+            .bind(device.config)
+            .bind(device.enabled)
+            .fetch_one(pool)
+            .await
+        }).await
     }
     
     async fn get_by_id(&self, id: Uuid) -> RepoResult<Option<Device>> {
-        let result = sqlx::query_as::<_, Device>(
-            r#"
-            SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-            FROM devices 
-            WHERE id = $1
-            "#
-        )
-        .bind(id)
-        .fetch_optional(&self.pool)
-        .await?;
-        
-        Ok(result)
+        self.execute_monitored("device_get_by_id", |pool| async move {
+            sqlx::query_as::<_, Device>(
+                r#"
+                SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+                FROM devices 
+                WHERE id = $1
+                "#
+            )
+            .bind(id)
+            .fetch_optional(pool)
+            .await
+        }).await
     }
     
     async fn get_by_name(&self, name: &str) -> RepoResult<Option<Device>> {
@@ -146,38 +172,38 @@ impl DeviceRepo for DeviceRepoImpl {
     }
     
     async fn list(&self, filter: DeviceFilter) -> RepoResult<Vec<Device>> {
-        let mut query_builder = sqlx::QueryBuilder::new(
-            r#"
-            SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-            FROM devices 
-            WHERE 1=1
-            "#
-        );
-        
-        if let Some(protocol) = filter.protocol {
-            query_builder.push(" AND protocol = ").push_bind(protocol);
-        }
-        
-        if let Some(enabled) = filter.enabled {
-            query_builder.push(" AND enabled = ").push_bind(enabled);
-        }
-        
-        query_builder.push(" ORDER BY created_at DESC");
-        
-        if let Some(limit) = filter.limit {
-            query_builder.push(" LIMIT ").push_bind(limit);
-        }
-        
-        if let Some(offset) = filter.offset {
-            query_builder.push(" OFFSET ").push_bind(offset);
-        }
-        
-        let devices = query_builder
-            .build_query_as::<Device>()
-            .fetch_all(&self.pool)
-            .await?;
-        
-        Ok(devices)
+        self.execute_monitored("device_list", |pool| async move {
+            let mut query_builder = sqlx::QueryBuilder::new(
+                r#"
+                SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+                FROM devices 
+                WHERE 1=1
+                "#
+            );
+            
+            if let Some(protocol) = filter.protocol {
+                query_builder.push(" AND protocol = ").push_bind(protocol);
+            }
+            
+            if let Some(enabled) = filter.enabled {
+                query_builder.push(" AND enabled = ").push_bind(enabled);
+            }
+            
+            query_builder.push(" ORDER BY created_at DESC");
+            
+            if let Some(limit) = filter.limit {
+                query_builder.push(" LIMIT ").push_bind(limit);
+            }
+            
+            if let Some(offset) = filter.offset {
+                query_builder.push(" OFFSET ").push_bind(offset);
+            }
+            
+            query_builder
+                .build_query_as::<Device>()
+                .fetch_all(pool)
+                .await
+        }).await
     }
     
     async fn count(&self, filter: DeviceFilter) -> RepoResult<i64> {

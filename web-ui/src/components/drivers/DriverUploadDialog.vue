@@ -17,7 +17,10 @@
         class="upload-notice"
       >
         <ul class="upload-rules">
-          <li>仅支持 .so (Linux)、.dll (Windows)、.dylib (macOS) 格式的动态链接库文件</li>
+          <li>
+            仅支持 .so (Linux)、.dll (Windows)、.dylib (macOS)
+            格式的动态链接库文件
+          </li>
           <li>文件大小不能超过 100MB</li>
           <li>驱动文件必须实现规定的接口规范</li>
           <li>建议在上传前进行本地测试验证</li>
@@ -26,7 +29,7 @@
 
       <!-- 文件上传区域 -->
       <div class="upload-area">
-        <el-upload
+        <ElUpload
           ref="uploadRef"
           class="driver-upload"
           drag
@@ -50,7 +53,7 @@
               <p class="secondary-text">支持 .so / .dll / .dylib 格式</p>
             </div>
           </div>
-        </el-upload>
+        </ElUpload>
       </div>
 
       <!-- 选中的文件信息 -->
@@ -64,15 +67,19 @@
             </div>
             <div class="file-meta">
               <div class="file-name">{{ selectedFile.name }}</div>
-              <div class="file-size">{{ formatFileSize(selectedFile.size) }}</div>
-              <div class="file-type">{{ getFileTypeDisplay(selectedFile.name) }}</div>
+              <div class="file-size">
+                {{ formatFileSize(selectedFile.size) }}
+              </div>
+              <div class="file-type">
+                {{ getFileTypeDisplay(selectedFile.name) }}
+              </div>
             </div>
             <div class="file-actions">
               <el-button
                 type="danger"
                 text
-                @click="removeFile"
                 :disabled="uploading"
+                @click="removeFile"
               >
                 移除
               </el-button>
@@ -85,7 +92,9 @@
       <div v-if="uploading || uploadProgress > 0" class="upload-progress">
         <div class="progress-info">
           <span class="progress-text">上传进度</span>
-          <span class="progress-percentage">{{ Math.round(uploadProgress) }}%</span>
+          <span class="progress-percentage"
+            >{{ Math.round(uploadProgress) }}%</span
+          >
         </div>
         <el-progress
           :percentage="uploadProgress"
@@ -106,12 +115,17 @@
             <div class="success-info">
               <p><strong>驱动文件:</strong> {{ uploadResult.data.filename }}</p>
               <p v-if="uploadResult.data.info">
-                <strong>驱动信息:</strong> {{ uploadResult.data.info.name }} v{{ uploadResult.data.info.version }}
+                <strong>驱动信息:</strong> {{ uploadResult.data.info.name }} v{{
+                  uploadResult.data.info.version
+                }}
               </p>
               <p v-if="uploadResult.data.info?.protocol">
                 <strong>支持协议:</strong> {{ uploadResult.data.info.protocol }}
               </p>
-              <p><strong>加载状态:</strong> {{ getStatusDisplayName(uploadResult.data.status) }}</p>
+              <p>
+                <strong>加载状态:</strong>
+                {{ getStatusDisplayName(uploadResult.data.status) }}
+              </p>
             </div>
           </template>
           <template v-else>
@@ -126,14 +140,14 @@
     <!-- 对话框底部按钮 -->
     <template #footer>
       <div class="dialog-footer">
-        <el-button @click="handleCancel" :disabled="uploading">
+        <el-button :disabled="uploading" @click="handleCancel">
           取消
         </el-button>
         <el-button
           type="primary"
-          @click="handleUpload"
           :loading="uploading"
           :disabled="!selectedFile"
+          @click="handleUpload"
         >
           {{ uploading ? '上传中...' : '开始上传' }}
         </el-button>
@@ -162,11 +176,12 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch } from 'vue'
-import { ElMessage, ElUpload } from 'element-plus'
 import { Upload, Document } from '@element-plus/icons-vue'
-import { formatFileSize } from '@/utils/format'
+import { ElMessage, ElUpload } from 'element-plus'
+import { ref, computed, watch } from 'vue'
+
 import type { DriverUploadResponse, DriverVO } from '@/api/drivers'
+import { formatFileSize } from '@/utils/format'
 
 // ===== Props =====
 const props = defineProps<{
@@ -176,7 +191,7 @@ const props = defineProps<{
 // ===== Emits =====
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'success': [result: DriverUploadResponse]
+  success: [result: DriverUploadResponse]
 }>()
 
 // ===== 响应式数据 =====
@@ -190,7 +205,7 @@ const uploadResult = ref<DriverUploadResponse | null>(null)
 // ===== 计算属性 =====
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
+  set: value => emit('update:visible', value),
 })
 
 const uploadAction = computed(() => {
@@ -199,7 +214,7 @@ const uploadAction = computed(() => {
 
 const uploadHeaders = computed(() => {
   return {
-    'Authorization': `Bearer ${localStorage.getItem('token') || ''}`,
+    Authorization: `Bearer ${localStorage.getItem('token') || ''}`,
   }
 })
 
@@ -213,7 +228,7 @@ function beforeUpload(file: File): boolean {
   const allowedExtensions = ['.so', '.dll', '.dylib']
   const fileName = file.name.toLowerCase()
   const isValidFormat = allowedExtensions.some(ext => fileName.endsWith(ext))
-  
+
   if (!isValidFormat) {
     ElMessage.error('文件格式不正确，仅支持 .so、.dll、.dylib 格式')
     return false
@@ -230,7 +245,7 @@ function beforeUpload(file: File): boolean {
   uploadResult.value = null
   uploadProgress.value = 0
   uploadStatus.value = ''
-  
+
   return false // 阻止自动上传
 }
 
@@ -248,11 +263,11 @@ function handleSuccess(response: any) {
   uploading.value = false
   uploadProgress.value = 100
   uploadStatus.value = 'success'
-  
+
   if (response.success) {
     uploadResult.value = response
     ElMessage.success('驱动上传成功')
-    
+
     // 延迟触发成功事件，让用户看到结果
     setTimeout(() => {
       emit('success', response)
@@ -271,14 +286,15 @@ function handleError(error: any) {
   uploading.value = false
   uploadStatus.value = 'exception'
   uploadProgress.value = 0
-  
-  const errorMessage = error?.response?.data?.message || error.message || '上传失败'
+
+  const errorMessage =
+    error?.response?.data?.message || error.message || '上传失败'
   uploadResult.value = {
     success: false,
     message: errorMessage,
     data: null,
   }
-  
+
   ElMessage.error(errorMessage)
 }
 
@@ -319,7 +335,7 @@ function handleCancel() {
     ElMessage.warning('上传中，无法关闭')
     return
   }
-  
+
   dialogVisible.value = false
 }
 
@@ -342,9 +358,9 @@ function handleDialogClosed() {
 function getFileTypeDisplay(filename: string): string {
   const extension = filename.split('.').pop()?.toLowerCase()
   const typeMap: Record<string, string> = {
-    'so': 'Linux 动态链接库',
-    'dll': 'Windows 动态链接库',
-    'dylib': 'macOS 动态链接库',
+    so: 'Linux 动态链接库',
+    dll: 'Windows 动态链接库',
+    dylib: 'macOS 动态链接库',
   }
   return typeMap[extension || ''] || '未知类型'
 }
@@ -354,30 +370,33 @@ function getFileTypeDisplay(filename: string): string {
  */
 function getStatusDisplayName(status: string): string {
   const nameMap: Record<string, string> = {
-    'Loaded': '已加载',
-    'Failed': '加载失败',
-    'Unloaded': '未加载',
+    Loaded: '已加载',
+    Failed: '加载失败',
+    Unloaded: '未加载',
   }
   return nameMap[status] || status
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  if (!visible) {
-    handleDialogClosed()
+watch(
+  () => props.visible,
+  visible => {
+    if (!visible) {
+      handleDialogClosed()
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .upload-dialog {
   .upload-notice {
     margin-bottom: 20px;
-    
+
     .upload-rules {
       margin: 8px 0 0 0;
       padding-left: 20px;
-      
+
       li {
         margin-bottom: 4px;
         font-size: 13px;
@@ -385,16 +404,16 @@ watch(() => props.visible, (visible) => {
       }
     }
   }
-  
+
   .upload-area {
     margin-bottom: 20px;
-    
+
     .driver-upload {
       width: 100%;
-      
+
       :deep(.el-upload) {
         width: 100%;
-        
+
         .el-upload-dragger {
           width: 100%;
           height: 160px;
@@ -402,14 +421,14 @@ watch(() => props.visible, (visible) => {
           border-radius: 8px;
           background-color: #fafafa;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #409eff;
             background-color: #f0f9ff;
           }
         }
       }
-      
+
       .upload-content {
         display: flex;
         flex-direction: column;
@@ -417,22 +436,22 @@ watch(() => props.visible, (visible) => {
         justify-content: center;
         height: 100%;
         padding: 20px;
-        
+
         .upload-icon {
           color: #409eff;
           margin-bottom: 16px;
         }
-        
+
         .upload-text {
           text-align: center;
-          
+
           .primary-text {
             font-size: 16px;
             color: #303133;
             margin: 0 0 8px 0;
             font-weight: 500;
           }
-          
+
           .secondary-text {
             font-size: 14px;
             color: #909399;
@@ -442,25 +461,25 @@ watch(() => props.visible, (visible) => {
       }
     }
   }
-  
+
   .file-info {
     margin-bottom: 20px;
-    
+
     .file-card {
       .file-details {
         display: flex;
         align-items: center;
         gap: 16px;
-        
+
         .file-icon {
           color: #409eff;
           flex-shrink: 0;
         }
-        
+
         .file-meta {
           flex: 1;
           min-width: 0;
-          
+
           .file-name {
             font-size: 16px;
             font-weight: 500;
@@ -468,40 +487,40 @@ watch(() => props.visible, (visible) => {
             margin-bottom: 4px;
             word-break: break-all;
           }
-          
+
           .file-size {
             font-size: 14px;
             color: #606266;
             margin-bottom: 2px;
           }
-          
+
           .file-type {
             font-size: 13px;
             color: #909399;
           }
         }
-        
+
         .file-actions {
           flex-shrink: 0;
         }
       }
     }
   }
-  
+
   .upload-progress {
     margin-bottom: 20px;
-    
+
     .progress-info {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 8px;
-      
+
       .progress-text {
         font-size: 14px;
         color: #606266;
       }
-      
+
       .progress-percentage {
         font-size: 14px;
         font-weight: 500;
@@ -509,7 +528,7 @@ watch(() => props.visible, (visible) => {
       }
     }
   }
-  
+
   .upload-result {
     .success-info,
     .error-info {
@@ -517,7 +536,7 @@ watch(() => props.visible, (visible) => {
         margin: 4px 0;
         font-size: 14px;
         line-height: 1.4;
-        
+
         strong {
           color: #303133;
         }
@@ -540,20 +559,20 @@ watch(() => props.visible, (visible) => {
         :deep(.el-upload-dragger) {
           height: 120px;
         }
-        
+
         .upload-content {
           padding: 16px;
-          
+
           .upload-icon {
             font-size: 36px;
             margin-bottom: 12px;
           }
-          
+
           .upload-text {
             .primary-text {
               font-size: 14px;
             }
-            
+
             .secondary-text {
               font-size: 12px;
             }
@@ -561,20 +580,20 @@ watch(() => props.visible, (visible) => {
         }
       }
     }
-    
+
     .file-info {
       .file-card {
         .file-details {
           flex-direction: column;
           align-items: flex-start;
           gap: 12px;
-          
+
           .file-meta {
             .file-name {
               font-size: 14px;
             }
           }
-          
+
           .file-actions {
             align-self: flex-end;
           }

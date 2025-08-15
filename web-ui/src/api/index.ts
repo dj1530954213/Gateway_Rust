@@ -26,20 +26,20 @@ export * from './metrics'
 export { systemApi as configApi } from './system'
 
 // 导入API实例以供便捷方法使用
-import { authApi } from './auth'
-import { healthApi } from './health'
-import { devicesApi } from './devices'
-import { tagsApi } from './tags'
-import { driversApi } from './drivers'
-import { historyApi } from './history'
 import { alertsApi } from './alerts'
-import { systemApi } from './system'
-import { realtimeApi } from './realtime'
-import { datapointsApi } from './datapoints'
-import { usersApi } from './users'
-import { systemLogsApi } from './systemlogs'
+import { authApi } from './auth'
 import { backupApi } from './backup'
+import { datapointsApi } from './datapoints'
+import { devicesApi } from './devices'
+import { driversApi } from './drivers'
+import { healthApi } from './health'
+import { historyApi } from './history'
 import { metricsApi } from './metrics'
+import { realtimeApi } from './realtime'
+import { systemApi } from './system'
+import { systemLogsApi } from './systemlogs'
+import { tagsApi } from './tags'
+import { usersApi } from './users'
 
 // 重新导出常用的 API 实例
 export { authApi } from './auth'
@@ -97,12 +97,17 @@ export class WebSocketClient {
       heartbeatInterval?: number
     } = {}
   ) {
-    this.url = url || `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/telemetry`
-    this.maxReconnectAttempts = options.maxReconnectAttempts || 
+    this.url =
+      url ||
+      `${import.meta.env.VITE_WS_BASE_URL || 'ws://localhost:8080'}/ws/telemetry`
+    this.maxReconnectAttempts =
+      options.maxReconnectAttempts ||
       parseInt(import.meta.env.VITE_WS_MAX_RECONNECT_ATTEMPTS || '10')
-    this.reconnectInterval = options.reconnectInterval || 
+    this.reconnectInterval =
+      options.reconnectInterval ||
       parseInt(import.meta.env.VITE_WS_RECONNECT_INTERVAL || '5000')
-    this.heartbeatInterval = options.heartbeatInterval || 
+    this.heartbeatInterval =
+      options.heartbeatInterval ||
       parseInt(import.meta.env.VITE_WS_HEARTBEAT_INTERVAL || '30000')
   }
 
@@ -121,7 +126,7 @@ export class WebSocketClient {
           resolve()
         }
 
-        this.ws.onmessage = (event) => {
+        this.ws.onmessage = event => {
           try {
             const message: WebSocketMessage = JSON.parse(event.data)
             this.emit(message.type, message.data)
@@ -130,24 +135,28 @@ export class WebSocketClient {
           }
         }
 
-        this.ws.onclose = (event) => {
+        this.ws.onclose = event => {
           console.log('WebSocket 连接已关闭:', event.code, event.reason)
           this.stopHeartbeat()
-          
-          if (!event.wasClean && this.reconnectAttempts < this.maxReconnectAttempts) {
+
+          if (
+            !event.wasClean &&
+            this.reconnectAttempts < this.maxReconnectAttempts
+          ) {
             setTimeout(() => {
               this.reconnectAttempts++
-              console.log(`尝试重连 WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`)
+              console.log(
+                `尝试重连 WebSocket (${this.reconnectAttempts}/${this.maxReconnectAttempts})`
+              )
               this.connect()
             }, this.reconnectInterval)
           }
         }
 
-        this.ws.onerror = (error) => {
+        this.ws.onerror = error => {
           console.error('WebSocket 错误:', error)
           reject(error)
         }
-
       } catch (error) {
         reject(error)
       }
@@ -194,7 +203,7 @@ export class WebSocketClient {
    */
   off(type: string, callback?: Function): void {
     if (!this.listeners.has(type)) return
-    
+
     if (callback) {
       this.listeners.get(type)!.delete(callback)
     } else {

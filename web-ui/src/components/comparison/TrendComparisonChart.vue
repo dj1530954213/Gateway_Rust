@@ -8,7 +8,7 @@
           <span class="chart-subtitle">{{ subtitle }}</span>
         </div>
       </div>
-      
+
       <div class="toolbar-right">
         <el-button-group size="small">
           <el-button
@@ -20,9 +20,9 @@
             {{ period.label }}
           </el-button>
         </el-button-group>
-        
+
         <el-divider direction="vertical" />
-        
+
         <el-dropdown @command="handleChartType">
           <el-button size="small">
             图表类型
@@ -37,7 +37,7 @@
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        
+
         <el-dropdown @command="handleAnalysisType">
           <el-button size="small">
             分析方式
@@ -46,25 +46,29 @@
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item command="absolute">绝对值对比</el-dropdown-item>
-              <el-dropdown-item command="percentage">百分比对比</el-dropdown-item>
-              <el-dropdown-item command="normalized">标准化对比</el-dropdown-item>
+              <el-dropdown-item command="percentage"
+                >百分比对比</el-dropdown-item
+              >
+              <el-dropdown-item command="normalized"
+                >标准化对比</el-dropdown-item
+              >
               <el-dropdown-item command="difference">差值分析</el-dropdown-item>
             </el-dropdown-menu>
           </template>
         </el-dropdown>
-        
+
         <el-button size="small" @click="showSettings = true">
           <el-icon><Setting /></el-icon>
           设置
         </el-button>
       </div>
     </div>
-    
+
     <!-- 主图表区域 -->
     <div class="chart-main">
       <div ref="mainChartRef" class="main-chart"></div>
     </div>
-    
+
     <!-- 统计面板 -->
     <div class="statistics-panel">
       <div class="stats-grid">
@@ -88,7 +92,7 @@
         </div>
       </div>
     </div>
-    
+
     <!-- 详细对比表格 -->
     <div class="comparison-table">
       <div class="table-header">
@@ -104,7 +108,7 @@
           </el-button>
         </div>
       </div>
-      
+
       <el-table
         v-show="showTable"
         :data="comparisonData"
@@ -152,30 +156,30 @@
         </el-table-column>
       </el-table>
     </div>
-    
+
     <!-- 设置对话框 -->
     <el-dialog v-model="showSettings" title="图表设置" width="500px">
       <el-form :model="chartSettings" label-width="100px">
         <el-form-item label="平滑曲线">
           <el-switch v-model="chartSettings.smooth" />
         </el-form-item>
-        
+
         <el-form-item label="显示数据点">
           <el-switch v-model="chartSettings.showSymbol" />
         </el-form-item>
-        
+
         <el-form-item label="填充区域">
           <el-switch v-model="chartSettings.areaStyle" />
         </el-form-item>
-        
+
         <el-form-item label="显示网格">
           <el-switch v-model="chartSettings.showGrid" />
         </el-form-item>
-        
+
         <el-form-item label="动画效果">
           <el-switch v-model="chartSettings.animation" />
         </el-form-item>
-        
+
         <el-form-item label="标记线">
           <el-checkbox-group v-model="chartSettings.markLines">
             <el-checkbox label="average">平均线</el-checkbox>
@@ -183,7 +187,7 @@
             <el-checkbox label="min">最小值线</el-checkbox>
           </el-checkbox-group>
         </el-form-item>
-        
+
         <el-form-item label="Y轴范围">
           <el-radio-group v-model="chartSettings.yAxisType">
             <el-radio label="auto">自动</el-radio>
@@ -191,8 +195,11 @@
             <el-radio label="custom">自定义</el-radio>
           </el-radio-group>
         </el-form-item>
-        
-        <el-form-item v-if="chartSettings.yAxisType === 'custom'" label="自定义范围">
+
+        <el-form-item
+          v-if="chartSettings.yAxisType === 'custom'"
+          label="自定义范围"
+        >
           <el-row :gutter="8">
             <el-col :span="12">
               <el-input-number
@@ -211,7 +218,7 @@
           </el-row>
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="resetSettings">重置</el-button>
         <el-button type="primary" @click="applySettings">应用</el-button>
@@ -238,9 +245,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
-import { ElMessage } from 'element-plus'
-import * as echarts from 'echarts'
 import {
   ArrowDown,
   Setting,
@@ -253,8 +257,11 @@ import {
   InfoFilled,
   Top,
   Bottom,
-  Minus
+  Minus,
 } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
 
 // ===== Props =====
 const props = defineProps<{
@@ -279,7 +286,7 @@ const timePeriods = ref([
   { label: '1天', value: '1d' },
   { label: '7天', value: '7d' },
   { label: '30天', value: '30d' },
-  { label: '90天', value: '90d' }
+  { label: '90天', value: '90d' },
 ])
 
 // 图表设置
@@ -292,7 +299,7 @@ const chartSettings = ref({
   markLines: [],
   yAxisType: 'auto',
   yAxisMin: null,
-  yAxisMax: null
+  yAxisMax: null,
 })
 
 // ===== 计算属性 =====
@@ -301,16 +308,18 @@ const subtitle = computed(() => {
     '1d': '最近24小时',
     '7d': '最近7天',
     '30d': '最近30天',
-    '90d': '最近90天'
+    '90d': '最近90天',
   }
   return periodMap[selectedPeriod.value] || ''
 })
 
 const chartSeries = computed(() => {
-  return props.series || [
-    { name: '目标1', dataKey: 'value1', color: '#409EFF' },
-    { name: '目标2', dataKey: 'value2', color: '#67C23A' }
-  ]
+  return (
+    props.series || [
+      { name: '目标1', dataKey: 'value1', color: '#409EFF' },
+      { name: '目标2', dataKey: 'value2', color: '#67C23A' },
+    ]
+  )
 })
 
 const statistics = computed(() => {
@@ -318,51 +327,58 @@ const statistics = computed(() => {
   if (!props.data || props.data.length === 0) {
     return []
   }
-  
+
   const stats = []
-  
+
   chartSeries.value.forEach((series, index) => {
-    const values = props.data.map(item => item[series.dataKey]).filter(v => v !== null && v !== undefined)
-    
+    const values = props.data
+      .map(item => item[series.dataKey])
+      .filter(v => v !== null && v !== undefined)
+
     if (values.length > 0) {
       const avg = values.reduce((sum, val) => sum + val, 0) / values.length
       const max = Math.max(...values)
       const min = Math.min(...values)
       const latest = values[values.length - 1]
       const previous = values.length > 1 ? values[values.length - 2] : latest
-      const change = ((latest - previous) / previous * 100).toFixed(1)
-      
+      const change = (((latest - previous) / previous) * 100).toFixed(1)
+
       stats.push({
         key: `avg_${index}`,
         label: `${series.name}平均值`,
         value: avg.toFixed(2),
         change: `${change}%`,
-        trend: parseFloat(change) > 0 ? 'up' : parseFloat(change) < 0 ? 'down' : 'flat',
-        icon: 'DataAnalysis'
+        trend:
+          parseFloat(change) > 0
+            ? 'up'
+            : parseFloat(change) < 0
+              ? 'down'
+              : 'flat',
+        icon: 'DataAnalysis',
       })
     }
   })
-  
+
   return stats
 })
 
 const comparisonData = computed(() => {
   if (!props.data || props.data.length === 0) return []
-  
+
   return props.data.map(item => {
     const result = { ...item }
-    
+
     // 计算差值
     if (chartSeries.value.length >= 2) {
       const val1 = item[chartSeries.value[0].dataKey]
       const val2 = item[chartSeries.value[1].dataKey]
-      
+
       if (val1 !== null && val2 !== null) {
         result.difference = val1 - val2
         result.changeRate = ((val1 - val2) / val2) * 100
       }
     }
-    
+
     return result
   })
 })
@@ -374,10 +390,10 @@ const comparisonData = computed(() => {
  */
 function initChart() {
   if (!mainChartRef.value) return
-  
+
   mainChart.value = echarts.init(mainChartRef.value)
   updateChart()
-  
+
   // 监听窗口大小变化
   window.addEventListener('resize', handleResize)
 }
@@ -387,7 +403,7 @@ function initChart() {
  */
 function updateChart() {
   if (!mainChart.value || !props.data) return
-  
+
   const option = generateChartOption()
   mainChart.value.setOption(option, true)
 }
@@ -397,10 +413,10 @@ function updateChart() {
  */
 function generateChartOption() {
   const xAxisData = props.data.map(item => item.timestamp)
-  
+
   let series = chartSeries.value.map(seriesConfig => {
     const data = props.data.map(item => item[seriesConfig.dataKey])
-    
+
     const seriesOption: any = {
       name: seriesConfig.name,
       type: chartType.value,
@@ -409,34 +425,36 @@ function generateChartOption() {
       itemStyle: { color: seriesConfig.color },
       smooth: chartSettings.value.smooth,
       symbol: chartSettings.value.showSymbol ? 'circle' : 'none',
-      symbolSize: 4
+      symbolSize: 4,
     }
-    
+
     // 面积图样式
     if (chartSettings.value.areaStyle && chartType.value === 'line') {
       seriesOption.areaStyle = {
         color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-          { offset: 0, color: `${seriesConfig.color  }40` },
-          { offset: 1, color: `${seriesConfig.color  }10` }
-        ])
+          { offset: 0, color: `${seriesConfig.color}40` },
+          { offset: 1, color: `${seriesConfig.color}10` },
+        ]),
       }
     }
-    
+
     // 标记线
     if (chartSettings.value.markLines.length > 0) {
       seriesOption.markLine = {
-        data: chartSettings.value.markLines.map(type => {
-          if (type === 'average') return { type: 'average', name: '平均值' }
-          if (type === 'max') return { type: 'max', name: '最大值' }
-          if (type === 'min') return { type: 'min', name: '最小值' }
-          return null
-        }).filter(Boolean)
+        data: chartSettings.value.markLines
+          .map(type => {
+            if (type === 'average') return { type: 'average', name: '平均值' }
+            if (type === 'max') return { type: 'max', name: '最大值' }
+            if (type === 'min') return { type: 'min', name: '最小值' }
+            return null
+          })
+          .filter(Boolean),
       }
     }
-    
+
     return seriesOption
   })
-  
+
   // 处理不同分析类型
   if (analysisType.value === 'percentage' && chartSeries.value.length >= 2) {
     // 百分比对比
@@ -445,9 +463,9 @@ function generateChartOption() {
       const data = props.data.map((item, i) => {
         const baseValue = baseData[i]
         const currentValue = item[seriesConfig.dataKey]
-        return baseValue !== 0 ? ((currentValue / baseValue) * 100 - 100) : 0
+        return baseValue !== 0 ? (currentValue / baseValue) * 100 - 100 : 0
       })
-      
+
       return {
         name: `${seriesConfig.name} vs ${chartSeries.value[0].name}`,
         type: chartType.value,
@@ -455,35 +473,43 @@ function generateChartOption() {
         lineStyle: { color: seriesConfig.color, width: 2 },
         itemStyle: { color: seriesConfig.color },
         smooth: chartSettings.value.smooth,
-        symbol: chartSettings.value.showSymbol ? 'circle' : 'none'
+        symbol: chartSettings.value.showSymbol ? 'circle' : 'none',
       }
     })
-  } else if (analysisType.value === 'difference' && chartSeries.value.length >= 2) {
+  } else if (
+    analysisType.value === 'difference' &&
+    chartSeries.value.length >= 2
+  ) {
     // 差值分析
     const data1 = props.data.map(item => item[chartSeries.value[0].dataKey])
     const data2 = props.data.map(item => item[chartSeries.value[1].dataKey])
-    
-    series = [{
-      name: `差值 (${chartSeries.value[0].name} - ${chartSeries.value[1].name})`,
-      type: chartType.value,
-      data: data1.map((val, index) => val - data2[index]),
-      lineStyle: { color: '#E6A23C', width: 2 },
-      itemStyle: { color: '#E6A23C' },
-      smooth: chartSettings.value.smooth,
-      symbol: chartSettings.value.showSymbol ? 'circle' : 'none',
-      markLine: {
-        data: [{ yAxis: 0, lineStyle: { color: '#F56C6C', type: 'dashed' } }]
-      }
-    }]
+
+    series = [
+      {
+        name: `差值 (${chartSeries.value[0].name} - ${chartSeries.value[1].name})`,
+        type: chartType.value,
+        data: data1.map((val, index) => val - data2[index]),
+        lineStyle: { color: '#E6A23C', width: 2 },
+        itemStyle: { color: '#E6A23C' },
+        smooth: chartSettings.value.smooth,
+        symbol: chartSettings.value.showSymbol ? 'circle' : 'none',
+        markLine: {
+          data: [{ yAxis: 0, lineStyle: { color: '#F56C6C', type: 'dashed' } }],
+        },
+      },
+    ]
   } else if (analysisType.value === 'normalized') {
     // 标准化对比
     series = chartSeries.value.map(seriesConfig => {
       const data = props.data.map(item => item[seriesConfig.dataKey])
       const mean = data.reduce((sum, val) => sum + val, 0) / data.length
-      const std = Math.sqrt(data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / data.length)
-      
+      const std = Math.sqrt(
+        data.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) /
+          data.length
+      )
+
       const normalizedData = data.map(val => (val - mean) / std)
-      
+
       return {
         name: `${seriesConfig.name} (标准化)`,
         type: chartType.value,
@@ -491,31 +517,38 @@ function generateChartOption() {
         lineStyle: { color: seriesConfig.color, width: 2 },
         itemStyle: { color: seriesConfig.color },
         smooth: chartSettings.value.smooth,
-        symbol: chartSettings.value.showSymbol ? 'circle' : 'none'
+        symbol: chartSettings.value.showSymbol ? 'circle' : 'none',
       }
     })
   }
-  
+
   // Y轴配置
   const yAxis: any = {
     type: 'value',
-    name: analysisType.value === 'percentage' ? '变化率 (%)' : 
-          analysisType.value === 'difference' ? '差值' :
-          analysisType.value === 'normalized' ? '标准化值' : '数值',
+    name:
+      analysisType.value === 'percentage'
+        ? '变化率 (%)'
+        : analysisType.value === 'difference'
+          ? '差值'
+          : analysisType.value === 'normalized'
+            ? '标准化值'
+            : '数值',
     nameTextStyle: { fontSize: 12 },
     splitLine: {
       show: chartSettings.value.showGrid,
-      lineStyle: { type: 'dashed', color: '#e0e6ed' }
-    }
+      lineStyle: { type: 'dashed', color: '#e0e6ed' },
+    },
   }
-  
+
   if (chartSettings.value.yAxisType === 'zero') {
     yAxis.min = 0
   } else if (chartSettings.value.yAxisType === 'custom') {
-    if (chartSettings.value.yAxisMin !== null) yAxis.min = chartSettings.value.yAxisMin
-    if (chartSettings.value.yAxisMax !== null) yAxis.max = chartSettings.value.yAxisMax
+    if (chartSettings.value.yAxisMin !== null)
+      yAxis.min = chartSettings.value.yAxisMin
+    if (chartSettings.value.yAxisMax !== null)
+      yAxis.max = chartSettings.value.yAxisMax
   }
-  
+
   return {
     animation: chartSettings.value.animation,
     grid: {
@@ -523,17 +556,17 @@ function generateChartOption() {
       right: '4%',
       bottom: '3%',
       top: '12%',
-      containLabel: true
+      containLabel: true,
     },
     tooltip: {
       trigger: 'axis',
       axisPointer: {
         type: 'cross',
-        label: { backgroundColor: '#6a7985' }
+        label: { backgroundColor: '#6a7985' },
       },
       formatter(params: any[]) {
         let tooltip = `<div style="margin-bottom: 5px;">${params[0].axisValue}</div>`
-        
+
         params.forEach(param => {
           tooltip += `
             <div style="display: flex; align-items: center; margin-bottom: 3px;">
@@ -543,14 +576,14 @@ function generateChartOption() {
             </div>
           `
         })
-        
+
         return tooltip
-      }
+      },
     },
     legend: {
       data: series.map(s => s.name),
       top: 0,
-      textStyle: { fontSize: 12 }
+      textStyle: { fontSize: 12 },
     },
     xAxis: {
       type: 'category',
@@ -558,19 +591,19 @@ function generateChartOption() {
       boundaryGap: false,
       axisLine: { lineStyle: { color: '#d4edda' } },
       axisTick: { show: false },
-      axisLabel: { 
+      axisLabel: {
         color: '#666',
         formatter(value: string) {
           return formatTimeLabel(value)
-        }
+        },
       },
       splitLine: {
         show: chartSettings.value.showGrid,
-        lineStyle: { type: 'dashed', color: '#e0e6ed' }
-      }
+        lineStyle: { type: 'dashed', color: '#e0e6ed' },
+      },
     },
     yAxis,
-    series
+    series,
   }
 }
 
@@ -621,7 +654,7 @@ function resetSettings() {
     markLines: [],
     yAxisType: 'auto',
     yAxisMin: null,
-    yAxisMax: null
+    yAxisMax: null,
   }
 }
 
@@ -647,7 +680,7 @@ function getTrendIcon(trend: string): string {
   const iconMap: { [key: string]: string } = {
     up: 'Top',
     down: 'Bottom',
-    flat: 'Minus'
+    flat: 'Minus',
   }
   return iconMap[trend] || 'Minus'
 }
@@ -674,9 +707,15 @@ function formatPercentage(value: number): string {
 function formatTimeLabel(timestamp: string): string {
   const date = new Date(timestamp)
   if (selectedPeriod.value === '1d') {
-    return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
+    return date.toLocaleTimeString('zh-CN', {
+      hour: '2-digit',
+      minute: '2-digit',
+    })
   } else {
-    return date.toLocaleDateString('zh-CN', { month: '2-digit', day: '2-digit' })
+    return date.toLocaleDateString('zh-CN', {
+      month: '2-digit',
+      day: '2-digit',
+    })
   }
 }
 
@@ -720,13 +759,21 @@ onUnmounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => props.data, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.data,
+  () => {
+    updateChart()
+  },
+  { deep: true }
+)
 
-watch(() => props.series, () => {
-  updateChart()
-}, { deep: true })
+watch(
+  () => props.series,
+  () => {
+    updateChart()
+  },
+  { deep: true }
+)
 </script>
 
 <style scoped lang="scss">
@@ -738,7 +785,7 @@ watch(() => props.series, () => {
     padding: 16px 0;
     border-bottom: 1px solid #ebeef5;
     margin-bottom: 16px;
-    
+
     .toolbar-left {
       .chart-title {
         h4 {
@@ -746,36 +793,36 @@ watch(() => props.series, () => {
           color: #303133;
           font-size: 16px;
         }
-        
+
         .chart-subtitle {
           font-size: 12px;
           color: #909399;
         }
       }
     }
-    
+
     .toolbar-right {
       display: flex;
       align-items: center;
       gap: 8px;
     }
   }
-  
+
   .chart-main {
     .main-chart {
       height: 400px;
       width: 100%;
     }
   }
-  
+
   .statistics-panel {
     margin: 20px 0;
-    
+
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
       gap: 16px;
-      
+
       .stat-item {
         display: flex;
         align-items: center;
@@ -784,40 +831,40 @@ watch(() => props.series, () => {
         background: #f8f9fa;
         border-radius: 8px;
         border-left: 4px solid transparent;
-        
+
         &.up {
           border-left-color: #67c23a;
         }
-        
+
         &.down {
           border-left-color: #f56c6c;
         }
-        
+
         &.flat {
           border-left-color: #909399;
         }
-        
+
         .stat-icon {
           font-size: 24px;
           color: #409eff;
         }
-        
+
         .stat-content {
           flex: 1;
-          
+
           .stat-value {
             font-size: 18px;
             font-weight: 600;
             color: #303133;
             margin-bottom: 2px;
           }
-          
+
           .stat-label {
             font-size: 12px;
             color: #606266;
             margin-bottom: 4px;
           }
-          
+
           .stat-change {
             display: flex;
             align-items: center;
@@ -829,62 +876,62 @@ watch(() => props.series, () => {
       }
     }
   }
-  
+
   .comparison-table {
     margin-top: 20px;
-    
+
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 12px;
-      
+
       h5 {
         margin: 0;
         color: #303133;
         font-size: 14px;
         font-weight: 600;
       }
-      
+
       .table-controls {
         display: flex;
         gap: 8px;
       }
     }
-    
+
     :deep(.el-table) {
       .positive-diff {
         color: #67c23a;
         font-weight: 500;
       }
-      
+
       .negative-diff {
         color: #f56c6c;
         font-weight: 500;
       }
-      
+
       .neutral-diff {
         color: #909399;
       }
-      
+
       .high-increase {
         color: #67c23a;
         font-weight: 600;
       }
-      
+
       .increase {
         color: #67c23a;
       }
-      
+
       .high-decrease {
         color: #f56c6c;
         font-weight: 600;
       }
-      
+
       .decrease {
         color: #f56c6c;
       }
-      
+
       .stable {
         color: #909399;
       }
@@ -907,22 +954,22 @@ watch(() => props.series, () => {
       flex-direction: column;
       gap: 12px;
       align-items: stretch;
-      
+
       .toolbar-right {
         justify-content: center;
         flex-wrap: wrap;
       }
     }
-    
+
     .statistics-panel .stats-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .comparison-table .table-header {
       flex-direction: column;
       gap: 8px;
       align-items: stretch;
-      
+
       .table-controls {
         justify-content: center;
       }

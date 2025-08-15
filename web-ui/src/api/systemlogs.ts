@@ -90,7 +90,7 @@ class SystemLogsApi {
   async export(params?: LogQuery) {
     return http.get('/api/v1/system/logs/export', {
       params,
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 
@@ -121,7 +121,7 @@ class SystemLogsApi {
       },
       close: () => {
         console.log('关闭实时日志流')
-      }
+      },
     }
   }
 
@@ -130,7 +130,7 @@ class SystemLogsApi {
    */
   async search(query: string, params?: Omit<LogQuery, 'search'>) {
     return http.get('/api/v1/system/logs/search', {
-      params: { ...params, q: query }
+      params: { ...params, q: query },
     })
   }
 
@@ -144,9 +144,13 @@ class SystemLogsApi {
   /**
    * 按时间范围获取日志
    */
-  async getByTimeRange(startTime: string, endTime: string, params?: Omit<LogQuery, 'timeRange'>) {
+  async getByTimeRange(
+    startTime: string,
+    endTime: string,
+    params?: Omit<LogQuery, 'timeRange'>
+  ) {
     return http.get('/api/v1/system/logs/range', {
-      params: { ...params, start_time: startTime, end_time: endTime }
+      params: { ...params, start_time: startTime, end_time: endTime },
     })
   }
 
@@ -176,7 +180,7 @@ class SystemLogsApi {
    */
   async downloadFile(filename: string) {
     return http.get(`/api/v1/system/logs/files/${filename}`, {
-      responseType: 'blob'
+      responseType: 'blob',
     })
   }
 }

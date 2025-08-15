@@ -114,8 +114,26 @@ impl WebServer {
 
 /// Serve the main index page
 async fn serve_index(State(_state): State<AppState>) -> Result<Html<String>, StatusCode> {
-    // Read the index.html file or return embedded version
-    let html_content = include_str!("../../../web/index.html");
+    // Return embedded HTML content for now
+    let html_content = r#"<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge Gateway</title>
+</head>
+<body>
+    <div id="app">
+        <h1>Edge Gateway 工业网关系统</h1>
+        <p>系统正在运行中...</p>
+        <div>
+            <h2>系统状态</h2>
+            <p>API服务: 运行中</p>
+            <p>Web界面: 运行中</p>
+        </div>
+    </div>
+</body>
+</html>"#;
     Ok(Html(html_content.to_string()))
 }
 

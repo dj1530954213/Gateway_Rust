@@ -78,38 +78,44 @@ impl ProtocolBridge for OpcUaBridge {
         Ok(())
     }
 
-    async fn write_data_point(&mut self, id: &str, value: DataValue) -> Result<()> {
+    async fn write_value(&self, id: &str, value: DataValue) -> Result<()> {
         let data_point = DataPoint {
             id: id.to_string(),
-            value,
-            timestamp: chrono::Utc::now(),
-            quality: DataQuality::Good,
+            name: id.to_string(),
+            data_type: DataType::String,
+            access: AccessLevel::ReadWrite,
+            value: Some(value),
+            last_updated: Some(std::time::SystemTime::now()),
+            quality: Quality::Good,
         };
         
         self.data_store.write().unwrap().insert(id.to_string(), data_point);
         Ok(())
     }
 
-    async fn read_data_point(&self, id: &str) -> Result<Option<DataPoint>> {
-        Ok(self.data_store.read().unwrap().get(id).cloned())
+    async fn read_value(&self, data_point_id: &str) -> Result<Option<DataValue>> {
+        Ok(self.data_store.read().unwrap().get(data_point_id).and_then(|dp| dp.value.clone()))
     }
 
     async fn list_data_points(&self) -> Result<Vec<String>> {
         Ok(self.data_store.read().unwrap().keys().cloned().collect())
     }
 
-    fn get_stats(&self) -> BridgeStats {
+    async fn stats(&self) -> BridgeStats {
         let data_store = self.data_store.read().unwrap();
         BridgeStats {
             connections: if *self.is_running.read().unwrap() { 1 } else { 0 },
-            data_points: data_store.len(),
-            bytes_transferred: data_store.len() * 64, // 估算
-            errors: 0,
+            total_requests: 0,
+            successful_requests: 0,
+            failed_requests: 0,
+            avg_response_time: 0.0,
+            start_time: None,
+            last_activity: None,
         }
     }
 
-    fn is_healthy(&self) -> bool {
-        *self.is_running.read().unwrap()
+    async fn health_check(&self) -> Result<bool> {
+        Ok(*self.is_running.read().unwrap())
     }
 }
 

@@ -4,9 +4,9 @@
       <h1>设备管理</h1>
       <p>管理IoT设备的连接、配置和监控</p>
     </div>
-    
+
     <div class="devices-content">
-      <el-card class="devices-card" v-loading="devicesStore.isLoading">
+      <el-card v-loading="devicesStore.isLoading" class="devices-card">
         <template #header>
           <div class="card-header">
             <div class="header-left">
@@ -27,7 +27,7 @@
             </div>
           </div>
         </template>
-        
+
         <!-- 搜索和筛选 -->
         <div class="search-bar">
           <el-input
@@ -35,14 +35,14 @@
             placeholder="搜索设备名称"
             size="small"
             style="width: 200px"
-            @keyup.enter="handleSearch"
             clearable
+            @keyup.enter="handleSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
-          
+
           <el-select
             v-model="protocolFilter"
             placeholder="协议类型"
@@ -55,7 +55,7 @@
             <el-option label="OPC UA" value="OpcUa" />
             <el-option label="MQTT" value="Mqtt" />
           </el-select>
-          
+
           <el-select
             v-model="statusFilter"
             placeholder="设备状态"
@@ -68,7 +68,7 @@
             <el-option label="禁用" :value="false" />
           </el-select>
         </div>
-        
+
         <el-table :data="devicesStore.state.devices" style="width: 100%">
           <el-table-column prop="name" label="设备名称" width="180" />
           <el-table-column prop="protocol" label="协议类型" width="120">
@@ -91,25 +91,33 @@
           </el-table-column>
           <el-table-column label="操作" fixed="right" width="200">
             <template #default="{ row }">
-              <el-button size="small" type="primary" @click="handleEditDevice(row)">
+              <el-button
+                size="small"
+                type="primary"
+                @click="handleEditDevice(row)"
+              >
                 编辑
               </el-button>
-              <el-button 
-                size="small" 
+              <el-button
+                size="small"
                 :type="row.enabled ? 'warning' : 'success'"
                 @click="handleToggleDevice(row)"
               >
                 {{ row.enabled ? '禁用' : '启用' }}
               </el-button>
-              <el-button size="small" type="danger" @click="handleDeleteDevice(row)">
+              <el-button
+                size="small"
+                type="danger"
+                @click="handleDeleteDevice(row)"
+              >
                 删除
               </el-button>
             </template>
           </el-table-column>
         </el-table>
-        
+
         <!-- 分页 -->
-        <div class="pagination-wrapper" v-if="devicesStore.state.total > 0">
+        <div v-if="devicesStore.state.total > 0" class="pagination-wrapper">
           <el-pagination
             v-model:current-page="devicesStore.state.currentPage"
             v-model:page-size="devicesStore.state.pageSize"
@@ -120,16 +128,18 @@
             @current-change="handleCurrentChange"
           />
         </div>
-        
+
         <!-- 空状态 -->
-        <el-empty 
-          v-if="!devicesStore.isLoading && devicesStore.state.devices.length === 0"
+        <el-empty
+          v-if="
+            !devicesStore.isLoading && devicesStore.state.devices.length === 0
+          "
           description="暂无设备数据"
           :image-size="80"
         />
       </el-card>
     </div>
-    
+
     <!-- 设备表单对话框 -->
     <DeviceFormDialog
       v-model="showDeviceDialog"
@@ -140,14 +150,15 @@
 </template>
 
 <script setup lang="ts">
+import { Plus, Refresh, Search } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Refresh, Search } from '@element-plus/icons-vue'
-import { useDevicesStore } from '@/stores/devices'
-import { formatTime } from '@/utils/date'
+
 import type { DeviceVO } from '@/api/devices'
 import DeviceFormDialog from '@/components/devices/DeviceFormDialog.vue'
+import { useDevicesStore } from '@/stores/devices'
+import { formatTime } from '@/utils/date'
 
 const router = useRouter()
 const devicesStore = useDevicesStore()
@@ -230,13 +241,13 @@ onMounted(async () => {
 
 .page-header {
   margin-bottom: 20px;
-  
+
   h1 {
     margin: 0 0 8px 0;
     font-size: 24px;
     color: var(--el-text-color-primary);
   }
-  
+
   p {
     margin: 0;
     color: var(--el-text-color-secondary);
@@ -249,19 +260,19 @@ onMounted(async () => {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .header-left {
         display: flex;
         align-items: center;
         gap: 12px;
       }
-      
+
       .header-actions {
         display: flex;
         gap: 8px;
       }
     }
-    
+
     .search-bar {
       display: flex;
       gap: 12px;
@@ -269,7 +280,7 @@ onMounted(async () => {
       padding: 16px 0;
       border-bottom: 1px solid var(--el-border-color-lighter);
     }
-    
+
     .pagination-wrapper {
       display: flex;
       justify-content: center;
@@ -283,19 +294,19 @@ onMounted(async () => {
 @media (max-width: 768px) {
   .devices-view {
     padding: 12px;
-    
+
     .devices-content .devices-card {
       .card-header {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
-        
+
         .header-left,
         .header-actions {
           justify-content: center;
         }
       }
-      
+
       .search-bar {
         flex-direction: column;
         gap: 8px;

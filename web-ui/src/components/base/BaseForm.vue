@@ -21,7 +21,7 @@
         <h4 class="form-group-title">{{ field.label }}</h4>
         <el-divider v-if="field.divider !== false" />
       </div>
-      
+
       <!-- 常规表单项 -->
       <el-form-item
         v-else
@@ -38,7 +38,11 @@
       >
         <!-- 输入框 -->
         <el-input
-          v-if="field.type === 'text' || field.type === 'password' || field.type === 'textarea'"
+          v-if="
+            field.type === 'text' ||
+            field.type === 'password' ||
+            field.type === 'textarea'
+          "
           v-model="formData[field.key]"
           :type="field.type === 'password' ? 'password' : 'text'"
           :placeholder="field.placeholder"
@@ -56,7 +60,7 @@
           @blur="handleFieldBlur(field.key)"
           @focus="handleFieldFocus(field.key)"
         />
-        
+
         <!-- 数字输入框 -->
         <el-input-number
           v-else-if="field.type === 'number'"
@@ -72,7 +76,7 @@
           :controls-position="field.controlsPosition"
           @change="handleFieldChange(field.key, $event)"
         />
-        
+
         <!-- 选择器 -->
         <el-select
           v-else-if="field.type === 'select' || field.type === 'multiSelect'"
@@ -99,10 +103,14 @@
             :disabled="option.disabled"
           />
         </el-select>
-        
+
         <!-- 日期选择器 -->
         <el-date-picker
-          v-else-if="field.type === 'date' || field.type === 'datetime' || field.type === 'daterange'"
+          v-else-if="
+            field.type === 'date' ||
+            field.type === 'datetime' ||
+            field.type === 'daterange'
+          "
           v-model="formData[field.key]"
           :type="getDatePickerType(field.type)"
           :placeholder="field.placeholder"
@@ -117,7 +125,7 @@
           :picker-options="field.pickerOptions"
           @change="handleFieldChange(field.key, $event)"
         />
-        
+
         <!-- 时间选择器 -->
         <el-time-picker
           v-else-if="field.type === 'time'"
@@ -130,7 +138,7 @@
           :value-format="field.valueFormat"
           @change="handleFieldChange(field.key, $event)"
         />
-        
+
         <!-- 开关 -->
         <el-switch
           v-else-if="field.type === 'switch'"
@@ -142,7 +150,7 @@
           :inactive-value="field.inactiveValue"
           @change="handleFieldChange(field.key, $event)"
         />
-        
+
         <!-- 单选框组 -->
         <el-radio-group
           v-else-if="field.type === 'radio'"
@@ -159,7 +167,7 @@
             {{ option.label }}
           </el-radio>
         </el-radio-group>
-        
+
         <!-- 复选框组 -->
         <el-checkbox-group
           v-else-if="field.type === 'checkbox'"
@@ -176,7 +184,7 @@
             {{ option.label }}
           </el-checkbox>
         </el-checkbox-group>
-        
+
         <!-- 单个复选框 -->
         <el-checkbox
           v-else-if="field.type === 'singleCheckbox'"
@@ -188,7 +196,7 @@
         >
           {{ field.checkboxText }}
         </el-checkbox>
-        
+
         <!-- 文件上传 -->
         <el-upload
           v-else-if="field.type === 'upload'"
@@ -199,9 +207,17 @@
           :multiple="field.multiple"
           :accept="field.accept"
           :before-upload="field.beforeUpload"
-          :on-success="(response, file, fileList) => handleUploadSuccess(field.key, response, file, fileList)"
-          :on-error="(error, file, fileList) => handleUploadError(field.key, error, file, fileList)"
-          :on-remove="(file, fileList) => handleUploadRemove(field.key, file, fileList)"
+          :on-success="
+            (response, file, fileList) =>
+              handleUploadSuccess(field.key, response, file, fileList)
+          "
+          :on-error="
+            (error, file, fileList) =>
+              handleUploadError(field.key, error, file, fileList)
+          "
+          :on-remove="
+            (file, fileList) => handleUploadRemove(field.key, file, fileList)
+          "
           :file-list="formData[field.key] || []"
           :disabled="isFieldDisabled(field)"
           :list-type="field.listType"
@@ -213,7 +229,7 @@
             </el-button>
           </slot>
         </el-upload>
-        
+
         <!-- JSON编辑器 -->
         <el-input
           v-else-if="field.type === 'json'"
@@ -224,7 +240,7 @@
           :disabled="isFieldDisabled(field)"
           @blur="handleJsonBlur(field.key)"
         />
-        
+
         <!-- 自定义插槽 -->
         <slot
           v-else-if="field.type === 'slot'"
@@ -233,7 +249,7 @@
           :value="formData[field.key]"
           :disabled="isFieldDisabled(field)"
         />
-        
+
         <!-- 字段说明 -->
         <div v-if="field.help" class="field-help">
           <el-text type="info" size="small">
@@ -243,18 +259,18 @@
         </div>
       </el-form-item>
     </template>
-    
+
     <!-- 表单操作按钮 -->
     <el-form-item v-if="showActions" class="form-actions">
-      <slot name="actions" :validate="validate" :resetFields="resetFields">
-        <el-button @click="handleReset" :disabled="disabled">
+      <slot name="actions" :validate="validate" :reset-fields="resetFields">
+        <el-button :disabled="disabled" @click="handleReset">
           {{ resetText }}
         </el-button>
         <el-button
           type="primary"
-          @click="handleSubmit"
           :loading="submitLoading"
           :disabled="disabled"
+          @click="handleSubmit"
         >
           {{ submitText }}
         </el-button>
@@ -264,27 +280,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, watch, nextTick } from 'vue'
 import { InfoFilled } from '@element-plus/icons-vue'
-import type { FormInstance, FormRules, FormValidateCallback } from 'element-plus'
+import type {
+  FormInstance,
+  FormRules,
+  FormValidateCallback,
+} from 'element-plus'
+import { ref, reactive, computed, watch, nextTick } from 'vue'
 
 export interface FormField {
   key: string
   label?: string
-  type: 'text' | 'password' | 'textarea' | 'number' | 'select' | 'multiSelect' | 
-        'date' | 'datetime' | 'daterange' | 'time' | 'switch' | 'radio' | 'checkbox' | 
-        'singleCheckbox' | 'upload' | 'json' | 'slot' | 'group'
+  type:
+    | 'text'
+    | 'password'
+    | 'textarea'
+    | 'number'
+    | 'select'
+    | 'multiSelect'
+    | 'date'
+    | 'datetime'
+    | 'daterange'
+    | 'time'
+    | 'switch'
+    | 'radio'
+    | 'checkbox'
+    | 'singleCheckbox'
+    | 'upload'
+    | 'json'
+    | 'slot'
+    | 'group'
   required?: boolean
   disabled?: boolean | ((formData: any) => boolean)
   readonly?: boolean
   placeholder?: string
   help?: string
   className?: string
-  
+
   // 验证规则
   rules?: any[]
   validator?: (rule: any, value: any, callback: any) => void
-  
+
   // 输入框特有属性
   clearable?: boolean
   maxlength?: number
@@ -293,7 +329,7 @@ export interface FormField {
   autosize?: boolean | { minRows?: number; maxRows?: number }
   prefixIcon?: any
   suffixIcon?: any
-  
+
   // 数字输入框特有属性
   min?: number
   max?: number
@@ -301,7 +337,7 @@ export interface FormField {
   precision?: number
   controls?: boolean
   controlsPosition?: 'right' | ''
-  
+
   // 选择器特有属性
   options?: SelectOption[]
   optionsLoader?: () => Promise<SelectOption[]>
@@ -312,7 +348,7 @@ export interface FormField {
   remote?: boolean
   remoteMethod?: (query: string) => void
   loading?: boolean
-  
+
   // 日期选择器特有属性
   format?: string
   valueFormat?: string
@@ -320,18 +356,18 @@ export interface FormField {
   startPlaceholder?: string
   endPlaceholder?: string
   pickerOptions?: any
-  
+
   // 开关特有属性
   activeText?: string
   inactiveText?: string
   activeValue?: any
   inactiveValue?: any
-  
+
   // 复选框特有属性
   checkboxText?: string
   trueLabel?: any
   falseLabel?: any
-  
+
   // 上传组件特有属性
   action?: string
   headers?: Record<string, any>
@@ -344,16 +380,16 @@ export interface FormField {
   drag?: boolean
   uploadIcon?: any
   uploadText?: string
-  
+
   // 布局属性
   labelWidth?: string
   showMessage?: boolean
   inlineMessage?: boolean
   size?: 'large' | 'default' | 'small'
-  
+
   // 自定义插槽
   slotName?: string
-  
+
   // 分组
   divider?: boolean
 }
@@ -377,7 +413,7 @@ interface Props {
   showMessage?: boolean
   inlineMessage?: boolean
   statusIcon?: boolean
-  
+
   // 操作按钮
   showActions?: boolean
   submitText?: string
@@ -427,36 +463,48 @@ const jsonValues = reactive<Record<string, string>>({})
 const fieldErrors = reactive<Record<string, string>>({})
 
 // 监听props.modelValue变化
-watch(() => props.modelValue, (newValue) => {
-  Object.assign(formData, newValue)
-  
-  // 初始化JSON字段
-  props.fields.forEach(field => {
-    if (field.type === 'json' && newValue[field.key]) {
-      try {
-        jsonValues[field.key] = JSON.stringify(newValue[field.key], null, 2)
-      } catch {
-        jsonValues[field.key] = ''
+watch(
+  () => props.modelValue,
+  newValue => {
+    Object.assign(formData, newValue)
+
+    // 初始化JSON字段
+    props.fields.forEach(field => {
+      if (field.type === 'json' && newValue[field.key]) {
+        try {
+          jsonValues[field.key] = JSON.stringify(newValue[field.key], null, 2)
+        } catch {
+          jsonValues[field.key] = ''
+        }
       }
-    }
-  })
-}, { immediate: true, deep: true })
+    })
+  },
+  { immediate: true, deep: true }
+)
 
 // 监听formData变化，同步到父组件
-watch(formData, (newValue) => {
-  emit('update:modelValue', { ...newValue })
-}, { deep: true })
+watch(
+  formData,
+  newValue => {
+    emit('update:modelValue', { ...newValue })
+  },
+  { deep: true }
+)
 
 // 处理后的字段列表
 const processedFields = computed(() => {
   return props.fields.map(field => {
     // 为选择器字段加载选项
-    if ((field.type === 'select' || field.type === 'multiSelect') && field.optionsLoader && !field.options) {
+    if (
+      (field.type === 'select' || field.type === 'multiSelect') &&
+      field.optionsLoader &&
+      !field.options
+    ) {
       field.optionsLoader().then(options => {
         field.options = options
       })
     }
-    
+
     return field
   })
 })
@@ -464,34 +512,34 @@ const processedFields = computed(() => {
 // 表单验证规则
 const formRules = computed(() => {
   const rules: FormRules = { ...props.rules }
-  
+
   props.fields.forEach(field => {
     if (field.rules || field.required || field.validator) {
       const fieldRules = []
-      
+
       if (field.required) {
         fieldRules.push({
           required: true,
           message: `请输入${field.label}`,
-          trigger: ['blur', 'change']
+          trigger: ['blur', 'change'],
         })
       }
-      
+
       if (field.rules) {
         fieldRules.push(...field.rules)
       }
-      
+
       if (field.validator) {
         fieldRules.push({
           validator: field.validator,
-          trigger: ['blur', 'change']
+          trigger: ['blur', 'change'],
         })
       }
-      
+
       rules[field.key] = fieldRules
     }
   })
-  
+
   return rules
 })
 
@@ -524,7 +572,7 @@ const getDatePickerType = (type: string) => {
   const typeMap: Record<string, string> = {
     date: 'date',
     datetime: 'datetime',
-    daterange: 'daterange'
+    daterange: 'daterange',
   }
   return typeMap[type] || 'date'
 }
@@ -564,12 +612,22 @@ const handleSelectVisibleChange = (key: string, visible: boolean) => {
   }
 }
 
-const handleUploadSuccess = (key: string, response: any, file: any, fileList: any[]) => {
+const handleUploadSuccess = (
+  key: string,
+  response: any,
+  file: any,
+  fileList: any[]
+) => {
   formData[key] = fileList
   emit('fieldChange', key, fileList)
 }
 
-const handleUploadError = (key: string, error: any, file: any, fileList: any[]) => {
+const handleUploadError = (
+  key: string,
+  error: any,
+  file: any,
+  fileList: any[]
+) => {
   console.error('Upload error:', error)
 }
 
@@ -584,7 +642,7 @@ const handleValidate = (prop: string, isValid: boolean, message: string) => {
 
 const handleSubmit = async () => {
   if (!formRef.value) return
-  
+
   try {
     await formRef.value.validate()
     emit('submit', { ...formData })
@@ -603,7 +661,10 @@ const validate = (callback?: FormValidateCallback) => {
   return formRef.value?.validate(callback)
 }
 
-const validateField = (props: string | string[], callback?: FormValidateCallback) => {
+const validateField = (
+  props: string | string[],
+  callback?: FormValidateCallback
+) => {
   return formRef.value?.validateField(props, callback)
 }
 
@@ -632,7 +693,7 @@ defineExpose({
 <style scoped lang="scss">
 .form-group {
   margin: 24px 0 16px 0;
-  
+
   .form-group-title {
     margin: 0 0 8px 0;
     font-size: 14px;
@@ -643,7 +704,7 @@ defineExpose({
 
 .field-help {
   margin-top: 4px;
-  
+
   .el-text {
     display: flex;
     align-items: center;
@@ -653,7 +714,7 @@ defineExpose({
 
 .form-actions {
   margin-top: 24px;
-  
+
   .el-button + .el-button {
     margin-left: 12px;
   }

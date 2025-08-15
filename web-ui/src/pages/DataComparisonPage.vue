@@ -20,7 +20,7 @@
         </el-button>
       </div>
     </div>
-    
+
     <div class="page-content">
       <!-- 分析类型选择 -->
       <div class="analysis-selector">
@@ -33,12 +33,15 @@
               </el-tooltip>
             </div>
           </div>
-          
+
           <div class="analysis-types">
             <div
               v-for="type in analysisTypes"
               :key="type.key"
-              :class="['analysis-type', { active: selectedAnalysisType === type.key }]"
+              :class="[
+                'analysis-type',
+                { active: selectedAnalysisType === type.key },
+              ]"
               @click="selectAnalysisType(type.key)"
             >
               <div class="type-icon">
@@ -62,7 +65,7 @@
           </div>
         </el-card>
       </div>
-      
+
       <!-- 数据对比分析面板 -->
       <div v-if="selectedAnalysisType === 'comparison'" class="analysis-panel">
         <DataComparisonPanel
@@ -70,7 +73,7 @@
           :variables="selectedVariables"
         />
       </div>
-      
+
       <!-- 趋势对比图表 -->
       <div v-if="selectedAnalysisType === 'trend'" class="analysis-panel">
         <TrendComparisonChart
@@ -79,7 +82,7 @@
           :title="'多变量趋势对比分析'"
         />
       </div>
-      
+
       <!-- 相关性分析 -->
       <div v-if="selectedAnalysisType === 'correlation'" class="analysis-panel">
         <CorrelationAnalysis
@@ -87,17 +90,23 @@
           :variables="selectedVariables"
         />
       </div>
-      
+
       <!-- 分布对比分析 -->
-      <div v-if="selectedAnalysisType === 'distribution'" class="analysis-panel">
+      <div
+        v-if="selectedAnalysisType === 'distribution'"
+        class="analysis-panel"
+      >
         <DistributionComparison
           :data="distributionData"
           :variables="selectedVariables"
         />
       </div>
-      
+
       <!-- 空状态 -->
-      <el-empty v-if="!selectedAnalysisType" description="请选择分析类型开始探索数据">
+      <el-empty
+        v-if="!selectedAnalysisType"
+        description="请选择分析类型开始探索数据"
+      >
         <div class="empty-actions">
           <el-button
             v-for="type in analysisTypes.slice(0, 3)"
@@ -109,7 +118,7 @@
         </div>
       </el-empty>
     </div>
-    
+
     <!-- 分析模板对话框 -->
     <el-dialog v-model="showTemplateDialog" title="分析模板" width="800px">
       <div class="template-grid">
@@ -139,7 +148,7 @@
         </div>
       </div>
     </el-dialog>
-    
+
     <!-- 历史分析对话框 -->
     <el-dialog v-model="showHistoryDialog" title="历史分析" width="900px">
       <el-table :data="analysisHistory" style="width: 100%">
@@ -172,21 +181,29 @@
             <el-button size="small" text @click="copyAnalysis(row)">
               复制
             </el-button>
-            <el-button size="small" text type="danger" @click="deleteAnalysis(row)">
+            <el-button
+              size="small"
+              text
+              type="danger"
+              @click="deleteAnalysis(row)"
+            >
               删除
             </el-button>
           </template>
         </el-table-column>
       </el-table>
     </el-dialog>
-    
+
     <!-- 新建分析对话框 -->
     <el-dialog v-model="showNewAnalysisDialog" title="新建分析" width="600px">
       <el-form :model="newAnalysisForm" label-width="120px">
         <el-form-item label="分析名称">
-          <el-input v-model="newAnalysisForm.name" placeholder="请输入分析名称" />
+          <el-input
+            v-model="newAnalysisForm.name"
+            placeholder="请输入分析名称"
+          />
         </el-form-item>
-        
+
         <el-form-item label="分析类型">
           <el-select v-model="newAnalysisForm.type" placeholder="选择分析类型">
             <el-option
@@ -197,7 +214,7 @@
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="选择变量">
           <el-select
             v-model="newAnalysisForm.variables"
@@ -213,7 +230,7 @@
             />
           </el-select>
         </el-form-item>
-        
+
         <el-form-item label="时间范围">
           <el-date-picker
             v-model="newAnalysisForm.dateRange"
@@ -225,7 +242,7 @@
             value-format="YYYY-MM-DD HH:mm:ss"
           />
         </el-form-item>
-        
+
         <el-form-item label="描述">
           <el-input
             v-model="newAnalysisForm.description"
@@ -235,7 +252,7 @@
           />
         </el-form-item>
       </el-form>
-      
+
       <template #footer>
         <el-button @click="showNewAnalysisDialog = false">取消</el-button>
         <el-button type="primary" @click="saveNewAnalysis">创建分析</el-button>
@@ -263,8 +280,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Grid,
   Clock,
@@ -275,12 +290,15 @@ import {
   PieChart,
   ScaleToOriginal,
   Monitor,
-  Setting
+  Setting,
 } from '@element-plus/icons-vue'
-import DataComparisonPanel from '../components/comparison/DataComparisonPanel.vue'
-import TrendComparisonChart from '../components/comparison/TrendComparisonChart.vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted } from 'vue'
+
 import CorrelationAnalysis from '../components/comparison/CorrelationAnalysis.vue'
+import DataComparisonPanel from '../components/comparison/DataComparisonPanel.vue'
 import DistributionComparison from '../components/comparison/DistributionComparison.vue'
+import TrendComparisonChart from '../components/comparison/TrendComparisonChart.vue'
 
 // ===== 响应式数据 =====
 const selectedAnalysisType = ref('')
@@ -295,29 +313,29 @@ const analysisTypes = ref([
     name: '多维度对比',
     description: '多个数据源的综合对比分析，支持统计检验和异常检测',
     icon: 'DataAnalysis',
-    features: ['统计检验', '异常检测', '多目标对比']
+    features: ['统计检验', '异常检测', '多目标对比'],
   },
   {
     key: 'trend',
     name: '趋势对比',
     description: '时间序列数据的趋势对比，支持多种分析方法和可视化',
     icon: 'TrendCharts',
-    features: ['时间序列', '趋势分析', '预测对比']
+    features: ['时间序列', '趋势分析', '预测对比'],
   },
   {
     key: 'correlation',
     name: '相关性分析',
     description: '变量间相关性分析，包括相关矩阵、网络图和滞后分析',
     icon: 'ScaleToOriginal',
-    features: ['相关矩阵', '网络分析', '滞后分析']
+    features: ['相关矩阵', '网络分析', '滞后分析'],
   },
   {
     key: 'distribution',
     name: '分布对比',
     description: '数据分布特征对比，包括概率分布、统计特征等',
     icon: 'PieChart',
-    features: ['分布拟合', '特征对比', '假设检验']
-  }
+    features: ['分布拟合', '特征对比', '假设检验'],
+  },
 ])
 
 // 分析模板
@@ -329,7 +347,7 @@ const analysisTemplates = ref([
     icon: 'Monitor',
     tags: ['设备', '性能', '对比'],
     type: 'comparison',
-    variables: ['temperature', 'pressure', 'efficiency']
+    variables: ['temperature', 'pressure', 'efficiency'],
   },
   {
     id: '2',
@@ -338,7 +356,7 @@ const analysisTemplates = ref([
     icon: 'ScaleToOriginal',
     tags: ['工艺', '参数', '相关性'],
     type: 'correlation',
-    variables: ['temperature', 'pressure', 'flow', 'ph']
+    variables: ['temperature', 'pressure', 'flow', 'ph'],
   },
   {
     id: '3',
@@ -347,7 +365,7 @@ const analysisTemplates = ref([
     icon: 'TrendCharts',
     tags: ['质量', '趋势', '时间'],
     type: 'trend',
-    variables: ['quality_score', 'defect_rate', 'compliance']
+    variables: ['quality_score', 'defect_rate', 'compliance'],
   },
   {
     id: '4',
@@ -356,8 +374,8 @@ const analysisTemplates = ref([
     icon: 'PieChart',
     tags: ['能耗', '分布', '对比'],
     type: 'distribution',
-    variables: ['power_consumption', 'energy_efficiency']
-  }
+    variables: ['power_consumption', 'energy_efficiency'],
+  },
 ])
 
 // 可用变量
@@ -371,7 +389,7 @@ const availableVariables = ref([
   { key: 'efficiency', name: '效率' },
   { key: 'quality_score', name: '质量得分' },
   { key: 'defect_rate', name: '缺陷率' },
-  { key: 'energy_efficiency', name: '能效比' }
+  { key: 'energy_efficiency', name: '能效比' },
 ])
 
 // 新建分析表单
@@ -380,7 +398,7 @@ const newAnalysisForm = ref({
   type: '',
   variables: [],
   dateRange: [],
-  description: ''
+  description: '',
 })
 
 // 分析历史
@@ -391,7 +409,7 @@ const analysisHistory = ref([
     type: 'correlation',
     variables: ['温度', '压力'],
     createTime: '2025-07-26 14:30:00',
-    status: '已完成'
+    status: '已完成',
   },
   {
     id: '2',
@@ -399,7 +417,7 @@ const analysisHistory = ref([
     type: 'comparison',
     variables: ['效率', '功率'],
     createTime: '2025-07-25 09:15:00',
-    status: '已完成'
+    status: '已完成',
   },
   {
     id: '3',
@@ -407,8 +425,8 @@ const analysisHistory = ref([
     type: 'trend',
     variables: ['质量得分', '缺陷率'],
     createTime: '2025-07-24 16:45:00',
-    status: '进行中'
-  }
+    status: '进行中',
+  },
 ])
 
 // ===== 计算属性 =====
@@ -440,7 +458,7 @@ const distributionData = computed(() => {
 const trendSeries = computed(() => [
   { name: '设备A', dataKey: 'deviceA', color: '#409EFF' },
   { name: '设备B', dataKey: 'deviceB', color: '#67C23A' },
-  { name: '设备C', dataKey: 'deviceC', color: '#E6A23C' }
+  { name: '设备C', dataKey: 'deviceC', color: '#E6A23C' },
 ])
 
 // ===== 方法 =====
@@ -450,7 +468,7 @@ const trendSeries = computed(() => [
  */
 function selectAnalysisType(type: string) {
   selectedAnalysisType.value = type
-  
+
   const typeName = analysisTypes.value.find(t => t.key === type)?.name
   ElMessage.success(`已切换到${typeName}分析`)
 }
@@ -460,14 +478,14 @@ function selectAnalysisType(type: string) {
  */
 function createNewAnalysis() {
   showNewAnalysisDialog.value = true
-  
+
   // 重置表单
   newAnalysisForm.value = {
     name: '',
     type: '',
     variables: [],
     dateRange: [],
-    description: ''
+    description: '',
   }
 }
 
@@ -479,34 +497,34 @@ function saveNewAnalysis() {
     ElMessage.warning('请输入分析名称')
     return
   }
-  
+
   if (!newAnalysisForm.value.type) {
     ElMessage.warning('请选择分析类型')
     return
   }
-  
+
   if (!newAnalysisForm.value.variables.length) {
     ElMessage.warning('请至少选择一个变量')
     return
   }
-  
+
   // 添加到历史记录
   const newAnalysis = {
     id: Date.now().toString(),
     name: newAnalysisForm.value.name,
     type: newAnalysisForm.value.type,
-    variables: newAnalysisForm.value.variables.map(key => 
-      availableVariables.value.find(v => v.key === key)?.name || key
+    variables: newAnalysisForm.value.variables.map(
+      key => availableVariables.value.find(v => v.key === key)?.name || key
     ),
     createTime: new Date().toLocaleString('zh-CN'),
-    status: '已完成'
+    status: '已完成',
   }
-  
+
   analysisHistory.value.unshift(newAnalysis)
-  
+
   // 应用新分析
   selectedAnalysisType.value = newAnalysisForm.value.type
-  
+
   showNewAnalysisDialog.value = false
   ElMessage.success('分析创建成功')
 }
@@ -517,7 +535,7 @@ function saveNewAnalysis() {
 function applyTemplate(template: any) {
   selectedAnalysisType.value = template.type
   showTemplateDialog.value = false
-  
+
   ElMessage.success(`已应用模板: ${template.name}`)
 }
 
@@ -527,7 +545,7 @@ function applyTemplate(template: any) {
 function loadAnalysis(analysis: any) {
   selectedAnalysisType.value = analysis.type
   showHistoryDialog.value = false
-  
+
   ElMessage.success(`已加载分析: ${analysis.name}`)
 }
 
@@ -540,9 +558,9 @@ function copyAnalysis(analysis: any) {
     id: Date.now().toString(),
     name: `${analysis.name} - 副本`,
     createTime: new Date().toLocaleString('zh-CN'),
-    status: '已完成'
+    status: '已完成',
   }
-  
+
   analysisHistory.value.unshift(copy)
   ElMessage.success('分析已复制')
 }
@@ -551,23 +569,21 @@ function copyAnalysis(analysis: any) {
  * 删除分析
  */
 function deleteAnalysis(analysis: any) {
-  ElMessageBox.confirm(
-    `确定要删除分析 "${analysis.name}" 吗？`,
-    '删除确认',
-    {
-      confirmButtonText: '删除',
-      cancelButtonText: '取消',
-      type: 'warning'
-    }
-  ).then(() => {
-    const index = analysisHistory.value.findIndex(a => a.id === analysis.id)
-    if (index !== -1) {
-      analysisHistory.value.splice(index, 1)
-      ElMessage.success('分析已删除')
-    }
-  }).catch(() => {
-    // 取消操作
+  ElMessageBox.confirm(`确定要删除分析 "${analysis.name}" 吗？`, '删除确认', {
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+    type: 'warning',
   })
+    .then(() => {
+      const index = analysisHistory.value.findIndex(a => a.id === analysis.id)
+      if (index !== -1) {
+        analysisHistory.value.splice(index, 1)
+        ElMessage.success('分析已删除')
+      }
+    })
+    .catch(() => {
+      // 取消操作
+    })
 }
 
 /**
@@ -578,7 +594,7 @@ function getAnalysisTypeTag(type: string): string {
     comparison: 'primary',
     trend: 'success',
     correlation: 'warning',
-    distribution: 'info'
+    distribution: 'info',
   }
   return typeMap[type] || 'info'
 }
@@ -607,7 +623,7 @@ function getStatusType(status: string): string {
 function generateMockAnalysisData() {
   const data = []
   const now = new Date()
-  
+
   for (let i = 0; i < 100; i++) {
     const time = new Date(now.getTime() - i * 60 * 60 * 1000)
     data.unshift({
@@ -615,27 +631,27 @@ function generateMockAnalysisData() {
       temperature: 25 + Math.random() * 10,
       pressure: 1.0 + Math.random() * 0.5,
       flow: 150 + Math.random() * 50,
-      power: 800 + Math.random() * 200
+      power: 800 + Math.random() * 200,
     })
   }
-  
+
   return data
 }
 
 function generateMockTrendData() {
   const data = []
   const now = new Date()
-  
+
   for (let i = 0; i < 48; i++) {
     const time = new Date(now.getTime() - i * 60 * 60 * 1000)
     data.unshift({
       timestamp: time.toISOString().slice(0, 19).replace('T', ' '),
       deviceA: 80 + Math.random() * 20 + Math.sin(i / 8) * 10,
       deviceB: 75 + Math.random() * 25 + Math.cos(i / 6) * 8,
-      deviceC: 85 + Math.random() * 15 + Math.sin(i / 10) * 12
+      deviceC: 85 + Math.random() * 15 + Math.sin(i / 10) * 12,
     })
   }
-  
+
   return data
 }
 
@@ -663,98 +679,98 @@ onMounted(() => {
     justify-content: space-between;
     align-items: flex-start;
     margin-bottom: 24px;
-    
+
     .header-content {
       h1 {
         margin: 0 0 8px 0;
         font-size: 24px;
         color: #303133;
       }
-      
+
       p {
         margin: 0;
         color: #606266;
         font-size: 14px;
       }
     }
-    
+
     .header-actions {
       display: flex;
       gap: 12px;
     }
   }
-  
+
   .page-content {
     .analysis-selector {
       margin-bottom: 24px;
-      
+
       .selector-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        
+
         h3 {
           margin: 0;
           color: #303133;
           font-size: 18px;
         }
-        
+
         .selector-tips {
           color: #909399;
           cursor: help;
         }
       }
-      
+
       .analysis-types {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
-        
+
         .analysis-type {
           padding: 20px;
           border: 2px solid #ebeef5;
           border-radius: 8px;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #c6e2ff;
             background: #f0f9ff;
           }
-          
+
           &.active {
             border-color: #409eff;
             background: #f0f9ff;
-            
+
             .type-icon {
               color: #409eff;
             }
           }
-          
+
           .type-icon {
             font-size: 32px;
             color: #909399;
             margin-bottom: 12px;
           }
-          
+
           .type-info {
             margin-bottom: 12px;
-            
+
             .type-name {
               font-size: 16px;
               font-weight: 600;
               color: #303133;
               margin-bottom: 4px;
             }
-            
+
             .type-description {
               font-size: 13px;
               color: #606266;
               line-height: 1.5;
             }
           }
-          
+
           .type-features {
             display: flex;
             flex-wrap: wrap;
@@ -763,14 +779,14 @@ onMounted(() => {
         }
       }
     }
-    
+
     .analysis-panel {
       background: white;
       border-radius: 8px;
       border: 1px solid #ebeef5;
       padding: 24px;
     }
-    
+
     .empty-actions {
       display: flex;
       gap: 12px;
@@ -784,25 +800,25 @@ onMounted(() => {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 16px;
-  
+
   .template-card {
     padding: 16px;
     border: 1px solid #ebeef5;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.3s;
-    
+
     &:hover {
       border-color: #c6e2ff;
       background: #f0f9ff;
     }
-    
+
     .template-icon {
       font-size: 24px;
       color: #409eff;
       margin-bottom: 12px;
     }
-    
+
     .template-info {
       .template-name {
         font-size: 14px;
@@ -810,14 +826,14 @@ onMounted(() => {
         color: #303133;
         margin-bottom: 6px;
       }
-      
+
       .template-description {
         font-size: 12px;
         color: #606266;
         line-height: 1.4;
         margin-bottom: 8px;
       }
-      
+
       .template-tags {
         display: flex;
         flex-wrap: wrap;
@@ -834,7 +850,7 @@ onMounted(() => {
       grid-template-columns: 1fr;
     }
   }
-  
+
   .template-grid {
     grid-template-columns: 1fr;
   }
@@ -846,13 +862,13 @@ onMounted(() => {
       flex-direction: column;
       gap: 16px;
       align-items: stretch;
-      
+
       .header-actions {
         justify-content: center;
         flex-wrap: wrap;
       }
     }
-    
+
     .analysis-panel {
       padding: 16px;
     }

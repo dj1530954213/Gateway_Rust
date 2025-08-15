@@ -19,7 +19,7 @@
         <template #header>
           <span class="section-title">基本信息</span>
         </template>
-        
+
         <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="设备名称" prop="name">
@@ -30,7 +30,7 @@
               />
             </el-form-item>
           </el-col>
-          
+
           <el-col :span="12">
             <el-form-item label="协议类型" prop="protocol">
               <el-select
@@ -47,7 +47,7 @@
             </el-form-item>
           </el-col>
         </el-row>
-        
+
         <el-form-item label="设备位置" prop="location">
           <el-input
             v-model="formData.location"
@@ -58,7 +58,7 @@
             show-word-limit
           />
         </el-form-item>
-        
+
         <el-form-item label="启用状态" prop="enabled">
           <el-switch
             v-model="formData.enabled"
@@ -73,7 +73,7 @@
         <template #header>
           <span class="section-title">连接配置</span>
         </template>
-        
+
         <!-- Modbus TCP 配置 -->
         <template v-if="formData.protocol === 'ModbusTcp'">
           <el-row :gutter="20">
@@ -85,7 +85,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="端口号" prop="config.port">
                 <el-input-number
@@ -98,7 +98,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="从站ID" prop="config.slave_id">
@@ -111,7 +111,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="连接超时" prop="config.timeout">
                 <el-input-number
@@ -128,7 +128,7 @@
             </el-col>
           </el-row>
         </template>
-        
+
         <!-- Modbus RTU 配置 -->
         <template v-else-if="formData.protocol === 'ModbusRtu'">
           <el-row :gutter="20">
@@ -140,7 +140,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="波特率" prop="config.baud_rate">
                 <el-select
@@ -157,7 +157,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item label="数据位" prop="config.data_bits">
@@ -170,7 +170,7 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="8">
               <el-form-item label="停止位" prop="config.stop_bits">
                 <el-select
@@ -182,13 +182,10 @@
                 </el-select>
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="8">
               <el-form-item label="校验位" prop="config.parity">
-                <el-select
-                  v-model="formData.config.parity"
-                  style="width: 100%"
-                >
+                <el-select v-model="formData.config.parity" style="width: 100%">
                   <el-option label="无" value="None" />
                   <el-option label="奇校验" value="Odd" />
                   <el-option label="偶校验" value="Even" />
@@ -196,7 +193,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-form-item label="从站ID" prop="config.slave_id">
             <el-input-number
               v-model="formData.config.slave_id"
@@ -207,7 +204,7 @@
             />
           </el-form-item>
         </template>
-        
+
         <!-- OPC UA 配置 -->
         <template v-else-if="formData.protocol === 'OpcUa'">
           <el-form-item label="端点URL" prop="config.endpoint">
@@ -216,7 +213,7 @@
               placeholder="opc.tcp://localhost:4840"
             />
           </el-form-item>
-          
+
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="用户名" prop="config.username">
@@ -226,7 +223,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="密码" prop="config.password">
                 <el-input
@@ -239,7 +236,7 @@
             </el-col>
           </el-row>
         </template>
-        
+
         <!-- MQTT 配置 -->
         <template v-else-if="formData.protocol === 'Mqtt'">
           <el-row :gutter="20">
@@ -251,7 +248,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="8">
               <el-form-item label="客户端ID" prop="config.client_id">
                 <el-input
@@ -261,7 +258,7 @@
               </el-form-item>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="20">
             <el-col :span="12">
               <el-form-item label="用户名" prop="config.username">
@@ -271,7 +268,7 @@
                 />
               </el-form-item>
             </el-col>
-            
+
             <el-col :span="12">
               <el-form-item label="密码" prop="config.password">
                 <el-input
@@ -291,18 +288,14 @@
       <div class="dialog-footer">
         <el-button @click="handleCancel">取消</el-button>
         <el-button
+          v-if="mode === 'create'"
           type="info"
           :loading="testing"
           @click="handleTestConnection"
-          v-if="mode === 'create'"
         >
           测试连接
         </el-button>
-        <el-button
-          type="primary"
-          :loading="submitting"
-          @click="handleSubmit"
-        >
+        <el-button type="primary" :loading="submitting" @click="handleSubmit">
           {{ mode === 'create' ? '创建' : '保存' }}
         </el-button>
       </div>
@@ -328,11 +321,12 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
 import { ElMessage } from 'element-plus'
-import { useDevicesStore } from '@/stores'
+import { ref, computed, watch, nextTick } from 'vue'
+
 import type { DeviceVO, DeviceCreateReq } from '@/api/devices'
+import { useDevicesStore } from '@/stores'
 
 // ===== Props =====
 const props = defineProps<{
@@ -344,7 +338,7 @@ const props = defineProps<{
 // ===== Emits =====
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'success': []
+  success: []
 }>()
 
 // ===== Store =====
@@ -358,7 +352,7 @@ const testing = ref(false)
 // 对话框显示状态
 const dialogVisible = computed({
   get: () => props.visible,
-  set: (value) => emit('update:visible', value)
+  set: value => emit('update:visible', value),
 })
 
 // 对话框标题
@@ -379,16 +373,25 @@ const formData = ref<DeviceCreateReq>({
 const formRules: FormRules = {
   name: [
     { required: true, message: '请输入设备名称', trigger: 'blur' },
-    { min: 2, max: 50, message: '设备名称长度应在 2-50 字符之间', trigger: 'blur' },
+    {
+      min: 2,
+      max: 50,
+      message: '设备名称长度应在 2-50 字符之间',
+      trigger: 'blur',
+    },
   ],
-  protocol: [
-    { required: true, message: '请选择协议类型', trigger: 'change' },
-  ],
+  protocol: [{ required: true, message: '请选择协议类型', trigger: 'change' }],
   'config.host': [
     { required: true, message: '请输入主机地址', trigger: 'blur' },
   ],
   'config.port': [
-    { type: 'number', min: 1, max: 65535, message: '端口号应在 1-65535 之间', trigger: 'blur' },
+    {
+      type: 'number',
+      min: 1,
+      max: 65535,
+      message: '端口号应在 1-65535 之间',
+      trigger: 'blur',
+    },
   ],
   'config.port_name': [
     { required: true, message: '请输入串口端口', trigger: 'blur' },
@@ -412,7 +415,7 @@ const formRules: FormRules = {
 function handleProtocolChange(protocol: string) {
   // 清空连接配置
   formData.value.config = {}
-  
+
   // 设置默认值
   switch (protocol) {
     case 'ModbusTcp':
@@ -457,13 +460,13 @@ function handleProtocolChange(protocol: string) {
 async function handleTestConnection() {
   // 先验证表单
   if (!formRef.value) return
-  
+
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) {
     ElMessage.warning('请先完善表单信息')
     return
   }
-  
+
   testing.value = true
   try {
     const success = await devicesStore.testDeviceConnection(formData.value)
@@ -480,23 +483,26 @@ async function handleTestConnection() {
  */
 async function handleSubmit() {
   if (!formRef.value) return
-  
+
   const valid = await formRef.value.validate().catch(() => false)
   if (!valid) return
-  
+
   submitting.value = true
-  
+
   try {
     let success = false
-    
+
     if (props.mode === 'create') {
       const result = await devicesStore.createDevice(formData.value)
       success = !!result
     } else if (props.device) {
-      const result = await devicesStore.updateDevice(props.device.id, formData.value)
+      const result = await devicesStore.updateDevice(
+        props.device.id,
+        formData.value
+      )
       success = !!result
     }
-    
+
     if (success) {
       emit('success')
       ElMessage.success(`设备${props.mode === 'create' ? '创建' : '更新'}成功`)
@@ -519,7 +525,7 @@ function handleCancel() {
 function handleDialogClosed() {
   // 重置表单
   formRef.value?.resetFields()
-  
+
   // 重置状态
   submitting.value = false
   testing.value = false
@@ -556,40 +562,46 @@ function initFormData() {
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  if (visible) {
-    nextTick(() => {
-      initFormData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    if (visible) {
+      nextTick(() => {
+        initFormData()
+      })
+    }
   }
-})
+)
 
-watch(() => props.device, () => {
-  if (props.visible) {
-    initFormData()
+watch(
+  () => props.device,
+  () => {
+    if (props.visible) {
+      initFormData()
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .form-section {
   margin-bottom: 20px;
-  
+
   &:last-child {
     margin-bottom: 0;
   }
-  
+
   .section-title {
     font-weight: 600;
     color: #303133;
   }
-  
+
   :deep(.el-card__header) {
     padding: 12px 20px;
     background-color: #f8f9fa;
     border-bottom: 1px solid #ebeef5;
   }
-  
+
   :deep(.el-card__body) {
     padding: 20px;
   }
@@ -597,10 +609,10 @@ watch(() => props.device, () => {
 
 .dialog-footer {
   text-align: right;
-  
+
   .el-button {
     margin-left: 12px;
-    
+
     &:first-child {
       margin-left: 0;
     }
@@ -610,12 +622,12 @@ watch(() => props.device, () => {
 // 表单项优化
 :deep(.el-form-item) {
   margin-bottom: 18px;
-  
+
   .el-form-item__label {
     font-weight: 500;
     color: #606266;
   }
-  
+
   .el-form-item__content {
     .el-input__wrapper,
     .el-select .el-input__wrapper,
@@ -638,7 +650,7 @@ watch(() => props.device, () => {
     width: 95% !important;
     margin: 5vh auto;
   }
-  
+
   .form-section {
     :deep(.el-row) {
       .el-col {

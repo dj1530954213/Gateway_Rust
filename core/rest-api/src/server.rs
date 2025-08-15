@@ -155,11 +155,12 @@ impl ApiServer {
             .and(with_handler(self.command_handler.clone()))
             .and_then(execute_command);
 
-        // Apply CORS to all routes - 允许开发环境的多个端口
+        // Apply CORS to all routes - 完全开放CORS配置 (0.0.0.0)
         let cors = warp::cors()
-            .allow_any_origin()  // 临时允许所有源
-            .allow_headers(vec!["content-type", "authorization", "x-requested-with"])
-            .allow_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"]);
+            .allow_any_origin()     // 允许所有源 (0.0.0.0)
+            .allow_headers(vec!["content-type", "authorization", "x-requested-with", "accept", "origin", "user-agent", "x-csrf-token"])
+            .allow_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH", "HEAD"])
+            .allow_credentials(false); // Warp不支持任意源+凭据组合
 
         // Combine routes with CORS and error recovery
         health_routes

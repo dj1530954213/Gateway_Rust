@@ -10,15 +10,15 @@ pub mod metrics;
 pub use driver::ModbusDriver;
 pub use config::ModbusCfg;
 
-use driver_manager::{DriverMeta, DriverKind};
+use driver_manager::{DriverMeta, DriverKind, Driver, register_static_driver};
 
-// TODO: 重新实现驱动注册机制（MVP-0阶段暂时禁用）
-// inventory::submit! {
-//     StaticDriverEntry {
-//         name: "modbus-tcp",
-//         factory: || Box::new(ModbusDriver::new()),
-//     }
-// }
+/// 创建Modbus驱动实例的工厂函数
+fn create_modbus_driver() -> Box<dyn Driver> {
+    Box::new(ModbusDriver::new())
+}
+
+// 注册Modbus TCP驱动到静态驱动注册表
+register_static_driver!("modbus-tcp", create_modbus_driver);
 
 /// 获取驱动元信息  
 pub fn meta() -> DriverMeta {

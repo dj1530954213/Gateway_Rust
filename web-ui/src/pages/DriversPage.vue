@@ -4,14 +4,19 @@
     <div class="page-header">
       <div class="page-title">
         <h1>驱动管理</h1>
-        <p class="page-description">管理动态链接库驱动，支持上传、热重载和状态监控</p>
+        <p class="page-description">
+          管理动态链接库驱动，支持上传、热重载和状态监控
+        </p>
       </div>
       <div class="page-actions">
         <el-button type="primary" @click="openUploadDialog">
           <el-icon><Upload /></el-icon>
           上传驱动
         </el-button>
-        <el-button @click="reloadAllDrivers" :loading="driversStore.isReloading">
+        <el-button
+          :loading="driversStore.isReloading"
+          @click="reloadAllDrivers"
+        >
           <el-icon><Refresh /></el-icon>
           重载全部
         </el-button>
@@ -30,36 +35,36 @@
             v-model="searchKeyword"
             placeholder="搜索驱动文件名"
             clearable
-            @input="handleSearch"
             style="width: 240px"
+            @input="handleSearch"
           >
             <template #prefix>
               <el-icon><Search /></el-icon>
             </template>
           </el-input>
         </div>
-        
+
         <div class="filter-item">
           <el-select
             v-model="selectedStatus"
             placeholder="加载状态"
             clearable
-            @change="handleStatusFilter"
             style="width: 150px"
+            @change="handleStatusFilter"
           >
             <el-option label="已加载" value="Loaded" />
             <el-option label="加载失败" value="Failed" />
             <el-option label="未加载" value="Unloaded" />
           </el-select>
         </div>
-        
+
         <div class="filter-item">
           <el-select
             v-model="selectedProtocol"
             placeholder="支持协议"
             clearable
-            @change="handleProtocolFilter"
             style="width: 150px"
+            @change="handleProtocolFilter"
           >
             <el-option
               v-for="protocol in availableProtocols"
@@ -69,15 +74,17 @@
             />
           </el-select>
         </div>
-        
+
         <div class="filter-item">
           <el-button @click="resetFilters">重置筛选</el-button>
         </div>
       </div>
-      
+
       <!-- 批量操作栏 -->
       <div v-if="selectedDrivers.length > 0" class="batch-actions">
-        <span class="selected-info">已选择 {{ selectedDrivers.length }} 个驱动</span>
+        <span class="selected-info"
+          >已选择 {{ selectedDrivers.length }} 个驱动</span
+        >
         <el-button type="danger" @click="handleBatchDelete">批量删除</el-button>
         <el-button @click="handleBatchReload">批量重载</el-button>
         <el-button @click="clearSelection">取消选择</el-button>
@@ -93,26 +100,32 @@
         </div>
         <el-icon class="stat-icon"><Cpu /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card loaded">
         <div class="stat-content">
-          <div class="stat-value">{{ driversStore.state.statusStats.loaded }}</div>
+          <div class="stat-value">
+            {{ driversStore.state.statusStats.loaded }}
+          </div>
           <div class="stat-label">已加载</div>
         </div>
         <el-icon class="stat-icon"><CircleCheck /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card failed">
         <div class="stat-content">
-          <div class="stat-value">{{ driversStore.state.statusStats.failed }}</div>
+          <div class="stat-value">
+            {{ driversStore.state.statusStats.failed }}
+          </div>
           <div class="stat-label">加载失败</div>
         </div>
         <el-icon class="stat-icon"><CircleClose /></el-icon>
       </el-card>
-      
+
       <el-card class="stat-card unloaded">
         <div class="stat-content">
-          <div class="stat-value">{{ driversStore.state.statusStats.unloaded }}</div>
+          <div class="stat-value">
+            {{ driversStore.state.statusStats.unloaded }}
+          </div>
           <div class="stat-label">未加载</div>
         </div>
         <el-icon class="stat-icon"><Warning /></el-icon>
@@ -130,7 +143,7 @@
         @reload-driver="handleReloadDriver"
         @view-details="handleViewDetails"
       />
-      
+
       <!-- 分页 -->
       <div class="pagination-wrapper">
         <el-pagination
@@ -180,14 +193,23 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
+import {
+  Upload,
+  Refresh,
+  Search,
+  Cpu,
+  CircleCheck,
+  CircleClose,
+  Warning,
+} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Upload, Refresh, Search, Cpu, CircleCheck, CircleClose, Warning } from '@element-plus/icons-vue'
-import { useDriversStore } from '@/stores'
+import { ref, computed, onMounted, watch } from 'vue'
+
+import type { DriverVO } from '@/api/drivers'
+import DriverDetailsDialog from '@/components/drivers/DriverDetailsDialog.vue'
 import DriversTable from '@/components/drivers/DriversTable.vue'
 import DriverUploadDialog from '@/components/drivers/DriverUploadDialog.vue'
-import DriverDetailsDialog from '@/components/drivers/DriverDetailsDialog.vue'
-import type { DriverVO } from '@/api/drivers'
+import { useDriversStore } from '@/stores'
 
 // ===== Store =====
 const driversStore = useDriversStore()
@@ -343,7 +365,7 @@ async function handleBatchDelete() {
     for (const driver of selectedDrivers.value) {
       await driversStore.deleteDriver(driver.id)
     }
-    
+
     selectedDrivers.value = []
     ElMessage.success('批量删除完成')
   } catch (error) {
@@ -379,9 +401,11 @@ async function handleBatchReload() {
         failedCount++
       }
     }
-    
+
     selectedDrivers.value = []
-    ElMessage.success(`批量重载完成：成功 ${successCount} 个，失败 ${failedCount} 个`)
+    ElMessage.success(
+      `批量重载完成：成功 ${successCount} 个，失败 ${failedCount} 个`
+    )
   } catch (error) {
     if (error !== 'cancel') {
       ElMessage.error('批量重载失败')
@@ -437,7 +461,7 @@ watch([currentPage, pageSize], () => {
   justify-content: space-between;
   align-items: flex-start;
   margin-bottom: 24px;
-  
+
   .page-title {
     h1 {
       margin: 0 0 8px 0;
@@ -445,7 +469,7 @@ watch([currentPage, pageSize], () => {
       font-weight: 600;
       color: #303133;
     }
-    
+
     .page-description {
       margin: 0;
       color: #606266;
@@ -453,7 +477,7 @@ watch([currentPage, pageSize], () => {
       line-height: 1.4;
     }
   }
-  
+
   .page-actions {
     display: flex;
     gap: 12px;
@@ -462,19 +486,19 @@ watch([currentPage, pageSize], () => {
 
 .filter-card {
   margin-bottom: 16px;
-  
+
   .filter-row {
     display: flex;
     align-items: center;
     gap: 16px;
     flex-wrap: wrap;
   }
-  
+
   .filter-item {
     display: flex;
     align-items: center;
   }
-  
+
   .batch-actions {
     margin-top: 16px;
     padding-top: 16px;
@@ -482,7 +506,7 @@ watch([currentPage, pageSize], () => {
     display: flex;
     align-items: center;
     gap: 12px;
-    
+
     .selected-info {
       color: #409eff;
       font-weight: 500;
@@ -495,7 +519,7 @@ watch([currentPage, pageSize], () => {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 16px;
   margin-bottom: 16px;
-  
+
   .stat-card {
     .el-card__body {
       padding: 20px;
@@ -503,7 +527,7 @@ watch([currentPage, pageSize], () => {
       justify-content: space-between;
       align-items: center;
     }
-    
+
     .stat-content {
       .stat-value {
         font-size: 28px;
@@ -512,26 +536,26 @@ watch([currentPage, pageSize], () => {
         line-height: 1;
         margin-bottom: 8px;
       }
-      
+
       .stat-label {
         font-size: 14px;
         color: #909399;
       }
     }
-    
+
     .stat-icon {
       font-size: 32px;
       color: #409eff;
     }
-    
+
     &.loaded .stat-icon {
       color: #67c23a;
     }
-    
+
     &.failed .stat-icon {
       color: #f56c6c;
     }
-    
+
     &.unloaded .stat-icon {
       color: #e6a23c;
     }
@@ -551,24 +575,24 @@ watch([currentPage, pageSize], () => {
   .drivers-page {
     padding: 16px;
   }
-  
+
   .page-header {
     flex-direction: column;
     align-items: stretch;
     gap: 16px;
   }
-  
+
   .stats-row {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .filter-row {
     flex-direction: column;
     align-items: stretch;
-    
+
     .filter-item {
       width: 100%;
-      
+
       :deep(.el-input),
       :deep(.el-select) {
         width: 100% !important;

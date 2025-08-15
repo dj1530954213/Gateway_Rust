@@ -13,12 +13,15 @@ members = [
     "core/protocol-bridge",
     "core/web-gw-api",           # ➕ 新增 Actix-Web HTTP+WS 服务
     "core/driver-sdk",           # ➕ 新增驱动SDK
+    "core/common-errors",        # ➕ 统一错误处理系统
     # "core/alert-engine",         # ➕ 新增独立报警引擎 - 暂时禁用编译错误
     "infra/pg-repo",             # ➕ PostgreSQL仓储层
     # "core/advanced-features",  # 暂时禁用以解决链接问题
     "drivers/modbus-static",
     "connectors/mqtt5",
-    "edge-gateway"
+    "edge-gateway",
+    "benches-pkg",                # 基准测试包
+    "examples"                    # 统一错误处理示例
 ]
 resolver = "2"
 
@@ -133,6 +136,7 @@ proptest = "1.4"
 criterion = { version = "0.5", features = ["html_reports"] }
 testcontainers = "0.15"
 tempfile = "3.8"
+tarpaulin = "0.27"  # 代码覆盖率工具
 
 # Integration test dependencies  
 paho-mqtt = "0.12"
@@ -161,4 +165,3 @@ authors = ["Edge Gateway Team"]
 license = "MIT"
 repository = "https://github.com/your-org/edge-gateway"
 
-# Additional workspace dependencies

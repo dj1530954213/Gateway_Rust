@@ -37,7 +37,7 @@
               @change="handleCustomTimeChange"
             />
           </div>
-          
+
           <div class="input-group">
             <label class="input-label">结束时间</label>
             <el-date-picker
@@ -53,12 +53,14 @@
             />
           </div>
         </div>
-        
+
         <!-- 时间范围预览 -->
-        <div class="range-preview" v-if="customStartTime && customEndTime">
+        <div v-if="customStartTime && customEndTime" class="range-preview">
           <div class="preview-item">
             <span class="preview-label">时间跨度:</span>
-            <span class="preview-value">{{ formatTimeSpan(customStartTime, customEndTime) }}</span>
+            <span class="preview-value">{{
+              formatTimeSpan(customStartTime, customEndTime)
+            }}</span>
           </div>
           <div class="preview-item">
             <span class="preview-label">数据点数:</span>
@@ -73,16 +75,20 @@
           <el-icon><Clock /></el-icon>
           <span class="selection-text">{{ getCurrentSelectionText() }}</span>
         </div>
-        
+
         <div class="selection-actions">
           <el-tooltip content="刷新到当前时间">
             <el-button type="text" size="small" @click="refreshToNow">
               <el-icon><Refresh /></el-icon>
             </el-button>
           </el-tooltip>
-          
+
           <el-tooltip content="时区设置">
-            <el-button type="text" size="small" @click="showTimezoneDialog = true">
+            <el-button
+              type="text"
+              size="small"
+              @click="showTimezoneDialog = true"
+            >
               <el-icon><Setting /></el-icon>
             </el-button>
           </el-tooltip>
@@ -114,7 +120,7 @@
             />
           </el-select>
         </div>
-        
+
         <div class="setting-item">
           <label class="setting-label">时间格式</label>
           <el-radio-group v-model="timeFormat">
@@ -122,17 +128,19 @@
             <el-radio label="12h">12小时制</el-radio>
           </el-radio-group>
         </div>
-        
+
         <div class="current-time">
           <span class="time-label">当前时间:</span>
           <span class="time-value">{{ getCurrentTimeDisplay() }}</span>
         </div>
       </div>
-      
+
       <template #footer>
         <div class="dialog-footer">
           <el-button @click="showTimezoneDialog = false">取消</el-button>
-          <el-button type="primary" @click="applyTimezoneSettings">确定</el-button>
+          <el-button type="primary" @click="applyTimezoneSettings"
+            >确定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -158,9 +166,10 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
 import { Clock, Refresh, Setting } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
+import { ref, computed, watch, onMounted } from 'vue'
+
 import { formatDateTime, getTimeRange } from '@/utils/date'
 
 // ===== Props & Emits =====
@@ -174,7 +183,7 @@ const emit = defineEmits<{
   'update:range': [range: string]
   'update:start': [start: string]
   'update:end': [end: string]
-  'change': [data: { range: string; start: string; end: string }]
+  change: [data: { range: string; start: string; end: string }]
 }>()
 
 // ===== 响应式数据 =====
@@ -192,7 +201,7 @@ const quickRanges = [
   { label: '24小时', value: '24h' },
   { label: '3天', value: '3d' },
   { label: '7天', value: '7d' },
-  { label: '30天', value: '30d' }
+  { label: '30天', value: '30d' },
 ]
 
 // 日期选择器快捷选项
@@ -203,7 +212,7 @@ const dateShortcuts = [
       const today = new Date()
       today.setHours(0, 0, 0, 0)
       return [today, new Date()]
-    }
+    },
   },
   {
     text: '昨天',
@@ -214,7 +223,7 @@ const dateShortcuts = [
       const end = new Date(yesterday)
       end.setHours(23, 59, 59, 999)
       return [yesterday, end]
-    }
+    },
   },
   {
     text: '最近3天',
@@ -222,7 +231,7 @@ const dateShortcuts = [
       const start = new Date()
       start.setDate(start.getDate() - 3)
       return [start, new Date()]
-    }
+    },
   },
   {
     text: '最近7天',
@@ -230,8 +239,8 @@ const dateShortcuts = [
       const start = new Date()
       start.setDate(start.getDate() - 7)
       return [start, new Date()]
-    }
-  }
+    },
+  },
 ]
 
 // 可用时区
@@ -241,14 +250,17 @@ const availableTimezones = [
   { label: '美国东部时间 (UTC-5)', value: 'America/New_York' },
   { label: '美国西部时间 (UTC-8)', value: 'America/Los_Angeles' },
   { label: '欧洲中部时间 (UTC+1)', value: 'Europe/Berlin' },
-  { label: '日本标准时间 (UTC+9)', value: 'Asia/Tokyo' }
+  { label: '日本标准时间 (UTC+9)', value: 'Asia/Tokyo' },
 ]
 
 // ===== 计算属性 =====
 const isValidTimeRange = computed(() => {
   if (currentRange.value === 'custom') {
-    return customStartTime.value && customEndTime.value && 
-           new Date(customStartTime.value) < new Date(customEndTime.value)
+    return (
+      customStartTime.value &&
+      customEndTime.value &&
+      new Date(customStartTime.value) < new Date(customEndTime.value)
+    )
   }
   return true
 })
@@ -260,17 +272,17 @@ const isValidTimeRange = computed(() => {
  */
 function selectQuickRange(range: string) {
   currentRange.value = range
-  
+
   // 计算对应的时间范围
   const timeRange = calculateTimeRange(range)
-  
+
   emit('update:range', range)
   emit('update:start', timeRange.start)
   emit('update:end', timeRange.end)
   emit('change', {
     range,
     start: timeRange.start,
-    end: timeRange.end
+    end: timeRange.end,
   })
 }
 
@@ -279,23 +291,23 @@ function selectQuickRange(range: string) {
  */
 function selectCustomRange() {
   currentRange.value = 'custom'
-  
+
   // 如果没有设置自定义时间，使用默认值
   if (!customStartTime.value || !customEndTime.value) {
     const now = new Date()
     const oneHourAgo = new Date(now.getTime() - 60 * 60 * 1000)
-    
+
     customStartTime.value = oneHourAgo.toISOString()
     customEndTime.value = now.toISOString()
   }
-  
+
   emit('update:range', 'custom')
   emit('update:start', customStartTime.value)
   emit('update:end', customEndTime.value)
   emit('change', {
     range: 'custom',
     start: customStartTime.value,
-    end: customEndTime.value
+    end: customEndTime.value,
   })
 }
 
@@ -307,13 +319,13 @@ function handleCustomTimeChange() {
     ElMessage.warning('结束时间必须晚于开始时间')
     return
   }
-  
+
   emit('update:start', customStartTime.value)
   emit('update:end', customEndTime.value)
   emit('change', {
     range: 'custom',
     start: customStartTime.value,
-    end: customEndTime.value
+    end: customEndTime.value,
   })
 }
 
@@ -331,7 +343,7 @@ function disabledEndDate(date: Date): boolean {
 function calculateTimeRange(range: string): { start: string; end: string } {
   const now = new Date()
   let start: Date
-  
+
   switch (range) {
     case '1h':
       start = new Date(now.getTime() - 60 * 60 * 1000)
@@ -354,10 +366,10 @@ function calculateTimeRange(range: string): { start: string; end: string } {
     default:
       start = new Date(now.getTime() - 60 * 60 * 1000)
   }
-  
+
   return {
     start: start.toISOString(),
-    end: now.toISOString()
+    end: now.toISOString(),
   }
 }
 
@@ -366,20 +378,20 @@ function calculateTimeRange(range: string): { start: string; end: string } {
  */
 function formatTimeSpan(startTime: string, endTime: string): string {
   if (!startTime || !endTime) return ''
-  
+
   const start = new Date(startTime)
   const end = new Date(endTime)
   const diffMs = end.getTime() - start.getTime()
-  
+
   const days = Math.floor(diffMs / (24 * 60 * 60 * 1000))
   const hours = Math.floor((diffMs % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000))
   const minutes = Math.floor((diffMs % (60 * 60 * 1000)) / (60 * 1000))
-  
+
   const parts = []
   if (days > 0) parts.push(`${days}天`)
   if (hours > 0) parts.push(`${hours}小时`)
   if (minutes > 0) parts.push(`${minutes}分钟`)
-  
+
   return parts.join('') || '1分钟内'
 }
 
@@ -387,23 +399,29 @@ function formatTimeSpan(startTime: string, endTime: string): string {
  * 估算数据点数
  */
 function estimateDataPoints(): number {
-  if (currentRange.value === 'custom' && customStartTime.value && customEndTime.value) {
-    const diffMs = new Date(customEndTime.value).getTime() - new Date(customStartTime.value).getTime()
+  if (
+    currentRange.value === 'custom' &&
+    customStartTime.value &&
+    customEndTime.value
+  ) {
+    const diffMs =
+      new Date(customEndTime.value).getTime() -
+      new Date(customStartTime.value).getTime()
     const diffMinutes = diffMs / (60 * 1000)
-    
+
     // 假设每分钟1个数据点
     return Math.floor(diffMinutes)
   }
-  
+
   const estimates: Record<string, number> = {
     '1h': 60,
     '6h': 360,
     '24h': 1440,
     '3d': 4320,
     '7d': 10080,
-    '30d': 43200
+    '30d': 43200,
   }
-  
+
   return estimates[currentRange.value] || 60
 }
 
@@ -417,16 +435,16 @@ function getCurrentSelectionText(): string {
     }
     return '自定义时间范围'
   }
-  
+
   const rangeLabels: Record<string, string> = {
     '1h': '最近1小时',
     '6h': '最近6小时',
     '24h': '最近24小时',
     '3d': '最近3天',
     '7d': '最近7天',
-    '30d': '最近30天'
+    '30d': '最近30天',
   }
-  
+
   return rangeLabels[currentRange.value] || '未知范围'
 }
 
@@ -436,19 +454,21 @@ function getCurrentSelectionText(): string {
 function refreshToNow() {
   if (currentRange.value === 'custom') {
     // 保持时间跨度，但更新到当前时间
-    const span = new Date(customEndTime.value).getTime() - new Date(customStartTime.value).getTime()
+    const span =
+      new Date(customEndTime.value).getTime() -
+      new Date(customStartTime.value).getTime()
     const now = new Date()
     const newStart = new Date(now.getTime() - span)
-    
+
     customStartTime.value = newStart.toISOString()
     customEndTime.value = now.toISOString()
-    
+
     handleCustomTimeChange()
   } else {
     // 重新计算快速范围
     selectQuickRange(currentRange.value)
   }
-  
+
   ElMessage.success('时间范围已更新到当前时间')
 }
 
@@ -457,7 +477,8 @@ function refreshToNow() {
  */
 function getCurrentTimeDisplay(): string {
   const now = new Date()
-  const format = timeFormat.value === '24h' ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD hh:mm:ss A'
+  const format =
+    timeFormat.value === '24h' ? 'YYYY-MM-DD HH:mm:ss' : 'YYYY-MM-DD hh:mm:ss A'
   return formatDateTime(now, format)
 }
 
@@ -486,16 +507,22 @@ onMounted(() => {
 })
 
 // ===== 监听器 =====
-watch(() => props.range, (newRange) => {
-  currentRange.value = newRange
-})
-
-watch(() => [props.start, props.end], ([newStart, newEnd]) => {
-  if (currentRange.value === 'custom') {
-    customStartTime.value = newStart
-    customEndTime.value = newEnd
+watch(
+  () => props.range,
+  newRange => {
+    currentRange.value = newRange
   }
-})
+)
+
+watch(
+  () => [props.start, props.end],
+  ([newStart, newEnd]) => {
+    if (currentRange.value === 'custom') {
+      customStartTime.value = newStart
+      customEndTime.value = newEnd
+    }
+  }
+)
 </script>
 
 <style scoped lang="scss">
@@ -503,33 +530,33 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
   .selector-content {
     .quick-ranges {
       margin-bottom: 12px;
-      
+
       .el-button-group {
         display: flex;
         flex-wrap: wrap;
         gap: 4px;
-        
+
         .el-button {
           margin: 0;
           border-radius: 4px;
         }
       }
     }
-    
+
     .custom-range {
       margin-bottom: 12px;
       padding: 16px;
       background: #f8f9fa;
       border-radius: 6px;
-      
+
       .date-inputs {
         display: flex;
         gap: 16px;
         margin-bottom: 12px;
-        
+
         .input-group {
           flex: 1;
-          
+
           .input-label {
             display: block;
             font-size: 13px;
@@ -537,27 +564,27 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
             margin-bottom: 6px;
             font-weight: 500;
           }
-          
+
           :deep(.el-date-editor) {
             width: 100%;
           }
         }
       }
-      
+
       .range-preview {
         display: flex;
         gap: 24px;
-        
+
         .preview-item {
           display: flex;
           align-items: center;
           gap: 6px;
-          
+
           .preview-label {
             font-size: 12px;
             color: #909399;
           }
-          
+
           .preview-value {
             font-size: 12px;
             color: #303133;
@@ -566,7 +593,7 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
         }
       }
     }
-    
+
     .current-selection {
       display: flex;
       justify-content: space-between;
@@ -574,24 +601,24 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
       padding: 8px 12px;
       background: #f0f2f5;
       border-radius: 4px;
-      
+
       .selection-info {
         display: flex;
         align-items: center;
         gap: 6px;
-        
+
         .el-icon {
           color: #409eff;
           font-size: 14px;
         }
-        
+
         .selection-text {
           font-size: 13px;
           color: #303133;
           font-weight: 500;
         }
       }
-      
+
       .selection-actions {
         display: flex;
         gap: 4px;
@@ -603,11 +630,11 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
 .timezone-settings {
   .setting-item {
     margin-bottom: 20px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .setting-label {
       display: block;
       font-size: 14px;
@@ -616,19 +643,19 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
       font-weight: 500;
     }
   }
-  
+
   .current-time {
     padding: 12px;
     background: #f8f9fa;
     border-radius: 4px;
     margin-top: 16px;
-    
+
     .time-label {
       font-size: 13px;
       color: #909399;
       margin-right: 8px;
     }
-    
+
     .time-value {
       font-size: 13px;
       color: #303133;
@@ -645,37 +672,37 @@ watch(() => [props.start, props.end], ([newStart, newEnd]) => {
       .custom-range .date-inputs {
         flex-direction: column;
         gap: 12px;
-        
+
         .input-group {
           width: 100%;
         }
       }
-      
+
       .current-selection {
         flex-direction: column;
         gap: 8px;
         align-items: stretch;
-        
+
         .selection-info {
           justify-content: center;
         }
-        
+
         .selection-actions {
           justify-content: center;
         }
       }
     }
   }
-  
+
   .timezone-settings {
     .current-time {
       text-align: center;
-      
+
       .time-label,
       .time-value {
         display: block;
       }
-      
+
       .time-value {
         margin-top: 4px;
       }

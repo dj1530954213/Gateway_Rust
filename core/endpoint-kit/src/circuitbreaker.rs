@@ -127,18 +127,15 @@ impl CircuitBreaker {
 
         let mut inner = self.inner.lock().unwrap();
         
-        match inner.state {
-            CircuitBreakerState::HalfOpen => {
-                let half_open_requests = self.stats.half_open_requests.fetch_add(1, Ordering::Relaxed) + 1;
-                
-                // 如果半开状态测试成功，转为关闭状态
-                if half_open_requests >= inner.config.max_half_open_requests {
-                    inner.state = CircuitBreakerState::Closed;
-                    inner.last_failure_time = None;
-                    tracing::info!("Circuit breaker recovered, transitioning to closed state");
-                }
+        if inner.state == CircuitBreakerState::HalfOpen {
+            let half_open_requests = self.stats.half_open_requests.fetch_add(1, Ordering::Relaxed) + 1;
+            
+            // 如果半开状态测试成功，转为关闭状态
+            if half_open_requests >= inner.config.max_half_open_requests {
+                inner.state = CircuitBreakerState::Closed;
+                inner.last_failure_time = None;
+                tracing::info!("Circuit breaker recovered, transitioning to closed state");
             }
-            _ => {}
         }
     }
 
@@ -266,7 +263,7 @@ impl<'a> CircuitBreakerGuard<'a> {
     }
 }
 
-impl<'a> Drop for CircuitBreakerGuard<'a> {
+impl Drop for CircuitBreakerGuard<'_> {
     fn drop(&mut self) {
         if !self.recorded {
             // 默认记录为失败

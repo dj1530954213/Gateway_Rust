@@ -16,7 +16,7 @@ export const {
   alerts: alertsApi,
   system: systemApi,
   realtime: realtimeApi,
-  ws: wsClient
+  ws: wsClient,
 } = api
 
 // 兼容性封装

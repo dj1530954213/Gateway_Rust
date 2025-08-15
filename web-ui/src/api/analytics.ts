@@ -12,7 +12,7 @@ export interface KpiMetric {
   trend: 'up' | 'down' | 'stable'
   trendText: string
   comparison: string
-  icon: any
+  icon: string
   iconClass: string
 }
 
@@ -20,7 +20,7 @@ export interface DataPoint {
   id: string
   name: string
   dataType: string
-  currentValue: any
+  currentValue: string | number | boolean
 }
 
 export interface Report {
@@ -140,7 +140,10 @@ export const analyticsApi = {
   /**
    * 更新报表
    */
-  async updateReport(id: string, report: Partial<Report>): Promise<{ data: Report }> {
+  async updateReport(
+    id: string,
+    report: Partial<Report>
+  ): Promise<{ data: Report }> {
     try {
       return await put(`/api/v1/analytics/reports/${id}`, report)
     } catch (error) {
@@ -209,7 +212,7 @@ export const analyticsApi = {
       return {
         accuracy: 75,
         confidenceRange: { min: 50, max: 90 },
-        anomalyRisk: 'low'
+        anomalyRisk: 'low',
       }
     }
   },
@@ -221,7 +224,7 @@ export const analyticsApi = {
     try {
       return await post('/api/v1/analytics/trend', {
         datapointIds,
-        timeRange
+        timeRange,
       })
     } catch (error) {
       console.warn('趋势数据API未实现')
@@ -236,7 +239,7 @@ export const analyticsApi = {
     try {
       return await post('/api/v1/analytics/distribution', {
         datapointId,
-        timeRange
+        timeRange,
       })
     } catch (error) {
       console.warn('分布数据API未实现')
@@ -266,5 +269,5 @@ export const analyticsApi = {
       console.warn('报警统计数据API未实现')
       return { series: [] }
     }
-  }
+  },
 }

@@ -6,14 +6,14 @@
 //! - 2025-01-27  Claude  初版
 
 use crate::{
-    driver::{DriverMeta as LegacyDriverMeta, DriverKind, DriverState},
+    driver::{DriverKind},
     dynamic::{DynamicDriverInfo, DynamicDriverLoader},
     registry::StaticDriverRegistry,
 };
-use driver_sdk::abi::{DriverMeta, DriverStatus};
+use driver_sdk::abi::DriverStatus;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, info, warn};
+use tracing::{debug, info};
 
 /// 统一驱动注册表条目
 #[derive(Debug, Clone, Serialize, Deserialize)]

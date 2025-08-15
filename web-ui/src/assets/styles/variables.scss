@@ -28,7 +28,9 @@ $border-color-lighter: #f0f0f0;
 $border-color-dark: #bfbfbf;
 
 // 阴影
-$box-shadow-base: 0 2px 4px rgba(0, 0, 0, 0.12), 0 0 6px rgba(0, 0, 0, 0.04);
+$box-shadow-base:
+  0 2px 4px rgba(0, 0, 0, 0.12),
+  0 0 6px rgba(0, 0, 0, 0.04);
 $box-shadow-light: 0 2px 12px 0 rgba(0, 0, 0, 0.1);
 $box-shadow-dark: 0 4px 12px rgba(0, 0, 0, 0.15);
 

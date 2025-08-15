@@ -7,13 +7,13 @@
           <h2 class="manager-title">角色权限管理</h2>
           <p class="manager-description">管理系统角色和权限分配</p>
         </div>
-        
+
         <div class="header-actions">
           <el-button type="primary" @click="showCreateRole = true">
             <el-icon><Plus /></el-icon>
             创建角色
           </el-button>
-          <el-button @click="refreshRoles" :loading="loading">
+          <el-button :loading="loading" @click="refreshRoles">
             <el-icon><Refresh /></el-icon>
             刷新
           </el-button>
@@ -44,23 +44,31 @@
               <div class="role-info">
                 <div class="role-header">
                   <div class="role-name">{{ role.name }}</div>
-                  <el-dropdown @command="(cmd) => handleRoleAction(cmd, role)">
+                  <el-dropdown @command="cmd => handleRoleAction(cmd, role)">
                     <el-button type="link" size="small" @click.stop>
                       <el-icon><MoreFilled /></el-icon>
                     </el-button>
                     <template #dropdown>
                       <el-dropdown-menu>
-                        <el-dropdown-item command="edit">编辑角色</el-dropdown-item>
-                        <el-dropdown-item command="copy">复制角色</el-dropdown-item>
-                        <el-dropdown-item command="users">查看用户</el-dropdown-item>
-                        <el-dropdown-item command="delete" divided>删除角色</el-dropdown-item>
+                        <el-dropdown-item command="edit"
+                          >编辑角色</el-dropdown-item
+                        >
+                        <el-dropdown-item command="copy"
+                          >复制角色</el-dropdown-item
+                        >
+                        <el-dropdown-item command="users"
+                          >查看用户</el-dropdown-item
+                        >
+                        <el-dropdown-item command="delete" divided
+                          >删除角色</el-dropdown-item
+                        >
                       </el-dropdown-menu>
                     </template>
                   </el-dropdown>
                 </div>
-                
+
                 <div class="role-description">{{ role.description }}</div>
-                
+
                 <div class="role-meta">
                   <span class="meta-item">
                     <el-icon><User /></el-icon>
@@ -71,12 +79,18 @@
                     {{ getPermissionCount(role) }} 个权限
                   </span>
                 </div>
-                
+
                 <div class="role-status">
-                  <el-tag :type="role.isBuiltIn ? 'warning' : 'success'" size="small">
+                  <el-tag
+                    :type="role.isBuiltIn ? 'warning' : 'success'"
+                    size="small"
+                  >
                     {{ role.isBuiltIn ? '系统内置' : '自定义' }}
                   </el-tag>
-                  <el-tag :type="role.status === 'active' ? 'success' : 'info'" size="small">
+                  <el-tag
+                    :type="role.status === 'active' ? 'success' : 'info'"
+                    size="small"
+                  >
                     {{ role.status === 'active' ? '启用' : '禁用' }}
                   </el-tag>
                 </div>
@@ -92,16 +106,26 @@
           <template #header>
             <div class="card-header">
               <div class="permission-title">
-                <span class="card-title">{{ selectedRole.name }} - 权限配置</span>
+                <span class="card-title"
+                  >{{ selectedRole.name }} - 权限配置</span
+                >
                 <el-button type="link" @click="togglePermissionMode">
                   <el-icon><Switch /></el-icon>
-                  {{ permissionMode === 'category' ? '切换到列表视图' : '切换到分类视图' }}
+                  {{
+                    permissionMode === 'category'
+                      ? '切换到列表视图'
+                      : '切换到分类视图'
+                  }}
                 </el-button>
               </div>
               <div class="permission-actions">
                 <el-button @click="selectAllPermissions">全选</el-button>
                 <el-button @click="clearAllPermissions">清空</el-button>
-                <el-button type="primary" @click="savePermissions" :loading="savingPermissions">
+                <el-button
+                  type="primary"
+                  :loading="savingPermissions"
+                  @click="savePermissions"
+                >
                   保存权限
                 </el-button>
               </div>
@@ -112,7 +136,11 @@
           <div class="permission-stats">
             <div class="stat-item">
               <span class="stat-label">已分配权限：</span>
-              <span class="stat-value">{{ getGrantedPermissionCount() }}/{{ getAllPermissionCount() }}</span>
+              <span class="stat-value"
+                >{{ getGrantedPermissionCount() }}/{{
+                  getAllPermissionCount()
+                }}</span
+              >
             </div>
             <div class="stat-item">
               <span class="stat-label">权限覆盖率：</span>
@@ -121,7 +149,10 @@
           </div>
 
           <!-- 分类视图 -->
-          <div v-if="permissionMode === 'category'" class="permission-categories">
+          <div
+            v-if="permissionMode === 'category'"
+            class="permission-categories"
+          >
             <div
               v-for="category in permissionCategories"
               :key="category.id"
@@ -133,9 +164,11 @@
                     <component :is="category.icon" />
                   </el-icon>
                   <span class="category-name">{{ category.name }}</span>
-                  <el-tag size="small">{{ category.permissions.length }} 个权限</el-tag>
+                  <el-tag size="small"
+                    >{{ category.permissions.length }} 个权限</el-tag
+                  >
                 </div>
-                
+
                 <div class="category-actions">
                   <el-checkbox
                     :model-value="isCategoryAllSelected(category)"
@@ -146,9 +179,9 @@
                   </el-checkbox>
                 </div>
               </div>
-              
+
               <div class="category-description">{{ category.description }}</div>
-              
+
               <div class="category-permissions">
                 <div
                   v-for="permission in category.permissions"
@@ -161,7 +194,9 @@
                   >
                     <div class="permission-info">
                       <div class="permission-name">{{ permission.name }}</div>
-                      <div class="permission-description">{{ permission.description }}</div>
+                      <div class="permission-description">
+                        {{ permission.description }}
+                      </div>
                     </div>
                   </el-checkbox>
                 </div>
@@ -191,7 +226,7 @@
               @selection-change="handlePermissionSelectionChange"
             >
               <el-table-column type="selection" width="55" />
-              
+
               <el-table-column label="权限名称" min-width="200">
                 <template #default="{ row }">
                   <div class="permission-info">
@@ -209,7 +244,9 @@
 
               <el-table-column label="分类" width="120">
                 <template #default="{ row }">
-                  <el-tag size="small">{{ getCategoryName(row.categoryId) }}</el-tag>
+                  <el-tag size="small">{{
+                    getCategoryName(row.categoryId)
+                  }}</el-tag>
                 </template>
               </el-table-column>
 
@@ -282,8 +319,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, onMounted, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Plus,
   Refresh,
@@ -301,8 +336,10 @@ import {
   Lock,
   View,
   Edit,
-  Delete
+  Delete,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, onMounted, watch } from 'vue'
 
 // 组件导入（这些组件将在后续步骤中创建）
 import RoleEditDialog from './RoleEditDialog.vue'
@@ -336,12 +373,13 @@ const filteredPermissions = computed(() => {
   if (!permissionSearchKeyword.value) {
     return allPermissions.value
   }
-  
+
   const keyword = permissionSearchKeyword.value.toLowerCase()
-  return allPermissions.value.filter(permission => 
-    permission.name.toLowerCase().includes(keyword) ||
-    permission.description.toLowerCase().includes(keyword) ||
-    permission.code.toLowerCase().includes(keyword)
+  return allPermissions.value.filter(
+    permission =>
+      permission.name.toLowerCase().includes(keyword) ||
+      permission.description.toLowerCase().includes(keyword) ||
+      permission.code.toLowerCase().includes(keyword)
   )
 })
 
@@ -353,19 +391,18 @@ const filteredPermissions = computed(() => {
 async function initializeData() {
   try {
     loading.value = true
-    
+
     // 从API加载真实数据
     await Promise.all([
       loadRoles(),
       loadPermissionCategories(),
-      loadAllPermissions()
+      loadAllPermissions(),
     ])
-    
+
     // 选择第一个角色
     if (roleList.value.length > 0) {
       selectRole(roleList.value[0])
     }
-
   } catch (error) {
     console.error('初始化角色权限管理失败:', error)
     ElMessage.error('初始化失败')
@@ -382,10 +419,10 @@ async function loadRoles() {
     const response = await fetch('/api/v1/roles', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       roleList.value = await response.json()
     } else {
@@ -406,10 +443,10 @@ async function loadPermissionCategories() {
     const response = await fetch('/api/v1/permissions/categories', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       permissionCategories.value = await response.json()
     } else {
@@ -430,16 +467,18 @@ async function loadAllPermissions() {
     const response = await fetch('/api/v1/permissions', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       allPermissions.value = await response.json()
-      
+
       // 将权限分配到对应的分类中
       permissionCategories.value.forEach(category => {
-        category.permissions = allPermissions.value.filter(p => p.categoryId === category.id)
+        category.permissions = allPermissions.value.filter(
+          p => p.categoryId === category.id
+        )
       })
     } else {
       allPermissions.value = []
@@ -465,14 +504,14 @@ async function selectRole(role: any) {
 async function loadRolePermissions(roleId: string) {
   try {
     loadingPermissions.value = true
-    
+
     const response = await fetch(`/api/v1/roles/${roleId}/permissions`, {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       const permissions = await response.json()
       rolePermissions.value = permissions.map((p: any) => p.id)
@@ -480,7 +519,6 @@ async function loadRolePermissions(roleId: string) {
       rolePermissions.value = []
       console.error('加载角色权限失败:', response.statusText)
     }
-    
   } catch (error) {
     console.error('加载角色权限失败:', error)
     ElMessage.error('加载角色权限失败')
@@ -524,7 +562,9 @@ function getAllPermissionCount(): number {
  */
 function getPermissionCoverageRate(): number {
   if (allPermissions.value.length === 0) return 0
-  return Math.round((rolePermissions.value.length / allPermissions.value.length) * 100)
+  return Math.round(
+    (rolePermissions.value.length / allPermissions.value.length) * 100
+  )
 }
 
 /**
@@ -561,7 +601,9 @@ function isCategoryAllSelected(category: any): boolean {
  * 检查分类是否部分选中
  */
 function isCategoryIndeterminate(category: any): boolean {
-  const granted = category.permissions.filter((p: any) => isPermissionGranted(p.id))
+  const granted = category.permissions.filter((p: any) =>
+    isPermissionGranted(p.id)
+  )
   return granted.length > 0 && granted.length < category.permissions.length
 }
 
@@ -592,7 +634,8 @@ function clearAllPermissions() {
  * 切换权限模式
  */
 function togglePermissionMode() {
-  permissionMode.value = permissionMode.value === 'category' ? 'list' : 'category'
+  permissionMode.value =
+    permissionMode.value === 'category' ? 'list' : 'category'
 }
 
 /**
@@ -607,26 +650,28 @@ function handlePermissionSelectionChange(selection: any[]) {
  */
 async function savePermissions() {
   if (!selectedRole.value) return
-  
+
   try {
     savingPermissions.value = true
-    
-    const response = await fetch(`/api/v1/roles/${selectedRole.value.id}/permissions`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        permissionIds: rolePermissions.value
-      })
-    })
-    
+
+    const response = await fetch(
+      `/api/v1/roles/${selectedRole.value.id}/permissions`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          permissionIds: rolePermissions.value,
+        }),
+      }
+    )
+
     if (response.ok) {
       ElMessage.success('权限保存成功')
     } else {
       throw new Error('保存权限失败')
     }
-    
   } catch (error) {
     console.error('保存权限失败:', error)
     ElMessage.error('保存权限失败')
@@ -672,13 +717,13 @@ async function copyRole(role: any) {
     const response = await fetch(`/api/v1/roles/${role.id}/copy`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        name: `${role.name} - 副本`
-      })
+        name: `${role.name} - 副本`,
+      }),
     })
-    
+
     if (response.ok) {
       const copiedRole = await response.json()
       editingRole.value = copiedRole
@@ -688,7 +733,6 @@ async function copyRole(role: any) {
     } else {
       throw new Error('复制角色失败')
     }
-    
   } catch (error) {
     console.error('复制角色失败:', error)
     ElMessage.error('复制角色失败')
@@ -703,30 +747,29 @@ async function deleteRole(role: any) {
     ElMessage.warning('系统内置角色不能删除')
     return
   }
-  
+
   try {
     await ElMessageBox.confirm(
       `确定要删除角色 "${role.name}" 吗？此操作不可恢复。`,
       '确认删除',
       {
-        type: 'error'
+        type: 'error',
       }
     )
-    
+
     const response = await fetch(`/api/v1/roles/${role.id}`, {
       method: 'DELETE',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       ElMessage.success('角色删除成功')
       await refreshRoles()
     } else {
       throw new Error('删除角色失败')
     }
-    
   } catch (error) {
     if (error instanceof Error && error.message !== 'cancel') {
       console.error('删除角色失败:', error)
@@ -762,7 +805,7 @@ function getRiskLevelType(riskLevel: string): string {
   const typeMap: { [key: string]: string } = {
     low: 'success',
     medium: 'warning',
-    high: 'danger'
+    high: 'danger',
   }
   return typeMap[riskLevel] || 'info'
 }
@@ -774,7 +817,7 @@ function getRiskLevelLabel(riskLevel: string): string {
   const labelMap: { [key: string]: string } = {
     low: '低风险',
     medium: '中风险',
-    high: '高风险'
+    high: '高风险',
   }
   return labelMap[riskLevel] || riskLevel
 }
@@ -785,26 +828,29 @@ onMounted(async () => {
 })
 
 // ===== 监听器 =====
-watch(() => showCreateRole.value, (show) => {
-  if (show) {
-    editingRole.value = null
-    isCreateMode.value = true
-    showEditRole.value = true
-    showCreateRole.value = false
+watch(
+  () => showCreateRole.value,
+  show => {
+    if (show) {
+      editingRole.value = null
+      isCreateMode.value = true
+      showEditRole.value = true
+      showCreateRole.value = false
+    }
   }
-})
+)
 </script>
 
 <style scoped lang="scss">
 .role-permission-manager {
   .manager-header {
     margin-bottom: 16px;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      
+
       .title-section {
         .manager-title {
           font-size: 24px;
@@ -812,14 +858,14 @@ watch(() => showCreateRole.value, (show) => {
           color: #303133;
           margin: 0 0 8px 0;
         }
-        
+
         .manager-description {
           font-size: 14px;
           color: #606266;
           margin: 0;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
@@ -836,19 +882,19 @@ watch(() => showCreateRole.value, (show) => {
     .roles-panel {
       .roles-card {
         height: fit-content;
-        
+
         .card-header {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          
+
           .card-title {
             font-size: 16px;
             font-weight: 600;
             color: #303133;
           }
         }
-        
+
         .roles-list {
           .role-item {
             padding: 16px;
@@ -857,60 +903,60 @@ watch(() => showCreateRole.value, (show) => {
             margin-bottom: 12px;
             cursor: pointer;
             transition: all 0.3s;
-            
+
             &:last-child {
               margin-bottom: 0;
             }
-            
+
             &:hover {
               border-color: #409eff;
               background: #f0f9ff;
             }
-            
+
             &.active {
               border-color: #409eff;
               background: #e1f3fe;
             }
-            
+
             .role-info {
               .role-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
                 margin-bottom: 8px;
-                
+
                 .role-name {
                   font-size: 16px;
                   font-weight: 600;
                   color: #303133;
                 }
               }
-              
+
               .role-description {
                 font-size: 13px;
                 color: #606266;
                 line-height: 1.5;
                 margin-bottom: 12px;
               }
-              
+
               .role-meta {
                 display: flex;
                 gap: 16px;
                 margin-bottom: 12px;
-                
+
                 .meta-item {
                   display: flex;
                   align-items: center;
                   gap: 4px;
                   font-size: 12px;
                   color: #909399;
-                  
+
                   .el-icon {
                     font-size: 14px;
                   }
                 }
               }
-              
+
               .role-status {
                 display: flex;
                 gap: 8px;
@@ -927,25 +973,25 @@ watch(() => showCreateRole.value, (show) => {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          
+
           .permission-title {
             display: flex;
             align-items: center;
             gap: 12px;
-            
+
             .card-title {
               font-size: 16px;
               font-weight: 600;
               color: #303133;
             }
           }
-          
+
           .permission-actions {
             display: flex;
             gap: 12px;
           }
         }
-        
+
         .permission-stats {
           display: flex;
           gap: 24px;
@@ -953,13 +999,13 @@ watch(() => showCreateRole.value, (show) => {
           padding: 16px;
           background: #f8f9fa;
           border-radius: 6px;
-          
+
           .stat-item {
             .stat-label {
               font-size: 13px;
               color: #606266;
             }
-            
+
             .stat-value {
               font-size: 16px;
               font-weight: 600;
@@ -968,31 +1014,31 @@ watch(() => showCreateRole.value, (show) => {
             }
           }
         }
-        
+
         .permission-categories {
           .permission-category {
             margin-bottom: 32px;
-            
+
             &:last-child {
               margin-bottom: 0;
             }
-            
+
             .category-header {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 12px;
-              
+
               .category-info {
                 display: flex;
                 align-items: center;
                 gap: 12px;
-                
+
                 .category-icon {
                   font-size: 18px;
                   color: #409eff;
                 }
-                
+
                 .category-name {
                   font-size: 16px;
                   font-weight: 600;
@@ -1000,25 +1046,25 @@ watch(() => showCreateRole.value, (show) => {
                 }
               }
             }
-            
+
             .category-description {
               font-size: 13px;
               color: #606266;
               margin-bottom: 16px;
               line-height: 1.5;
             }
-            
+
             .category-permissions {
               display: grid;
               grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
               gap: 12px;
-              
+
               .permission-item {
                 padding: 12px;
                 border: 1px solid #e4e7ed;
                 border-radius: 6px;
                 background: #fff;
-                
+
                 .permission-info {
                   .permission-name {
                     font-size: 14px;
@@ -1026,7 +1072,7 @@ watch(() => showCreateRole.value, (show) => {
                     color: #303133;
                     margin-bottom: 4px;
                   }
-                  
+
                   .permission-description {
                     font-size: 12px;
                     color: #606266;
@@ -1037,19 +1083,19 @@ watch(() => showCreateRole.value, (show) => {
             }
           }
         }
-        
+
         .permission-list {
           .list-search {
             margin-bottom: 16px;
           }
-          
+
           .permission-info {
             .permission-name {
               font-weight: 500;
               color: #303133;
               margin-bottom: 2px;
             }
-            
+
             .permission-code {
               font-size: 12px;
               color: #909399;
@@ -1058,7 +1104,7 @@ watch(() => showCreateRole.value, (show) => {
           }
         }
       }
-      
+
       .placeholder-card {
         display: flex;
         align-items: center;
@@ -1074,15 +1120,19 @@ watch(() => showCreateRole.value, (show) => {
   .role-permission-manager {
     .manager-content {
       grid-template-columns: 1fr;
-      
+
       .roles-panel {
         .roles-list .role-item .role-info .role-meta {
           flex-direction: column;
           gap: 8px;
         }
       }
-      
-      .permissions-panel .permissions-card .permission-categories .permission-category .category-permissions {
+
+      .permissions-panel
+        .permissions-card
+        .permission-categories
+        .permission-category
+        .category-permissions {
         grid-template-columns: 1fr;
       }
     }
@@ -1096,18 +1146,18 @@ watch(() => showCreateRole.value, (show) => {
       gap: 16px;
       align-items: stretch;
     }
-    
+
     .manager-content .permissions-panel .permissions-card {
       .card-header {
         flex-direction: column;
         gap: 12px;
         align-items: stretch;
-        
+
         .permission-actions {
           justify-content: center;
         }
       }
-      
+
       .permission-stats {
         flex-direction: column;
         gap: 12px;

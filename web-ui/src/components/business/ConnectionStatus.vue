@@ -11,7 +11,7 @@
             </el-icon>
             <span>{{ title || getConnectionName() }}</span>
           </div>
-          
+
           <div class="connection-actions">
             <!-- 刷新按钮 -->
             <el-button
@@ -22,9 +22,13 @@
               :loading="refreshing"
               @click="handleRefresh"
             />
-            
+
             <!-- 更多操作 -->
-            <el-dropdown v-if="showActions" trigger="click" @command="handleAction">
+            <el-dropdown
+              v-if="showActions"
+              trigger="click"
+              @command="handleAction"
+            >
               <el-button type="text" size="small" :icon="MoreFilled" />
               <template #dropdown>
                 <el-dropdown-menu>
@@ -46,19 +50,19 @@
           </div>
         </div>
       </template>
-      
+
       <!-- 连接状态内容 -->
       <div class="connection-content">
         <!-- 主要状态显示 -->
         <div class="status-main">
-          <StatusTag 
-            :status="connection.status" 
+          <StatusTag
+            :status="connection.status"
             :mappings="statusMappings"
             size="large"
             :show-badge="showStatusBadge"
             :badge-value="badgeValue"
           />
-          
+
           <div class="status-info">
             <div class="status-text">{{ getStatusText() }}</div>
             <div v-if="connection.lastUpdate" class="status-time">
@@ -66,7 +70,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- 连接详细信息 -->
         <div v-if="showDetails" class="connection-details">
           <el-row :gutter="16">
@@ -83,7 +87,7 @@
               </div>
             </el-col>
           </el-row>
-          
+
           <el-row :gutter="16">
             <el-col :span="12">
               <div class="detail-item">
@@ -99,30 +103,39 @@
             </el-col>
           </el-row>
         </div>
-        
+
         <!-- 连接质量指标 -->
-        <div v-if="showMetrics && connection.metrics" class="connection-metrics">
+        <div
+          v-if="showMetrics && connection.metrics"
+          class="connection-metrics"
+        >
           <el-divider content-position="left">连接质量</el-divider>
-          
+
           <el-row :gutter="16">
             <el-col :span="8">
               <div class="metric-item">
                 <div class="metric-label">延迟</div>
-                <div class="metric-value" :class="getLatencyClass(connection.metrics.latency)">
+                <div
+                  class="metric-value"
+                  :class="getLatencyClass(connection.metrics.latency)"
+                >
                   {{ connection.metrics.latency }}ms
                 </div>
               </div>
             </el-col>
-            
+
             <el-col :span="8">
               <div class="metric-item">
                 <div class="metric-label">丢包率</div>
-                <div class="metric-value" :class="getPacketLossClass(connection.metrics.packetLoss)">
+                <div
+                  class="metric-value"
+                  :class="getPacketLossClass(connection.metrics.packetLoss)"
+                >
                   {{ connection.metrics.packetLoss }}%
                 </div>
               </div>
             </el-col>
-            
+
             <el-col :span="8">
               <div class="metric-item">
                 <div class="metric-label">吞吐量</div>
@@ -133,7 +146,7 @@
             </el-col>
           </el-row>
         </div>
-        
+
         <!-- 错误信息 -->
         <div v-if="connection.error && showError" class="connection-error">
           <el-alert
@@ -144,7 +157,7 @@
             :closable="false"
           />
         </div>
-        
+
         <!-- 操作按钮 -->
         <div v-if="showActionButtons" class="connection-buttons">
           <el-button
@@ -156,7 +169,7 @@
           >
             重新连接
           </el-button>
-          
+
           <el-button
             v-if="canDisconnect"
             type="danger"
@@ -166,7 +179,7 @@
           >
             断开连接
           </el-button>
-          
+
           <el-button
             v-if="showTestButton"
             type="info"
@@ -179,7 +192,7 @@
         </div>
       </div>
     </el-card>
-    
+
     <!-- 连接历史对话框 -->
     <el-dialog
       v-model="historyVisible"
@@ -196,7 +209,9 @@
             :type="getHistoryItemType(record.type)"
           >
             <div class="history-content">
-              <div class="history-title">{{ getHistoryTitle(record.type) }}</div>
+              <div class="history-title">
+                {{ getHistoryTitle(record.type) }}
+              </div>
               <div v-if="record.message" class="history-message">
                 {{ record.message }}
               </div>
@@ -204,7 +219,7 @@
           </el-timeline-item>
         </el-timeline>
       </div>
-      
+
       <template #footer>
         <el-button @click="historyVisible = false">关闭</el-button>
         <el-button type="primary" @click="handleClearHistory">
@@ -216,21 +231,22 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { 
-  Connection, 
+import {
+  Connection,
   // Disconnect,  // 这个图标不存在，先移除
-  Refresh, 
-  MoreFilled, 
-  InfoFilled, 
+  Refresh,
+  MoreFilled,
+  InfoFilled,
   Clock,
   CircleCheck,
   CircleClose,
   Warning,
-  Loading
+  Loading,
 } from '@element-plus/icons-vue'
-import { StatusTag } from '../base'
 import { ElMessage } from 'element-plus'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
+
+import { StatusTag } from '../base'
 
 export interface ConnectionInfo {
   id: string
@@ -263,7 +279,7 @@ export interface ConnectionHistoryRecord {
 interface Props {
   connection: ConnectionInfo
   title?: string
-  
+
   // 显示控制
   showDetails?: boolean
   showMetrics?: boolean
@@ -273,15 +289,15 @@ interface Props {
   showActions?: boolean
   showStatusBadge?: boolean
   showTestButton?: boolean
-  
+
   // 外观配置
   size?: 'small' | 'default' | 'large'
   cardShadow?: 'always' | 'hover' | 'never'
-  
+
   // 状态配置
   autoRefresh?: boolean
   refreshInterval?: number
-  
+
   // 自定义样式
   customClass?: string
 }
@@ -323,18 +339,18 @@ const connectionHistory = ref<ConnectionHistoryRecord[]>([
   {
     timestamp: new Date(Date.now() - 3600000),
     type: 'connected',
-    message: '成功建立连接'
+    message: '成功建立连接',
   },
   {
     timestamp: new Date(Date.now() - 1800000),
     type: 'error',
-    message: '连接超时，正在重试'
+    message: '连接超时，正在重试',
   },
   {
     timestamp: new Date(Date.now() - 900000),
     type: 'connected',
-    message: '重连成功'
-  }
+    message: '重连成功',
+  },
 ])
 
 // 自动刷新定时器
@@ -352,13 +368,13 @@ const statusMappings = computed(() => ({
 // 计算属性
 const containerClass = computed(() => {
   const classes = []
-  
+
   classes.push(`connection-status--${props.size}`)
-  
+
   if (props.customClass) {
     classes.push(props.customClass)
   }
-  
+
   return classes.join(' ')
 })
 
@@ -405,11 +421,11 @@ const formatTime = (date: Date) => {
 
 const formatDuration = (duration?: number) => {
   if (!duration) return '未知'
-  
+
   const hours = Math.floor(duration / 3600)
   const minutes = Math.floor((duration % 3600) / 60)
   const seconds = duration % 60
-  
+
   if (hours > 0) {
     return `${hours}时${minutes}分${seconds}秒`
   } else if (minutes > 0) {
@@ -440,9 +456,9 @@ const getPacketLossClass = (packetLoss: number) => {
 const getHistoryItemType = (type: string) => {
   const typeMap = {
     connected: 'success',
-    disconnected: 'info', 
+    disconnected: 'info',
     error: 'danger',
-    retry: 'warning'
+    retry: 'warning',
   }
   return typeMap[type] || 'info'
 }
@@ -452,7 +468,7 @@ const getHistoryTitle = (type: string) => {
     connected: '连接成功',
     disconnected: '连接断开',
     error: '连接错误',
-    retry: '重试连接'
+    retry: '重试连接',
   }
   return titleMap[type] || '未知事件'
 }
@@ -564,17 +580,17 @@ onUnmounted(() => {
 <style scoped lang="scss">
 .connection-status {
   width: 100%;
-  
+
   &.connection-status--small {
     .status-text {
       font-size: 13px;
     }
-    
+
     .detail-item label {
       font-size: 12px;
     }
   }
-  
+
   &.connection-status--large {
     .status-text {
       font-size: 16px;
@@ -586,7 +602,7 @@ onUnmounted(() => {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  
+
   .connection-title {
     display: flex;
     align-items: center;
@@ -594,7 +610,7 @@ onUnmounted(() => {
     font-weight: 600;
     color: var(--el-text-color-primary);
   }
-  
+
   .connection-actions {
     display: flex;
     align-items: center;
@@ -608,16 +624,16 @@ onUnmounted(() => {
     align-items: center;
     gap: 16px;
     margin-bottom: 16px;
-    
+
     .status-info {
       flex: 1;
-      
+
       .status-text {
         font-size: 14px;
         font-weight: 500;
         color: var(--el-text-color-primary);
       }
-      
+
       .status-time {
         font-size: 12px;
         color: var(--el-text-color-secondary);
@@ -625,22 +641,22 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .connection-details {
     margin-bottom: 16px;
-    
+
     .detail-item {
       display: flex;
       align-items: center;
       margin-bottom: 8px;
-      
+
       label {
         font-size: 13px;
         color: var(--el-text-color-secondary);
         width: 80px;
         flex-shrink: 0;
       }
-      
+
       span {
         font-size: 13px;
         color: var(--el-text-color-primary);
@@ -648,42 +664,42 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .connection-metrics {
     margin-bottom: 16px;
-    
+
     .metric-item {
       text-align: center;
-      
+
       .metric-label {
         font-size: 12px;
         color: var(--el-text-color-secondary);
         margin-bottom: 4px;
       }
-      
+
       .metric-value {
         font-size: 16px;
         font-weight: 600;
-        
+
         &.metric-good {
           color: var(--el-color-success);
         }
-        
+
         &.metric-warning {
           color: var(--el-color-warning);
         }
-        
+
         &.metric-error {
           color: var(--el-color-danger);
         }
       }
     }
   }
-  
+
   .connection-error {
     margin-bottom: 16px;
   }
-  
+
   .connection-buttons {
     display: flex;
     gap: 8px;
@@ -694,7 +710,7 @@ onUnmounted(() => {
 .connection-history {
   max-height: 400px;
   overflow-y: auto;
-  
+
   .history-content {
     .history-title {
       font-size: 14px;
@@ -702,7 +718,7 @@ onUnmounted(() => {
       color: var(--el-text-color-primary);
       margin-bottom: 4px;
     }
-    
+
     .history-message {
       font-size: 13px;
       color: var(--el-text-color-secondary);
@@ -718,17 +734,17 @@ onUnmounted(() => {
       align-items: flex-start;
       gap: 8px;
     }
-    
+
     .status-main {
       flex-direction: column;
       align-items: flex-start;
       gap: 12px;
     }
-    
+
     .connection-buttons {
       flex-direction: column;
       width: 100%;
-      
+
       .el-button {
         width: 100%;
       }

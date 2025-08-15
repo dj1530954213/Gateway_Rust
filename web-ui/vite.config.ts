@@ -1,13 +1,14 @@
-import { defineConfig, loadEnv } from 'vite'
-import vue from '@vitejs/plugin-vue'
 import { resolve } from 'path'
+
+import vue from '@vitejs/plugin-vue'
 import AutoImport from 'unplugin-auto-import/vite'
-import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import Components from 'unplugin-vue-components/vite'
+import { defineConfig, loadEnv } from 'vite'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  
+
   return {
     plugins: [
       vue(),
@@ -18,11 +19,16 @@ export default defineConfig(({ mode }) => {
           'vue-router',
           'pinia',
           {
-            'element-plus': ['ElMessage', 'ElMessageBox', 'ElNotification', 'ElLoading'],
-            'axios': [['default', 'axios']],
-            'dayjs': [['default', 'dayjs']],
+            'element-plus': [
+              'ElMessage',
+              'ElMessageBox',
+              'ElNotification',
+              'ElLoading',
+            ],
+            axios: [['default', 'axios']],
+            dayjs: [['default', 'dayjs']],
             'lodash-es': ['debounce', 'throttle', 'cloneDeep', 'merge'],
-          }
+          },
         ],
         dts: true,
         eslintrc: {
@@ -32,18 +38,20 @@ export default defineConfig(({ mode }) => {
         },
       }),
       Components({
-        resolvers: [ElementPlusResolver({ 
-          importStyle: 'sass',
-        })],
-        dts: true
-      })
+        resolvers: [
+          ElementPlusResolver({
+            importStyle: 'sass',
+          }),
+        ],
+        dts: true,
+      }),
     ],
-    
+
     define: {
       __VUE_OPTIONS_API__: false,
       __VUE_PROD_DEVTOOLS__: false,
     },
-    
+
     resolve: {
       alias: {
         '@': resolve(__dirname, 'src'),
@@ -56,9 +64,9 @@ export default defineConfig(({ mode }) => {
         '@assets': resolve(__dirname, 'src/assets'),
         '@api': resolve(__dirname, 'src/api'),
         '@composables': resolve(__dirname, 'src/composables'),
-      }
+      },
     },
-    
+
     server: {
       port: parseInt(env.VITE_DEV_PORT) || 5173,
       host: '0.0.0.0',
@@ -67,37 +75,43 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Gateway Rust API代理
         '/api': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:50010',
+          target: 'http://localhost:50013',
           changeOrigin: true,
           secure: false,
-          configure: (proxy, options) => {
-            proxy.on('error', (err, req, res) => {
-              console.error('API代理错误:', err.message);
-            });
-            proxy.on('proxyReq', (proxyReq, req, res) => {
-              console.log('🚀 API请求:', req.method, req.url);
-            });
-            proxy.on('proxyRes', (proxyRes, req, res) => {
-              console.log('✅ API响应:', proxyRes.statusCode, req.url);
-            });
-          }
+          configure: (proxy, _options) => {
+            proxy.on('error', (err, _req, _res) => {
+              console.error('API代理错误:', err.message)
+            })
+            proxy.on('proxyReq', (_proxyReq, req, _res) => {
+              console.log('🚀 API请求:', req.method, req.url)
+            })
+            proxy.on('proxyRes', (proxyRes, req, _res) => {
+              console.log('✅ API响应:', proxyRes.statusCode, req.url)
+            })
+          },
         },
         // WebSocket代理
         '/ws': {
           target: env.VITE_WS_BASE_URL || 'ws://localhost:8080',
           ws: true,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/ws/, '/ws')
+          rewrite: path => path.replace(/^\/ws/, '/ws'),
+        },
+        // System API代理
+        '/system': {
+          target: 'http://localhost:50013',
+          changeOrigin: true,
+          secure: false,
         },
         // OpenAPI文档代理
         '/docs': {
-          target: env.VITE_API_BASE_URL || 'http://localhost:50010',
+          target: 'http://localhost:50013',
           changeOrigin: true,
           secure: false,
-        }
-      }
+        },
+      },
     },
-    
+
     build: {
       target: 'es2020',
       outDir: 'dist',
@@ -107,31 +121,56 @@ export default defineConfig(({ mode }) => {
       chunkSizeWarningLimit: 1000,
       rollupOptions: {
         output: {
-          manualChunks: {
-            'element-plus': ['element-plus', '@element-plus/icons-vue'],
-            'vue-vendor': ['vue', 'vue-router', 'pinia'],
-            'chart-vendor': ['echarts', 'vue-echarts'],
-            'utils-vendor': ['dayjs', 'lodash-es', 'axios'],
-            'form-vendor': ['vee-validate', 'yup', 'zod'],
-          }
-        }
-      }
+          manualChunks(id) {
+            // 更精确的代码分割策略，避免循环依赖
+            if (id.includes('node_modules')) {
+              if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
+                return 'vue-vendor'
+              }
+              if (id.includes('element-plus')) {
+                return 'element-plus'
+              }
+              if (id.includes('echarts')) {
+                return 'chart-vendor'
+              }
+              if (id.includes('dayjs') || id.includes('lodash-es') || id.includes('axios')) {
+                return 'utils-vendor'
+              }
+              return 'vendor'
+            }
+          },
+        },
+      },
     },
-    
+
+    optimizeDeps: {
+      // 预构建依赖，避免运行时解析问题
+      include: [
+        'vue',
+        'vue-router',
+        'pinia',
+        'element-plus',
+        '@element-plus/icons-vue',
+        'axios',
+        'echarts',
+        'dayjs'
+      ],
+    },
+
     css: {
       preprocessorOptions: {
         scss: {
           additionalData: `@use "@/assets/styles/variables.scss" as *;`,
           api: 'modern-compiler', // Use modern Sass API
           silenceDeprecations: ['legacy-js-api'],
-        }
-      }
+        },
+      },
     },
-    
+
     test: {
       globals: true,
       environment: 'jsdom',
-      setupFiles: ['./src/test/setup.ts']
-    }
+      setupFiles: ['./src/test/setup.ts'],
+    },
   }
 })

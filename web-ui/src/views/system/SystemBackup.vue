@@ -33,7 +33,9 @@
       </el-card>
       <el-card class="stat-card">
         <div class="stat-content">
-          <div class="stat-value">{{ formatFileSize(backupStats.totalSize) }}</div>
+          <div class="stat-value">
+            {{ formatFileSize(backupStats.totalSize) }}
+          </div>
           <div class="stat-label">总大小</div>
           <div class="stat-icon size">
             <el-icon><Folder /></el-icon>
@@ -97,9 +99,9 @@
             </div>
           </template>
 
-          <div class="backup-list" v-loading="loading">
-            <div 
-              v-for="backup in filteredBackups" 
+          <div v-loading="loading" class="backup-list">
+            <div
+              v-for="backup in filteredBackups"
               :key="backup.id"
               class="backup-item"
               :class="{ active: selectedBackup?.id === backup.id }"
@@ -108,16 +110,19 @@
               <div class="backup-info">
                 <div class="backup-name">{{ backup.name }}</div>
                 <div class="backup-meta">
-                  <span class="backup-type" :class="backup.type">{{ getTypeLabel(backup.type) }}</span>
-                  <span class="backup-size">{{ formatFileSize(backup.size) }}</span>
+                  <span class="backup-type" :class="backup.type">{{
+                    getTypeLabel(backup.type)
+                  }}</span>
+                  <span class="backup-size">{{
+                    formatFileSize(backup.size)
+                  }}</span>
                 </div>
-                <div class="backup-date">{{ formatDate(backup.createdAt) }}</div>
+                <div class="backup-date">
+                  {{ formatDate(backup.createdAt) }}
+                </div>
               </div>
               <div class="backup-status">
-                <el-tag 
-                  :type="getStatusType(backup.status)" 
-                  size="small"
-                >
+                <el-tag :type="getStatusType(backup.status)" size="small">
                   {{ getStatusLabel(backup.status) }}
                 </el-tag>
               </div>
@@ -165,8 +170,8 @@
             <div class="card-header">
               <span>备份详情</span>
               <div class="header-actions">
-                <el-button 
-                  type="primary" 
+                <el-button
+                  type="primary"
                   size="small"
                   @click="restoreBackup(selectedBackup)"
                 >
@@ -217,7 +222,7 @@
             <div class="detail-section">
               <h3>备份内容</h3>
               <div class="content-list">
-                <div 
+                <div
                   v-for="item in selectedBackup.contents"
                   :key="item.name"
                   class="content-item"
@@ -230,25 +235,35 @@
             </div>
 
             <!-- 验证信息 -->
-            <div class="detail-section" v-if="selectedBackup.verification">
+            <div v-if="selectedBackup.verification" class="detail-section">
               <h3>验证信息</h3>
               <div class="verification-info">
                 <div class="verification-item">
                   <label>MD5校验:</label>
-                  <span class="checksum">{{ selectedBackup.verification.md5 }}</span>
+                  <span class="checksum">{{
+                    selectedBackup.verification.md5
+                  }}</span>
                 </div>
                 <div class="verification-item">
                   <label>完整性验证:</label>
-                  <el-tag 
-                    :type="selectedBackup.verification.integrity ? 'success' : 'danger'"
+                  <el-tag
+                    :type="
+                      selectedBackup.verification.integrity
+                        ? 'success'
+                        : 'danger'
+                    "
                     size="small"
                   >
-                    {{ selectedBackup.verification.integrity ? '通过' : '失败' }}
+                    {{
+                      selectedBackup.verification.integrity ? '通过' : '失败'
+                    }}
                   </el-tag>
                 </div>
                 <div class="verification-item">
                   <label>最后验证时间:</label>
-                  <span>{{ formatDate(selectedBackup.verification.lastVerified) }}</span>
+                  <span>{{
+                    formatDate(selectedBackup.verification.lastVerified)
+                  }}</span>
                 </div>
               </div>
             </div>
@@ -261,7 +276,7 @@
             <span>进度监控</span>
           </template>
           <div class="operations-list">
-            <div 
+            <div
               v-for="operation in activeOperations"
               :key="operation.id"
               class="operation-item"
@@ -271,18 +286,20 @@
                 <div class="operation-type">{{ operation.type }}</div>
               </div>
               <div class="operation-progress">
-                <el-progress 
+                <el-progress
                   :percentage="operation.progress"
-                  :status="operation.status === 'error' ? 'exception' : undefined"
+                  :status="
+                    operation.status === 'error' ? 'exception' : undefined
+                  "
                 />
                 <div class="progress-text">
                   {{ operation.currentStep }} - {{ operation.progress }}%
                 </div>
               </div>
               <div class="operation-actions">
-                <el-button 
+                <el-button
                   v-if="operation.status === 'running'"
-                  text 
+                  text
                   @click="cancelOperation(operation.id)"
                 >
                   取消
@@ -301,7 +318,7 @@
       width="600px"
       :before-close="closeCreateBackupDialog"
     >
-      <el-form 
+      <el-form
         ref="createBackupForm"
         :model="createBackupData"
         :rules="createBackupRules"
@@ -314,7 +331,7 @@
             clearable
           />
         </el-form-item>
-        
+
         <el-form-item label="备份类型" prop="type">
           <el-radio-group v-model="createBackupData.type">
             <el-radio label="full">完整备份</el-radio>
@@ -352,7 +369,11 @@
           />
         </el-form-item>
 
-        <el-form-item v-if="createBackupData.encrypt" label="加密密码" prop="password">
+        <el-form-item
+          v-if="createBackupData.encrypt"
+          label="加密密码"
+          prop="password"
+        >
           <el-input
             v-model="createBackupData.password"
             type="password"
@@ -373,22 +394,14 @@
 
       <template #footer>
         <el-button @click="closeCreateBackupDialog">取消</el-button>
-        <el-button 
-          type="primary" 
-          @click="createBackup"
-          :loading="creating"
-        >
+        <el-button type="primary" :loading="creating" @click="createBackup">
           创建备份
         </el-button>
       </template>
     </el-dialog>
 
     <!-- 恢复确认对话框 -->
-    <el-dialog
-      v-model="restoreDialogVisible"
-      title="确认恢复"
-      width="500px"
-    >
+    <el-dialog v-model="restoreDialogVisible" title="确认恢复" width="500px">
       <div class="restore-warning">
         <el-icon class="warning-icon"><WarningFilled /></el-icon>
         <div class="warning-content">
@@ -396,8 +409,13 @@
           <p>恢复操作将覆盖当前系统数据，此操作不可撤销。</p>
           <div class="backup-info">
             <p><strong>备份名称:</strong> {{ restoreTarget?.name }}</p>
-            <p><strong>创建时间:</strong> {{ formatDate(restoreTarget?.createdAt) }}</p>
-            <p><strong>备份类型:</strong> {{ getTypeLabel(restoreTarget?.type) }}</p>
+            <p>
+              <strong>创建时间:</strong>
+              {{ formatDate(restoreTarget?.createdAt) }}
+            </p>
+            <p>
+              <strong>备份类型:</strong> {{ getTypeLabel(restoreTarget?.type) }}
+            </p>
           </div>
         </div>
       </div>
@@ -419,11 +437,11 @@
 
       <template #footer>
         <el-button @click="restoreDialogVisible = false">取消</el-button>
-        <el-button 
-          type="danger" 
-          @click="confirmRestore"
+        <el-button
+          type="danger"
           :disabled="!restoreConfirmed"
           :loading="restoring"
+          @click="confirmRestore"
         >
           确认恢复
         </el-button>
@@ -441,7 +459,7 @@
         <div class="existing-schedules">
           <h3>现有计划任务</h3>
           <div class="schedule-list">
-            <div 
+            <div
               v-for="schedule in schedules"
               :key="schedule.id"
               class="schedule-item"
@@ -461,7 +479,9 @@
               </div>
               <div class="schedule-actions">
                 <el-button text @click="editSchedule(schedule)">编辑</el-button>
-                <el-button text type="danger" @click="deleteSchedule(schedule)">删除</el-button>
+                <el-button text type="danger" @click="deleteSchedule(schedule)"
+                  >删除</el-button
+                >
               </div>
             </div>
           </div>
@@ -483,21 +503,30 @@
               </el-select>
             </el-form-item>
             <el-form-item label="执行频率">
-              <el-select v-model="newSchedule.frequency" @change="updateCronExpression">
+              <el-select
+                v-model="newSchedule.frequency"
+                @change="updateCronExpression"
+              >
                 <el-option label="每天" value="daily" />
                 <el-option label="每周" value="weekly" />
                 <el-option label="每月" value="monthly" />
                 <el-option label="自定义" value="custom" />
               </el-select>
             </el-form-item>
-            <el-form-item v-if="newSchedule.frequency !== 'custom'" label="执行时间">
+            <el-form-item
+              v-if="newSchedule.frequency !== 'custom'"
+              label="执行时间"
+            >
               <el-time-picker
                 v-model="newSchedule.time"
                 format="HH:mm"
                 value-format="HH:mm"
               />
             </el-form-item>
-            <el-form-item v-if="newSchedule.frequency === 'custom'" label="Cron表达式">
+            <el-form-item
+              v-if="newSchedule.frequency === 'custom'"
+              label="Cron表达式"
+            >
               <el-input v-model="newSchedule.cron" placeholder="0 2 * * *" />
             </el-form-item>
             <el-form-item label="保留份数">
@@ -520,16 +549,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+import {
+  Plus,
+  Timer,
+  Search,
+  Document,
+  Folder,
+  SuccessFilled,
+  Clock,
+  MoreFilled,
+  RefreshRight,
+  Download,
+  CircleCheck,
+  Delete,
+  FolderOpened,
+  WarningFilled,
+} from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { FormInstance, FormRules } from 'element-plus'
-import {
-  Plus, Timer, Search, Document, Folder, SuccessFilled, Clock,
-  MoreFilled, RefreshRight, Download, CircleCheck, Delete,
-  FolderOpened, WarningFilled
-} from '@element-plus/icons-vue'
+import { ref, reactive, computed, onMounted, onUnmounted } from 'vue'
+
 import { backupApi, wsClient } from '@/api'
-import type { BackupItem, BackupStats, BackupCreateReq, BackupSchedule, BackupOperation } from '@/api/backup'
+import type {
+  BackupItem,
+  BackupStats,
+  BackupCreateReq,
+  BackupSchedule,
+  BackupOperation,
+} from '@/api/backup'
 
 // 使用从 API 导入的类型
 
@@ -560,7 +607,7 @@ const backupStats = ref<BackupStats>({
   totalBackups: 0,
   totalSize: 0,
   successRate: 95,
-  scheduledTasks: 0
+  scheduledTasks: 0,
 })
 
 // 创建备份表单数据
@@ -571,7 +618,7 @@ const createBackupData = reactive({
   compress: true,
   encrypt: false,
   password: '',
-  description: ''
+  description: '',
 })
 
 // 新建计划任务数据
@@ -581,21 +628,17 @@ const newSchedule = reactive({
   frequency: 'daily',
   time: '02:00',
   cron: '0 2 * * *',
-  retention: 7
+  retention: 7,
 })
 
 // 表单验证规则
 const createBackupRules: FormRules = {
-  name: [
-    { required: true, message: '请输入备份名称', trigger: 'blur' }
-  ],
-  type: [
-    { required: true, message: '请选择备份类型', trigger: 'change' }
-  ],
+  name: [{ required: true, message: '请输入备份名称', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择备份类型', trigger: 'change' }],
   password: [
     { required: true, message: '请输入加密密码', trigger: 'blur' },
-    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' }
-  ]
+    { min: 6, message: '密码长度不能少于6位', trigger: 'blur' },
+  ],
 }
 
 // 计算属性
@@ -603,7 +646,7 @@ const filteredBackups = computed(() => {
   let filtered = backups.value
 
   if (searchQuery.value) {
-    filtered = filtered.filter(backup => 
+    filtered = filtered.filter(backup =>
       backup.name.toLowerCase().includes(searchQuery.value.toLowerCase())
     )
   }
@@ -612,7 +655,9 @@ const filteredBackups = computed(() => {
     filtered = filtered.filter(backup => backup.type === selectedType.value)
   }
 
-  return filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+  return filtered.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  )
 })
 
 // 工具函数
@@ -621,7 +666,7 @@ const formatFileSize = (bytes: number): string => {
   const k = 1024
   const sizes = ['B', 'KB', 'MB', 'GB', 'TB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))  } ${  sizes[i]}`
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
 }
 
 const formatDate = (dateString: string): string => {
@@ -630,30 +675,30 @@ const formatDate = (dateString: string): string => {
 
 const getTypeLabel = (type: string): string => {
   const labels = {
-    'full': '完整备份',
-    'config': '配置备份',
-    'data': '数据备份',
-    'incremental': '增量备份'
+    full: '完整备份',
+    config: '配置备份',
+    data: '数据备份',
+    incremental: '增量备份',
   }
   return labels[type as keyof typeof labels] || type
 }
 
 const getStatusType = (status: string) => {
   const types = {
-    'success': 'success',
-    'failed': 'danger',
-    'running': 'warning',
-    'pending': 'info'
+    success: 'success',
+    failed: 'danger',
+    running: 'warning',
+    pending: 'info',
   }
   return types[status as keyof typeof types] || 'info'
 }
 
 const getStatusLabel = (status: string): string => {
   const labels = {
-    'success': '成功',
-    'failed': '失败',
-    'running': '进行中',
-    'pending': '等待中'
+    success: '成功',
+    failed: '失败',
+    running: '进行中',
+    pending: '等待中',
   }
   return labels[status as keyof typeof labels] || status
 }
@@ -678,13 +723,13 @@ const closeCreateBackupDialog = () => {
     compress: true,
     encrypt: false,
     password: '',
-    description: ''
+    description: '',
   })
 }
 
 const createBackup = async () => {
   if (!createBackupForm.value) return
-  
+
   try {
     await createBackupForm.value.validate()
     creating.value = true
@@ -696,7 +741,7 @@ const createBackup = async () => {
       compress: createBackupData.compress,
       encrypt: createBackupData.encrypt,
       password: createBackupData.password,
-      description: createBackupData.description
+      description: createBackupData.description,
     }
 
     await backupApi.create(backupRequest)
@@ -724,10 +769,10 @@ const confirmRestore = async () => {
 
   try {
     restoring.value = true
-    
+
     await backupApi.restore({
       backupId: restoreTarget.value.id,
-      password: restorePassword.value
+      password: restorePassword.value,
     })
 
     ElMessage.success('系统恢复成功')
@@ -745,7 +790,7 @@ const downloadBackup = async (backup: BackupItem) => {
   try {
     ElMessage.info(`开始下载备份: ${backup.name}`)
     const response = await backupApi.download(backup.id)
-    
+
     // 创建下载链接
     const url = window.URL.createObjectURL(new Blob([response.data]))
     const link = document.createElement('a')
@@ -755,7 +800,7 @@ const downloadBackup = async (backup: BackupItem) => {
     link.click()
     document.body.removeChild(link)
     window.URL.revokeObjectURL(url)
-    
+
     ElMessage.success('备份下载完成')
   } catch (error) {
     console.error('下载备份失败:', error)
@@ -766,7 +811,7 @@ const downloadBackup = async (backup: BackupItem) => {
 const verifyBackup = async (backup: BackupItem) => {
   try {
     ElMessage.info('开始验证备份完整性...')
-    
+
     await backupApi.verify(backup.id)
     ElMessage.success('备份验证通过')
     await loadBackups()
@@ -784,16 +829,16 @@ const deleteBackup = async (backup: BackupItem) => {
       {
         type: 'warning',
         confirmButtonText: '删除',
-        cancelButtonText: '取消'
+        cancelButtonText: '取消',
       }
     )
 
     await backupApi.delete(backup.id)
-    
+
     if (selectedBackup.value?.id === backup.id) {
       selectedBackup.value = null
     }
-    
+
     ElMessage.success('备份删除成功')
     await loadBackups()
     await loadStats()
@@ -850,7 +895,7 @@ const createSchedule = async () => {
       name: newSchedule.name,
       backupType: newSchedule.backupType,
       cron: newSchedule.cron,
-      retention: newSchedule.retention
+      retention: newSchedule.retention,
     })
 
     Object.assign(newSchedule, {
@@ -859,7 +904,7 @@ const createSchedule = async () => {
       frequency: 'daily',
       time: '02:00',
       cron: '0 2 * * *',
-      retention: 7
+      retention: 7,
     })
 
     ElMessage.success('计划任务创建成功')
@@ -893,7 +938,7 @@ const deleteSchedule = async (schedule: BackupSchedule) => {
       `确定要删除计划任务 "${schedule.name}" 吗？`,
       '确认删除',
       {
-        type: 'warning'
+        type: 'warning',
       }
     )
 
@@ -926,10 +971,10 @@ const loadBackups = async () => {
       search: searchQuery.value,
       type: selectedType.value,
       page: 1,
-      size: 100
+      size: 100,
     })
     backups.value = response.data.items || response.data
-    
+
     // 选中第一个备份
     if (backups.value.length > 0 && !selectedBackup.value) {
       selectedBackup.value = backups.value[0]
@@ -965,14 +1010,14 @@ const initializeData = async () => {
     loadBackups(),
     loadStats(),
     loadOperations(),
-    loadSchedules()
+    loadSchedules(),
   ])
 }
 
 // 生命周期
 onMounted(async () => {
   await initializeData()
-  
+
   // 设置WebSocket监听器
   wsClient.on('backup_progress', (data: BackupOperation) => {
     const index = activeOperations.value.findIndex(op => op.id === data.id)
@@ -982,9 +1027,11 @@ onMounted(async () => {
       activeOperations.value.push(data)
     }
   })
-  
+
   wsClient.on('backup_completed', async (data: { operationId: string }) => {
-    const index = activeOperations.value.findIndex(op => op.id === data.operationId)
+    const index = activeOperations.value.findIndex(
+      op => op.id === data.operationId
+    )
     if (index > -1) {
       activeOperations.value.splice(index, 1)
     }
@@ -1005,17 +1052,17 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   background: #f5f7fa;
-  
+
   .page-header {
     background: white;
     padding: 24px;
     border-bottom: 1px solid #e4e7ed;
-    
+
     .header-content {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      
+
       .title-section {
         h1 {
           margin: 0;
@@ -1023,45 +1070,45 @@ onUnmounted(() => {
           font-weight: 600;
           color: #303133;
         }
-        
+
         .description {
           margin: 8px 0 0 0;
           color: #909399;
           font-size: 14px;
         }
       }
-      
+
       .header-actions {
         display: flex;
         gap: 12px;
       }
     }
   }
-  
+
   .stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: 20px;
     padding: 20px 24px;
-    
+
     .stat-card {
       .stat-content {
         display: flex;
         align-items: center;
         position: relative;
-        
+
         .stat-value {
           font-size: 32px;
           font-weight: bold;
           color: #303133;
           margin-bottom: 4px;
         }
-        
+
         .stat-label {
           color: #909399;
           font-size: 14px;
         }
-        
+
         .stat-icon {
           position: absolute;
           right: 12px;
@@ -1069,16 +1116,24 @@ onUnmounted(() => {
           transform: translateY(-50%);
           font-size: 32px;
           opacity: 0.3;
-          
-          &.backup { color: #409eff; }
-          &.size { color: #67c23a; }
-          &.success { color: #67c23a; }
-          &.scheduled { color: #e6a23c; }
+
+          &.backup {
+            color: #409eff;
+          }
+          &.size {
+            color: #67c23a;
+          }
+          &.success {
+            color: #67c23a;
+          }
+          &.scheduled {
+            color: #e6a23c;
+          }
         }
       }
     }
   }
-  
+
   .main-content {
     flex: 1;
     display: grid;
@@ -1086,24 +1141,24 @@ onUnmounted(() => {
     gap: 20px;
     padding: 0 24px 24px;
     min-height: 0;
-    
+
     .backup-list-section {
       .card-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        
+
         .header-actions {
           display: flex;
           gap: 12px;
           align-items: center;
         }
       }
-      
+
       .backup-list {
         max-height: 600px;
         overflow-y: auto;
-        
+
         .backup-item {
           display: flex;
           align-items: center;
@@ -1113,70 +1168,82 @@ onUnmounted(() => {
           margin-bottom: 12px;
           cursor: pointer;
           transition: all 0.3s;
-          
+
           &:hover {
             border-color: #409eff;
             box-shadow: 0 2px 8px rgba(64, 158, 255, 0.1);
           }
-          
+
           &.active {
             border-color: #409eff;
             background: #f0f9ff;
           }
-          
+
           .backup-info {
             flex: 1;
-            
+
             .backup-name {
               font-weight: 500;
               color: #303133;
               margin-bottom: 6px;
             }
-            
+
             .backup-meta {
               display: flex;
               gap: 12px;
               margin-bottom: 4px;
-              
+
               .backup-type {
                 padding: 2px 8px;
                 border-radius: 4px;
                 font-size: 12px;
-                
-                &.full { background: #e1f3d8; color: #529b2e; }
-                &.config { background: #e6f7ff; color: #1890ff; }
-                &.data { background: #fff2e8; color: #d46b08; }
-                &.incremental { background: #f6f6f6; color: #666; }
+
+                &.full {
+                  background: #e1f3d8;
+                  color: #529b2e;
+                }
+                &.config {
+                  background: #e6f7ff;
+                  color: #1890ff;
+                }
+                &.data {
+                  background: #fff2e8;
+                  color: #d46b08;
+                }
+                &.incremental {
+                  background: #f6f6f6;
+                  color: #666;
+                }
               }
-              
+
               .backup-size {
                 font-size: 12px;
                 color: #909399;
               }
             }
-            
+
             .backup-date {
               font-size: 12px;
               color: #909399;
             }
           }
-          
+
           .backup-status {
             margin: 0 12px;
           }
-          
+
           .backup-actions {
             .el-button {
               padding: 4px;
             }
           }
         }
-        
+
         .empty-state {
           text-align: center;
           padding: 40px;
           color: #909399;
-          
+
           .el-icon {
             font-size: 48px;
             margin-bottom: 16px;
@@ -1184,16 +1251,16 @@ onUnmounted(() => {
         }
       }
     }
-    
+
     .backup-detail-section {
       display: flex;
       flex-direction: column;
       gap: 16px;
-      
+
       .backup-details {
         .detail-section {
           margin-bottom: 24px;
-          
+
           h3 {
             margin: 0 0 16px 0;
             font-size: 16px;
@@ -1202,76 +1269,88 @@ onUnmounted(() => {
             padding-bottom: 8px;
             border-bottom: 1px solid #e4e7ed;
           }
-          
+
           .info-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            
+
             .info-item {
               display: flex;
-              
+
               label {
                 min-width: 80px;
                 font-weight: 500;
                 color: #606266;
               }
-              
+
               span {
                 flex: 1;
                 color: #303133;
-                
+
                 &.backup-type {
                   padding: 2px 8px;
                   border-radius: 4px;
                   font-size: 12px;
                   display: inline-block;
-                  
-                  &.full { background: #e1f3d8; color: #529b2e; }
-                  &.config { background: #e6f7ff; color: #1890ff; }
-                  &.data { background: #fff2e8; color: #d46b08; }
-                  &.incremental { background: #f6f6f6; color: #666; }
+
+                  &.full {
+                    background: #e1f3d8;
+                    color: #529b2e;
+                  }
+                  &.config {
+                    background: #e6f7ff;
+                    color: #1890ff;
+                  }
+                  &.data {
+                    background: #fff2e8;
+                    color: #d46b08;
+                  }
+                  &.incremental {
+                    background: #f6f6f6;
+                    color: #666;
+                  }
                 }
               }
             }
           }
-          
+
           .content-list {
             .content-item {
               display: flex;
               align-items: center;
               padding: 8px 0;
               border-bottom: 1px solid #f5f7fa;
-              
+
               .el-icon {
                 margin-right: 8px;
                 color: #409eff;
               }
-              
+
               .item-name {
                 flex: 1;
                 color: #303133;
               }
-              
+
               .item-size {
                 color: #909399;
                 font-size: 12px;
               }
             }
           }
-          
+
           .verification-info {
             .verification-item {
               display: flex;
               align-items: center;
               margin-bottom: 8px;
-              
+
               label {
                 min-width: 100px;
                 font-weight: 500;
                 color: #606266;
               }
-              
+
               .checksum {
                 font-family: monospace;
                 font-size: 12px;
@@ -1284,44 +1363,44 @@ onUnmounted(() => {
           }
         }
       }
-      
+
       .progress-card {
         .operations-list {
           .operation-item {
             padding: 16px 0;
             border-bottom: 1px solid #f5f7fa;
-            
+
             &:last-child {
               border-bottom: none;
             }
-            
+
             .operation-info {
               display: flex;
               justify-content: space-between;
               align-items: center;
               margin-bottom: 8px;
-              
+
               .operation-name {
                 font-weight: 500;
                 color: #303133;
               }
-              
+
               .operation-type {
                 font-size: 12px;
                 color: #909399;
               }
             }
-            
+
             .operation-progress {
               margin-bottom: 8px;
-              
+
               .progress-text {
                 font-size: 12px;
                 color: #909399;
                 margin-top: 4px;
               }
             }
-            
+
             .operation-actions {
               text-align: right;
             }
@@ -1330,38 +1409,38 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .restore-warning {
     display: flex;
     align-items: flex-start;
     gap: 16px;
     margin-bottom: 20px;
-    
+
     .warning-icon {
       font-size: 24px;
       color: #e6a23c;
       margin-top: 2px;
     }
-    
+
     .warning-content {
       flex: 1;
-      
+
       h3 {
         margin: 0 0 8px 0;
         color: #e6a23c;
       }
-      
+
       p {
         margin: 0 0 16px 0;
         color: #606266;
       }
-      
+
       .backup-info {
         background: #fdf6ec;
         padding: 12px;
         border-radius: 4px;
         border: 1px solid #f5dab1;
-        
+
         p {
           margin: 4px 0;
           font-size: 14px;
@@ -1369,11 +1448,12 @@ onUnmounted(() => {
       }
     }
   }
-  
+
   .schedule-section {
-    .existing-schedules, .create-schedule {
+    .existing-schedules,
+    .create-schedule {
       margin-bottom: 24px;
-      
+
       h3 {
         margin: 0 0 16px 0;
         font-size: 16px;
@@ -1382,7 +1462,7 @@ onUnmounted(() => {
         border-bottom: 1px solid #e4e7ed;
       }
     }
-    
+
     .schedule-list {
       .schedule-item {
         display: flex;
@@ -1391,16 +1471,16 @@ onUnmounted(() => {
         border: 1px solid #e4e7ed;
         border-radius: 8px;
         margin-bottom: 12px;
-        
+
         .schedule-info {
           flex: 1;
-          
+
           .schedule-name {
             font-weight: 500;
             color: #303133;
             margin-bottom: 6px;
           }
-          
+
           .schedule-details {
             display: flex;
             gap: 12px;
@@ -1408,11 +1488,11 @@ onUnmounted(() => {
             color: #909399;
           }
         }
-        
+
         .schedule-status {
           margin: 0 16px;
         }
-        
+
         .schedule-actions {
           display: flex;
           gap: 8px;
@@ -1427,7 +1507,7 @@ onUnmounted(() => {
   .system-backup {
     .main-content {
       grid-template-columns: 1fr;
-      
+
       .backup-detail-section {
         order: -1;
       }
@@ -1441,17 +1521,17 @@ onUnmounted(() => {
       grid-template-columns: 1fr 1fr;
       padding: 16px;
     }
-    
+
     .page-header {
       padding: 16px;
-      
+
       .header-content {
         flex-direction: column;
         align-items: flex-start;
         gap: 16px;
       }
     }
-    
+
     .main-content {
       padding: 0 16px 16px;
     }

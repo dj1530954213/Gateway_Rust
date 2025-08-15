@@ -22,7 +22,9 @@
             <el-tag :type="getRoleType(userData?.role)" size="small">
               {{ getRoleName(userData?.role) }}
             </el-tag>
-            <el-tag type="warning" size="small">{{ getDepartmentName(userData?.departmentId) }}</el-tag>
+            <el-tag type="warning" size="small">{{
+              getDepartmentName(userData?.departmentId)
+            }}</el-tag>
           </div>
         </div>
       </div>
@@ -36,28 +38,31 @@
           <div class="category-header">
             <h4>权限分类</h4>
             <div class="category-actions">
-              <el-button 
-                size="small" 
-                @click="expandAllCategories"
+              <el-button
+                size="small"
                 :icon="Expand"
+                @click="expandAllCategories"
               >
                 展开全部
               </el-button>
-              <el-button 
-                size="small" 
-                @click="collapseAllCategories"
+              <el-button
+                size="small"
                 :icon="Fold"
+                @click="collapseAllCategories"
               >
                 收起全部
               </el-button>
             </div>
           </div>
-          
+
           <div class="category-list">
             <div
               v-for="category in permissionCategories"
               :key="category.id"
-              :class="['category-item', { active: selectedCategoryId === category.id }]"
+              :class="[
+                'category-item',
+                { active: selectedCategoryId === category.id },
+              ]"
               @click="selectCategory(category.id)"
             >
               <div class="category-main">
@@ -66,8 +71,12 @@
                 </el-icon>
                 <span class="category-name">{{ category.name }}</span>
                 <div class="category-stats">
-                  <span class="granted-count">{{ getGrantedCount(category.id) }}</span>
-                  <span class="total-count">/{{ category.permissions.length }}</span>
+                  <span class="granted-count">{{
+                    getGrantedCount(category.id)
+                  }}</span>
+                  <span class="total-count"
+                    >/{{ category.permissions.length }}</span
+                  >
                 </div>
               </div>
               <div class="category-progress">
@@ -87,19 +96,19 @@
           <div class="details-header">
             <h4>{{ getSelectedCategoryName() }} 权限</h4>
             <div class="details-actions">
-              <el-button 
-                size="small" 
-                @click="grantAllInCategory"
+              <el-button
+                size="small"
                 :icon="Check"
                 type="success"
+                @click="grantAllInCategory"
               >
                 全部授予
               </el-button>
-              <el-button 
-                size="small" 
-                @click="revokeAllInCategory"
+              <el-button
+                size="small"
                 :icon="Close"
                 type="danger"
+                @click="revokeAllInCategory"
               >
                 全部撤销
               </el-button>
@@ -117,19 +126,33 @@
                   <div class="permission-header">
                     <span class="permission-name">{{ permission.name }}</span>
                     <el-tag
-                      :type="permission.level === 'high' ? 'danger' : permission.level === 'medium' ? 'warning' : 'info'"
+                      :type="
+                        permission.level === 'high'
+                          ? 'danger'
+                          : permission.level === 'medium'
+                            ? 'warning'
+                            : 'info'
+                      "
                       size="small"
                       class="permission-level"
                     >
                       {{ getLevelText(permission.level) }}
                     </el-tag>
                   </div>
-                  <div class="permission-desc">{{ permission.description }}</div>
+                  <div class="permission-desc">
+                    {{ permission.description }}
+                  </div>
                   <div class="permission-source">
-                    <span v-if="permission.fromRole" class="source-tag role-source">
+                    <span
+                      v-if="permission.fromRole"
+                      class="source-tag role-source"
+                    >
                       角色权限
                     </span>
-                    <span v-if="permission.fromUser" class="source-tag user-source">
+                    <span
+                      v-if="permission.fromUser"
+                      class="source-tag user-source"
+                    >
                       个人权限
                     </span>
                   </div>
@@ -138,14 +161,19 @@
                   <el-switch
                     v-model="permission.granted"
                     :disabled="permission.fromRole && !permission.canOverride"
+                    :active-color="
+                      permission.level === 'high' ? '#F56C6C' : '#67C23A'
+                    "
                     @change="handlePermissionChange(permission)"
-                    :active-color="permission.level === 'high' ? '#F56C6C' : '#67C23A'"
                   />
                 </div>
               </div>
-              
+
               <!-- 权限依赖 -->
-              <div v-if="permission.dependencies?.length" class="permission-dependencies">
+              <div
+                v-if="permission.dependencies?.length"
+                class="permission-dependencies"
+              >
                 <div class="dependencies-label">依赖权限:</div>
                 <div class="dependencies-list">
                   <el-tag
@@ -184,7 +212,8 @@
               <Minus v-if="change.action === 'revoke'" />
             </el-icon>
             <span class="change-text">
-              {{ change.action === 'grant' ? '授予' : '撤销' }} {{ change.permissionName }}
+              {{ change.action === 'grant' ? '授予' : '撤销' }}
+              {{ change.permissionName }}
             </span>
             <el-tag
               :type="change.action === 'grant' ? 'success' : 'danger'"
@@ -201,12 +230,14 @@
     <template #footer>
       <div class="dialog-footer">
         <el-button @click="handleClose">取消</el-button>
-        <el-button @click="resetChanges" :disabled="!hasChanges">重置</el-button>
+        <el-button :disabled="!hasChanges" @click="resetChanges"
+          >重置</el-button
+        >
         <el-button
           type="primary"
-          @click="savePermissions"
           :loading="saving"
           :disabled="!hasChanges"
+          @click="savePermissions"
         >
           保存权限
         </el-button>
@@ -234,8 +265,6 @@
  *  - 2025-07-27  初始创建
  */
 
-import { ref, computed, watch, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   UserFilled,
   Monitor,
@@ -248,8 +277,10 @@ import {
   Check,
   Close,
   Plus,
-  Minus
+  Minus,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, computed, watch, nextTick } from 'vue'
 
 // ===== Props & Emits =====
 const props = defineProps<{
@@ -259,7 +290,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   'update:visible': [visible: boolean]
-  'save': [permissionData: any]
+  save: [permissionData: any]
 }>()
 
 // ===== 响应式数据 =====
@@ -289,7 +320,7 @@ const permissionCategories = ref([
         fromRole: true,
         fromUser: false,
         canOverride: false,
-        dependencies: []
+        dependencies: [],
       },
       {
         id: 'device_write',
@@ -300,7 +331,7 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['device_read']
+        dependencies: ['device_read'],
       },
       {
         id: 'device_control',
@@ -311,7 +342,7 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['device_read', 'device_write']
+        dependencies: ['device_read', 'device_write'],
       },
       {
         id: 'device_delete',
@@ -322,9 +353,9 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['device_read', 'device_write']
-      }
-    ]
+        dependencies: ['device_read', 'device_write'],
+      },
+    ],
   },
   {
     id: 'system',
@@ -339,7 +370,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: true,
         fromUser: false,
-        canOverride: false
+        canOverride: false,
       },
       {
         id: 'user_manage',
@@ -349,7 +380,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'role_manage',
@@ -359,7 +390,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'backup_restore',
@@ -369,9 +400,9 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
-      }
-    ]
+        canOverride: true,
+      },
+    ],
   },
   {
     id: 'data',
@@ -386,7 +417,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: true,
         fromUser: false,
-        canOverride: false
+        canOverride: false,
       },
       {
         id: 'data_export',
@@ -397,7 +428,7 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['data_read']
+        dependencies: ['data_read'],
       },
       {
         id: 'data_import',
@@ -407,7 +438,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'data_delete',
@@ -418,9 +449,9 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['data_read']
-      }
-    ]
+        dependencies: ['data_read'],
+      },
+    ],
   },
   {
     id: 'network',
@@ -435,7 +466,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'protocol_manage',
@@ -445,7 +476,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'driver_manage',
@@ -455,9 +486,9 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
-      }
-    ]
+        canOverride: true,
+      },
+    ],
   },
   {
     id: 'alert',
@@ -472,7 +503,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: true,
         fromUser: false,
-        canOverride: false
+        canOverride: false,
       },
       {
         id: 'alert_ack',
@@ -483,7 +514,7 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['alert_read']
+        dependencies: ['alert_read'],
       },
       {
         id: 'alert_config',
@@ -493,7 +524,7 @@ const permissionCategories = ref([
         granted: false,
         fromRole: false,
         fromUser: false,
-        canOverride: true
+        canOverride: true,
       },
       {
         id: 'alert_delete',
@@ -504,10 +535,10 @@ const permissionCategories = ref([
         fromRole: false,
         fromUser: false,
         canOverride: true,
-        dependencies: ['alert_read']
-      }
-    ]
-  }
+        dependencies: ['alert_read'],
+      },
+    ],
+  },
 ])
 
 // ===== 计算属性 =====
@@ -521,20 +552,22 @@ const changeCount = computed(() => {
 
 const permissionChanges = computed(() => {
   const changes: any[] = []
-  
+
   permissionCategories.value.forEach(category => {
     category.permissions.forEach(permission => {
-      const original = originalPermissions.value.find(p => p.id === permission.id)
+      const original = originalPermissions.value.find(
+        p => p.id === permission.id
+      )
       if (original && original.granted !== permission.granted) {
         changes.push({
           permissionId: permission.id,
           permissionName: permission.name,
-          action: permission.granted ? 'grant' : 'revoke'
+          action: permission.granted ? 'grant' : 'revoke',
         })
       }
     })
   })
-  
+
   return changes
 })
 
@@ -546,14 +579,10 @@ const permissionChanges = computed(() => {
 async function initializeData() {
   try {
     // 从API加载真实数据
-    await Promise.all([
-      loadAvailableRoles(),
-      loadDepartments()
-    ])
-    
+    await Promise.all([loadAvailableRoles(), loadDepartments()])
+
     // 加载用户权限
     await loadUserPermissions()
-    
   } catch (error) {
     console.error('初始化权限分配对话框失败:', error)
     ElMessage.error('初始化失败')
@@ -566,21 +595,26 @@ async function initializeData() {
 async function loadUserPermissions() {
   try {
     // 从真实API加载用户权限数据
-    const response = await fetch(`/api/v1/users/${props.userData?.id}/permissions`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json'
+    const response = await fetch(
+      `/api/v1/users/${props.userData?.id}/permissions`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       }
-    })
-    
+    )
+
     if (response.ok) {
       const userPermissions = await response.json()
-      
+
       // 更新权限状态
       permissionCategories.value.forEach(category => {
         category.permissions.forEach(permission => {
-          const userPermission = userPermissions.find((p: any) => p.id === permission.id)
-          
+          const userPermission = userPermissions.find(
+            (p: any) => p.id === permission.id
+          )
+
           if (userPermission) {
             permission.granted = userPermission.granted
             permission.fromRole = userPermission.fromRole || false
@@ -598,10 +632,9 @@ async function loadUserPermissions() {
       console.error('加载用户权限失败:', response.statusText)
       ElMessage.error('加载用户权限失败')
     }
-    
+
     // 保存原始状态
     saveOriginalState()
-    
   } catch (error) {
     console.error('加载用户权限失败:', error)
     ElMessage.error('加载用户权限失败')
@@ -617,7 +650,7 @@ function saveOriginalState() {
     category.permissions.forEach(permission => {
       originalPermissions.value.push({
         id: permission.id,
-        granted: permission.granted
+        granted: permission.granted,
       })
     })
   })
@@ -631,10 +664,10 @@ async function loadAvailableRoles() {
     const response = await fetch('/api/v1/roles', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       availableRoles.value = await response.json()
     } else {
@@ -655,10 +688,10 @@ async function loadDepartments() {
     const response = await fetch('/api/v1/users/departments', {
       method: 'GET',
       headers: {
-        'Content-Type': 'application/json'
-      }
+        'Content-Type': 'application/json',
+      },
     })
-    
+
     if (response.ok) {
       departments.value = await response.json()
     } else {
@@ -676,11 +709,16 @@ async function loadDepartments() {
  */
 function getRoleType(roleId: string): string {
   switch (roleId) {
-    case 'admin': return 'danger'
-    case 'manager': return 'warning'
-    case 'operator': return 'success'
-    case 'viewer': return 'info'
-    default: return 'info'
+    case 'admin':
+      return 'danger'
+    case 'manager':
+      return 'warning'
+    case 'operator':
+      return 'success'
+    case 'viewer':
+      return 'info'
+    default:
+      return 'info'
   }
 }
 
@@ -714,7 +752,7 @@ function getGrantedCount(categoryId: string): number {
 function getPermissionProgress(categoryId: string): number {
   const category = permissionCategories.value.find(c => c.id === categoryId)
   if (!category || category.permissions.length === 0) return 0
-  
+
   const grantedCount = category.permissions.filter(p => p.granted).length
   return Math.round((grantedCount / category.permissions.length) * 100)
 }
@@ -740,7 +778,9 @@ function selectCategory(categoryId: string) {
  * 获取选中分类名称
  */
 function getSelectedCategoryName(): string {
-  const category = permissionCategories.value.find(c => c.id === selectedCategoryId.value)
+  const category = permissionCategories.value.find(
+    c => c.id === selectedCategoryId.value
+  )
   return category?.name || ''
 }
 
@@ -748,7 +788,9 @@ function getSelectedCategoryName(): string {
  * 获取选中分类权限
  */
 function getSelectedCategoryPermissions() {
-  const category = permissionCategories.value.find(c => c.id === selectedCategoryId.value)
+  const category = permissionCategories.value.find(
+    c => c.id === selectedCategoryId.value
+  )
   return category?.permissions || []
 }
 
@@ -757,10 +799,14 @@ function getSelectedCategoryPermissions() {
  */
 function getLevelText(level: string): string {
   switch (level) {
-    case 'high': return '高风险'
-    case 'medium': return '中风险'
-    case 'low': return '低风险'
-    default: return '未知'
+    case 'high':
+      return '高风险'
+    case 'medium':
+      return '中风险'
+    case 'low':
+      return '低风险'
+    default:
+      return '未知'
   }
 }
 
@@ -795,15 +841,17 @@ function collapseAllCategories() {
  * 授予分类下所有权限
  */
 function grantAllInCategory() {
-  const category = permissionCategories.value.find(c => c.id === selectedCategoryId.value)
+  const category = permissionCategories.value.find(
+    c => c.id === selectedCategoryId.value
+  )
   if (!category) return
-  
+
   category.permissions.forEach(permission => {
     if (permission.canOverride || !permission.fromRole) {
       permission.granted = true
     }
   })
-  
+
   ElMessage.success(`已授予 ${category.name} 分类下所有可用权限`)
 }
 
@@ -811,15 +859,17 @@ function grantAllInCategory() {
  * 撤销分类下所有权限
  */
 function revokeAllInCategory() {
-  const category = permissionCategories.value.find(c => c.id === selectedCategoryId.value)
+  const category = permissionCategories.value.find(
+    c => c.id === selectedCategoryId.value
+  )
   if (!category) return
-  
+
   category.permissions.forEach(permission => {
     if (permission.canOverride || !permission.fromRole) {
       permission.granted = false
     }
   })
-  
+
   ElMessage.success(`已撤销 ${category.name} 分类下所有可撤销权限`)
 }
 
@@ -836,18 +886,20 @@ function handlePermissionChange(permission: any) {
           `此权限依赖 "${getPermissionName(depId)}" 权限，是否同时授予？`,
           '权限依赖',
           {
-            type: 'warning'
+            type: 'warning',
           }
-        ).then(() => {
-          depPermission.granted = true
-        }).catch(() => {
-          permission.granted = false
-        })
+        )
+          .then(() => {
+            depPermission.granted = true
+          })
+          .catch(() => {
+            permission.granted = false
+          })
         return
       }
     }
   }
-  
+
   // 检查被依赖权限
   if (!permission.granted) {
     const dependentPermissions = findDependentPermissions(permission.id)
@@ -857,13 +909,15 @@ function handlePermissionChange(permission: any) {
         `撤销此权限将同时撤销依赖它的权限: ${dependentNames}，是否继续？`,
         '权限依赖',
         {
-          type: 'warning'
+          type: 'warning',
         }
-      ).then(() => {
-        dependentPermissions.forEach(p => p.granted = false)
-      }).catch(() => {
-        permission.granted = true
-      })
+      )
+        .then(() => {
+          dependentPermissions.forEach(p => (p.granted = false))
+        })
+        .catch(() => {
+          permission.granted = true
+        })
     }
   }
 }
@@ -884,15 +938,18 @@ function findPermissionById(permissionId: string) {
  */
 function findDependentPermissions(permissionId: string) {
   const dependents: any[] = []
-  
+
   for (const category of permissionCategories.value) {
     for (const permission of category.permissions) {
-      if (permission.dependencies?.includes(permissionId) && permission.granted) {
+      if (
+        permission.dependencies?.includes(permissionId) &&
+        permission.granted
+      ) {
         dependents.push(permission)
       }
     }
   }
-  
+
   return dependents
 }
 
@@ -906,7 +963,7 @@ function resetChanges() {
       permission.granted = original.granted
     }
   })
-  
+
   ElMessage.success('已重置所有变更')
 }
 
@@ -916,34 +973,40 @@ function resetChanges() {
 async function savePermissions() {
   try {
     saving.value = true
-    
+
     // 准备要保存的权限数据
     const permissionData = {
       userId: props.userData?.id,
-      permissions: []
+      permissions: [],
     }
-    
+
     permissionCategories.value.forEach(category => {
       category.permissions.forEach(permission => {
-        if (permission.fromUser || (permission.canOverride && permission.granted !== permission.fromRole)) {
+        if (
+          permission.fromUser ||
+          (permission.canOverride && permission.granted !== permission.fromRole)
+        ) {
           permissionData.permissions.push({
             id: permission.id,
             granted: permission.granted,
-            source: 'user'
+            source: 'user',
           })
         }
       })
     })
-    
+
     // 调用真实API保存权限
-    const response = await fetch(`/api/v1/users/${props.userData?.id}/permissions`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(permissionData)
-    })
-    
+    const response = await fetch(
+      `/api/v1/users/${props.userData?.id}/permissions`,
+      {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(permissionData),
+      }
+    )
+
     if (response.ok) {
       const result = await response.json()
       emit('save', result)
@@ -953,7 +1016,6 @@ async function savePermissions() {
       const errorData = await response.json()
       throw new Error(errorData.message || '保存失败')
     }
-    
   } catch (error) {
     console.error('保存权限失败:', error)
     ElMessage.error(`保存权限失败: ${error.message}`)
@@ -967,33 +1029,34 @@ async function savePermissions() {
  */
 function handleClose() {
   if (hasChanges.value) {
-    ElMessageBox.confirm(
-      '你有未保存的权限更改，确定要关闭吗？',
-      '确认关闭',
-      {
-        type: 'warning'
-      }
-    ).then(() => {
-      dialogVisible.value = false
-    }).catch(() => {
-      // 用户取消关闭
+    ElMessageBox.confirm('你有未保存的权限更改，确定要关闭吗？', '确认关闭', {
+      type: 'warning',
     })
+      .then(() => {
+        dialogVisible.value = false
+      })
+      .catch(() => {
+        // 用户取消关闭
+      })
   } else {
     dialogVisible.value = false
   }
 }
 
 // ===== 监听器 =====
-watch(() => props.visible, (visible) => {
-  dialogVisible.value = visible
-  if (visible) {
-    nextTick(() => {
-      initializeData()
-    })
+watch(
+  () => props.visible,
+  visible => {
+    dialogVisible.value = visible
+    if (visible) {
+      nextTick(() => {
+        initializeData()
+      })
+    }
   }
-})
+)
 
-watch(dialogVisible, (visible) => {
+watch(dialogVisible, visible => {
   emit('update:visible', visible)
 })
 </script>
@@ -1007,21 +1070,21 @@ watch(dialogVisible, (visible) => {
     padding: 16px;
     background: #f8f9fa;
     border-radius: 8px;
-    
+
     .user-avatar {
       flex-shrink: 0;
     }
-    
+
     .user-details {
       flex: 1;
-      
+
       .user-name {
         margin: 0 0 8px 0;
         font-size: 18px;
         font-weight: 600;
         color: #303133;
       }
-      
+
       .user-meta {
         display: flex;
         gap: 8px;
@@ -1029,35 +1092,35 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .permission-content {
     display: flex;
     gap: 24px;
     margin-top: 24px;
-    
+
     .permission-categories {
       width: 300px;
       flex-shrink: 0;
-      
+
       .category-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 16px;
-        
+
         h4 {
           margin: 0;
           font-size: 16px;
           font-weight: 600;
           color: #303133;
         }
-        
+
         .category-actions {
           display: flex;
           gap: 8px;
         }
       }
-      
+
       .category-list {
         .category-item {
           padding: 12px;
@@ -1066,76 +1129,76 @@ watch(dialogVisible, (visible) => {
           margin-bottom: 8px;
           cursor: pointer;
           transition: all 0.2s;
-          
+
           &:hover {
             border-color: #409eff;
             background: #f0f9ff;
           }
-          
+
           &.active {
             border-color: #409eff;
             background: #409eff;
             color: white;
-            
+
             .category-stats {
               color: rgba(255, 255, 255, 0.8);
             }
           }
-          
+
           .category-main {
             display: flex;
             align-items: center;
             gap: 12px;
             margin-bottom: 8px;
-            
+
             .category-icon {
               font-size: 18px;
             }
-            
+
             .category-name {
               flex: 1;
               font-weight: 500;
             }
-            
+
             .category-stats {
               font-size: 12px;
               color: #909399;
-              
+
               .granted-count {
                 font-weight: 600;
               }
             }
           }
-          
+
           .category-progress {
             margin-top: 8px;
           }
         }
       }
     }
-    
+
     .permission-details {
       flex: 1;
-      
+
       .details-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
-        
+
         h4 {
           margin: 0;
           font-size: 16px;
           font-weight: 600;
           color: #303133;
         }
-        
+
         .details-actions {
           display: flex;
           gap: 8px;
         }
       }
-      
+
       .permission-grid {
         .permission-item {
           border: 1px solid #ebeef5;
@@ -1143,57 +1206,57 @@ watch(dialogVisible, (visible) => {
           padding: 16px;
           margin-bottom: 12px;
           transition: all 0.2s;
-          
+
           &:hover {
             border-color: #409eff;
             box-shadow: 0 2px 12px rgba(64, 158, 255, 0.1);
           }
-          
+
           .permission-main {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            
+
             .permission-info {
               flex: 1;
-              
+
               .permission-header {
                 display: flex;
                 align-items: center;
                 gap: 12px;
                 margin-bottom: 8px;
-                
+
                 .permission-name {
                   font-weight: 500;
                   color: #303133;
                 }
-                
+
                 .permission-level {
                   margin: 0;
                 }
               }
-              
+
               .permission-desc {
                 font-size: 14px;
                 color: #606266;
                 margin-bottom: 8px;
                 line-height: 1.4;
               }
-              
+
               .permission-source {
                 display: flex;
                 gap: 8px;
-                
+
                 .source-tag {
                   padding: 2px 8px;
                   border-radius: 4px;
                   font-size: 12px;
-                  
+
                   &.role-source {
                     background: #e1f3d8;
                     color: #67c23a;
                   }
-                  
+
                   &.user-source {
                     background: #fdf6ec;
                     color: #e6a23c;
@@ -1201,29 +1264,29 @@ watch(dialogVisible, (visible) => {
                 }
               }
             }
-            
+
             .permission-control {
               flex-shrink: 0;
               margin-left: 16px;
             }
           }
-          
+
           .permission-dependencies {
             margin-top: 12px;
             padding-top: 12px;
             border-top: 1px solid #f0f0f0;
-            
+
             .dependencies-label {
               font-size: 12px;
               color: #909399;
               margin-bottom: 8px;
             }
-            
+
             .dependencies-list {
               display: flex;
               gap: 6px;
               flex-wrap: wrap;
-              
+
               .dependency-tag {
                 margin: 0;
               }
@@ -1233,16 +1296,16 @@ watch(dialogVisible, (visible) => {
       }
     }
   }
-  
+
   .changes-preview {
     margin-top: 20px;
-    
+
     .changes-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       margin-bottom: 16px;
-      
+
       h4 {
         margin: 0;
         font-size: 16px;
@@ -1250,11 +1313,11 @@ watch(dialogVisible, (visible) => {
         color: #303133;
       }
     }
-    
+
     .changes-list {
       max-height: 200px;
       overflow-y: auto;
-      
+
       .change-item {
         display: flex;
         align-items: center;
@@ -1262,35 +1325,35 @@ watch(dialogVisible, (visible) => {
         padding: 8px 12px;
         border-radius: 6px;
         margin-bottom: 4px;
-        
+
         &.grant {
           background: #f0f9ff;
           border-left: 3px solid #67c23a;
         }
-        
+
         &.revoke {
           background: #fef0f0;
           border-left: 3px solid #f56c6c;
         }
-        
+
         .change-icon {
           font-size: 14px;
-          
+
           .change-item.grant & {
             color: #67c23a;
           }
-          
+
           .change-item.revoke & {
             color: #f56c6c;
           }
         }
-        
+
         .change-text {
           flex: 1;
           font-size: 14px;
           color: #303133;
         }
-        
+
         .change-tag {
           margin: 0;
         }
@@ -1311,12 +1374,12 @@ watch(dialogVisible, (visible) => {
     .permission-content {
       flex-direction: column;
       gap: 16px;
-      
+
       .permission-categories {
         width: 100%;
       }
     }
-    
+
     .user-info-header {
       flex-direction: column;
       align-items: flex-start;

@@ -8,7 +8,7 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-use crate::error::{RepoError, RepoResult};
+use crate::error::RepoResult;
 use crate::models::{NewTag, Tag, TagFilter, TagUpdate};
 use async_trait::async_trait;
 use sqlx::{Pool, Postgres};
@@ -64,9 +64,9 @@ impl TagRepo for TagRepoImpl {
     async fn create(&self, tag: NewTag) -> RepoResult<Tag> {
         let result = sqlx::query_as::<_, Tag>(
             r#"
-            INSERT INTO tags (id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled)
+            INSERT INTO tags (id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled)
             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-            RETURNING id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled, created_at
+            RETURNING id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled, created_at
             "#
         )
         .bind(tag.id)
@@ -88,7 +88,7 @@ impl TagRepo for TagRepoImpl {
     async fn get_by_id(&self, id: Uuid) -> RepoResult<Option<Tag>> {
         let result = sqlx::query_as::<_, Tag>(
             r#"
-            SELECT id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled, created_at
+            SELECT id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled, created_at
             FROM tags 
             WHERE id = $1
             "#
@@ -109,12 +109,12 @@ impl TagRepo for TagRepoImpl {
                 address = COALESCE($3, address),
                 data_type = COALESCE($4, data_type),
                 scaling = COALESCE($5, scaling),
-                "offset" = COALESCE($6, "offset"),
+                tag_offset = COALESCE($6, tag_offset),
                 unit = COALESCE($7, unit),
                 description = COALESCE($8, description),
                 enabled = COALESCE($9, enabled)
             WHERE id = $1
-            RETURNING id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled, created_at
+            RETURNING id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled, created_at
             "#
         )
         .bind(id)
@@ -144,7 +144,7 @@ impl TagRepo for TagRepoImpl {
     async fn list(&self, filter: TagFilter) -> RepoResult<Vec<Tag>> {
         let mut query_builder = sqlx::QueryBuilder::new(
             r#"
-            SELECT id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled, created_at
+            SELECT id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled, created_at
             FROM tags 
             WHERE 1=1
             "#
@@ -179,7 +179,7 @@ impl TagRepo for TagRepoImpl {
     async fn list_by_device(&self, device_id: Uuid) -> RepoResult<Vec<Tag>> {
         let tags = sqlx::query_as::<_, Tag>(
             r#"
-            SELECT id, device_id, name, address, data_type, scaling, "offset", unit, description, enabled, created_at
+            SELECT id, device_id, name, address, data_type, scaling, tag_offset, unit, description, enabled, created_at
             FROM tags 
             WHERE device_id = $1 
             ORDER BY name

@@ -192,12 +192,22 @@
               </el-button>
             </el-button-group>
           </div>
-          
+
           <div class="display-options">
-            <el-checkbox v-model="displayOptions.showLineNumbers">显示行号</el-checkbox>
-            <el-checkbox v-model="displayOptions.wordWrap">自动换行</el-checkbox>
-            <el-checkbox v-model="displayOptions.highlightErrors">高亮错误</el-checkbox>
-            <el-select v-model="displayOptions.fontSize" size="small" style="width: 100px;">
+            <el-checkbox v-model="displayOptions.showLineNumbers"
+              >显示行号</el-checkbox
+            >
+            <el-checkbox v-model="displayOptions.wordWrap"
+              >自动换行</el-checkbox
+            >
+            <el-checkbox v-model="displayOptions.highlightErrors"
+              >高亮错误</el-checkbox
+            >
+            <el-select
+              v-model="displayOptions.fontSize"
+              size="small"
+              style="width: 100px"
+            >
               <el-option label="小" value="12px" />
               <el-option label="中" value="14px" />
               <el-option label="大" value="16px" />
@@ -213,11 +223,11 @@
         <!-- 表格视图 -->
         <div v-if="viewMode === 'table'" class="table-view">
           <el-table
+            v-loading="loading"
             :data="filteredLogs"
             style="width: 100%"
-            v-loading="loading"
-            @sort-change="handleSortChange"
             :row-class-name="getRowClassName"
+            @sort-change="handleSortChange"
           >
             <el-table-column
               v-if="displayOptions.showLineNumbers"
@@ -232,7 +242,9 @@
               sortable="custom"
             >
               <template #default="{ row }">
-                <span class="timestamp">{{ formatTimestamp(row.timestamp) }}</span>
+                <span class="timestamp">{{
+                  formatTimestamp(row.timestamp)
+                }}</span>
               </template>
             </el-table-column>
             <el-table-column
@@ -276,7 +288,8 @@
                   :class="{
                     'log-message': true,
                     'word-wrap': displayOptions.wordWrap,
-                    'highlight-error': displayOptions.highlightErrors && row.level === 'error'
+                    'highlight-error':
+                      displayOptions.highlightErrors && row.level === 'error',
                   }"
                   :style="{ fontSize: displayOptions.fontSize }"
                 >
@@ -289,9 +302,7 @@
                 <el-button size="small" @click="showLogDetail(row)">
                   详情
                 </el-button>
-                <el-button size="small" @click="copyLog(row)">
-                  复制
-                </el-button>
+                <el-button size="small" @click="copyLog(row)"> 复制 </el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -313,15 +324,18 @@
               <span v-if="displayOptions.showLineNumbers" class="line-number">
                 {{ index + 1 }}
               </span>
-              <span class="timestamp">{{ formatTimestamp(log.timestamp) }}</span>
+              <span class="timestamp">{{
+                formatTimestamp(log.timestamp)
+              }}</span>
               <span class="level">{{ log.level.toUpperCase() }}</span>
               <span class="source">[{{ log.source }}]</span>
               <span class="thread">({{ log.thread }})</span>
               <span
                 :class="{
-                  'message': true,
+                  message: true,
                   'word-wrap': displayOptions.wordWrap,
-                  'highlight-error': displayOptions.highlightErrors && log.level === 'error'
+                  'highlight-error':
+                    displayOptions.highlightErrors && log.level === 'error',
                 }"
               >
                 {{ log.message }}
@@ -361,7 +375,8 @@
                   :class="{
                     'timeline-message': true,
                     'word-wrap': displayOptions.wordWrap,
-                    'highlight-error': displayOptions.highlightErrors && log.level === 'error'
+                    'highlight-error':
+                      displayOptions.highlightErrors && log.level === 'error',
                   }"
                   :style="{ fontSize: displayOptions.fontSize }"
                 >
@@ -406,11 +421,7 @@
     </el-dialog>
 
     <!-- 日志设置对话框 -->
-    <el-dialog
-      v-model="showSettings"
-      title="日志设置"
-      width="600px"
-    >
+    <el-dialog v-model="showSettings" title="日志设置" width="600px">
       <div class="settings-form">
         <el-form :model="logSettings" label-width="140px">
           <el-form-item label="日志级别">
@@ -469,7 +480,7 @@
     </el-dialog>
 
     <!-- 快速操作面板 -->
-    <div class="quick-actions" v-if="realTimeMode">
+    <div v-if="realTimeMode" class="quick-actions">
       <el-card shadow="never">
         <div class="actions-panel">
           <span class="status-indicator">
@@ -477,15 +488,9 @@
             实时模式已启用
           </span>
           <div class="actions">
-            <el-button size="small" @click="pauseRealTime">
-              暂停
-            </el-button>
-            <el-button size="small" @click="jumpToBottom">
-              跳到底部
-            </el-button>
-            <el-button size="small" @click="scrollToTop">
-              回到顶部
-            </el-button>
+            <el-button size="small" @click="pauseRealTime"> 暂停 </el-button>
+            <el-button size="small" @click="jumpToBottom"> 跳到底部 </el-button>
+            <el-button size="small" @click="scrollToTop"> 回到顶部 </el-button>
           </div>
         </div>
       </el-card>
@@ -494,12 +499,23 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Document, Refresh, Delete, Download, Setting, Search, Warning,
-  Folder, VideoPlay, List, Monitor, Clock
+  Document,
+  Refresh,
+  Delete,
+  Download,
+  Setting,
+  Search,
+  Warning,
+  Folder,
+  VideoPlay,
+  List,
+  Monitor,
+  Clock,
 } from '@element-plus/icons-vue'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted, onUnmounted, computed, nextTick, watch } from 'vue'
+
 import { systemLogsApi, wsClient, type SystemLog } from '../../api'
 // import StatCard from '../../components/common/StatCard.vue' // 暂时注释掉不存在的组件
 // import { LogViewer } from '../../components/business' // 暂时注释掉不存在的组件
@@ -525,7 +541,7 @@ const logStats = ref({
   warningCount: 0,
   warningTrend: 0,
   storageSize: 0,
-  storageTrend: 0
+  storageTrend: 0,
 })
 
 // 筛选条件
@@ -533,7 +549,7 @@ const filters = ref({
   search: '',
   level: '',
   source: '',
-  timeRange: null as any
+  timeRange: null as any,
 })
 
 // 显示选项
@@ -541,18 +557,18 @@ const displayOptions = ref({
   showLineNumbers: true,
   wordWrap: false,
   highlightErrors: true,
-  fontSize: '14px'
+  fontSize: '14px',
 })
 
 // 分页信息
 const pagination = ref({
   page: 1,
   size: 100,
-  total: 0
+  total: 0,
 })
 
 // 日志来源
-const logSources = ref<Array<{label: string, value: string}>>([])
+const logSources = ref<Array<{ label: string; value: string }>>([])
 
 // 日志数据
 const logs = ref<SystemLog[]>([])
@@ -564,7 +580,7 @@ const logSettings = ref({
   maxLogLines: 1000,
   retentionPeriod: 604800000, // 7天
   rotationSize: '100MB',
-  enableArchiving: true
+  enableArchiving: true,
 })
 
 // 计算属性
@@ -574,10 +590,11 @@ const filteredLogs = computed(() => {
   // 应用筛选条件
   if (filters.value.search) {
     const search = filters.value.search.toLowerCase()
-    result = result.filter(log =>
-      log.message.toLowerCase().includes(search) ||
-      log.source.toLowerCase().includes(search) ||
-      log.thread.toLowerCase().includes(search)
+    result = result.filter(
+      log =>
+        log.message.toLowerCase().includes(search) ||
+        log.source.toLowerCase().includes(search) ||
+        log.thread.toLowerCase().includes(search)
     )
   }
 
@@ -593,12 +610,17 @@ const filteredLogs = computed(() => {
     const [startTime, endTime] = filters.value.timeRange
     result = result.filter(log => {
       const logTime = new Date(log.timestamp).getTime()
-      return logTime >= new Date(startTime).getTime() && logTime <= new Date(endTime).getTime()
+      return (
+        logTime >= new Date(startTime).getTime() &&
+        logTime <= new Date(endTime).getTime()
+      )
     })
   }
 
   // 应用日志级别过滤
-  result = result.filter(log => logSettings.value.enabledLevels.includes(log.level))
+  result = result.filter(log =>
+    logSettings.value.enabledLevels.includes(log.level)
+  )
 
   // 限制日志行数
   if (result.length > logSettings.value.maxLogLines) {
@@ -625,9 +647,9 @@ const loadLogs = async () => {
       search: filters.value.search,
       level: filters.value.level,
       source: filters.value.source,
-      timeRange: filters.value.timeRange
+      timeRange: filters.value.timeRange,
     }
-    
+
     const response = await systemLogsApi.list(params)
     logs.value = response.data.items || []
     pagination.value.total = response.data.total || 0
@@ -661,10 +683,7 @@ const loadLogSources = async () => {
 
 // 刷新日志
 const refreshLogs = async () => {
-  await Promise.all([
-    loadLogs(),
-    loadLogStats()
-  ])
+  await Promise.all([loadLogs(), loadLogStats()])
   ElMessage.success('日志刷新成功')
 }
 
@@ -676,15 +695,15 @@ const clearAllLogs = async () => {
       {
         confirmButtonText: '确定清空',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     await systemLogsApi.clearAll()
-    
+
     logs.value = []
     await loadLogStats()
-    
+
     ElMessage.success('日志已清空')
   } catch (error) {
     if (error !== 'cancel') {
@@ -697,16 +716,16 @@ const clearAllLogs = async () => {
 const downloadLogs = async () => {
   try {
     ElMessage.info('正在准备日志下载...')
-    
+
     const params = {
       search: filters.value.search,
       level: filters.value.level,
       source: filters.value.source,
-      timeRange: filters.value.timeRange
+      timeRange: filters.value.timeRange,
     }
-    
+
     const response = await systemLogsApi.export(params)
-    
+
     // 创建下载链接
     const blob = new Blob([response.data], { type: 'application/json' })
     const url = URL.createObjectURL(blob)
@@ -717,7 +736,7 @@ const downloadLogs = async () => {
     a.click()
     document.body.removeChild(a)
     URL.revokeObjectURL(url)
-    
+
     ElMessage.success('日志下载完成')
   } catch (error) {
     console.error('日志下载失败:', error)
@@ -740,33 +759,35 @@ const startRealTimeMode = () => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
-  
+
   // 使用WebSocket获取实时日志
   try {
     if (!wsClient.isConnected) {
       wsClient.connect()
     }
-    
+
     // 监听实时日志
     wsClient.on('system_log', (logData: SystemLog) => {
       // 检查是否符合当前筛选条件
-      const matchesFilter = (
+      const matchesFilter =
         (!filters.value.level || logData.level === filters.value.level) &&
         (!filters.value.source || logData.source === filters.value.source) &&
-        (!filters.value.search || 
-          logData.message.toLowerCase().includes(filters.value.search.toLowerCase()) ||
-          logData.source.toLowerCase().includes(filters.value.search.toLowerCase())
-        )
-      )
-      
+        (!filters.value.search ||
+          logData.message
+            .toLowerCase()
+            .includes(filters.value.search.toLowerCase()) ||
+          logData.source
+            .toLowerCase()
+            .includes(filters.value.search.toLowerCase()))
+
       if (matchesFilter) {
         logs.value.unshift(logData)
-        
+
         // 限制日志数量
         if (logs.value.length > logSettings.value.maxLogLines) {
           logs.value = logs.value.slice(0, logSettings.value.maxLogLines)
         }
-        
+
         // 自动滚动到顶部（最新日志）
         nextTick(() => {
           if (viewMode.value === 'console' && consoleContainer.value) {
@@ -775,12 +796,11 @@ const startRealTimeMode = () => {
         })
       }
     })
-    
+
     // 备用定时器，防止WebSocket连接问题
     refreshTimer.value = setInterval(() => {
       loadLogStats()
     }, 30000) // 每30秒更新统计数据
-    
   } catch (error) {
     console.error('启动实时模式失败:', error)
     // 降级到定时刷新
@@ -822,7 +842,7 @@ const resetFilters = () => {
     search: '',
     level: '',
     source: '',
-    timeRange: null
+    timeRange: null,
   }
   pagination.value.page = 1
   loadLogs()
@@ -831,16 +851,16 @@ const resetFilters = () => {
 const handleSortChange = ({ prop, order }: any) => {
   // 实现排序逻辑
   if (!prop || !order) return
-  
+
   logs.value.sort((a: any, b: any) => {
     let aVal = a[prop]
     let bVal = b[prop]
-    
+
     if (prop === 'timestamp') {
       aVal = new Date(aVal).getTime()
       bVal = new Date(bVal).getTime()
     }
-    
+
     if (order === 'ascending') {
       return aVal > bVal ? 1 : -1
     } else {
@@ -867,7 +887,7 @@ const showLogDetail = (log: any) => {
 
 const copyLog = (log: any) => {
   const logText = `[${log.timestamp}] ${log.level.toUpperCase()} [${log.source}] (${log.thread}) ${log.message}`
-  
+
   if (navigator.clipboard) {
     navigator.clipboard.writeText(logText).then(() => {
       ElMessage.success('日志已复制到剪贴板')
@@ -899,16 +919,16 @@ const scrollToTop = () => {
 const saveSettings = async () => {
   try {
     await systemLogsApi.updateSettings(logSettings.value)
-    
+
     // 应用设置
     if (refreshTimer.value) {
       clearInterval(refreshTimer.value)
     }
-    
+
     if (realTimeMode.value && logSettings.value.refreshInterval > 0) {
       startRealTimeMode()
     }
-    
+
     showSettings.value = false
     ElMessage.success('设置已保存')
   } catch (error) {
@@ -935,7 +955,7 @@ const getSourceTagType = (source: string) => {
     'data-processor': 'info',
     'web-api': 'primary',
     'alert-engine': 'danger',
-    'system-monitor': 'info'
+    'system-monitor': 'info',
   }
   return tagTypeMap[source] || 'info'
 }
@@ -946,7 +966,7 @@ const getTimelineType = (level: string) => {
     warn: 'warning',
     info: 'primary',
     debug: 'info',
-    trace: 'info'
+    trace: 'info',
   }
   return typeMap[level] || 'info'
 }
@@ -961,7 +981,7 @@ onMounted(async () => {
     loadLogs(),
     loadLogStats(),
     loadLogSources(),
-    loadLogSettings()
+    loadLogSettings(),
   ])
 })
 
@@ -976,10 +996,19 @@ const loadLogSettings = async () => {
 }
 
 // 监听筛选参数变化
-watch([() => filters.value.search, () => filters.value.level, () => filters.value.source, () => filters.value.timeRange], () => {
-  pagination.value.page = 1
-  loadLogs()
-}, { debounce: 300 })
+watch(
+  [
+    () => filters.value.search,
+    () => filters.value.level,
+    () => filters.value.source,
+    () => filters.value.timeRange,
+  ],
+  () => {
+    pagination.value.page = 1
+    loadLogs()
+  },
+  { debounce: 300 }
+)
 
 // 监听分页变化
 watch([() => pagination.value.page, () => pagination.value.size], () => {
@@ -990,7 +1019,7 @@ onUnmounted(() => {
   if (refreshTimer.value) {
     clearInterval(refreshTimer.value)
   }
-  
+
   // 清理WebSocket监听器
   wsClient.off('system_log')
 })
@@ -1048,11 +1077,26 @@ onUnmounted(() => {
         font-weight: bold;
         font-size: 12px;
 
-        &.error { background: #fef0f0; color: #f56c6c; }
-        &.warn { background: #fdf6ec; color: #e6a23c; }
-        &.info { background: #f4f4f5; color: #909399; }
-        &.debug { background: #f0f9ff; color: #409eff; }
-        &.trace { background: #f5f7fa; color: #909399; }
+        &.error {
+          background: #fef0f0;
+          color: #f56c6c;
+        }
+        &.warn {
+          background: #fdf6ec;
+          color: #e6a23c;
+        }
+        &.info {
+          background: #f4f4f5;
+          color: #909399;
+        }
+        &.debug {
+          background: #f0f9ff;
+          color: #409eff;
+        }
+        &.trace {
+          background: #f5f7fa;
+          color: #909399;
+        }
       }
     }
   }
@@ -1189,23 +1233,33 @@ onUnmounted(() => {
             }
 
             &.level-error {
-              .level { color: #f56c6c; }
+              .level {
+                color: #f56c6c;
+              }
             }
 
             &.level-warn {
-              .level { color: #e6a23c; }
+              .level {
+                color: #e6a23c;
+              }
             }
 
             &.level-info {
-              .level { color: #67c23a; }
+              .level {
+                color: #67c23a;
+              }
             }
 
             &.level-debug {
-              .level { color: #909399; }
+              .level {
+                color: #909399;
+              }
             }
 
             &.level-trace {
-              .level { color: #606266; }
+              .level {
+                color: #606266;
+              }
             }
           }
         }
@@ -1305,8 +1359,12 @@ onUnmounted(() => {
         }
 
         @keyframes pulse {
-          from { opacity: 1; }
-          to { opacity: 0.5; }
+          from {
+            opacity: 1;
+          }
+          to {
+            opacity: 0.5;
+          }
         }
       }
 

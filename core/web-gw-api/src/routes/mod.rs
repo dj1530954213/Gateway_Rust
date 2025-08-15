@@ -23,6 +23,7 @@ pub mod history;
 pub mod websocket;
 pub mod alerts;
 pub mod system;
+pub mod database;
 
 use actix_web::web;
 
@@ -45,6 +46,7 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .service(driver_configs::scope())
                 .configure(history::configure)
                 .service(alerts::scope())
+                .configure(database::config_routes) // 数据库管理路由
         )
         
         // WebSocket路由

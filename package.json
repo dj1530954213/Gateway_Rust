@@ -29,7 +29,9 @@
     "axios": "^1.11.0",
     "cors": "^2.8.5",
     "express": "^5.1.0",
+    "modbus-serial": "^8.0.21-no-serial-port",
     "pg": "^8.16.3",
+    "playwright": "^1.54.2",
     "puppeteer": "^24.15.0",
     "ws": "^8.18.3"
   },

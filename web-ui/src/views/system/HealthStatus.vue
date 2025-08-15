@@ -40,7 +40,7 @@
                 :type="getOverallStatusType(overallHealth.status)"
                 size="large"
               >
-                <el-icon style="margin-right: 4px;">
+                <el-icon style="margin-right: 4px">
                   <Check v-if="overallHealth.status === 'healthy'" />
                   <Warning v-else-if="overallHealth.status === 'warning'" />
                   <Close v-else />
@@ -95,18 +95,18 @@
           </el-col>
         </el-row>
 
-        <div class="system-metrics" style="margin-top: 20px;">
+        <div class="system-metrics" style="margin-top: 20px">
           <el-row :gutter="20">
             <el-col :span="12">
               <div class="metric-chart">
                 <h4>系统资源使用趋势</h4>
-                <div ref="resourceChart" style="height: 300px;"></div>
+                <div ref="resourceChart" style="height: 300px"></div>
               </div>
             </el-col>
             <el-col :span="12">
               <div class="metric-chart">
                 <h4>网络流量监控</h4>
-                <div ref="networkChart" style="height: 300px;"></div>
+                <div ref="networkChart" style="height: 300px"></div>
               </div>
             </el-col>
           </el-row>
@@ -146,7 +146,10 @@
             :key="component.id"
             :span="8"
           >
-            <el-card class="component-card" :class="getComponentStatusClass(component.status)">
+            <el-card
+              class="component-card"
+              :class="getComponentStatusClass(component.status)"
+            >
               <div class="component-header">
                 <div class="component-info">
                   <el-icon class="component-icon">
@@ -158,20 +161,27 @@
                   </div>
                 </div>
                 <div class="component-status">
-                  <el-tag :type="getStatusTagType(component.status)" size="small">
+                  <el-tag
+                    :type="getStatusTagType(component.status)"
+                    size="small"
+                  >
                     {{ getStatusText(component.status) }}
                   </el-tag>
                 </div>
               </div>
-              
+
               <div class="component-metrics">
                 <div class="metric-row">
                   <span class="metric-label">响应时间:</span>
-                  <span class="metric-value">{{ component.responseTime }}ms</span>
+                  <span class="metric-value"
+                    >{{ component.responseTime }}ms</span
+                  >
                 </div>
                 <div class="metric-row">
                   <span class="metric-label">最后检查:</span>
-                  <span class="metric-value">{{ formatDateTime(component.lastCheck) }}</span>
+                  <span class="metric-value">{{
+                    formatDateTime(component.lastCheck)
+                  }}</span>
                 </div>
                 <div v-if="component.errorCount > 0" class="metric-row error">
                   <span class="metric-label">错误次数:</span>
@@ -245,7 +255,7 @@
                 :color="getProgressColor(row.cpu)"
                 :show-text="false"
               />
-              <span style="margin-left: 8px;">{{ row.cpu }}%</span>
+              <span style="margin-left: 8px">{{ row.cpu }}%</span>
             </template>
           </el-table-column>
           <el-table-column prop="memory" label="内存使用" width="120">
@@ -256,7 +266,7 @@
                 :color="getProgressColor(row.memory)"
                 :show-text="false"
               />
-              <span style="margin-left: 8px;">{{ row.memory }}%</span>
+              <span style="margin-left: 8px">{{ row.memory }}%</span>
             </template>
           </el-table-column>
           <el-table-column prop="uptime" label="运行时间" width="150" />
@@ -299,7 +309,12 @@
           <div class="card-header">
             <span>实时日志监控</span>
             <div class="log-controls">
-              <el-select v-model="logLevel" placeholder="日志级别" size="small" style="width: 120px;">
+              <el-select
+                v-model="logLevel"
+                placeholder="日志级别"
+                size="small"
+                style="width: 120px"
+              >
                 <el-option label="全部" value="all" />
                 <el-option label="错误" value="error" />
                 <el-option label="警告" value="warn" />
@@ -313,9 +328,7 @@
               >
                 {{ logPaused ? '继续' : '暂停' }}
               </el-button>
-              <el-button size="small" @click="clearLogs">
-                清空
-              </el-button>
+              <el-button size="small" @click="clearLogs"> 清空 </el-button>
             </div>
           </div>
         </template>
@@ -344,9 +357,7 @@
         <template #header>
           <div class="card-header">
             <span>健康检查历史</span>
-            <el-button size="small" @click="clearHistory">
-              清空历史
-            </el-button>
+            <el-button size="small" @click="clearHistory"> 清空历史 </el-button>
           </div>
         </template>
 
@@ -384,11 +395,17 @@
       width="800px"
       :close-on-click-modal="false"
     >
-      <ComponentDetail v-if="selectedComponent" :component="selectedComponent" />
+      <ComponentDetail
+        v-if="selectedComponent"
+        :component="selectedComponent"
+      />
       <template #footer>
         <span class="dialog-footer">
           <el-button @click="componentDetailVisible = false">关闭</el-button>
-          <el-button type="primary" @click="checkComponent(selectedComponent?.id)">
+          <el-button
+            type="primary"
+            @click="checkComponent(selectedComponent?.id)"
+          >
             健康检查
           </el-button>
         </span>
@@ -411,11 +428,7 @@
     </el-dialog>
 
     <!-- 监控设置对话框 -->
-    <el-dialog
-      v-model="showSettings"
-      title="监控设置"
-      width="600px"
-    >
+    <el-dialog v-model="showSettings" title="监控设置" width="600px">
       <div class="settings-form">
         <el-form :model="monitorSettings" label-width="140px">
           <el-form-item label="检查间隔">
@@ -436,7 +449,7 @@
                   :max="100"
                   :precision="1"
                 />
-                <span style="margin-left: 8px;">%</span>
+                <span style="margin-left: 8px">%</span>
               </el-form-item>
               <el-form-item label="内存">
                 <el-input-number
@@ -445,7 +458,7 @@
                   :max="100"
                   :precision="1"
                 />
-                <span style="margin-left: 8px;">%</span>
+                <span style="margin-left: 8px">%</span>
               </el-form-item>
               <el-form-item label="磁盘">
                 <el-input-number
@@ -454,7 +467,7 @@
                   :max="100"
                   :precision="1"
                 />
-                <span style="margin-left: 8px;">%</span>
+                <span style="margin-left: 8px">%</span>
               </el-form-item>
             </el-form>
           </el-form-item>
@@ -482,16 +495,31 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
-import { ElMessage, ElMessageBox } from 'element-plus'
 import {
-  Monitor, Refresh, Tools, Download, Setting, Check, Warning, Close,
-  Timer, Cpu, Memory, Folder, Connection, Database, Server, Link
+  Monitor,
+  Refresh,
+  Tools,
+  Download,
+  Setting,
+  Check,
+  Warning,
+  Close,
+  Timer,
+  Cpu,
+  Memory,
+  Folder,
+  Connection,
+  Database,
+  Server,
+  Link,
 } from '@element-plus/icons-vue'
-import StatCard from '../../components/common/StatCard.vue'
+import * as echarts from 'echarts'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { ref, onMounted, onUnmounted, computed, nextTick } from 'vue'
+
 import ComponentDetail from '../../components/business/ComponentDetail.vue'
 import ServiceLogs from '../../components/business/ServiceLogs.vue'
-import * as echarts from 'echarts'
+import StatCard from '../../components/common/StatCard.vue'
 
 // 响应式数据
 const loading = ref(false)
@@ -512,7 +540,7 @@ const logContent = ref<HTMLElement>()
 
 // 系统总览数据
 const overallHealth = ref({
-  status: 'healthy' as 'healthy' | 'warning' | 'critical'
+  status: 'healthy' as 'healthy' | 'warning' | 'critical',
 })
 
 const systemInfo = ref({
@@ -522,13 +550,13 @@ const systemInfo = ref({
   memoryUsage: 67.8,
   memoryTrend: 5.2,
   diskUsage: 23.4,
-  diskTrend: 0.8
+  diskTrend: 0.8,
 })
 
 const healthStats = ref({
   healthy: 8,
   warning: 2,
-  critical: 1
+  critical: 1,
 })
 
 // 组件健康状态
@@ -541,7 +569,7 @@ const healthComponents = ref([
     responseTime: 12,
     lastCheck: '2024-01-20 15:30:25',
     errorCount: 0,
-    description: 'IoT 网关核心服务，处理设备连接和数据路由'
+    description: 'IoT 网关核心服务，处理设备连接和数据路由',
   },
   {
     id: 'modbus_driver',
@@ -551,7 +579,7 @@ const healthComponents = ref([
     responseTime: 8,
     lastCheck: '2024-01-20 15:30:20',
     errorCount: 0,
-    description: 'Modbus TCP/RTU 协议驱动服务'
+    description: 'Modbus TCP/RTU 协议驱动服务',
   },
   {
     id: 'opcua_driver',
@@ -561,7 +589,7 @@ const healthComponents = ref([
     responseTime: 156,
     lastCheck: '2024-01-20 15:29:45',
     errorCount: 3,
-    description: 'OPC UA 协议驱动服务，连接响应较慢'
+    description: 'OPC UA 协议驱动服务，连接响应较慢',
   },
   {
     id: 'mqtt_broker',
@@ -571,7 +599,7 @@ const healthComponents = ref([
     responseTime: 5,
     lastCheck: '2024-01-20 15:30:22',
     errorCount: 0,
-    description: 'MQTT5 消息代理服务'
+    description: 'MQTT5 消息代理服务',
   },
   {
     id: 'data_processor',
@@ -581,7 +609,7 @@ const healthComponents = ref([
     responseTime: 23,
     lastCheck: '2024-01-20 15:30:18',
     errorCount: 0,
-    description: '数据预处理和转换服务'
+    description: '数据预处理和转换服务',
   },
   {
     id: 'alert_engine',
@@ -591,7 +619,7 @@ const healthComponents = ref([
     responseTime: 0,
     lastCheck: '2024-01-20 15:25:10',
     errorCount: 12,
-    description: '告警规则引擎服务，当前离线'
+    description: '告警规则引擎服务，当前离线',
   },
   {
     id: 'database',
@@ -601,7 +629,7 @@ const healthComponents = ref([
     responseTime: 18,
     lastCheck: '2024-01-20 15:30:25',
     errorCount: 0,
-    description: 'InfluxDB 时序数据存储'
+    description: 'InfluxDB 时序数据存储',
   },
   {
     id: 'web_api',
@@ -611,7 +639,7 @@ const healthComponents = ref([
     responseTime: 15,
     lastCheck: '2024-01-20 15:30:23',
     errorCount: 0,
-    description: 'RESTful API 服务'
+    description: 'RESTful API 服务',
   },
   {
     id: 'file_manager',
@@ -621,8 +649,8 @@ const healthComponents = ref([
     responseTime: 89,
     lastCheck: '2024-01-20 15:30:15',
     errorCount: 1,
-    description: '配置文件和日志管理服务'
-  }
+    description: '配置文件和日志管理服务',
+  },
 ])
 
 // 服务状态监控
@@ -637,7 +665,7 @@ const services = ref([
     memory: 256,
     uptime: '15天 8小时',
     requests: 15678,
-    lastRestart: '2024-01-05 10:30:00'
+    lastRestart: '2024-01-05 10:30:00',
   },
   {
     id: 'modbus_service',
@@ -649,7 +677,7 @@ const services = ref([
     memory: 128,
     uptime: '15天 8小时',
     requests: 8942,
-    lastRestart: '2024-01-05 10:30:15'
+    lastRestart: '2024-01-05 10:30:15',
   },
   {
     id: 'opcua_service',
@@ -661,7 +689,7 @@ const services = ref([
     memory: 512,
     uptime: '2小时 15分钟',
     requests: 1234,
-    lastRestart: '2024-01-20 13:15:30'
+    lastRestart: '2024-01-20 13:15:30',
   },
   {
     id: 'mqtt_service',
@@ -673,7 +701,7 @@ const services = ref([
     memory: 96,
     uptime: '15天 8小时',
     requests: 25673,
-    lastRestart: '2024-01-05 10:30:45'
+    lastRestart: '2024-01-05 10:30:45',
   },
   {
     id: 'alert_service',
@@ -685,8 +713,8 @@ const services = ref([
     memory: 0,
     uptime: '0分钟',
     requests: 0,
-    lastRestart: '2024-01-20 15:25:10'
-  }
+    lastRestart: '2024-01-20 15:25:10',
+  },
 ])
 
 // 实时日志
@@ -695,32 +723,32 @@ const logs = ref([
     timestamp: new Date(),
     level: 'info',
     source: 'Gateway Core',
-    message: '系统启动完成，所有服务正常运行'
+    message: '系统启动完成，所有服务正常运行',
   },
   {
     timestamp: new Date(Date.now() - 1000),
     level: 'warn',
     source: 'OPC UA Driver',
-    message: '连接到 OPC UA 服务器响应超时，正在重试...'
+    message: '连接到 OPC UA 服务器响应超时，正在重试...',
   },
   {
     timestamp: new Date(Date.now() - 2000),
     level: 'error',
     source: 'Alert Engine',
-    message: '告警引擎服务连接失败，请检查服务状态'
+    message: '告警引擎服务连接失败，请检查服务状态',
   },
   {
     timestamp: new Date(Date.now() - 3000),
     level: 'info',
     source: 'Data Processor',
-    message: '已处理 1000 条数据记录'
+    message: '已处理 1000 条数据记录',
   },
   {
     timestamp: new Date(Date.now() - 4000),
     level: 'debug',
     source: 'MQTT Broker',
-    message: '新客户端连接: client_12345'
-  }
+    message: '新客户端连接: client_12345',
+  },
 ])
 
 // 健康检查历史
@@ -732,7 +760,7 @@ const healthHistory = ref([
     status: 'warning',
     componentCount: 9,
     issueCount: 3,
-    duration: 1250
+    duration: 1250,
   },
   {
     timestamp: '2024-01-20 15:15:00',
@@ -741,7 +769,7 @@ const healthHistory = ref([
     status: 'healthy',
     componentCount: 9,
     issueCount: 0,
-    duration: 890
+    duration: 890,
   },
   {
     timestamp: '2024-01-20 15:00:00',
@@ -750,8 +778,8 @@ const healthHistory = ref([
     status: 'critical',
     componentCount: 9,
     issueCount: 1,
-    duration: 2100
-  }
+    duration: 2100,
+  },
 ])
 
 // 监控设置
@@ -760,10 +788,10 @@ const monitorSettings = ref({
   thresholds: {
     cpu: 80.0,
     memory: 85.0,
-    disk: 90.0
+    disk: 90.0,
   },
   logRetention: 86400000,
-  autoRestart: true
+  autoRestart: true,
 })
 
 // 计算属性
@@ -780,21 +808,24 @@ const refreshData = async () => {
   try {
     // 模拟API调用
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     // 更新系统信息
     systemInfo.value = {
       ...systemInfo.value,
       cpuUsage: 30 + Math.random() * 40,
       memoryUsage: 50 + Math.random() * 30,
-      diskUsage: 20 + Math.random() * 20
+      diskUsage: 20 + Math.random() * 20,
     }
-    
+
     // 更新组件状态
     healthComponents.value.forEach(component => {
-      component.lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ')
+      component.lastCheck = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
       component.responseTime = Math.floor(Math.random() * 100) + 5
     })
-    
+
     updateOverallHealth()
     ElMessage.success('数据刷新成功')
   } catch (error) {
@@ -809,7 +840,7 @@ const runHealthCheck = async () => {
   try {
     ElMessage.info('开始执行健康检查...')
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     // 模拟健康检查结果
     const checkResult = {
       timestamp: new Date().toISOString().slice(0, 19).replace('T', ' '),
@@ -818,14 +849,14 @@ const runHealthCheck = async () => {
       status: Math.random() > 0.7 ? 'healthy' : 'warning',
       componentCount: healthComponents.value.length,
       issueCount: Math.floor(Math.random() * 3),
-      duration: 1000 + Math.floor(Math.random() * 1000)
+      duration: 1000 + Math.floor(Math.random() * 1000),
     }
-    
+
     healthHistory.value.unshift(checkResult)
     if (healthHistory.value.length > 10) {
       healthHistory.value = healthHistory.value.slice(0, 10)
     }
-    
+
     updateOverallHealth()
     ElMessage.success('健康检查完成')
   } catch (error) {
@@ -836,9 +867,13 @@ const runHealthCheck = async () => {
 }
 
 const updateOverallHealth = () => {
-  const criticalCount = healthComponents.value.filter(c => c.status === 'critical').length
-  const warningCount = healthComponents.value.filter(c => c.status === 'warning').length
-  
+  const criticalCount = healthComponents.value.filter(
+    c => c.status === 'critical'
+  ).length
+  const warningCount = healthComponents.value.filter(
+    c => c.status === 'warning'
+  ).length
+
   if (criticalCount > 0) {
     overallHealth.value.status = 'critical'
   } else if (warningCount > 0) {
@@ -846,11 +881,11 @@ const updateOverallHealth = () => {
   } else {
     overallHealth.value.status = 'healthy'
   }
-  
+
   healthStats.value = {
     healthy: healthComponents.value.filter(c => c.status === 'healthy').length,
     warning: warningCount,
-    critical: criticalCount
+    critical: criticalCount,
   }
 }
 
@@ -863,17 +898,20 @@ const checkComponent = async (componentId: string) => {
   try {
     ElMessage.info('正在检查组件...')
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     const component = healthComponents.value.find(c => c.id === componentId)
     if (component) {
-      component.lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ')
+      component.lastCheck = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
       component.responseTime = Math.floor(Math.random() * 100) + 5
-      
+
       // 随机更新状态
       const statuses = ['healthy', 'warning']
       component.status = statuses[Math.floor(Math.random() * statuses.length)]
     }
-    
+
     updateOverallHealth()
     ElMessage.success('组件检查完成')
   } catch (error) {
@@ -889,21 +927,24 @@ const restartComponent = async (componentId: string) => {
       {
         confirmButtonText: '确定重启',
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     ElMessage.info('正在重启组件...')
     await new Promise(resolve => setTimeout(resolve, 3000))
-    
+
     const component = healthComponents.value.find(c => c.id === componentId)
     if (component) {
       component.status = 'healthy'
       component.errorCount = 0
       component.responseTime = Math.floor(Math.random() * 20) + 5
-      component.lastCheck = new Date().toISOString().slice(0, 19).replace('T', ' ')
+      component.lastCheck = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
     }
-    
+
     updateOverallHealth()
     ElMessage.success('组件重启成功')
   } catch (error) {
@@ -933,26 +974,25 @@ const showServiceLogs = (service: any) => {
 
 const restartService = async (serviceId: string) => {
   try {
-    await ElMessageBox.confirm(
-      '确定要重启此服务吗？',
-      '重启服务',
-      {
-        confirmButtonText: '确定重启',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm('确定要重启此服务吗？', '重启服务', {
+      confirmButtonText: '确定重启',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
     ElMessage.info('正在重启服务...')
     await new Promise(resolve => setTimeout(resolve, 2000))
-    
+
     const service = services.value.find(s => s.id === serviceId)
     if (service) {
-      service.lastRestart = new Date().toISOString().slice(0, 19).replace('T', ' ')
+      service.lastRestart = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace('T', ' ')
       service.uptime = '刚刚启动'
       service.requests = 0
     }
-    
+
     ElMessage.success('服务重启成功')
   } catch (error) {
     // 用户取消操作
@@ -968,13 +1008,13 @@ const toggleService = async (service: any) => {
       {
         confirmButtonText: `确定${action}`,
         cancelButtonText: '取消',
-        type: 'warning'
+        type: 'warning',
       }
     )
-    
+
     ElMessage.info(`正在${action}服务...`)
     await new Promise(resolve => setTimeout(resolve, 1500))
-    
+
     if (service.status === 'running') {
       service.status = 'stopped'
       service.cpu = 0
@@ -984,7 +1024,7 @@ const toggleService = async (service: any) => {
       service.status = 'running'
       service.uptime = '刚刚启动'
     }
-    
+
     ElMessage.success(`服务${action}成功`)
   } catch (error) {
     // 用户取消操作
@@ -1012,16 +1052,12 @@ const clearLogs = () => {
 
 const clearHistory = async () => {
   try {
-    await ElMessageBox.confirm(
-      '确定要清空所有健康检查历史吗？',
-      '清空历史',
-      {
-        confirmButtonText: '确定清空',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }
-    )
-    
+    await ElMessageBox.confirm('确定要清空所有健康检查历史吗？', '清空历史', {
+      confirmButtonText: '确定清空',
+      cancelButtonText: '取消',
+      type: 'warning',
+    })
+
     healthHistory.value = []
     ElMessage.success('历史记录已清空')
   } catch (error) {
@@ -1044,14 +1080,14 @@ const saveSettings = () => {
   if (healthCheckTimer.value) {
     clearInterval(healthCheckTimer.value)
   }
-  
+
   healthCheckTimer.value = setInterval(() => {
     if (!logPaused.value) {
       // 自动健康检查逻辑
       console.log('自动健康检查')
     }
   }, monitorSettings.value.checkInterval)
-  
+
   showSettings.value = false
   ElMessage.success('设置已保存')
 }
@@ -1060,32 +1096,38 @@ const startLogUpdates = () => {
   if (logUpdateTimer.value) {
     clearInterval(logUpdateTimer.value)
   }
-  
+
   logUpdateTimer.value = setInterval(() => {
     if (!logPaused.value) {
       // 模拟新日志
       const levels = ['info', 'warn', 'error', 'debug']
-      const sources = ['Gateway Core', 'Modbus Driver', 'OPC UA Driver', 'MQTT Broker', 'Data Processor']
+      const sources = [
+        'Gateway Core',
+        'Modbus Driver',
+        'OPC UA Driver',
+        'MQTT Broker',
+        'Data Processor',
+      ]
       const messages = [
         '数据处理完成',
         '连接状态检查',
         '配置文件已重载',
         '客户端连接建立',
-        '数据同步完成'
+        '数据同步完成',
       ]
-      
+
       const newLog = {
         timestamp: new Date(),
         level: levels[Math.floor(Math.random() * levels.length)],
         source: sources[Math.floor(Math.random() * sources.length)],
-        message: messages[Math.floor(Math.random() * messages.length)]
+        message: messages[Math.floor(Math.random() * messages.length)],
       }
-      
+
       logs.value.unshift(newLog)
       if (logs.value.length > 100) {
         logs.value = logs.value.slice(0, 100)
       }
-      
+
       // 自动滚动到顶部
       nextTick(() => {
         if (logContent.value) {
@@ -1102,49 +1144,62 @@ const initCharts = () => {
     const chart = echarts.init(resourceChart.value)
     const option = {
       title: {
-        text: ''
+        text: '',
       },
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
       },
       legend: {
-        data: ['CPU', '内存', '磁盘']
+        data: ['CPU', '内存', '磁盘'],
       },
       grid: {
         left: '3%',
         right: '4%',
         bottom: '3%',
-        containLabel: true
+        containLabel: true,
       },
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30']
+        data: [
+          '10:00',
+          '10:30',
+          '11:00',
+          '11:30',
+          '12:00',
+          '12:30',
+          '13:00',
+          '13:30',
+          '14:00',
+          '14:30',
+          '15:00',
+          '15:30',
+        ],
       },
       yAxis: {
         type: 'value',
-        max: 100
+        max: 100,
       },
       series: [
         {
           name: 'CPU',
           type: 'line',
           stack: 'Total',
-          data: [25, 28, 32, 35, 38, 42, 45, 48, 46, 44, 42, 46]
+          data: [25, 28, 32, 35, 38, 42, 45, 48, 46, 44, 42, 46],
         },
         {
           name: '内存',
           type: 'line',
           stack: 'Total',
-          data: [60, 62, 65, 68, 70, 72, 68, 66, 64, 66, 68, 68]
+          data: [60, 62, 65, 68, 70, 72, 68, 66, 64, 66, 68, 68],
         },
         {
           name: '磁盘',
           type: 'line',
           stack: 'Total',
-          data: [20, 20, 21, 21, 22, 22, 23, 23, 23, 23, 24, 23]
-        }
-      ]
+          data: [20, 20, 21, 21, 22, 22, 23, 23, 23, 23, 24, 23],
+        },
+      ],
     }
     chart.setOption(option)
   }
@@ -1154,40 +1209,53 @@ const initCharts = () => {
     const chart = echarts.init(networkChart.value)
     const option = {
       title: {
-        text: ''
+        text: '',
       },
       tooltip: {
-        trigger: 'axis'
+        trigger: 'axis',
       },
       legend: {
-        data: ['上行', '下行']
+        data: ['上行', '下行'],
       },
       grid: {
         left: '3%',
         right: '4%',
         bottom: '3%',
-        containLabel: true
+        containLabel: true,
       },
       xAxis: {
         type: 'category',
         boundaryGap: false,
-        data: ['10:00', '10:30', '11:00', '11:30', '12:00', '12:30', '13:00', '13:30', '14:00', '14:30', '15:00', '15:30']
+        data: [
+          '10:00',
+          '10:30',
+          '11:00',
+          '11:30',
+          '12:00',
+          '12:30',
+          '13:00',
+          '13:30',
+          '14:00',
+          '14:30',
+          '15:00',
+          '15:30',
+        ],
       },
       yAxis: {
-        type: 'value'
+        type: 'value',
       },
       series: [
         {
           name: '上行',
           type: 'line',
-          data: [120, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330]
+          data: [120, 132, 101, 134, 90, 230, 210, 182, 191, 234, 290, 330],
         },
         {
           name: '下行',
           type: 'line',
-          data: [220, 282, 201, 234, 290, 330, 310, 123, 442, 321, 90, 149]
-        }
-      ]
+          data: [220, 282, 201, 234, 290, 330, 310, 123, 442, 321, 90, 149],
+        },
+      ],
     }
     chart.setOption(option)
   }
@@ -1198,7 +1266,7 @@ const getOverallStatusType = (status: string) => {
   const typeMap: { [key: string]: string } = {
     healthy: 'success',
     warning: 'warning',
-    critical: 'danger'
+    critical: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -1209,7 +1277,7 @@ const getStatusText = (status: string) => {
     warning: '警告',
     critical: '异常',
     running: '运行中',
-    stopped: '已停止'
+    stopped: '已停止',
   }
   return textMap[status] || status
 }
@@ -1220,7 +1288,7 @@ const getStatusTagType = (status: string) => {
     warning: 'warning',
     critical: 'danger',
     running: 'success',
-    stopped: 'danger'
+    stopped: 'danger',
   }
   return tagTypeMap[status] || 'info'
 }
@@ -1238,7 +1306,7 @@ const getComponentIcon = (type: string) => {
     'Alert Service': Warning,
     Database,
     'API Service': Server,
-    'Storage Service': Folder
+    'Storage Service': Folder,
   }
   return iconMap[type] || Server
 }
@@ -1248,7 +1316,7 @@ const getServiceIcon = (type: string) => {
     main: Server,
     driver: Connection,
     broker: Link,
-    service: Tools
+    service: Tools,
   }
   return iconMap[type] || Server
 }
@@ -1267,7 +1335,7 @@ const getTimelineType = (status: string) => {
   const typeMap: { [key: string]: string } = {
     healthy: 'success',
     warning: 'warning',
-    critical: 'danger'
+    critical: 'danger',
   }
   return typeMap[status] || 'info'
 }
@@ -1289,7 +1357,7 @@ onMounted(() => {
   updateOverallHealth()
   refreshData()
   startLogUpdates()
-  
+
   // 初始化图表
   nextTick(() => {
     initCharts()
