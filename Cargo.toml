@@ -19,9 +19,9 @@ members = [
     # "core/advanced-features",  # 暂时禁用以解决链接问题
     "drivers/modbus-static",
     "connectors/mqtt5",
-    "edge-gateway",
-    "benches-pkg",                # 基准测试包
-    "examples"                    # 统一错误处理示例
+    "edge-gateway"
+    # "benches-pkg",                # 基准测试包 - 目录不存在暂时禁用
+    # "examples"                    # 统一错误处理示例 - 暂时禁用
 ]
 resolver = "2"
 
