@@ -14,12 +14,12 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 uuid = { workspace = true }
 chrono = { workspace = true }
+tracing = { workspace = true }
 
 # Database
 sqlx = { workspace = true }
 
 # Local dependencies
-common-errors = { path = "../../core/common-errors" }
 
 # Testing
 mockall = { workspace = true, optional = true }

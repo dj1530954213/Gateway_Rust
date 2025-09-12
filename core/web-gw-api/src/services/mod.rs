@@ -12,9 +12,8 @@
 pub mod frame_bus_bridge;
 pub mod history;
 pub mod protocol_mapper;
-pub mod driver_config_monitor;
 
 pub use frame_bus_bridge::{FrameBusBridge, TelemetryPublisher, AlertPublisher};
 pub use history::HistoryService;
 pub use protocol_mapper::{ProtocolMapper, get_protocol_mapper};
-pub use driver_config_monitor::{DriverConfigMonitor, init_driver_config_monitor, get_driver_config_monitor};
+// driver_config_monitor 暂未启用，嵌入模式下禁用以减少依赖

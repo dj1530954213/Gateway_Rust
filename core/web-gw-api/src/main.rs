@@ -10,19 +10,14 @@
 //! 更新历史：
 //! - 2025-01-27  Claude  初版
 
-mod bootstrap;
-mod config;
-mod dto;
-mod error;
-mod openapi;
-mod routes;
-mod services;
-
-use actix_web::{middleware::Logger, web, App, HttpServer};
+use actix_web::{middleware::Logger, App, HttpResponse, HttpServer, web};
 use anyhow::Context;
 use metrics_exporter_prometheus::PrometheusBuilder;
-use tracing::{info, warn};
-use url::Url;
+use tracing::info;
+use utoipa::OpenApi;
+
+// 使用同包内的库 `web_gw_api` 暴露的模块与函数
+use web_gw_api as api;
 
 #[actix_web::main]
 async fn main() -> anyhow::Result<()> {
@@ -30,7 +25,7 @@ async fn main() -> anyhow::Result<()> {
     init_logging()?;
     
     // 加载配置
-    let config = bootstrap::load_config()
+    let config = api::load_config()
         .context("Failed to load configuration")?;
     
     info!("Starting web-gw-api server with config: {:?}", config.redacted());
@@ -42,7 +37,7 @@ async fn main() -> anyhow::Result<()> {
         .context("Failed to install Prometheus recorder")?;
     
     // 初始化应用状态
-    let state = bootstrap::init_state(&config)
+    let state = api::init_state(&config)
         .await
         .context("Failed to initialize application state")?;
     
@@ -72,8 +67,17 @@ async fn main() -> anyhow::Result<()> {
             .wrap(Logger::default())
             .wrap(state.cors())
             .wrap(prometheus_middleware())
-            .configure(routes::configure)
-            .service(openapi::create_routes())
+            .configure(api::routes::configure)
+            // 直接暴露关键路由，确保调试阶段可用
+            .route("/docs/openapi.json", web::get().to(|| async {
+                let openapi = api::openapi::ApiDoc::openapi();
+                HttpResponse::Ok().json(openapi)
+            }))
+            .route("/system/health", web::get().to(api::routes::system::get_system_health))
+            .route("/api/v1/system/health", web::get().to(api::routes::system::get_system_health))
+            .route("/hello", web::get().to(|| async { HttpResponse::Ok().body("hi") }))
+            // OpenAPI & Swagger UI 路由
+            .configure(api::openapi::configure)
     })
     .bind(config.http_addr)
     .context("Failed to bind HTTP server")?

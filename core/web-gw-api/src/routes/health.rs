@@ -15,13 +15,20 @@ use actix_web::{web, HttpResponse, Scope};
 use chrono::Utc;
 use tracing::info;
 use utoipa::ToSchema;
+use utoipa::OpenApi;
 
 /// 健康检查路由作用域
 pub fn scope() -> Scope {
-    web::scope("/health")
-        .route("", web::get().to(health_check))
-        .route("/ready", web::get().to(readiness_check))
-        .route("/live", web::get().to(liveness_check))
+    // 统一健康检查：支持 /health 与 /healthz
+    web::scope("")
+        .route("/health", web::get().to(health_check))
+        .route("/healthz", web::get().to(health_check))
+        .route("/health/ready", web::get().to(readiness_check))
+        .route("/health/live", web::get().to(liveness_check))
+        // 关键端点兜底注册，确保调试与自动化测试阶段可用
+        .route("/system/health", web::get().to(crate::routes::system::get_system_health))
+        .route("/api/v1/system/health", web::get().to(crate::routes::system::get_system_health))
+        .route("/docs/openapi.json", web::get().to(serve_openapi_json))
 }
 
 /// 基础健康检查
@@ -106,4 +113,10 @@ async fn liveness_check() -> ApiResult<HttpResponse> {
         "status": "alive",
         "timestamp": Utc::now()
     })))
+}
+
+/// 兜底：提供 OpenAPI JSON（避免路径注册异常时 404）
+async fn serve_openapi_json() -> HttpResponse {
+    let openapi = crate::openapi::ApiDoc::openapi();
+    HttpResponse::Ok().json(openapi)
 }

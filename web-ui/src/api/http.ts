@@ -25,7 +25,7 @@ const IS_DEV = import.meta.env.DEV
 // 在开发环境中，如果没有设置VITE_API_BASE_URL或设置为空，则使用相对路径通过Vite代理
 const BASE_URL = import.meta.env.VITE_API_BASE_URL !== undefined && import.meta.env.VITE_API_BASE_URL !== '' 
   ? import.meta.env.VITE_API_BASE_URL 
-  : (IS_DEV ? '' : 'http://localhost:50010')
+  : (IS_DEV ? '' : 'http://localhost:8080')
 const REQUEST_TIMEOUT = 30000
 const RETRY_COUNT = 3
 const RETRY_DELAY = 1000

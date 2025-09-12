@@ -19,7 +19,7 @@ use std::env;
 use std::sync::Arc;
 use tokio::sync::broadcast;
 use pg_repo;
-use crate::services::{get_driver_config_monitor, init_driver_config_monitor};
+// driver_config_monitor 暂未启用，待运行时服务完成后再接入
 
 /// 应用状态，包含所有共享资源
 #[derive(Clone)]
@@ -77,7 +77,7 @@ impl AppState {
         let mut cors = Cors::default();
         
         // 严格配置允许的来源
-        for origin in origins {
+        for origin in &origins {
             cors = cors.allowed_origin(origin.trim());
         }
         
@@ -97,7 +97,7 @@ impl AppState {
             .max_age(300)  // 缩短预检缓存时间到5分钟
             .supports_credentials();  // 支持凭据
         
-        tracing::info!("CORS configured with secure origins: {:?}", origins);
+        tracing::info!("CORS configured with secure origins: {:?}", &origins);
         cors
     }
 
@@ -117,7 +117,7 @@ impl AppState {
                 services.insert("postgres_active_connections".to_string(), 
                     stats.active_connections.to_string());
             }
-            _ => services.insert("postgres".to_string(), "unhealthy".to_string()),
+            _ => { let _ = services.insert("postgres".to_string(), "unhealthy".to_string()); }
         };
 
         // 检查InfluxDB连接 - 使用HTTP客户端而不是influxdb2库的health()方法
@@ -382,26 +382,7 @@ pub async fn init_state(config: &ApiConfig) -> ApiResult<Data<AppState>> {
 
     let driver_manager_arc = Arc::new(driver_manager);
     
-    // 初始化驱动配置监听服务
-    crate::services::init_driver_config_monitor(
-        driver_config_repo.clone(),
-        driver_manager_arc.clone(),
-    );
-
-    // 启动驱动配置监听服务 (带超时)
-    if let Some(monitor) = get_driver_config_monitor() {
-        match tokio::time::timeout(std::time::Duration::from_secs(10), monitor.start()).await {
-            Ok(Ok(())) => {
-                tracing::info!("Driver config monitor started successfully");
-            }
-            Ok(Err(e)) => {
-                tracing::error!("Failed to start driver config monitor: {}", e);
-            }
-            Err(_) => {
-                tracing::warn!("Driver config monitor start timed out, continuing anyway");
-            }
-        }
-    }
+    // 驱动配置监听服务暂未启用（将以运行时服务替代），此处跳过初始化与启动
     
     let state = AppState {
         config: config.clone(),

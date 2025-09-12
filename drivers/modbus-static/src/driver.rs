@@ -239,6 +239,16 @@ impl Driver for ModbusDriver {
                 scale: Some("value / 10.0".to_string()),  // 温度传感器1: 值/10.0
                 access: Access::R,
             },
+            // 采集保持寄存器40001的Float32(CDAB字序时需全局Little)
+            RegPoint {
+                tag: "sensor.float40001".to_string(),
+                func: tokio_modbus::FunctionCode::ReadHoldingRegisters,
+                addr: 0,  // 40001对应地址0
+                len: 2,   // Float32占用两个寄存器
+                datatype: DataType::Float32,
+                scale: None,
+                access: Access::R,
+            },
             RegPoint {
                 tag: "sensor.pressure1".to_string(),
                 func: tokio_modbus::FunctionCode::ReadHoldingRegisters,

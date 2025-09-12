@@ -170,7 +170,7 @@ GATEWAY_LOCATION=${GATEWAY_LOCATION:-"默认位置"}
 # 生成主配置文件
 echo "📄 生成主配置文件..."
 
-MAIN_CONFIG="$OUTPUT_DIR/gateway.yml"
+MAIN_CONFIG="$OUTPUT_DIR/gateway.yaml"
 TEMPLATE_FILE="$TEMPLATES_DIR/${ENVIRONMENT}-gateway.yml"
 
 if [[ ! -f "$TEMPLATE_FILE" ]]; then
@@ -251,7 +251,7 @@ GATEWAY_LOCATION="$GATEWAY_LOCATION"
 
 # 服务配置
 RUST_LOG=info
-GATEWAY_CONFIG=./config/gateway.yml
+GATEWAY_CONFIG=./config/gateway.yaml
 
 # 安全配置 (生产环境请修改这些密钥)
 JWT_SECRET="change-me-32-byte-jwt-secret-key"
@@ -320,8 +320,8 @@ if [[ -f ".env" ]]; then
 fi
 
 # 验证配置文件
-if [[ ! -f "gateway.yml" ]]; then
-    echo "错误: 找不到配置文件 gateway.yml"
+if [[ ! -f "gateway.yaml" ]]; then
+    echo "错误: 找不到配置文件 gateway.yaml"
     exit 1
 fi
 
@@ -330,10 +330,10 @@ mkdir -p data logs temp models
 
 # 启动网关
 echo "🚀 启动 Edge Gateway..."
-echo "📁 配置文件: $PWD/gateway.yml"
+echo "📁 配置文件: $PWD/gateway.yaml"
 echo "🌍 环境: ${ENVIRONMENT:-未知}"
 
-exec edge-gateway --config gateway.yml
+exec edge-gateway --config gateway.yaml
 EOF
 
     chmod +x "$START_SCRIPT"
@@ -396,7 +396,7 @@ if [[ ! -f "$README_FILE" || "$OVERWRITE" == "true" ]]; then
 ## 文件说明
 
 ### 核心文件
-- \`gateway.yml\` - 主配置文件
+- `gateway.yaml` - 主配置文件
 - \`.env\` - 环境变量文件
 - \`start-gateway.sh\` - 启动脚本
 - \`stop-gateway.sh\` - 停止脚本
@@ -423,7 +423,7 @@ EOF
    - 修改默认密码和密钥
    - 配置外部服务地址
    
-2. **主配置文件** (\`gateway.yml\`):
+2. **主配置文件** (`gateway.yaml`):
    - 检查驱动配置
    - 验证连接器设置
    - 调整系统参数
@@ -434,13 +434,13 @@ EOF
 ./start-gateway.sh
 
 # 或者手动启动
-edge-gateway --config gateway.yml
+edge-gateway --config gateway.yaml
 \`\`\`
 
 ### 3. 验证运行
 \`\`\`bash
 # 检查健康状态
-curl http://localhost:8090/health
+curl http://localhost:8080/healthz
 
 # 查看指标
 curl http://localhost:9090/metrics

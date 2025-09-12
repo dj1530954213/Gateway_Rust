@@ -1,13 +1,13 @@
 # 开发环境配置覆盖
 
 # HTTP服务端口配置
-http_addr: "0.0.0.0:50013"
+http_addr: "0.0.0.0:8080"
 
-# Metrics端口配置（修复端口冲突）
-metrics_addr: "0.0.0.0:50015"
+# Metrics端口配置（避免与宿主上已有服务冲突）
+metrics_addr: "0.0.0.0:19090"
 
-# 数据库配置（使用容器IP）
-pg_dsn: "postgres://postgres:postgres@172.20.0.5:5432/iot"
+# 数据库配置（使用服务名以适配Compose网络）
+pg_dsn: "postgres://postgres:postgres@postgres:5432/iot"
 
 # 开发环境CORS配置 - 限制到已知的开发端口
 cors_allowed:

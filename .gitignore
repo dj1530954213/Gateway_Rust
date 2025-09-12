@@ -346,12 +346,12 @@ infra/pg-repo/src/error_new.rs
 core/driver-manager/src/error.rs
 core/frame-bus/src/error.rs
 core/web-gw-api/src/error_new.rs
-core/web-gw-api/src/database_pool.rs
-core/web-gw-api/src/middleware.rs
-core/web-gw-api/src/response.rs
+# core/web-gw-api/src/database_pool.rs
+# core/web-gw-api/src/middleware.rs
+# core/web-gw-api/src/response.rs
 core/web-gw-api/src/routes/database.rs
 core/web-gw-api/src/services/driver_config_monitor.rs
-core/web-gw-api/src/services/protocol_mapper.rs
+# core/web-gw-api/src/services/protocol_mapper.rs
 
 # ================ 前端测试组件 ====================
 web-ui/src/views/test/

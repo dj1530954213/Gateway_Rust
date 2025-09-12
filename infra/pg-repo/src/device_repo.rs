@@ -85,39 +85,45 @@ impl DeviceRepoImpl {
 #[async_trait]
 impl DeviceRepo for DeviceRepoImpl {
     async fn create(&self, device: NewDevice) -> RepoResult<Device> {
-        self.execute_monitored("device_create", |pool| async move {
-            sqlx::query_as::<_, Device>(
-                r#"
-                INSERT INTO devices (id, name, protocol, location, endpoint, config, enabled)
-                VALUES ($1, $2, $3, $4, $5, $6, $7)
-                RETURNING id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-                "#
-            )
-            .bind(device.id)
-            .bind(device.name)
-            .bind(device.protocol)
-            .bind(device.location)
-            .bind(device.endpoint)
-            .bind(device.config)
-            .bind(device.enabled)
-            .fetch_one(pool)
-            .await
-        }).await
+        let start = std::time::Instant::now();
+        let result = sqlx::query_as::<_, Device>(
+            r#"
+            INSERT INTO devices (id, name, protocol, location, endpoint, config, enabled)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            RETURNING id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+            "#
+        )
+        .bind(device.id)
+        .bind(device.name)
+        .bind(device.protocol)
+        .bind(device.location)
+        .bind(device.endpoint)
+        .bind(device.config)
+        .bind(device.enabled)
+        .fetch_one(&self.pool)
+        .await?;
+        let elapsed = start.elapsed();
+        tracing::debug!("Query {} executed in {:?}", "device_create", elapsed);
+        if elapsed.as_millis() > 1000 { tracing::warn!("Slow query detected: {} took {:?}", "device_create", elapsed); }
+        Ok(result)
     }
     
     async fn get_by_id(&self, id: Uuid) -> RepoResult<Option<Device>> {
-        self.execute_monitored("device_get_by_id", |pool| async move {
-            sqlx::query_as::<_, Device>(
-                r#"
-                SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-                FROM devices 
-                WHERE id = $1
-                "#
-            )
-            .bind(id)
-            .fetch_optional(pool)
-            .await
-        }).await
+        let start = std::time::Instant::now();
+        let result = sqlx::query_as::<_, Device>(
+            r#"
+            SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+            FROM devices 
+            WHERE id = $1
+            "#
+        )
+        .bind(id)
+        .fetch_optional(&self.pool)
+        .await?;
+        let elapsed = start.elapsed();
+        tracing::debug!("Query {} executed in {:?}", "device_get_by_id", elapsed);
+        if elapsed.as_millis() > 1000 { tracing::warn!("Slow query detected: {} took {:?}", "device_get_by_id", elapsed); }
+        Ok(result)
     }
     
     async fn get_by_name(&self, name: &str) -> RepoResult<Option<Device>> {
@@ -172,38 +178,41 @@ impl DeviceRepo for DeviceRepoImpl {
     }
     
     async fn list(&self, filter: DeviceFilter) -> RepoResult<Vec<Device>> {
-        self.execute_monitored("device_list", |pool| async move {
-            let mut query_builder = sqlx::QueryBuilder::new(
-                r#"
-                SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
-                FROM devices 
-                WHERE 1=1
-                "#
-            );
-            
-            if let Some(protocol) = filter.protocol {
-                query_builder.push(" AND protocol = ").push_bind(protocol);
-            }
-            
-            if let Some(enabled) = filter.enabled {
-                query_builder.push(" AND enabled = ").push_bind(enabled);
-            }
-            
-            query_builder.push(" ORDER BY created_at DESC");
-            
-            if let Some(limit) = filter.limit {
-                query_builder.push(" LIMIT ").push_bind(limit);
-            }
-            
-            if let Some(offset) = filter.offset {
-                query_builder.push(" OFFSET ").push_bind(offset);
-            }
-            
-            query_builder
-                .build_query_as::<Device>()
-                .fetch_all(pool)
-                .await
-        }).await
+        let start = std::time::Instant::now();
+        let mut query_builder = sqlx::QueryBuilder::new(
+            r#"
+            SELECT id, name, protocol, location, endpoint, config, enabled, created_at, updated_at
+            FROM devices 
+            WHERE 1=1
+            "#
+        );
+        
+        if let Some(protocol) = filter.protocol {
+            query_builder.push(" AND protocol = ").push_bind(protocol);
+        }
+        
+        if let Some(enabled) = filter.enabled {
+            query_builder.push(" AND enabled = ").push_bind(enabled);
+        }
+        
+        query_builder.push(" ORDER BY created_at DESC");
+        
+        if let Some(limit) = filter.limit {
+            query_builder.push(" LIMIT ").push_bind(limit);
+        }
+        
+        if let Some(offset) = filter.offset {
+            query_builder.push(" OFFSET ").push_bind(offset);
+        }
+        
+        let result = query_builder
+            .build_query_as::<Device>()
+            .fetch_all(&self.pool)
+            .await?;
+        let elapsed = start.elapsed();
+        tracing::debug!("Query {} executed in {:?}", "device_list", elapsed);
+        if elapsed.as_millis() > 1000 { tracing::warn!("Slow query detected: {} took {:?}", "device_list", elapsed); }
+        Ok(result)
     }
     
     async fn count(&self, filter: DeviceFilter) -> RepoResult<i64> {

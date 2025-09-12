@@ -17,7 +17,7 @@ pub struct ApiConfig {
     /// HTTP 监听地址，默认 0.0.0.0:8080
     pub http_addr: SocketAddr,
     
-    /// Metrics 监听地址，默认 0.0.0.0:8081  
+    /// Metrics 监听地址，默认 0.0.0.0:9090  
     pub metrics_addr: SocketAddr,
     
     /// WebSocket 路径，默认 "/ws"
@@ -75,8 +75,8 @@ pub struct ApiConfig {
 impl Default for ApiConfig {
     fn default() -> Self {
         Self {
-            http_addr: "0.0.0.0:50013".parse().unwrap(),
-            metrics_addr: "0.0.0.0:50015".parse().unwrap(),
+            http_addr: "0.0.0.0:8080".parse().unwrap(),
+            metrics_addr: "0.0.0.0:9090".parse().unwrap(),
             ws_path: "/ws".to_string(),
             cors_allowed: vec![
                 "http://localhost:5173".to_string(), 

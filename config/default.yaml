@@ -2,8 +2,8 @@
 # 所有环境共用基线配置，不包含敏感信息
 
 # HTTP服务配置
-http_addr: "0.0.0.0:50013"
-metrics_addr: "0.0.0.0:50015" 
+http_addr: "0.0.0.0:8080"
+metrics_addr: "0.0.0.0:9090" 
 ws_path: "/ws"
 
 # CORS跨域配置 - 安全限制

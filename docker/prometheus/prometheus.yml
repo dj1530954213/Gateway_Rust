@@ -17,7 +17,7 @@ scrape_configs:
   # Edge Gateway指标
   - job_name: 'edge-gateway'
     static_configs:
-      - targets: ['host.docker.internal:20011']  # 网关指标端口
+      - targets: ['edge-gateway:9090']  # 网关指标端口
     scrape_interval: 5s
     metrics_path: /metrics
     

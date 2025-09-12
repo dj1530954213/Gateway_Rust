@@ -167,11 +167,18 @@ export abstract class BaseStore<TItem, TCreateReq, TUpdateReq, TQuery extends Ba
   /**
    * 处理API响应
    */
-  protected handleResponse<T>(response: ApiResponse<T>): T {
-    if (!response.success || !response.data) {
-      throw new Error(response.error?.message || '操作失败')
+  protected handleResponse<T>(response: ApiResponse<T> | T): T {
+    // 兼容两种响应格式：
+    // 1) 标准包装: { success, data, error }
+    // 2) 直接返回数据对象
+    const r: any = response as any
+    if (r && typeof r === 'object' && 'success' in r) {
+      if (!r.success || typeof r.data === 'undefined') {
+        throw new Error(r.error?.message || '操作失败')
+      }
+      return r.data as T
     }
-    return response.data
+    return response as T
   }
 
   /**

@@ -10,13 +10,15 @@
 
 use crate::dto::*;
 use crate::error::ErrorResponse;
-use actix_web::{web, HttpResponse, Result, Scope};
+use actix_web::{web, HttpResponse, Result};
+use actix_web::web::ServiceConfig;
 use std::fs;
 use utoipa::{
     openapi::security::{ApiKey, ApiKeyValue, SecurityScheme},
     Modify, OpenApi,
 };
 use utoipa_swagger_ui::SwaggerUi;
+use tracing::info;
 
 /// OpenAPI文档配置
 #[derive(OpenApi)]
@@ -121,15 +123,19 @@ impl Modify for SecurityAddon {
     }
 }
 
-/// 创建OpenAPI路由
-pub fn create_routes() -> Scope {
-    web::scope("/docs")
-        .route("/openapi.json", web::get().to(serve_openapi_json))
-        .route("/openapi.yaml", web::get().to(serve_openapi_yaml))
-        .service(
-            SwaggerUi::new("/docs/swagger-ui/{_:.*}")
-                .url("/docs/openapi.json", ApiDoc::openapi())
-        )
+/// 注册 OpenAPI 路由（使用绝对路径，避免 scope 嵌套引起的路径混淆）
+pub fn configure(cfg: &mut ServiceConfig) {
+    info!("Registering OpenAPI routes at /docs ...");
+    cfg
+        // OpenAPI 文档导出
+        .route("/docs/openapi.json", web::get().to(serve_openapi_json))
+        .route("/docs/openapi.yaml", web::get().to(serve_openapi_yaml))
+        // 兜底：直接返回一个基于 CDN 的 Swagger UI HTML 页面（含有/无尾斜杠两种）
+        .route("/docs", web::get().to(serve_swagger_ui))
+        .route("/docs/", web::get().to(serve_swagger_ui))
+        .route("/docs/swagger-ui", web::get().to(serve_swagger_ui))
+        .route("/docs/swagger-ui/", web::get().to(serve_swagger_ui))
+        ;
 }
 
 /// 提供OpenAPI JSON格式文档
@@ -138,6 +144,37 @@ async fn serve_openapi_json() -> Result<HttpResponse> {
     Ok(HttpResponse::Ok()
         .content_type("application/json")
         .json(openapi))
+}
+
+/// 兜底的 Swagger UI 页面（使用 CDN 资源），避免静态资源路由异常导致 404
+pub async fn serve_swagger_ui() -> Result<HttpResponse> {
+    let html = r#"<!DOCTYPE html>
+<html lang=\"en\"> 
+  <head>
+    <meta charset=\"utf-8\" />
+    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\" />
+    <title>Gateway Rust API Docs</title>
+    <link rel=\"stylesheet\" href=\"https://unpkg.com/swagger-ui-dist@5/swagger-ui.css\" />
+    <style> body { margin: 0; padding: 0 } #swagger-ui { height: 100vh; } </style>
+  </head>
+  <body>
+    <div id=\"swagger-ui\"></div>
+    <script src=\"https://unpkg.com/swagger-ui-dist@5/swagger-ui-bundle.js\"></script>
+    <script>
+      window.addEventListener('load', () => {
+        window.ui = SwaggerUIBundle({
+          url: '/docs/openapi.json',
+          dom_id: '#swagger-ui',
+          presets: [SwaggerUIBundle.presets.apis],
+          layout: 'BaseLayout',
+        });
+      });
+    </script>
+  </body>
+</html>\n"#;
+    Ok(HttpResponse::Ok()
+        .content_type("text/html; charset=utf-8")
+        .body(html))
 }
 
 /// 提供OpenAPI YAML格式文档

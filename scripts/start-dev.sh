@@ -34,8 +34,8 @@ sleep 10
 echo "📊 服务状态检查："
 echo "- PLC模拟器: http://localhost:502 (Modbus TCP)"
 echo "- EMQX: http://localhost:18083 (admin/public)"
-echo "- Prometheus: http://localhost:9091"
-echo "- Grafana: http://localhost:3000 (admin/admin)"
+echo "- Prometheus: http://localhost:50003"
+echo "- Grafana: http://localhost:50002 (admin/admin)"
 echo "- InfluxDB: http://localhost:8086"
 
 echo ""

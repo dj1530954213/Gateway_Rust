@@ -23,7 +23,7 @@ pub mod history;
 pub mod websocket;
 pub mod alerts;
 pub mod system;
-pub mod database;
+// pub mod database; // 暂时禁用数据库管理路由，避免编译错误
 
 use actix_web::web;
 
@@ -44,9 +44,11 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
                 .service(tags::scope_as_datapoints()) // datapoints别名指向tags
                 .service(drivers::scope())
                 .service(driver_configs::scope())
+                // 暴露与根路径一致的 system 路由，兼容旧前端对 /api/v1/system/* 的访问
+                .service(system::scope())
                 .configure(history::configure)
                 .service(alerts::scope())
-                .configure(database::config_routes) // 数据库管理路由
+                // .configure(database::config_routes) // 数据库管理路由 - 暂时禁用
         )
         
         // WebSocket路由

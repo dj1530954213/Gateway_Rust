@@ -23,7 +23,7 @@ docker-compose logs -f edge-gateway
 - 📊 **监控指标**: http://localhost:9090
 - 📈 **Grafana监控面板**: http://localhost:3000 (admin/admin)
 - 📝 **EMQX MQTT管理**: http://localhost:18083 (admin/public)
-- 📊 **Prometheus**: http://localhost:9091
+- 📊 **Prometheus**: http://localhost:50003
 - 💾 **InfluxDB**: http://localhost:8086
 
 ## 方法二：分别启动（开发模式）
@@ -83,7 +83,7 @@ npm run build
 cp -r dist/* ../core/web-server/static/
 
 # 启动后端
-../target/release/edge-gateway --config config/prod-gateway.yml
+../target/release/edge-gateway --config config/prod.yaml
 ```
 
 ## 🛠️ 常用管理命令
@@ -130,7 +130,7 @@ RUST_LOG=debug cargo run --bin edge-gateway
 
 ### ✅ 基础服务检查
 - [ ] 前端界面可访问 (http://localhost:8090)
-- [ ] REST API 响应正常 (http://localhost:8080/health)
+- [ ] REST API 响应正常 (http://localhost:8080/healthz)
 - [ ] 监控指标正常 (http://localhost:9090/metrics)
 
 ### ✅ 功能模块检查
@@ -170,7 +170,7 @@ RUST_LOG=debug cargo run --bin edge-gateway
    cargo run --bin edge-gateway -- validate
    
    # 查看示例配置
-   cat config/gateway.yml
+   cat config/gateway.yaml
    ```
 
 4. **依赖服务未启动**

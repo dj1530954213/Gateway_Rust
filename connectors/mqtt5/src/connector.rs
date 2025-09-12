@@ -135,47 +135,46 @@ impl MqttConnector {
         let mut last_send = Instant::now();
 
         while let Ok(envelope) = rx.recv().await {
-            // 临时绕过decode问题，直接构造基本数据
-            let frame = DataFrame {
-                tag: "test_tag".to_string(),
-                value: Some(Value::int(0)),
-                qos: 2, // Good quality
-                timestamp: chrono::Utc::now().timestamp_millis() as u64,
-                meta: std::collections::HashMap::new(),
+            // 解码 DataFrame；失败则跳过当前包
+            let frame = match envelope.into_data() {
+                Ok(f) => f,
+                Err(e) => {
+                    tracing::warn!("Failed to decode DataFrame from envelope: {}", e);
+                    continue;
+                }
             };
-            if true {
-                let timestamp = SystemTime::now()
-                    .duration_since(UNIX_EPOCH)
-                    .unwrap()
-                    .as_millis() as u64;
 
-                let point = DataPoint {
-                    tag: frame.tag,
-                    value: Self::frame_value_to_json(frame.value.as_ref().unwrap_or(&Value::int(0))),
-                    quality: frame.qos as u8,
-                    meta: frame.meta,
+            let timestamp = SystemTime::now()
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_millis() as u64;
+
+            let point = DataPoint {
+                tag: frame.tag,
+                value: Self::frame_value_to_json(frame.value.as_ref().unwrap_or(&Value::int(0))),
+                quality: frame.qos as u8,
+                meta: frame.meta,
+            };
+
+            current_batch.push(point);
+
+            // 检查是否需要发送批次
+            let should_send = current_batch.len() >= batch_cfg.size
+                || last_send.elapsed() >= batch_cfg.timeout;
+
+            if should_send && !current_batch.is_empty() {
+                let message = MqttMessage {
+                    device_id: device_id.clone(),
+                    timestamp,
+                    points: current_batch.drain(..).collect(),
                 };
 
-                current_batch.push(point);
+                let mut buffer_guard = buffer.lock().await;
+                buffer_guard.push(message);
+                METRICS.buffer_used.set(buffer_guard.len() as i64);
+                drop(buffer_guard);
 
-                // 检查是否需要发送批次
-                let should_send = current_batch.len() >= batch_cfg.size
-                    || last_send.elapsed() >= batch_cfg.timeout;
-
-                if should_send && !current_batch.is_empty() {
-                    let message = MqttMessage {
-                        device_id: device_id.clone(),
-                        timestamp,
-                        points: current_batch.drain(..).collect(),
-                    };
-
-                    let mut buffer_guard = buffer.lock().await;
-                    buffer_guard.push(message);
-                    METRICS.buffer_used.set(buffer_guard.len() as i64);
-                    drop(buffer_guard);
-
-                    last_send = Instant::now();
-                }
+                last_send = Instant::now();
             }
         }
     }

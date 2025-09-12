@@ -3,7 +3,7 @@
 
 # HTTP server configuration
 http_addr: "0.0.0.0:8080"
-metrics_addr: "0.0.0.0:8081"
+metrics_addr: "0.0.0.0:9090"
 ws_path: "/ws"
 
 # CORS configuration

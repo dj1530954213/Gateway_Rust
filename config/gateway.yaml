@@ -2,8 +2,8 @@
 # 基于default.yaml和dev.yaml的合并配置
 
 # HTTP服务配置
-http_addr: "0.0.0.0:50013"
-metrics_addr: "0.0.0.0:50015" 
+http_addr: "0.0.0.0:8080"
+metrics_addr: "0.0.0.0:9090" 
 ws_path: "/ws"
 
 # CORS跨域配置 - 测试期间允许所有来源

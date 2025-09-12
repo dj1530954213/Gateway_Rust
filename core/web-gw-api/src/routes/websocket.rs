@@ -33,12 +33,6 @@ pub struct WsConnectionManager {
     config: ConnectionManagerConfig,
     /// 全局统计信息
     global_stats: Arc<tokio::sync::RwLock<GlobalStats>>,
-    /// 断线重连管理
-    reconnection_manager: Arc<ReconnectionManager>,
-    /// 消息队列（离线消息）
-    message_queue: Arc<RwLock<HashMap<String, Vec<QueuedMessage>>>>,
-    /// 连接健康检查
-    health_checker: Arc<ConnectionHealthChecker>,
 }
 
 /// 连接管理器配置

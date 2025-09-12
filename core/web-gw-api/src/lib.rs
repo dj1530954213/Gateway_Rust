@@ -9,6 +9,7 @@ pub mod dto;
 pub mod error;
 pub mod routes;
 pub mod services;
+pub mod openapi;
 pub mod middleware;
 pub mod response;
 

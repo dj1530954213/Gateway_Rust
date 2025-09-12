@@ -75,8 +75,11 @@ impl DriverSupervisor {
         // 获取frame-bus sender
         let frame_tx = frame_bus::ring::get_publisher()?.clone();
         
-        // 创建一个测试用的endpoint handle
-        let endpoint_handle = endpoint_kit::from_url("tcp://localhost:502").await
+        // 创建一个endpoint handle，支持通过环境变量覆盖
+        let endpoint_url = std::env::var("MODBUS_ENDPOINT")
+            .unwrap_or_else(|_| "tcp://localhost:502".to_string());
+        tracing::info!("Modbus endpoint = {}", endpoint_url);
+        let endpoint_handle = endpoint_kit::from_url(&endpoint_url).await
             .map_err(|e| anyhow::anyhow!("Failed to create endpoint handle: {}", e))?;
         
         // 连接驱动

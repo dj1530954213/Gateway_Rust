@@ -6,19 +6,19 @@ Static file server and web interface for the Edge Gateway management UI.
 
 use std::net::SocketAddr;
 use std::path::PathBuf;
-use std::sync::Arc;
+// use std::sync::Arc;
 
 use anyhow::{Context, Result};
 use axum::{
     response::Html,
-    routing::get,
+    routing::{get, get_service},
     Router,
-    extract::State,
     http::StatusCode,
 };
+use axum::Server;
 use tower::ServiceBuilder;
 use tower_http::{
-    services::ServeDir,
+    services::{ServeDir, ServeFile},
     cors::CorsLayer,
     trace::TraceLayer,
 };
@@ -42,12 +42,6 @@ impl Default for WebServerConfig {
     }
 }
 
-/// Web server application state
-#[derive(Clone)]
-pub struct AppState {
-    pub config: WebServerConfig,
-}
-
 /// Web server for management interface
 pub struct WebServer {
     config: WebServerConfig,
@@ -57,25 +51,22 @@ pub struct WebServer {
 impl WebServer {
     /// Create new web server
     pub fn new(config: WebServerConfig) -> Result<Self> {
-        let app_state = AppState {
-            config: config.clone(),
-        };
-
         // Create the main router
         let mut app = Router::new()
             .route("/", get(serve_index))
             .route("/health", get(health_check))
-            .route("/api/status", get(get_status))
-            .with_state(app_state);
+            .route("/healthz", get(health_check))
+            .route("/api/status", get(get_status));
 
-        // Add static file serving
-        if config.static_dir.exists() {
-            let serve_dir = ServeDir::new(&config.static_dir);
-            app = app.nest_service("/static", serve_dir);
-            info!("Static files served from: {:?}", config.static_dir);
-        } else {
-            warn!("Static directory not found: {:?}", config.static_dir);
-        }
+        // 静态目录与 SPA 回退：优先让显式路由命中（上面三个），其余路径交给静态文件服务
+        // /app/web 挂载了 Vite 构建产物 dist，包含 index.html 与 /assets/*
+        let static_root = PathBuf::from("/app/web");
+        let app = app.fallback_service(
+            get_service(
+                ServeDir::new(&static_root)
+                    .not_found_service(ServeFile::new(static_root.join("index.html")))
+            )
+        );
 
         // Add middleware
         let app = app.layer(ServiceBuilder::new().layer(TraceLayer::new_for_http()));
@@ -93,15 +84,19 @@ impl WebServer {
     pub async fn start(&self) -> Result<()> {
         info!("Starting web server on {}", self.config.bind_addr);
 
-        let listener = tokio::net::TcpListener::bind(&self.config.bind_addr)
-            .await
-            .context("Failed to bind web server")?;
-
         info!("Web management interface available at: http://{}", self.config.bind_addr);
 
-        // Simplified - just log that server would start
-        info!("Web server would start here (simplified for compilation)");
-        tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+        // 后台启动 Axum Server（不阻塞网关启动）。
+        let addr = self.config.bind_addr;
+        let app = self.app.clone();
+        tokio::spawn(async move {
+            if let Err(e) = Server::bind(&addr)
+                .serve(app.into_make_service())
+                .await
+            {
+                tracing::error!("Web server error: {}", e);
+            }
+        });
 
         Ok(())
     }
@@ -113,25 +108,36 @@ impl WebServer {
 }
 
 /// Serve the main index page
-async fn serve_index(State(_state): State<AppState>) -> Result<Html<String>, StatusCode> {
-    // Return embedded HTML content for now
+async fn serve_index() -> Result<Html<String>, StatusCode> {
+    // Prefer serving built SPA index.html if present
+    let index_path = PathBuf::from("/app/web").join("index.html");
+    if index_path.exists() {
+        match tokio::fs::read_to_string(&index_path).await {
+            Ok(content) => return Ok(Html(content)),
+            Err(_e) => {
+                // fall through to embedded minimal page
+            }
+        }
+    }
+
+    // Embedded minimal page as fallback
     let html_content = r#"<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Edge Gateway</title>
+    <meta http-equiv="refresh" content="3">
+    <style>body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu;max-width:880px;margin:40px auto;padding:0 16px}</style>
 </head>
 <body>
-    <div id="app">
-        <h1>Edge Gateway 工业网关系统</h1>
-        <p>系统正在运行中...</p>
-        <div>
-            <h2>系统状态</h2>
-            <p>API服务: 运行中</p>
-            <p>Web界面: 运行中</p>
-        </div>
-    </div>
+    <h1>Edge Gateway 工业网关系统</h1>
+    <p>前端构建产物尚未检测到，若你已执行构建，将自动提供静态页面。</p>
+    <ul>
+        <li>REST 健康: <code>/healthz</code></li>
+        <li>Web 健康: <code>http://localhost:8090/healthz</code></li>
+        <li>指标: <code>http://localhost:9090/metrics</code></li>
+    </ul>
 </body>
 </html>"#;
     Ok(Html(html_content.to_string()))
@@ -147,7 +153,7 @@ async fn health_check() -> Result<axum::Json<serde_json::Value>, StatusCode> {
 }
 
 /// Get system status
-async fn get_status(State(_state): State<AppState>) -> Result<axum::Json<serde_json::Value>, StatusCode> {
+async fn get_status() -> Result<axum::Json<serde_json::Value>, StatusCode> {
     // This would normally fetch real status from the gateway
     Ok(axum::Json(serde_json::json!({
         "gateway": {

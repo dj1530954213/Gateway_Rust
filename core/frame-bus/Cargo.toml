@@ -11,7 +11,9 @@ anyhow = { workspace = true }
 thiserror = { workspace = true }
 prost = { workspace = true }
 prost-types = { workspace = true }
-rocksdb = { workspace = true }
+# Avoid pulling zstd-sys (bindgen/libclang) by disabling default features
+# and enabling a minimal set of compression backends
+rocksdb = { workspace = true, default-features = false, features = ["snappy", "lz4", "zlib"] }
 prometheus = { workspace = true }
 tracing = { workspace = true }
 serde = { workspace = true }
@@ -21,7 +23,6 @@ uuid = { workspace = true }
 regex = "1.8"
 
 # Local dependencies
-common-errors = { path = "../common-errors" }
 
 [dev-dependencies]
 tempfile = { workspace = true }

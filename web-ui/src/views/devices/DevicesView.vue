@@ -12,7 +12,7 @@
             <div class="header-left">
               <span>设备列表</span>
               <el-tag type="info" size="small">
-                共 {{ devicesStore.state.total }} 台设备
+                共 {{ devicesStore.pagination.total }} 台设备
               </el-tag>
             </div>
             <div class="header-actions">
@@ -69,7 +69,7 @@
           </el-select>
         </div>
 
-        <el-table :data="devicesStore.state.devices" style="width: 100%">
+        <el-table :data="devicesStore.items" style="width: 100%">
           <el-table-column prop="name" label="设备名称" width="180" />
           <el-table-column prop="protocol" label="协议类型" width="120">
             <template #default="{ row }">
@@ -117,12 +117,12 @@
         </el-table>
 
         <!-- 分页 -->
-        <div v-if="devicesStore.state.total > 0" class="pagination-wrapper">
+        <div v-if="devicesStore.pagination.total > 0" class="pagination-wrapper">
           <el-pagination
-            v-model:current-page="devicesStore.state.currentPage"
-            v-model:page-size="devicesStore.state.pageSize"
+            :current-page="devicesStore.pagination.page"
+            :page-size="devicesStore.pagination.size"
             :page-sizes="[10, 20, 50, 100]"
-            :total="devicesStore.state.total"
+            :total="devicesStore.pagination.total"
             layout="total, sizes, prev, pager, next, jumper"
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
@@ -131,9 +131,7 @@
 
         <!-- 空状态 -->
         <el-empty
-          v-if="
-            !devicesStore.isLoading && devicesStore.state.devices.length === 0
-          "
+          v-if="!devicesStore.isLoading && devicesStore.items.length === 0"
           description="暂无设备数据"
           :image-size="80"
         />
@@ -142,8 +140,9 @@
 
     <!-- 设备表单对话框 -->
     <DeviceFormDialog
-      v-model="showDeviceDialog"
+      v-model:visible="showDeviceDialog"
       :device="editDevice"
+      :mode="editDevice ? 'edit' : 'create'"
       @success="handleDeviceSuccess"
     />
   </div>
@@ -157,7 +156,7 @@ import { useRouter } from 'vue-router'
 
 import type { DeviceVO } from '@/api/devices'
 import DeviceFormDialog from '@/components/devices/DeviceFormDialog.vue'
-import { useDevicesStore } from '@/stores/devices'
+import { useDevicesStore } from '@/stores'
 import { formatTime } from '@/utils/date'
 
 const router = useRouter()

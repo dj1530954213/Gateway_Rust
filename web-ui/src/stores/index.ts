@@ -6,9 +6,9 @@
 export { useAuthStore } from './auth'
 export type { User, LoginRequest, LoginResponse } from '@/types/auth'
 
-// Devices Store
-export { useDevicesStore } from './devices'
-export type { DevicesStore, DeviceState } from './devices'
+// Devices Store (use new implementation wired to REST /devices)
+export { useDevicesStore } from './devices-new'
+export type { DevicesStore, DeviceState } from './devices-new'
 
 // Tags Store
 export { useTagsStore } from './tags'

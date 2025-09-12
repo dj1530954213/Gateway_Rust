@@ -9,17 +9,42 @@ services:
       dockerfile: Dockerfile
       target: runtime
     environment:
-      - RUST_LOG=debug
+      - RUST_LOG=debug,web_server=debug,rest_api=debug,metrics_server=debug,hyper=info,axum=info
       - RUST_BACKTRACE=1
+      - GATEWAY_CONFIG=/app/config/dev.yaml
+      # Southbound Modbus target (PLC at 172.16.124.128:502)
+      - MODBUS_ENDPOINT=tcp://172.16.124.128:502
+      - MODBUS_UNIT_ID=1
+      - MODBUS_POLL_MS=1000
+      # Northbound MQTT broker (EMQX in compose network)
+      - MQTT_BROKER=tcp://emqx:1883
+      - MQTT_TOPIC_PREFIX=gateway
     volumes:
       # 开发时挂载源代码配置
       - ./config:/app/config:ro
-      - ./web:/app/web:ro
+      # 前端构建产物，供 Web 管理服务静态托管
+      - ./web-ui/dist:/app/web:ro
       # 数据目录可写
       - gateway-data:/app/data
       - gateway-logs:/app/logs
+    ports:
+      - "8080:8080"   # REST API
+      - "8090:8090"   # Web 管理界面
+      - "9090:9090"   # Prometheus 指标
     # 开发时允许重启
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - postgres
+      - nats
+      - emqx
+      - influxdb
+    networks:
+      - gateway-net
     
   # EMQX开发配置
   emqx:
@@ -41,3 +66,6 @@ services:
 volumes:
   gateway-data:
   gateway-logs:
+
+networks:
+  gateway-net:

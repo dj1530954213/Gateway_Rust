@@ -591,25 +591,6 @@ impl<T> ApiResponse<T> {
         }
     }
 
-    /// 分页响应
-    pub fn paginated(data: Vec<T>, pagination: PaginationMeta) -> Self where T: Clone {
-        let meta = ResponseMeta {
-            pagination: Some(pagination),
-            performance: None,
-            version: env!("CARGO_PKG_VERSION").to_string(),
-            extra: None,
-        };
-        
-        Self {
-            success: true,
-            data: Some(data),
-            error: None,
-            meta: Some(meta),
-            timestamp: Utc::now(),
-            request_id: None,
-        }
-    }
-
     /// 错误响应
     pub fn error(error: ApiError) -> Self {
         Self {

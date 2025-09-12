@@ -75,7 +75,7 @@ export default defineConfig(({ mode }) => {
       proxy: {
         // Gateway Rust API代理
         '/api': {
-          target: 'http://localhost:50013',
+          target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,
           configure: (proxy, _options) => {
@@ -99,13 +99,30 @@ export default defineConfig(({ mode }) => {
         },
         // System API代理
         '/system': {
-          target: 'http://localhost:50013',
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+        },
+        // 健康检查代理
+        '/health': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+        },
+        '/healthz': {
+          target: 'http://localhost:8080',
+          changeOrigin: true,
+          secure: false,
+        },
+        // Drivers 直达路由
+        '/drivers': {
+          target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,
         },
         // OpenAPI文档代理
         '/docs': {
-          target: 'http://localhost:50013',
+          target: 'http://localhost:8080',
           changeOrigin: true,
           secure: false,
         },
@@ -119,28 +136,8 @@ export default defineConfig(({ mode }) => {
       minify: 'terser',
       sourcemap: mode === 'development',
       chunkSizeWarningLimit: 1000,
-      rollupOptions: {
-        output: {
-          manualChunks(id) {
-            // 更精确的代码分割策略，避免循环依赖
-            if (id.includes('node_modules')) {
-              if (id.includes('vue') || id.includes('pinia') || id.includes('vue-router')) {
-                return 'vue-vendor'
-              }
-              if (id.includes('element-plus')) {
-                return 'element-plus'
-              }
-              if (id.includes('echarts')) {
-                return 'chart-vendor'
-              }
-              if (id.includes('dayjs') || id.includes('lodash-es') || id.includes('axios')) {
-                return 'utils-vendor'
-              }
-              return 'vendor'
-            }
-          },
-        },
-      },
+      // 让 Vite/ Rollup 自动决定 chunk 切分，避免自定义 manualChunks 引入循环依赖时序问题
+      rollupOptions: {},
     },
 
     optimizeDeps: {

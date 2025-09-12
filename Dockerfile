@@ -1,7 +1,7 @@
 # 多阶段构建Dockerfile for Edge Gateway
 
 # 构建阶段
-FROM rust:1.85-slim as builder
+FROM rust:1.85-bullseye as builder
 
 # 安装依赖
 RUN apt-get update && apt-get install -y \
@@ -23,7 +23,7 @@ COPY drivers/ ./drivers/
 COPY connectors/ ./connectors/
 COPY infra/ ./infra/
 COPY edge-gateway/ ./edge-gateway/
-COPY web/ ./web/
+COPY schema/ ./schema/
 
 # 构建发布版本
 RUN cargo build --release --bin edge-gateway
@@ -51,10 +51,11 @@ COPY --from=builder /app/target/release/edge-gateway /usr/local/bin/edge-gateway
 RUN mkdir -p /app/config /app/data /app/logs && \
     chown -R gateway:gateway /app
 
-# 复制配置文件
+# 复制配置文件（兼容 .yml 与 .yaml）
 COPY config/*.yml /app/config/
+COPY config/*.yaml /app/config/
 COPY examples/*.yml /app/config/
-COPY web/ /app/web/
+COPY examples/*.yaml /app/config/
 
 # 创建模型目录
 RUN mkdir -p /app/models
@@ -65,9 +66,9 @@ USER gateway
 # 暴露端口
 EXPOSE 8080 8090 9090
 
-# 健康检查
+# 健康检查（与 REST /healthz 对齐）
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:9090/health || exit 1
+    CMD curl -f http://localhost:8080/healthz || exit 1
 
-# 启动命令  
-CMD ["edge-gateway", "--config", "/app/config/docker-gateway.yml"]
+# 启动命令（默认使用 dev.yaml，可通过 --config 覆盖）
+CMD ["edge-gateway", "--config", "/app/config/dev.yaml"]

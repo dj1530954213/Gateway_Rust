@@ -144,13 +144,13 @@ docker-compose -f docker-compose.prod.yml up -d
 - 🔗 **EMQX Dashboard**: http://localhost:18083 (admin/emqx_admin_2024)
 
 **开发环境访问地址：**
-- 🌐 **Web管理界面**: http://localhost:20010
-- 🔗 **REST API**: http://localhost:20009
-- 📊 **Grafana监控**: http://localhost:20008 (admin/admin)
-- 💾 **InfluxDB 3.2-core**: http://localhost:20012 (admin/password123)
-- 📈 **Prometheus**: http://localhost:20007
-- 🔗 **EMQX Dashboard**: http://localhost:20006 (admin/public)
-- 🛠️ **前端开发**: http://localhost:5173 (需单独启动)
+- 🌐 **Web管理界面**: http://localhost:8090
+- 🔗 **REST API**: http://localhost:8080
+- 📊 **Grafana监控**: http://localhost:50002 (admin/admin)
+- 💾 **InfluxDB 3.2-core**: http://localhost:8086 (admin/password123)
+- 📈 **Prometheus**: http://localhost:50003
+- 🔗 **EMQX Dashboard**: http://localhost:50004 (admin/public)
+- 🛠️ **前端开发**: http://localhost:50020 (需单独启动)
 
 ### 详细启动指南
 

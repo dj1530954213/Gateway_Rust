@@ -10,16 +10,26 @@ use std::sync::Arc;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use tokio::signal;
-use tracing::info;
+use tracing::{info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt, EnvFilter};
 
 // Core modules
 use frame_bus::{FrameSender, FrameReceiver, init as init_frame_bus};
+use driver_manager::manager::DriverManager;
+use serde_json::json;
+
+// MQTT5 connector
+use mqtt5::config::MqttCfg;
+use mqtt5::connector::MqttConnector;
 use dynamic_driver::DynamicDriverRegistry;
 use rest_api::ApiServer;
 use web_server::WebServer;
 use monitoring::{MetricsCollector, HealthMonitor, AlertManager};
 use production_config::{ProductionConfigManager, EnvironmentDetector};
+use metrics_server::{MetricsServerConfig, start_background_server};
+// Force-link static drivers so their registration ctor runs
+use modbus_static as _;
+// use actix_web::{App as ActixApp, HttpServer as ActixHttpServer, middleware::Logger as ActixLogger};
 // use advanced_features::AdvancedFeaturesManager;  // 暂时禁用
 
 /// Edge Gateway CLI
@@ -27,7 +37,7 @@ use production_config::{ProductionConfigManager, EnvironmentDetector};
 #[command(author, version, about, long_about = None)]
 struct Cli {
     /// Configuration file path
-    #[arg(short, long, default_value = "config/gateway.yaml")]
+    #[arg(short, long, default_value = "config/dev.yaml")]
     config: PathBuf,
 
     /// Enable debug logging
@@ -57,6 +67,7 @@ struct Gateway {
     _frame_sender: FrameSender,
     _frame_receiver: FrameReceiver,
     dynamic_registry: DynamicDriverRegistry,
+    driver_manager: DriverManager,
     rest_api: ApiServer,
     web_server: WebServer,
     metrics_collector: MetricsCollector,
@@ -91,6 +102,8 @@ impl Gateway {
                     "data/wal".to_string()
                 }
             });
+
+        // Actix web-gw-api 嵌入式服务暂不启用，保留Warp REST作为主API
         
         info!("Using WAL directory: {}", wal_dir);
         
@@ -124,8 +137,8 @@ impl Gateway {
         use frame_bus::{command::CommandProcessor, permissions::PermissionManager};
         use std::net::SocketAddr;
         
-        // 使用50000+端口范围（开发调试环境）
-        let bind_addr: SocketAddr = "127.0.0.1:50013".parse()
+        // Warp REST 端口使用 8080，供前端与外部访问
+        let bind_addr: SocketAddr = "0.0.0.0:8080".parse()
             .context("Invalid REST API bind address")?;
             
         let server_config = ServerConfig {
@@ -150,7 +163,7 @@ impl Gateway {
         // Initialize Web server
         use web_server::WebServerConfig;
         let web_config = WebServerConfig {
-            bind_addr: SocketAddr::from(([127, 0, 0, 1], 50014)),
+            bind_addr: SocketAddr::from(([0, 0, 0, 0], 8090)),
             ..Default::default()
         };
         let web_server = WebServer::new(web_config)
@@ -164,14 +177,72 @@ impl Gateway {
         let alert_manager = AlertManager::new()
             .context("Failed to initialize alert manager")?;
 
+        // Start metrics HTTP server (Prometheus) at :9090
+        let metrics_server_config = MetricsServerConfig {
+            bind_addr: "0.0.0.0:9090".parse().expect("invalid metrics addr"),
+            metrics_path: "/metrics".to_string(),
+            health_path: "/health".to_string(),
+        };
+        start_background_server(metrics_server_config).await
+            .context("Failed to start metrics server")?;
+
         // Initialize advanced features - 暂时禁用
         // let advanced_features = AdvancedFeaturesManager::new().await
         //     .context("Failed to initialize advanced features")?;
+
+        // Initialize Driver Manager and load Modbus static driver
+        let driver_manager = DriverManager::new().context("Failed to create DriverManager")?;
+
+        // Touch the modbus-static crate to ensure it's linked
+        let _ = modbus_static::meta();
+
+        // Build Modbus driver config from environment
+        let unit_id: u8 = std::env::var("MODBUS_UNIT_ID").ok().and_then(|v| v.parse().ok()).unwrap_or(1);
+        let polling_ms: u64 = std::env::var("MODBUS_POLL_MS").ok().and_then(|v| v.parse().ok()).unwrap_or(1000);
+
+        let modbus_cfg = json!({
+            "unit_id": unit_id,
+            "polling": format!("{}ms", polling_ms),
+            "max_regs_per_req": 100u16,
+            "retry": 3u8,
+            "endian": "little",
+            "enable_write": false
+        });
+
+        let driver_id = "modbus_driver_1".to_string();
+        driver_manager.load_static_driver(driver_id.clone(), "modbus-tcp", modbus_cfg)
+            .await
+            .context("Failed to load modbus-tcp static driver")?;
+
+        // Start the driver read loop (supervisor will connect using MODBUS_ENDPOINT env)
+        driver_manager.start_driver(&driver_id).await.context("Failed to start modbus-tcp driver")?;
+
+        // Initialize and start MQTT connector in background
+        let mqtt_broker = std::env::var("MQTT_BROKER").unwrap_or_else(|_| "tcp://emqx:1883".to_string());
+        let mqtt_client_id = std::env::var("MQTT_CLIENT_ID").unwrap_or_default();
+        let mqtt_username = std::env::var("MQTT_USERNAME").unwrap_or_default();
+        let mqtt_password = std::env::var("MQTT_PASSWORD").unwrap_or_default();
+        let mqtt_topic_prefix = std::env::var("MQTT_TOPIC_PREFIX").unwrap_or_else(|_| "gateway".to_string());
+
+        let mut mqtt_cfg = MqttCfg { broker: mqtt_broker, client_id: mqtt_client_id, username: mqtt_username, password: mqtt_password, topic_prefix: mqtt_topic_prefix, ..Default::default() };
+
+        // Spawn connector tasks
+        tokio::spawn(async move {
+            let mut connector = MqttConnector::new(mqtt_cfg);
+            if let Err(e) = connector.init().await {
+                tracing::error!("MQTT connector init failed: {}", e);
+                return;
+            }
+            if let Err(e) = connector.start().await {
+                tracing::error!("MQTT connector start terminated: {}", e);
+            }
+        });
 
         Ok(Self {
             _frame_sender: frame_sender,
             _frame_receiver: frame_receiver,
             dynamic_registry,
+            driver_manager,
             rest_api,
             web_server,
             metrics_collector,
@@ -189,9 +260,12 @@ impl Gateway {
         // Start all services
         self.rest_api.start().await
             .context("Failed to start REST API server")?;
+        info!("REST API server started (spawned)");
         
+        info!("Starting Web Management server...");
         self.web_server.start().await
             .context("Failed to start Web server")?;
+        info!("Web Management server start returned Ok (spawned)");
         
         self.metrics_collector.start().await
             .context("Failed to start metrics collector")?;
@@ -211,9 +285,9 @@ impl Gateway {
         info!("✓ Steps 36-50: REST API & Web Management");
         info!("✓ Steps 51-70: Advanced Features & Production-Ready");
         info!("================================");
-        info!("🌐 Web管理界面: http://127.0.0.1:50014");
-        info!("🔗 REST API: http://127.0.0.1:50013");
-        info!("📊 监控指标: http://127.0.0.1:50015/metrics");
+        info!("🌐 Web管理界面: http://127.0.0.1:8090");
+        info!("🔗 REST API: http://127.0.0.1:8080");
+        info!("📊 监控指标: http://127.0.0.1:9090/metrics");
         info!("================================");
         info!("🧠 机器学习引擎: 已启用");
         info!("📈 实时分析引擎: 已启用");

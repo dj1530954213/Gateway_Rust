@@ -98,20 +98,6 @@ services:
   # Edge Gateway主服务 - 开发调试时在控制台启动
   # edge-gateway:
   #   build: .
-  #   container_name: edge-gateway
-  #   ports:
-  #     - "50010:8080"   # REST API (调试时改用控制台启动)
-  #     - "50011:8090"   # Web管理界面  
-  #     - "50012:9090"   # Prometheus指标
-  #   environment:
-  #     - RUST_LOG=info
-  #     - GATEWAY_CONFIG=/app/config/docker-gateway.yml
-  #   volumes:
-  #     - ./config:/app/config
-  #     - ./data:/app/data
-  #     - ./logs:/app/logs
-  #     - ./drivers:/app/drivers
-  #   depends_on:
   #     - emqx
   #     - prometheus
   #   networks:

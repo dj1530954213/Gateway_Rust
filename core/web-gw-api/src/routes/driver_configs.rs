@@ -13,7 +13,7 @@ use actix_web::{
     HttpResponse, Responder, Result,
 };
 use uuid::Uuid;
-use tracing::{info, error};
+use tracing::{info, error, warn};
 use utoipa::OpenApi;
 
 /// 驱动配置OpenAPI文档
@@ -491,18 +491,21 @@ async fn start_driver_config(
         return Err(ApiError::bad_request("Cannot start a disabled driver config"));
     }
 
-    // 触发驱动配置监听器进行扫描，启动这个配置的驱动
-    if let Some(monitor) = crate::services::get_driver_config_monitor() {
-        if let Err(e) = monitor.trigger_scan().await {
-            error!("Failed to trigger driver config scan: {}", e);
-            return Err(ApiError::internal_error("Failed to start driver config"));
+    // 生成管理器中的驱动ID
+    let manager_driver_id = manager_driver_id(&config);
+
+    // 如果未加载，尝试按协议加载静态/动态驱动（最小实现：Modbus）
+    let state_opt = app_state.driver_manager.get_driver_state(&manager_driver_id).await;
+    if state_opt.is_none() {
+        if let Err(e) = try_load_driver_for_config(&app_state, &config, &manager_driver_id).await {
+            warn!("Failed to pre-load driver for config {}: {}", config_id, e);
         }
-    } else {
-        return Err(ApiError::internal_error("Driver config monitor is not available"));
     }
 
-    // 等待短暂时间让驱动启动
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
+    // 启动驱动
+    if let Err(e) = app_state.driver_manager.start_driver(&manager_driver_id).await {
+        warn!("start_driver failed for {}: {}", manager_driver_id, e);
+    }
 
     // 检查驱动是否成功启动
     let status = get_config_driver_status(&config, &app_state).await?;
@@ -554,38 +557,12 @@ async fn stop_driver_config(
         })?
         .ok_or_else(|| ApiError::not_found(format!("Driver config not found: {}", config_id)))?;
 
-    // 临时禁用配置以触发停止
-    app_state.driver_config_repo.enable_driver_config(config_id, false).await
-        .map_err(|e| {
-            error!("Failed to disable driver config {}: {}", config_id, e);
-            ApiError::internal_error("Failed to disable driver config")
-        })?;
-
-    // 触发驱动配置监听器进行扫描，停止这个配置的驱动
-    if let Some(monitor) = crate::services::get_driver_config_monitor() {
-        if let Err(e) = monitor.trigger_scan().await {
-            error!("Failed to trigger driver config scan: {}", e);
-            // 恢复启用状态
-            let _ = app_state.driver_config_repo.enable_driver_config(config_id, config.enabled).await;
-            return Err(ApiError::internal_error("Failed to stop driver config"));
-        }
-    } else {
-        // 恢复启用状态
-        let _ = app_state.driver_config_repo.enable_driver_config(config_id, config.enabled).await;
-        return Err(ApiError::internal_error("Driver config monitor is not available"));
+    // 生成管理器中的驱动ID
+    let manager_driver_id = manager_driver_id(&config);
+    // 停止驱动（若不存在则忽略）
+    if let Err(e) = app_state.driver_manager.stop_driver(&manager_driver_id).await {
+        warn!("stop_driver failed for {}: {}", manager_driver_id, e);
     }
-
-    // 恢复原始启用状态（如果原来是启用的）
-    if config.enabled {
-        app_state.driver_config_repo.enable_driver_config(config_id, true).await
-            .map_err(|e| {
-                error!("Failed to restore driver config enabled state {}: {}", config_id, e);
-                ApiError::internal_error("Failed to restore driver config state")
-            })?;
-    }
-
-    // 等待短暂时间让驱动停止
-    tokio::time::sleep(tokio::time::Duration::from_millis(500)).await;
 
     // 检查驱动是否成功停止
     let status = get_config_driver_status(&config, &app_state).await?;
@@ -641,51 +618,24 @@ async fn restart_driver_config(
         return Err(ApiError::bad_request("Cannot restart a disabled driver config"));
     }
 
-    // 通过更新updated_at时间戳来触发重启
-    let update = pg_repo::DriverConfigUpdate {
-        name: None,
-        description: None,
-        protocol: None,
-        connection_type: None,
-        enabled: None,
-        config: None,
-        scan_interval: None,
-        timeout: None,
-        max_concurrent: None,
-        batch_size: None,
-        max_retries: None,
-        retry_interval: None,
-        exponential_backoff: None,
-        max_retry_interval: None,
-        log_level: None,
-        enable_request_log: None,
-        enable_response_log: None,
-        max_log_size: None,
-        enable_ssl: None,
-        verify_certificate: None,
-        client_cert_path: None,
-        client_key_path: None,
-    };
-
-    // 触发更新（这会更新updated_at字段）
-    app_state.driver_config_repo.update_driver_config(config_id, update).await
-        .map_err(|e| {
-            error!("Failed to update driver config {}: {}", config_id, e);
-            ApiError::internal_error("Failed to trigger driver config restart")
-        })?;
-
-    // 触发驱动配置监听器进行扫描，重启这个配置的驱动
-    if let Some(monitor) = crate::services::get_driver_config_monitor() {
-        if let Err(e) = monitor.trigger_scan().await {
-            error!("Failed to trigger driver config scan: {}", e);
-            return Err(ApiError::internal_error("Failed to restart driver config"));
-        }
-    } else {
-        return Err(ApiError::internal_error("Driver config monitor is not available"));
+    // 生成管理器中的驱动ID
+    let manager_driver_id = manager_driver_id(&config);
+    // 停止
+    if let Err(e) = app_state.driver_manager.stop_driver(&manager_driver_id).await {
+        warn!("stop_driver (restart) failed for {}: {}", manager_driver_id, e);
     }
-
-    // 等待时间让驱动重启
-    tokio::time::sleep(tokio::time::Duration::from_millis(1000)).await;
+    // 短暂等待
+    tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+    // 若未加载则尝试加载
+    if app_state.driver_manager.get_driver_state(&manager_driver_id).await.is_none() {
+        if let Err(e) = try_load_driver_for_config(&app_state, &config, &manager_driver_id).await {
+            warn!("Failed to pre-load driver for restart {}: {}", config_id, e);
+        }
+    }
+    // 启动
+    if let Err(e) = app_state.driver_manager.start_driver(&manager_driver_id).await {
+        warn!("start_driver (restart) failed for {}: {}", manager_driver_id, e);
+    }
 
     // 检查驱动状态
     let status = get_config_driver_status(&config, &app_state).await?;
@@ -751,44 +701,55 @@ async fn get_config_driver_status(
     config: &pg_repo::DriverConfig,
     app_state: &Data<crate::bootstrap::AppState>,
 ) -> Result<DriverConfigStatusVO, ApiError> {
-    use crate::services::get_driver_config_monitor;
-
-    // 生成管理器驱动ID（与监听服务中的格式一致）
-    let expected_driver_id = format!("config_{}_{}", config.name, config.id);
+    // 生成管理器驱动ID（与之前约定一致）
+    let expected_driver_id = manager_driver_id(config);
 
     // 从驱动管理器获取状态
     let driver_state = app_state.driver_manager.get_driver_state(&expected_driver_id).await;
 
-    // 从监听服务获取管理状态
-    let managed_instances = if let Some(monitor) = get_driver_config_monitor() {
-        monitor.get_managed_instances().await
-    } else {
-        vec![]
-    };
-
-    let managed_instance = managed_instances
-        .iter()
-        .find(|instance| instance.config_id == config.id);
-
-    let running = driver_state.is_some() && 
-                  matches!(driver_state, Some(driver_manager::DriverState::Active));
+    let running = matches!(driver_state, Some(driver_manager::DriverState::Active));
 
     let status_message = if !config.enabled {
         "Disabled".to_string()
     } else if running {
         "Running".to_string()
-    } else if managed_instance.is_some() {
-        format!("Managed but not running (state: {:?})", driver_state)
     } else {
-        "Not managed".to_string()
+        format!("Not running (state: {:?})", driver_state)
     };
 
     Ok(DriverConfigStatusVO {
         running,
         enabled: config.enabled,
-        managed_driver_id: managed_instance.map(|i| i.manager_driver_id.clone()),
+        managed_driver_id: Some(expected_driver_id),
         driver_state: driver_state.map(|s| format!("{:?}", s)),
         status_message,
         last_checked: chrono::Utc::now(),
     })
+}
+
+/// 由配置生成管理器中的驱动ID（命名约定）
+fn manager_driver_id(config: &pg_repo::DriverConfig) -> String {
+    format!("config_{}_{}", config.name, config.id)
+}
+
+/// 按配置尝试加载驱动（最小实现：支持 Modbus 静态驱动）
+async fn try_load_driver_for_config(
+    app_state: &Data<crate::bootstrap::AppState>,
+    config: &pg_repo::DriverConfig,
+    manager_driver_id: &str,
+) -> anyhow::Result<()> {
+    // 仅在启用时加载
+    if !config.enabled { return Ok(()); }
+
+    // 选择驱动名称（静态）
+    let protocol = config.protocol.to_lowercase();
+    let driver_name = if protocol.contains("modbus") {
+        "modbus-tcp"
+    } else {
+        return Err(anyhow::anyhow!("Protocol '{}' not supported for auto-load", config.protocol));
+    };
+
+    // 传递原始配置JSON给驱动
+    let cfg = config.config.clone();
+    app_state.driver_manager.load_static_driver(manager_driver_id.to_string(), driver_name, cfg).await
 }

@@ -2,21 +2,20 @@
 //!
 //! - scope(): `/api/v1/system`
 
-use actix_web::{web, HttpResponse, Result as ActixResult, get};
+use actix_web::{web, HttpResponse, Result as ActixResult};
 use serde_json::json;
 use crate::bootstrap::AppState;
 
 /// 系统路由配置
 pub fn scope() -> actix_web::Scope {
     web::scope("/system")
-        .service(get_system_info)
-        .service(get_system_metrics)  
-        .service(get_system_health)
-        .service(get_component_status)
+        .route("/info", web::get().to(get_system_info))
+        .route("/metrics", web::get().to(get_system_metrics))  
+        .route("/health", web::get().to(get_system_health))
+        .route("/components/status", web::get().to(get_component_status))
 }
 
 /// 获取系统信息
-#[get("/info")]
 pub async fn get_system_info(
     _data: web::Data<AppState>
 ) -> ActixResult<HttpResponse> {
@@ -35,7 +34,6 @@ pub async fn get_system_info(
 }
 
 /// 获取系统性能指标
-#[get("/metrics")]
 pub async fn get_system_metrics(
     _data: web::Data<AppState>
 ) -> ActixResult<HttpResponse> {
@@ -54,7 +52,6 @@ pub async fn get_system_metrics(
 }
 
 /// 获取系统健康状态
-#[get("/health")]
 pub async fn get_system_health(
     data: web::Data<AppState>
 ) -> ActixResult<HttpResponse> {
@@ -63,7 +60,6 @@ pub async fn get_system_health(
 }
 
 /// 获取组件状态
-#[get("/components/status")]
 pub async fn get_component_status(
     _data: web::Data<AppState>
 ) -> ActixResult<HttpResponse> {
